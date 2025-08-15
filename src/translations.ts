@@ -1,0 +1,42 @@
+export const translations = {
+  ru: {
+    title: "Like if the journey calls",
+    subtitle: "Поездки с Максимов Турс. Автобусные рейсы по разным странам мира",
+    from: "Откуда",
+    to: "Куда",
+    swap: "Поменять",
+    date: "Дата",
+    passengers: "Пассажиры",
+    search: "Найти",
+  },
+  bg: {
+    title: "Ако пътуването зове",
+    subtitle: "Пътувайте с Maksimov Tours. Автобусни линии до различни държави",
+    from: "Откъде",
+    to: "Докъде",
+    swap: "Размени",
+    date: "Дата",
+    passengers: "Пътници",
+    search: "Търси",
+  },
+  en: {
+    title: "Like if the journey calls",
+    subtitle: "Travel with Maksimov Tours. Bus trips to various parts of the world",
+    from: "From",
+    to: "To",
+    swap: "Swap",
+    date: "Date",
+    passengers: "Passengers",
+    search: "Search",
+  },
+  ua: {
+    title: "Якщо кличе дорога",
+    subtitle: "Подорожуйте з Maksimov Tours. Автобусні рейси до різних країн світу",
+    from: "Звідки",
+    to: "Куди",
+    swap: "Змінити",
+    date: "Дата",
+    passengers: "Пасажири",
+    search: "Знайти",
+  }
+};
