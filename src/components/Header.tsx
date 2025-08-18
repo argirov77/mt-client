@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 
 type Lang = "ru" | "bg" | "en" | "ua";
 
@@ -38,9 +39,9 @@ export default function Header({ lang = "ru", onLangChange }: HeaderProps) {
     <header className="bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 sticky top-0 z-30 border-b border-slate-200">
       <nav className="container mx-auto max-w-6xl px-4 h-14 flex items-center justify-between">
         {/* Лого */}
-        <a href="/" className="font-bold text-primary text-lg md:text-2xl tracking-tight">
+        <Link href="/" className="font-bold text-primary text-lg md:text-2xl tracking-tight">
           Максимов Турc
-        </a>
+        </Link>
 
         {/* Меню */}
         <ul className="hidden md:flex gap-6 items-center">

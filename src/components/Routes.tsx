@@ -1,7 +1,7 @@
 // src/components/routes/Routes.tsx
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { MapPin } from "lucide-react";
 import { API } from "@/config";
 
@@ -96,8 +96,8 @@ const deepEqualStops = (a: Stop[] = [], b: Stop[] = []) => {
       sa.name?.trim() !== sb.name?.trim() ||
       (sa.arrival_time || "") !== (sb.arrival_time || "") ||
       (sa.departure_time || "") !== (sb.departure_time || "") ||
-      (sa.description || "") !== (sb.description || "") ||
-      (sa.location || "") !== (sb.location || "")
+      (sa.description?.trim() || "") !== (sb.description?.trim() || "") ||
+      (sa.location?.trim() || "") !== (sb.location?.trim() || "")
     ) {
       return false;
     }
