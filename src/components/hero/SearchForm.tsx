@@ -200,86 +200,92 @@ export default function SearchForm({
   return (
     <form onSubmit={handleSubmit} className="w-full">
       <div className="mx-auto max-w-5xl w-full rounded-3xl bg-white/20 backdrop-blur p-5 shadow-lg ring-1 ring-white/30">
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Откуда */}
-          <select
-            aria-label={t.from}
-            className={pill}
-            value={from}
-            onChange={(e) => setFrom(e.target.value)}
-          >
-            <option value="">{t.from}</option>
-            {departureStops.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.stop_name}
-              </option>
-            ))}
-          </select>
+        <div className="flex flex-wrap md:flex-nowrap items-center gap-3">
+          {/* Блок направлений: откуда/куда + реверс */}
+          <div className="relative flex w-full md:w-1/2">
+            {/* Откуда */}
+            <select
+              aria-label={t.from}
+              className={pill + " w-1/2 pr-10 rounded-r-none"}
+              value={from}
+              onChange={(e) => setFrom(e.target.value)}
+            >
+              <option value="">{t.from}</option>
+              {departureStops.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.stop_name}
+                </option>
+              ))}
+            </select>
 
-          {/* Реверс */}
-          <button
-            type="button"
-            title={t.swapTitle}
-            onClick={handleSwap}
-            className="h-12 w-12 grid place-items-center rounded-xl bg-white/60 hover:bg-white text-sky-700 shadow ring-1 ring-black/5"
-          >
-            ⇄
-          </button>
+            {/* Куда */}
+            <select
+              aria-label={t.to}
+              className={pill + " w-1/2 pl-10 rounded-l-none"}
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+              disabled={!fromId}
+            >
+              <option value="">{t.to}</option>
+              {arrivalStops.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.stop_name}
+                </option>
+              ))}
+            </select>
 
-          {/* Куда */}
-          <select
-            aria-label={t.to}
-            className={pill}
-            value={to}
-            onChange={(e) => setTo(e.target.value)}
-            disabled={!fromId}
-          >
-            <option value="">{t.to}</option>
-            {arrivalStops.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.stop_name}
-              </option>
-            ))}
-          </select>
+            {/* Реверс */}
+            <button
+              type="button"
+              title={t.swapTitle}
+              onClick={handleSwap}
+              className="absolute left-1/2 top-1/2 z-10 h-10 w-10 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/90 hover:bg-white text-sky-700 shadow ring-1 ring-black/5"
+            >
+              ⇄
+            </button>
+          </div>
 
-          {/* Дата туда */}
-          <DateInput
-            value={departDate}
-            setValue={setDepartDate}
-            activeDates={departActive}
-            lang={lang}
-            className={pill + " flex items-center gap-2"}
-            disabled={!fromId || !toId}
-          />
+          {/* Блок дат/пассажиров/поиска */}
+          <div className="flex w-full md:w-1/2 flex-wrap md:flex-nowrap items-center gap-3">
+            {/* Дата туда */}
+            <DateInput
+              value={departDate}
+              setValue={setDepartDate}
+              activeDates={departActive}
+              lang={lang}
+              className={pill + " flex-1 flex items-center gap-2"}
+              disabled={!fromId || !toId}
+            />
 
-          {/* Дата обратно */}
-          <DateInput
-            value={returnDate}
-            setValue={setReturnDate}
-            activeDates={returnActive}
-            lang={lang}
-            className={pill + " flex items-center gap-2"}
-            disabled={!fromId || !toId}
-          />
+            {/* Дата обратно */}
+            <DateInput
+              value={returnDate}
+              setValue={setReturnDate}
+              activeDates={returnActive}
+              lang={lang}
+              className={pill + " flex-1 flex items-center gap-2"}
+              disabled={!fromId || !toId}
+            />
 
-          {/* Пассажиры: 👤 N – / + (минимализм) */}
-          <PassengersInput
-            value={seatCount}
-            setValue={setSeatCount}
-            className="flex items-center gap-2"
-            pillClass="h-12 px-3 rounded-2xl bg-white/90 hover:bg-white text-slate-800 shadow ring-1 ring-black/5 flex items-center gap-2"
-            btnClass="h-12 w-10 grid place-items-center rounded-xl bg-white/90 hover:bg-white text-sky-700 shadow ring-1 ring-black/5"
-          />
+            {/* Пассажиры: 👤 N – / + (минимализм) */}
+            <PassengersInput
+              value={seatCount}
+              setValue={setSeatCount}
+              className="flex items-center gap-2"
+              pillClass="h-12 px-3 rounded-2xl bg-white/90 hover:bg-white text-slate-800 shadow ring-1 ring-black/5 flex items-center gap-2"
+              btnClass="h-12 w-10 grid place-items-center rounded-xl bg-white/90 hover:bg-white text-sky-700 shadow ring-1 ring-black/5"
+            />
 
-          {/* Поиск */}
-          <button
-            type="submit"
-            className="h-12 px-6 rounded-2xl bg-[#ff6a00] hover:bg-[#ff7a1c] text-white font-medium shadow-lg"
-            disabled={!fromId || !toId || !departDate}
-            aria-label={t.search}
-          >
-            {t.search}
-          </button>
+            {/* Поиск */}
+            <button
+              type="submit"
+              className="h-12 px-6 rounded-2xl bg-[#ff6a00] hover:bg-[#ff7a1c] text-white font-medium shadow-lg"
+              disabled={!fromId || !toId || !departDate}
+              aria-label={t.search}
+            >
+              {t.search}
+            </button>
+          </div>
         </div>
       </div>
     </form>
