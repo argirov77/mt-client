@@ -1,6 +1,7 @@
 import React from "react";
 import SeatClient from "../SeatClient";
 import type { Tour } from "./SearchResults";
+import FormInput from "../common/FormInput";
 
 type Dict = {
   freeSeats: (n: number) => string;
@@ -82,7 +83,7 @@ export default function BookingPanel({
 }: Props) {
   return (
     <>
-      <h3 style={{ marginTop: 20 }}>
+      <h3 className="mt-5">
         Рейс туда #{selectedOutboundTour.id}, дата: {selectedOutboundTour.date}
       </h3>
       <p>{t.freeSeats(free(selectedOutboundTour.seats))}</p>
@@ -104,7 +105,7 @@ export default function BookingPanel({
 
       {selectedReturnTour && (
         <>
-          <h3 style={{ marginTop: 20 }}>
+          <h3 className="mt-5">
             Рейс обратно #{selectedReturnTour.id}, дата: {selectedReturnTour.date}
           </h3>
           <p>{t.freeSeats(free(selectedReturnTour.seats))}</p>
@@ -129,17 +130,11 @@ export default function BookingPanel({
       {/* ФОРМА ПАССАЖИРОВ */}
       <form
         onSubmit={(e) => e.preventDefault()}
-        style={{
-          marginTop: 20,
-          display: "flex",
-          flexDirection: "column",
-          gap: 8,
-          maxWidth: 440,
-        }}
+        className="mt-5 flex w-full max-w-[440px] flex-col gap-2"
       >
         {passengerNames.map((name, idx) => (
-          <div key={idx} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <input
+          <div key={idx} className="flex items-center gap-2">
+            <FormInput
               type="text"
               placeholder={`Имя пассажира ${idx + 1}`}
               required
@@ -149,9 +144,10 @@ export default function BookingPanel({
                 arr[idx] = e.target.value;
                 setPassengerNames(arr);
               }}
+              className="flex-1"
             />
-            <label style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <input
+            <label className="flex items-center gap-1">
+              <FormInput
                 type="checkbox"
                 checked={!!extraBaggageOutbound[idx]}
                 onChange={(e) => {
@@ -163,8 +159,8 @@ export default function BookingPanel({
               Багаж туда
             </label>
             {selectedReturnTour && (
-              <label style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                <input
+              <label className="flex items-center gap-1">
+                <FormInput
                   type="checkbox"
                   checked={!!extraBaggageReturn[idx]}
                   onChange={(e) => {
@@ -179,34 +175,52 @@ export default function BookingPanel({
           </div>
         ))}
 
-        <input
+        <FormInput
           type="tel"
           placeholder="Телефон"
           required
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
+          className="w-full"
         />
-        <input
+        <FormInput
           type="email"
           placeholder="Email"
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          className="w-full"
         />
 
-        <div style={{ display: "flex", gap: 8 }}>
-          <button type="button" onClick={() => handleAction("book")}>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => handleAction("book")}
+            className="border rounded p-2 hover:bg-slate-100"
+          >
             {t.book}
           </button>
-          <button type="button" onClick={() => handleAction("purchase")}>
+          <button
+            type="button"
+            onClick={() => handleAction("purchase")}
+            className="border rounded p-2 hover:bg-slate-100"
+          >
             {t.buy}
           </button>
           {purchaseId && (
             <>
-              <button type="button" onClick={handlePay}>
+              <button
+                type="button"
+                onClick={handlePay}
+                className="border rounded p-2 hover:bg-slate-100"
+              >
                 {t.pay}
               </button>
-              <button type="button" onClick={handleCancel}>
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="border rounded p-2 hover:bg-slate-100"
+              >
                 {t.cancel}
               </button>
             </>
