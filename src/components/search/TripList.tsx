@@ -1,5 +1,6 @@
 import React from "react";
 import type { Tour } from "./SearchResults";
+import styles from "./TripList.module.css";
 
 type TripListProps = {
   title: string;
@@ -24,19 +25,11 @@ export default function TripList({
 }: TripListProps) {
   return (
     <>
-      <h3 style={{ marginTop: 12, marginBottom: 8 }}>{title}:</h3>
+      <h3 className="mt-3 mb-2">{title}:</h3>
       {tours.map((tour) => {
         const isChosen = selectedId === tour.id;
         return (
-          <div
-            key={tour.id}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              marginBottom: 8,
-            }}
-          >
+          <div key={tour.id} className={styles.item}>
             <span>
               Рейс #{tour.id}, дата: {tour.date} —{" "}
               {t.freeSeats(freeSeatsValue(tour.seats))}
