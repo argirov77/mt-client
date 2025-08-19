@@ -18,8 +18,8 @@ type Props = {
   initialReturnDate?: string; // YYYY-MM-DD
   initialSeats?: number;
   onSearch: (params: {
-    fromId: number;
-    toId: number;
+    from: string;
+    to: string;
     date: string;
     returnDate?: string;
     seatCount: number;
@@ -189,8 +189,8 @@ export default function SearchForm({
     e.preventDefault();
     if (!fromId || !toId || !departDate) return;
     onSearch({
-      fromId,
-      toId,
+      from: String(fromId),
+      to: String(toId),
       date: departDate,
       returnDate: returnDate || undefined,
       seatCount,
