@@ -60,27 +60,50 @@ function Stepper({
   onSelect: (i: number) => void;
 }) {
   return (
-    <nav className="flex items-center justify-between text-sm">
-      {steps.map((label, index) => {
-        const status =
-          index < current ? "done" : index === current ? "active" : "todo";
-        return (
-          <button
-            key={label}
-            onClick={() => index <= current && onSelect(index)}
-            className={
-              status === "active"
-                ? "text-blue-600"
-                : status === "done"
-                ? "text-green-600"
-                : "text-gray-400"
-            }
-          >
-            {status === "done" && "✓ "}
-            {label}
-          </button>
-        );
-      })}
+    <nav aria-label="Прогресс">
+      <ol className="flex w-full items-center">
+        {steps.map((label, index) => {
+          const status =
+            index < current ? "done" : index === current ? "active" : "todo";
+          return (
+            <li
+              key={label}
+              className={`flex items-center ${
+                index < steps.length - 1 ? "flex-1" : ""
+              }`}
+              aria-current={status === "active" ? "step" : undefined}
+            >
+              <button
+                type="button"
+                onClick={() => index <= current && onSelect(index)}
+                className="flex items-center"
+              >
+                <span
+                  className={
+                    "flex h-8 w-8 items-center justify-center rounded-full text-white " +
+                    (status === "active"
+                      ? "bg-blue-600"
+                      : status === "done"
+                      ? "bg-green-600"
+                      : "bg-gray-300 text-gray-600")
+                  }
+                >
+                  {status === "done" ? "✓" : index + 1}
+                </span>
+                <span className="ml-2 text-sm">{label}</span>
+              </button>
+              {index < steps.length - 1 && (
+                <div
+                  className={
+                    "mx-2 h-0.5 flex-1 " +
+                    (index < current ? "bg-green-600" : "bg-gray-300")
+                  }
+                />
+              )}
+            </li>
+          );
+        })}
+      </ol>
     </nav>
   );
 }
