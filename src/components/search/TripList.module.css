@@ -3,3 +3,15 @@
 .item {
   @apply flex items-center gap-2 mb-2;
 }
+
+.btn {
+  @apply px-3 py-1 rounded-lg text-white transition-colors;
+}
+
+.pick {
+  @apply bg-sky-600 hover:bg-sky-700;
+}
+
+.chosen {
+  @apply bg-green-600 hover:bg-green-700;
+}

@@ -17,10 +17,10 @@ export default function BookingCard() {
   const lang = "ru" as const;
 
   return (
-    <div className="mx-auto w-full max-w-5xl rounded-2xl border bg-white p-4 shadow">
+    <div className="mx-auto w-full max-w-5xl space-y-6">
       <SearchForm lang={lang} onSearch={(params) => setCriteria(params)} />
       {criteria && (
-        <div className="mt-6">
+        <div className="rounded-3xl bg-white/20 backdrop-blur p-5 shadow-lg ring-1 ring-white/30">
           <SearchResults lang={lang} {...criteria} />
         </div>
       )}
