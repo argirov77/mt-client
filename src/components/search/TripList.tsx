@@ -34,7 +34,10 @@ export default function TripList({
               Рейс #{tour.id}, дата: {tour.date} —{" "}
               {t.freeSeats(freeSeatsValue(tour.seats))}
             </span>
-            <button onClick={() => onSelect(tour)}>
+            <button
+              onClick={() => onSelect(tour)}
+              className={`${styles.btn} ${isChosen ? styles.chosen : styles.pick}`}
+            >
               {isChosen ? t.chosen : t.pick}
             </button>
           </div>
