@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import SearchForm from './SearchForm';
 
 type Lang = 'ru' | 'bg' | 'en' | 'ua';
@@ -8,7 +8,13 @@ type Lang = 'ru' | 'bg' | 'en' | 'ua';
 type Props = {
   lang?: Lang;
   className?: string;
-  onSearch: (criteria: { from: string; to: string; date: string; seatCount: number }) => void;
+  onSearch: (criteria: {
+    from: string;
+    to: string;
+    date: string;
+    seatCount: number;
+    returnDate?: string;
+  }) => void;
 };
 
 const TXT = {
@@ -33,12 +39,6 @@ const TXT = {
 export default function HeroSection({ lang = 'ru', className = '', onSearch }: Props) {
   const t = TXT[lang] ?? TXT.ru;
 
-  // локально управляемые поля формы
-  const [from, setFrom] = useState('');
-  const [to, setTo] = useState('');
-  const [date, setDate] = useState('');           // YYYY-MM-DD
-  const [seatCount, setSeatCount] = useState(1);
-
   return (
     <section
       className={`relative min-h-[420px] flex flex-col items-center justify-center
@@ -58,14 +58,6 @@ export default function HeroSection({ lang = 'ru', className = '', onSearch }: P
         {/* Форма поиска */}
         <div className="w-full max-w-5xl">
           <SearchForm
-            from={from}
-            to={to}
-            date={date}
-            seatCount={seatCount}
-            setFrom={setFrom}
-            setTo={setTo}
-            setDate={setDate}
-            setSeatCount={setSeatCount}
             lang={lang}
             onSearch={(criteria) => {
               // отдаём наружу чистые данные
