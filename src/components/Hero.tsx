@@ -1,9 +1,9 @@
 import HeroSection from "@/components/hero/HeroSection";
 
 export default function HomePage() {
-  const handleSearch = (params: { from: string; to: string; date: string; passengers: number }) => {
+  const handleSearch = (criteria: { from: string; to: string; date: string; seatCount: number }) => {
     // здесь переход на страницу поиска или прокрутка к расписанию
-    console.log(params);
+    console.log(criteria);
   };
   return (
     <div>

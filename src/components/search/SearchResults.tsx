@@ -126,6 +126,10 @@ export default function SearchResults({
 }: Props) {
   const t = dict[lang];
 
+  // Limit seat count to a reasonable range to avoid huge allocations
+  const MAX_SEAT_COUNT = 50;
+  const safeSeatCount = Math.max(1, Math.min(seatCount, MAX_SEAT_COUNT));
+
   // Числовые id (один раз)
   const fromId = useMemo(() => Number(from), [from]);
   const toId = useMemo(() => Number(to), [to]);
@@ -149,16 +153,16 @@ export default function SearchResults({
 
   // Пассажиры/контакты/багаж
   const [passengerNames, setPassengerNames] = useState<string[]>(
-    Array(seatCount).fill("")
+    Array(safeSeatCount).fill("")
   );
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
 
   const [extraBaggageOutbound, setExtraBaggageOutbound] = useState<boolean[]>(
-    Array(seatCount).fill(false)
+    Array(safeSeatCount).fill(false)
   );
   const [extraBaggageReturn, setExtraBaggageReturn] = useState<boolean[]>(
-    Array(seatCount).fill(false)
+    Array(safeSeatCount).fill(false)
   );
 
   // Покупка/бронь
@@ -166,12 +170,12 @@ export default function SearchResults({
 
   // При смене кол-ва мест — очищаем связанные стейты
   useEffect(() => {
-    setPassengerNames(Array(seatCount).fill(""));
-    setExtraBaggageOutbound(Array(seatCount).fill(false));
-    setExtraBaggageReturn(Array(seatCount).fill(false));
+    setPassengerNames(Array(safeSeatCount).fill(""));
+    setExtraBaggageOutbound(Array(safeSeatCount).fill(false));
+    setExtraBaggageReturn(Array(safeSeatCount).fill(false));
     setSelectedOutboundSeats([]);
     setSelectedReturnSeats([]);
-  }, [seatCount]);
+  }, [seatCount, safeSeatCount]);
 
   // Поиск рейсов
   useEffect(() => {
@@ -196,7 +200,7 @@ export default function SearchResults({
             departure_stop_id: fromId,
             arrival_stop_id: toId,
             date,
-            seats: seatCount,
+        seats: safeSeatCount,
           },
         });
 
@@ -206,7 +210,7 @@ export default function SearchResults({
                 departure_stop_id: toId,
                 arrival_stop_id: fromId,
                 date: returnDate,
-                seats: seatCount,
+                seats: safeSeatCount,
               },
             })
           : Promise.resolve({ data: [] as Tour[] });
@@ -246,7 +250,7 @@ export default function SearchResults({
     return () => {
       cancelled = true;
     };
-  }, [fromId, toId, date, returnDate, seatCount, t]);
+  }, [fromId, toId, date, returnDate, safeSeatCount, t]);
 
   // Выбор рейсов
   const onSelectOutbound = (tour: Tour) => {
@@ -271,8 +275,8 @@ export default function SearchResults({
         return;
       }
       if (
-        selectedOutboundSeats.length !== seatCount ||
-        (selectedReturnTour && selectedReturnSeats.length !== seatCount)
+        selectedOutboundSeats.length !== safeSeatCount ||
+        (selectedReturnTour && selectedReturnSeats.length !== safeSeatCount)
       ) {
         setMsg("Выберите нужное количество мест");
         setMsgType("error");
@@ -339,11 +343,11 @@ export default function SearchResults({
       // сброс выбора
       setSelectedOutboundSeats([]);
       setSelectedReturnSeats([]);
-      setPassengerNames(Array(seatCount).fill(""));
+      setPassengerNames(Array(safeSeatCount).fill(""));
       setPhone("");
       setEmail("");
-      setExtraBaggageOutbound(Array(seatCount).fill(false));
-      setExtraBaggageReturn(Array(seatCount).fill(false));
+      setExtraBaggageOutbound(Array(safeSeatCount).fill(false));
+      setExtraBaggageReturn(Array(safeSeatCount).fill(false));
     } catch {
       setMsg(t.errAction);
       setMsgType("error");
@@ -434,7 +438,7 @@ export default function SearchResults({
         (!returnDate || (returnDate && selectedReturnTour)) && (
           <BookingPanel
             t={t}
-            seatCount={seatCount}
+            seatCount={safeSeatCount}
             fromId={fromId}
             toId={toId}
             selectedOutboundTour={selectedOutboundTour}
