@@ -1,74 +1,73 @@
+// src/components/hero/HeroSection.tsx
 'use client';
 
-import React from 'react';
+import { useState } from 'react';
 import SearchForm from './SearchForm';
+import SearchResults from '@/components/search/SearchResults';
 
 type Lang = 'ru' | 'bg' | 'en' | 'ua';
 
-type Props = {
-  lang?: Lang;
-  className?: string;
-  onSearch: (criteria: {
+export default function HeroSection({ lang = 'ru' }: { lang?: Lang }) {
+  const [criteria, setCriteria] = useState<null | {
     from: string;
     to: string;
     date: string;
-    seatCount: number;
     returnDate?: string;
-  }) => void;
-};
+    seatCount: number;
+  }>(null);
 
-const TXT = {
-  ru: {
-    title: 'Поедем с комфортом',
-    subtitle: 'Покупка автобусных билетов онлайн — быстро и удобно.',
-  },
-  bg: {
-    title: 'Пътувайте комфортно',
-    subtitle: 'Купете автобусни билети онлайн — бързо и удобно.',
-  },
-  en: {
-    title: 'Travel in comfort',
-    subtitle: 'Buy bus tickets online — fast and easy.',
-  },
-  ua: {
-    title: 'Подорожуйте з комфортом',
-    subtitle: 'Купуйте автобусні квитки онлайн — швидко та зручно.',
-  },
-};
-
-export default function HeroSection({ lang = 'ru', className = '', onSearch }: Props) {
-  const t = TXT[lang] ?? TXT.ru;
+  const expanded = !!criteria;
 
   return (
     <section
-      className={`relative min-h-[420px] flex flex-col items-center justify-center
-      bg-gradient-to-r from-blue-700 to-sky-400 text-white ${className}`}
+      id="hero"
+      className="relative bg-gradient-to-r from-sky-600 via-sky-500 to-sky-400 text-white"
     >
-      {/* Декорный фон */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,.15),transparent_40%),radial-gradient(circle_at_80%_30%,rgba(255,255,255,.15),transparent_40%)]" />
-
-      <div className="z-10 flex flex-col items-center w-full px-4">
-        <h1 className="text-4xl md:text-5xl font-bold mt-10 mb-4 text-center drop-shadow">
-          {t.title}
+      <div className="container mx-auto px-4 py-14">
+        <h1 className="text-4xl md:text-5xl font-bold text-center">
+          Поедем с комфортом
         </h1>
-        <p className="text-xl mb-6 text-center drop-shadow">
-          {t.subtitle}
+        <p className="mt-3 text-center text-white/90">
+          Покупка автобусных билетов онлайн — быстро и удобно.
         </p>
 
-        {/* Форма поиска */}
-        <div className="w-full max-w-5xl">
-          <SearchForm
-            lang={lang}
-            onSearch={(criteria) => {
-              // отдаём наружу чистые данные
-              onSearch(criteria);
-            }}
-          />
+        {/* ЕДИНАЯ КАПСУЛА: форма + (скрываемый) блок результатов */}
+        <div className="mx-auto mt-8 max-w-5xl rounded-3xl bg-white/20 backdrop-blur shadow-lg ring-1 ring-white/30 overflow-hidden">
+
+          {/* ВСТАВЛЯЕМ ФОРМУ БЕЗ ЕЕ СОБСТВЕННОГО ВНЕШНЕГО КОНТЕЙНЕРА  */}
+          <div className="p-5">
+            <SearchForm
+              lang={lang}
+              embedded
+              onSearch={(cr) => setCriteria(cr)}
+            />
+          </div>
+
+          {/* Плавно раскрываемый блок с результатами ПОИСКА */}
+          <div
+            className={[
+              'grid transition-all duration-300 ease-in-out',
+              expanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0',
+            ].join(' ')}
+          >
+            {expanded && (
+              <div className="px-5 pb-5 pt-0">
+                <div className="rounded-2xl bg-white/80 p-4 text-slate-900 shadow ring-1 ring-black/5">
+                  <SearchResults
+                    lang={lang}
+                    from={criteria!.from}
+                    to={criteria!.to}
+                    date={criteria!.date}
+                    returnDate={criteria!.returnDate}
+                    seatCount={criteria!.seatCount}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-
-      {/* Небольшая подложка под формой для читабельности */}
-      <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-blue-900/30 to-transparent pointer-events-none" />
     </section>
   );
 }
+
