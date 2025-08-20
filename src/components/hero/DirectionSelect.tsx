@@ -70,9 +70,12 @@ export default function DirectionSelect({
     async function load() {
       setDepLoading(true);
       try {
-        const url = new URL(`${API}/search/departures`);
-        url.searchParams.set('seats', String(seatCount || 1));
-        const res = await fetch(url.toString(), { cache: 'no-store' });
+        const res = await fetch(`${API}/search/departures`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ seats: seatCount || 1, lang }),
+          cache: 'no-store',
+        });
         if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
         const data: Stop[] = await res.json();
         if (!aborted) {
@@ -96,7 +99,7 @@ export default function DirectionSelect({
     return () => {
       aborted = true;
     };
-  }, [seatCount]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [seatCount, lang]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Загрузка конечных при выборе отправной
   useEffect(() => {
@@ -109,10 +112,16 @@ export default function DirectionSelect({
       }
       setArrLoading(true);
       try {
-        const url = new URL(`${API}/search/arrivals`);
-        url.searchParams.set('departure_stop_id', String(from));
-        url.searchParams.set('seats', String(seatCount || 1));
-        const res = await fetch(url.toString(), { cache: 'no-store' });
+        const res = await fetch(`${API}/search/arrivals`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            departure_stop_id: Number(from),
+            seats: seatCount || 1,
+            lang,
+          }),
+          cache: 'no-store',
+        });
         if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
         const data: Stop[] = await res.json();
         if (!aborted) {
@@ -135,7 +144,7 @@ export default function DirectionSelect({
     return () => {
       aborted = true;
     };
-  }, [from, seatCount]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [from, seatCount, lang]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const canSwap = useMemo(
     () => Boolean(from && to),

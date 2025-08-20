@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import HeroSection from "@/components/hero/HeroSection";
 import Routes from "@/components/Routes";
@@ -10,7 +10,14 @@ import About from "@/components/About";
 type Lang = "ru" | "bg" | "en" | "ua";
 
 export default function Page() {
-  const [lang] = useState<Lang>("ru");
+  const [lang, setLang] = useState<Lang>("ru");
+
+  useEffect(() => {
+    const nav = navigator.language.slice(0, 2) as Lang;
+    if (["ru", "bg", "en", "ua"].includes(nav)) {
+      setLang(nav);
+    }
+  }, []);
 
   return (
     <main className="min-h-screen">
