@@ -32,7 +32,7 @@ export default function HeroSection({ lang = 'ru' }: { lang?: Lang }) {
         </p>
 
         {/* ЕДИНАЯ КАПСУЛА: форма + (скрываемый) блок результатов */}
-        <div className="mx-auto mt-8 max-w-5xl rounded-3xl bg-white/20 backdrop-blur shadow-lg ring-1 ring-white/30 overflow-hidden">
+        <div className="mx-auto mt-8 max-w-5xl rounded-3xl bg-white/20 backdrop-blur shadow-lg ring-1 ring-white/30 overflow-visible relative">
 
           {/* ВСТАВЛЯЕМ ФОРМУ БЕЗ ЕЕ СОБСТВЕННОГО ВНЕШНЕГО КОНТЕЙНЕРА  */}
           <div className="p-5">

@@ -72,7 +72,7 @@ export default function DateInput({
       {open && !disabled && (
         <div
           ref={pop}
-          className="absolute z-50 mt-2"
+          className="absolute z-[100] mt-2"
           style={{ minWidth: 320 }}
         >
           <div className="rounded-2xl bg-white shadow-xl ring-1 ring-black/10">
