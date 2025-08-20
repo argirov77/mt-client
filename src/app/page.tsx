@@ -18,7 +18,7 @@ export default function Page() {
         <HeroSection lang={lang} />
       </section>
 
-      <section id="routes" className="bg-white/60">
+      <section id="routes" className="relative z-10 bg-white/60">
         <div className="mx-auto max-w-6xl w-full px-4 py-14">
           <Routes />
         </div>

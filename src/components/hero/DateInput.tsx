@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Calendar as CalendarIcon } from "lucide-react";
 import Calendar from "../Calendar"; // ваш компонент
 
@@ -30,18 +31,55 @@ export default function DateInput({
   lang = "ru",
 }: Props) {
   const [open, setOpen] = useState(false);
-  const pop = useRef<HTMLDivElement>(null);
+  const anchorRef = useRef<HTMLDivElement>(null);
+  const popRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState({ top: 0, left: 0, width: 280 });
 
   useEffect(() => {
+    if (!open || !anchorRef.current) return;
+    const r = anchorRef.current.getBoundingClientRect();
+    setPos({
+      top: r.bottom + window.scrollY + 6,
+      left: r.left + window.scrollX,
+      width: r.width,
+    });
+  }, [open]);
+
+  // пересчитать при скролле/resize
+  useEffect(() => {
+    if (!open) return;
+    const on = () => {
+      if (!anchorRef.current) return;
+      const r = anchorRef.current.getBoundingClientRect();
+      setPos({
+        top: r.bottom + window.scrollY + 6,
+        left: r.left + window.scrollX,
+        width: r.width,
+      });
+    };
+    window.addEventListener("scroll", on, true);
+    window.addEventListener("resize", on);
+    return () => {
+      window.removeEventListener("scroll", on, true);
+      window.removeEventListener("resize", on);
+    };
+  }, [open]);
+
+  // закрытие по Esc/клику вне
+  useEffect(() => {
+    if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
     const onClick = (e: MouseEvent) => {
-      if (!pop.current) return;
-      if (!pop.current.contains(e.target as Node)) setOpen(false);
+      if (!popRef.current || !anchorRef.current) return;
+      if (
+        !popRef.current.contains(e.target as Node) &&
+        !anchorRef.current.contains(e.target as Node)
+      ) {
+        setOpen(false);
+      }
     };
-    if (open) {
-      document.addEventListener("keydown", onKey);
-      document.addEventListener("mousedown", onClick);
-    }
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("mousedown", onClick);
     return () => {
       document.removeEventListener("keydown", onKey);
       document.removeEventListener("mousedown", onClick);
@@ -51,7 +89,7 @@ export default function DateInput({
   const hasDate = Boolean(value);
 
   return (
-    <div className="relative">
+    <div ref={anchorRef} className="relative">
       {/* Пилюля (без плейсхолдера) */}
       <button
         type="button"
@@ -69,13 +107,13 @@ export default function DateInput({
       </button>
 
       {/* Popover */}
-      {open && !disabled && (
-        <div
-          ref={pop}
-          className="absolute z-[100] mt-2"
-          style={{ minWidth: 320 }}
-        >
-          <div className="rounded-2xl bg-white shadow-xl ring-1 ring-black/10">
+      {open && !disabled &&
+        createPortal(
+          <div
+            ref={popRef}
+            className="fixed z-[9999] shadow-xl rounded-2xl bg-white ring-1 ring-black/10"
+            style={{ top: pos.top, left: pos.left, minWidth: Math.max(320, pos.width) }}
+          >
             <div className="px-3 pt-2 pb-1 text-xs text-slate-500">
               Доступные даты отмечены точкой
             </div>
@@ -90,9 +128,9 @@ export default function DateInput({
               lang={lang}
               className="border-0 shadow-none"
             />
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </div>
   );
 }
