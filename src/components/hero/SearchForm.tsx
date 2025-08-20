@@ -72,11 +72,14 @@ export default function SearchForm({
 
   useEffect(() => {
     let cancelled = false;
-    axios.get<Stop[]>(`${API}/search/departures`, { params: { seats: seatCount } })
+    axios
+      .post<Stop[]>(`${API}/search/departures`, { seats: seatCount, lang })
       .then(res => !cancelled && setDepartureStops(res.data || []))
       .catch(() => !cancelled && setDepartureStops([]));
-    return () => { cancelled = true; };
-  }, [seatCount]);
+    return () => {
+      cancelled = true;
+    };
+  }, [seatCount, lang]);
 
   useEffect(() => {
     let cancelled = false;
@@ -86,11 +89,16 @@ export default function SearchForm({
       setDepartDate('');   setReturnDate('');
       return;
     }
-    axios.get<Stop[]>(`${API}/search/arrivals`, { params: { departure_stop_id: fromId, seats: seatCount } })
+    axios
+      .post<Stop[]>(`${API}/search/arrivals`, {
+        departure_stop_id: fromId,
+        seats: seatCount,
+        lang,
+      })
       .then(res => !cancelled && setArrivalStops(res.data || []))
       .catch(() => !cancelled && setArrivalStops([]));
     return () => { cancelled = true; };
-  }, [fromId, seatCount]);
+  }, [fromId, seatCount, lang]);
 
   useEffect(() => {
     let cancelled = false;
