@@ -2,6 +2,7 @@ import React from "react";
 import SeatClient from "../SeatClient";
 import type { Tour } from "./SearchResults";
 import FormInput from "../common/FormInput";
+import { formatDate } from "@/utils/date";
 
 type Dict = {
   freeSeats: (n: number) => string;
@@ -84,7 +85,7 @@ export default function BookingPanel({
   return (
     <>
       <h3 className="mt-5">
-        Рейс туда #{selectedOutboundTour.id}, дата: {selectedOutboundTour.date}
+        Рейс туда #{selectedOutboundTour.id}, дата: {formatDate(selectedOutboundTour.date)}
       </h3>
       <p>{t.freeSeats(free(selectedOutboundTour.seats))}</p>
       <p>Выберите место:</p>
@@ -106,7 +107,7 @@ export default function BookingPanel({
       {selectedReturnTour && (
         <>
           <h3 className="mt-5">
-            Рейс обратно #{selectedReturnTour.id}, дата: {selectedReturnTour.date}
+            Рейс обратно #{selectedReturnTour.id}, дата: {formatDate(selectedReturnTour.date)}
           </h3>
           <p>{t.freeSeats(free(selectedReturnTour.seats))}</p>
           <p>Выберите место:</p>

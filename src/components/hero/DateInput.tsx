@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { formatDate } from "@/utils/date";
 
 type Props = {
   value: string;
@@ -20,17 +21,11 @@ export default function DateInput({
   disabled,
   className = "",
   label,
-  lang = "ru",
+  lang = "ru", // eslint-disable-line @typescript-eslint/no-unused-vars
   onOpen,
 }: Props) {
   // отображаемое значение (если пусто — покажем "— — —")
-  const human =
-    value
-      ? new Date(value + "T00:00:00Z").toLocaleDateString(
-          lang === "en" ? "en-GB" : lang,
-          { day: "2-digit", month: "2-digit", year: "numeric" }
-        )
-      : "— — —";
+  const human = value ? formatDate(value) : "— — —";
 
   return (
     <button
