@@ -11,9 +11,12 @@ export default function HeroSection({ lang = 'ru' }: { lang?: Lang }) {
   const [criteria, setCriteria] = useState<null | {
     from: string;
     to: string;
+    fromName: string;
+    toName: string;
     date: string;
     returnDate?: string;
     seatCount: number;
+    discountCount: number;
   }>(null);
 
   const expanded = !!criteria;
@@ -57,9 +60,12 @@ export default function HeroSection({ lang = 'ru' }: { lang?: Lang }) {
                     lang={lang}
                     from={criteria!.from}
                     to={criteria!.to}
+                    fromName={criteria!.fromName}
+                    toName={criteria!.toName}
                     date={criteria!.date}
                     returnDate={criteria!.returnDate}
                     seatCount={criteria!.seatCount}
+                    discountCount={criteria!.discountCount}
                   />
                 </div>
               </div>
