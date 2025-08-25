@@ -151,10 +151,28 @@ export default function SearchForm({
       </div>
 
       <div className="flex w-full md:w-1/2 flex-wrap md:flex-nowrap items-center gap-3">
-        <DateInput value={departDate} setValue={setDepartDate} activeDates={departActive} lang={lang}
-                   className={pill + ' flex-1 flex items-center gap-2'} disabled={!fromId || !toId}/>
-        <DateInput value={returnDate} setValue={setReturnDate} activeDates={returnActive} lang={lang}
-                   className={pill + ' flex-1 flex items-center gap-2'} disabled={!fromId || !toId}/>
+        <div className="flex flex-col flex-1">
+          <span className="text-white/80 text-sm mb-1">{t.date}</span>
+          <DateInput
+            value={departDate}
+            setValue={setDepartDate}
+            activeDates={departActive}
+            lang={lang}
+            className={pill + ' flex items-center gap-2'}
+            disabled={!fromId || !toId}
+          />
+        </div>
+        <div className="flex flex-col flex-1">
+          <span className="text-white/80 text-sm mb-1">{t.back}</span>
+          <DateInput
+            value={returnDate}
+            setValue={setReturnDate}
+            activeDates={returnActive}
+            lang={lang}
+            className={pill + ' flex items-center gap-2'}
+            disabled={!fromId || !toId}
+          />
+        </div>
         <PassengersInput
           value={passengers}
           onChange={setPassengers}
