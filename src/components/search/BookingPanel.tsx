@@ -19,6 +19,8 @@ type Props = {
   seatCount: number;
   fromId: number;
   toId: number;
+  fromName: string;
+  toName: string;
 
   selectedOutboundTour: Tour;
   selectedReturnTour: Tour | null;
@@ -57,6 +59,8 @@ export default function BookingPanel({
   seatCount,
   fromId,
   toId,
+  fromName,
+  toName,
   selectedOutboundTour,
   selectedReturnTour,
 
@@ -98,11 +102,15 @@ export default function BookingPanel({
         selectedSeats={selectedOutboundSeats}
         maxSeats={seatCount}
         onChange={setSelectedOutboundSeats}
+        departureText={`${fromName} ${selectedOutboundTour.departure_time}`}
+        arrivalText={`${toName} ${selectedOutboundTour.arrival_time}`}
+        extraBaggage={extraBaggageOutbound[0] || false}
+        onExtraBaggageChange={(v) => {
+          const arr = [...extraBaggageOutbound];
+          arr[0] = v;
+          setExtraBaggageOutbound(arr);
+        }}
       />
-
-      {selectedOutboundSeats.length > 0 && (
-        <p>Вы выбрали места: {selectedOutboundSeats.join(", ")}</p>
-      )}
 
       {selectedReturnTour && (
         <>
@@ -120,11 +128,15 @@ export default function BookingPanel({
             selectedSeats={selectedReturnSeats}
             maxSeats={seatCount}
             onChange={setSelectedReturnSeats}
+            departureText={`${toName} ${selectedReturnTour.departure_time}`}
+            arrivalText={`${fromName} ${selectedReturnTour.arrival_time}`}
+            extraBaggage={extraBaggageReturn[0] || false}
+            onExtraBaggageChange={(v) => {
+              const arr = [...extraBaggageReturn];
+              arr[0] = v;
+              setExtraBaggageReturn(arr);
+            }}
           />
-
-          {selectedReturnSeats.length > 0 && (
-            <p>Вы выбрали места обратно: {selectedReturnSeats.join(", ")}</p>
-          )}
         </>
       )}
 
