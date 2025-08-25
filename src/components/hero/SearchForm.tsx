@@ -60,7 +60,8 @@ export default function SearchForm({
   const [to, setTo] = useState<string>(initialToId ? String(initialToId) : '');
   const [departDate, setDepartDate] = useState<string>(initialDate ?? '');
   const [returnDate, setReturnDate] = useState<string>(initialReturnDate ?? '');
-  const [seatCount, setSeatCount] = useState<number>(Math.max(1, initialSeats));
+  const [passengers, setPassengers] = useState({ adults: Math.max(1, initialSeats), discount: 0 });
+  const seatCount = passengers.adults + passengers.discount;
 
   const [departureStops, setDepartureStops] = useState<Stop[]>([]);
   const [arrivalStops, setArrivalStops] = useState<Stop[]>([]);
@@ -154,10 +155,12 @@ export default function SearchForm({
                    className={pill + ' flex-1 flex items-center gap-2'} disabled={!fromId || !toId}/>
         <DateInput value={returnDate} setValue={setReturnDate} activeDates={returnActive} lang={lang}
                    className={pill + ' flex-1 flex items-center gap-2'} disabled={!fromId || !toId}/>
-        <PassengersInput value={seatCount} setValue={setSeatCount}
-                         className="flex items-center gap-2"
-                         pillClass="h-12 px-3 rounded-2xl bg-white/90 hover:bg-white text-slate-800 shadow ring-1 ring-black/5 flex items-center gap-2"
-                         btnClass="h-12 w-10 grid place-items-center rounded-xl bg-white/90 hover:bg-white text-sky-700 shadow ring-1 ring-black/5"/>
+        <PassengersInput
+          value={passengers}
+          onChange={setPassengers}
+          className="flex items-center"
+          pillClass="h-12 px-3 rounded-2xl bg-white/90 hover:bg-white text-slate-800 shadow ring-1 ring-black/5 inline-flex items-center gap-2"
+        />
         <button type="submit"
                 className="h-12 px-6 rounded-2xl bg-[#ff6a00] hover:bg-[#ff7a1c] text-white font-medium shadow-lg"
                 disabled={!fromId || !toId || !departDate} aria-label={t.search}>{t.search}</button>

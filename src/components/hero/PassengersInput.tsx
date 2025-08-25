@@ -1,70 +1,272 @@
 "use client";
 
-import React from "react";
-import { Minus, Plus, User2 } from "lucide-react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { User, Plus, Minus, HelpCircle } from "lucide-react";
+
+type PassengerValue = {
+  adults: number;
+  discount: number;
+};
 
 type Props = {
-  value: number;
-  setValue: (n: number) => void;
-  min?: number;
-  max?: number;
-  className?: string;      // оболочка (флекс)
-  pillClass?: string;      // «пилюля» с иконкой и числом
-  btnClass?: string;       // кнопки +/-
+  value: PassengerValue;                          // {adults, discount}
+  onChange: (v: PassengerValue) => void;          // вернём оба значения
+  className?: string;                             // контейнер
+  pillClass?: string;                             // стиль кнопки-триггера (пилюля)
+  minAdults?: number;                             // по умолчанию 1
+  maxTotal?: number;                              // по умолчанию 9
+  lang?: "ru" | "bg" | "en" | "ua";
+};
+
+const L = {
+  ru: {
+    passengers: "Пассажиры",
+    adults: "Взрослый",
+    discount: "Льготный",
+    tip: "Дети, студенты, пенсионеры",
+    done: "Готово",
+  },
+  en: {
+    passengers: "Passengers",
+    adults: "Adult",
+    discount: "Discounted",
+    tip: "Children, students, seniors",
+    done: "Done",
+  },
+  bg: {
+    passengers: "Пътници",
+    adults: "Възрастен",
+    discount: "С намаление",
+    tip: "Деца, студенти, пенсионери",
+    done: "Готово",
+  },
+  ua: {
+    passengers: "Пасажири",
+    adults: "Дорослий",
+    discount: "Пільговий",
+    tip: "Діти, студенти, пенсіонери",
+    done: "Готово",
+  },
 };
 
 export default function PassengersInput({
   value,
-  setValue,
-  min = 1,
-  max = 8,
-  className = "flex items-center gap-2",
-  pillClass = "h-12 px-3 rounded-2xl bg-white/90 hover:bg-white text-slate-800 shadow ring-1 ring-black/5 flex items-center gap-2",
-  btnClass = "h-12 w-10 grid place-items-center rounded-xl bg-white/90 hover:bg-white text-sky-700 shadow ring-1 ring-black/5",
+  onChange,
+  className = "",
+  pillClass = "h-12 px-3 rounded-2xl bg-white/90 hover:bg-white text-slate-800 shadow ring-1 ring-black/5",
+  minAdults = 1,
+  maxTotal = 9,
+  lang = "ru",
 }: Props) {
+  const t = L[lang];
+  const [open, setOpen] = useState(false);
+  const [local, setLocal] = useState<PassengerValue>(value);
 
-  const dec = () => setValue(Math.max(min, value - 1));
-  const inc = () => setValue(Math.min(max, value + 1));
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const popRef = useRef<HTMLDivElement>(null);
+
+  // синхронизация внешнего/внутреннего
+  useEffect(() => setLocal(value), [value]);
+
+  // закрыть по клику вне и по Escape
+  useEffect(() => {
+    if (!open) return;
+    const onDocClick = (e: MouseEvent) => {
+      if (
+        popRef.current &&
+        !popRef.current.contains(e.target as Node) &&
+        btnRef.current &&
+        !btnRef.current.contains(e.target as Node)
+      ) {
+        setOpen(false);
+        onChange(local);
+      }
+    };
+    const onEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        onChange(local);
+      }
+    };
+    document.addEventListener("mousedown", onDocClick);
+    document.addEventListener("keydown", onEsc);
+    return () => {
+      document.removeEventListener("mousedown", onDocClick);
+      document.removeEventListener("keydown", onEsc);
+    };
+  }, [open, local, onChange]);
+
+  const total = useMemo(
+    () => local.adults + local.discount,
+    [local.adults, local.discount]
+  );
+
+  const canMinusAdult = local.adults > minAdults;
+  const canMinusDisc = local.discount > 0;
+  const canPlusAdult = total < maxTotal;
+  const canPlusDisc = total < maxTotal;
+
+  const change = (deltaA: number, deltaD: number) => {
+    setLocal((prev) => {
+      const nextA = Math.max(minAdults, prev.adults + deltaA);
+      let nextD = Math.max(0, prev.discount + deltaD);
+      // контроль общей суммы
+      const cappedTotal = Math.min(maxTotal, nextA + nextD);
+      nextD = Math.max(0, cappedTotal - nextA);
+      return { adults: nextA, discount: nextD };
+    });
+  };
 
   return (
-    <div className={className} aria-label="Количество пассажиров">
+    <div className={`relative ${className}`}>
+      {/* Триггер */}
       <button
+        ref={btnRef}
         type="button"
-        aria-label="Меньше пассажиров"
-        className={btnClass}
-        onClick={dec}
-        disabled={value <= min}
+        onClick={() => setOpen((v) => !v)}
+        className={`${pillClass} inline-flex items-center gap-2`}
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        title={t.passengers}
       >
-        <Minus className="h-4 w-4" />
+        <User className="h-5 w-5 opacity-80" />
+        <span className="tabular-nums">{value.adults + value.discount}</span>
       </button>
 
-      <div
-        className={pillClass}
-        role="spinbutton"
-        aria-valuenow={value}
-        aria-valuemin={min}
-        aria-valuemax={max}
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === "ArrowDown") dec();
-          if (e.key === "ArrowUp") inc();
-          if (e.key === "Home") setValue(min);
-          if (e.key === "End") setValue(max);
-        }}
-      >
-        <User2 className="h-5 w-5 opacity-80" />
-        <span className="tabular-nums">{value}</span>
-      </div>
+      {/* Поповер */}
+      {open && (
+        <div
+          ref={popRef}
+          role="dialog"
+          className="absolute z-[60] mt-2 w-[280px] rounded-2xl bg-white shadow-xl ring-1 ring-black/10 p-3"
+        >
+          <div className="space-y-3">
+            {/* Взрослый */}
+            <Row
+              label={t.adults}
+              value={local.adults}
+              onMinus={() => change(-1, 0)}
+              onPlus={() => change(+1, 0)}
+              disableMinus={!canMinusAdult}
+              disablePlus={!canPlusAdult}
+            />
 
-      <button
-        type="button"
-        aria-label="Больше пассажиров"
-        className={btnClass}
-        onClick={inc}
-        disabled={value >= max}
-      >
-        <Plus className="h-4 w-4" />
-      </button>
+            {/* Льготный + подсказка */}
+            <Row
+              label={
+                <div className="inline-flex items-center gap-1">
+                  {t.discount}
+                  <span
+                    className="group relative"
+                    aria-label={t.tip}
+                    title={t.tip}
+                  >
+                    <HelpCircle className="h-4 w-4 text-slate-400 group-hover:text-slate-600" />
+                  </span>
+                </div>
+              }
+              value={local.discount}
+              onMinus={() => change(0, -1)}
+              onPlus={() => change(0, +1)}
+              disableMinus={!canMinusDisc}
+              disablePlus={!canPlusDisc}
+            />
+          </div>
+
+          {/* Итого + Готово */}
+          <div className="mt-3 flex items-center justify-between">
+            <span className="text-sm text-slate-500">
+              {t.passengers}:{" "}
+              <b className="text-slate-900 tabular-nums">{total}</b>
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                onChange(local);
+                setOpen(false);
+              }}
+              className="h-9 px-4 rounded-xl bg-sky-600 text-white text-sm hover:bg-sky-700 shadow"
+            >
+              {t.done}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
+/* --- внутренний ряд со счётчиком --- */
+function Row({
+  label,
+  value,
+  onMinus,
+  onPlus,
+  disableMinus,
+  disablePlus,
+}: {
+  label: React.ReactNode;
+  value: number;
+  onMinus: () => void;
+  onPlus: () => void;
+  disableMinus?: boolean;
+  disablePlus?: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <span className="text-sm text-slate-700">{label}</span>
+      <div className="flex items-center gap-2">
+        <IconButton
+          ariaLabel="minus"
+          disabled={!!disableMinus}
+          onClick={onMinus}
+        >
+          <Minus className="h-4 w-4" />
+        </IconButton>
+
+        <span className="w-7 text-center tabular-nums text-slate-900">
+          {value}
+        </span>
+
+        <IconButton
+          ariaLabel="plus"
+          disabled={!!disablePlus}
+          onClick={onPlus}
+        >
+          <Plus className="h-4 w-4" />
+        </IconButton>
+      </div>
+    </div>
+  );
+}
+
+/* — стильная круглая кнопка +/– */
+function IconButton({
+  children,
+  onClick,
+  disabled,
+  ariaLabel,
+}: {
+  children: React.ReactNode;
+  onClick: () => void;
+  disabled?: boolean;
+  ariaLabel?: string;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={ariaLabel}
+      disabled={disabled}
+      onClick={onClick}
+      className={`h-8 w-8 grid place-items-center rounded-full border transition
+        ${
+          disabled
+            ? "border-slate-200 text-slate-300 cursor-not-allowed"
+            : "border-slate-300 text-slate-700 hover:bg-slate-50 active:scale-95"
+        }`}
+    >
+      {children}
+    </button>
+  );
+}
+
