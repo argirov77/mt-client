@@ -42,26 +42,39 @@ export default function TripCard({
 }: TripCardProps) {
   return (
     <div
-      className={`rounded-2xl bg-white shadow ring-1 ring-black/5 p-5 flex flex-col gap-4 hover:shadow-md transition ${selected ? "ring-sky-300" : ""}`}
+      className={`rounded-2xl bg-white shadow ring-1 ring-black/5 p-5 flex flex-col gap-4 hover:shadow-md transition ${
+        selected ? "ring-sky-300" : ""
+      }`}
       role="button"
       onClick={onSelect}
     >
-      {/* top row */}
-      <div className="flex items-center justify-between">
-        <div className="text-slate-600 text-sm flex items-center gap-2">
-          <Clock className="h-4 w-4" />
-          <span>
-            {dateText} • {departTime} → {arriveTime} ({duration})
-          </span>
+      {/* top row: departure/arrival */}
+      <div className="flex justify-between items-start">
+        {/* departure */}
+        <div>
+          <div className="text-lg font-bold text-slate-900">
+            {dateText} • {departTime}
+          </div>
+          <div className="text-sm text-slate-500">{fromStop}</div>
         </div>
-        <span className="text-xl font-semibold text-slate-900">
-          {total.toFixed(2)} ₴
-        </span>
+        {/* arrival */}
+        <div className="text-right">
+          <div className="text-lg font-bold text-slate-900">{arriveTime}</div>
+          <div className="text-sm text-slate-500">{toStop}</div>
+        </div>
       </div>
 
-      {/* route */}
-      <div className="text-lg font-medium text-slate-900">
-        {fromStop} → {toStop}
+      {/* duration */}
+      <div className="flex items-center gap-2 text-sm text-slate-600">
+        <Clock className="h-4 w-4" />
+        В пути: {duration}
+      </div>
+
+      {/* route line */}
+      <div className="flex items-center justify-between text-sm font-medium text-slate-700">
+        <span>{fromStop}</span>
+        <div className="flex-1 mx-2 h-0.5 bg-slate-300"></div>
+        <span>{toStop}</span>
       </div>
 
       {/* passengers */}
@@ -80,21 +93,31 @@ export default function TripCard({
         ))}
       </div>
 
-      {/* bottom */}
+      {/* bottom: free seats and select */}
       <div className="flex items-center justify-between">
         <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full bg-sky-50 text-sky-700 ring-1 ring-sky-200">
           <Users className="h-3.5 w-3.5" />
           {freeSeatsText ? freeSeatsText(freeSeats) : `Свободно мест: ${freeSeats}`}
         </span>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onSelect?.();
-          }}
-          className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl shadow text-white ${selected ? "bg-green-600 hover:bg-green-700" : "bg-[#ff6a00] hover:bg-[#ff7a1c]"}`}
-        >
-          {selected ? chosenLabel : pickLabel} <ChevronRight className="h-4 w-4" />
-        </button>
+        <div className="flex items-center gap-4">
+          <div className="text-xl font-bold text-slate-900">
+            {total.toFixed(2)} ₴
+          </div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelect?.();
+            }}
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl shadow text-white ${
+              selected
+                ? "bg-green-600 hover:bg-green-700"
+                : "bg-[#ff6a00] hover:bg-[#ff7a1c]"
+            }`}
+          >
+            {selected ? chosenLabel : pickLabel}
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
       </div>
     </div>
   );
