@@ -4,6 +4,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 
+import Calendar from '../Calendar';
 import DateInput from './DateInput';
 import PassengersInput from './PassengersInput';
 import { API } from '@/config';
@@ -42,8 +43,6 @@ const L = {
   ua: { from: 'Звідки', to: 'Куди', date: 'Дата', back: 'Назад', search: 'Пошук', swapTitle: 'Поміняти місцями' },
 };
 
-const pill = 'h-12 rounded-2xl bg-white/90 hover:bg-white text-slate-800 shadow ring-1 ring-black/5 px-4';
-
 export default function SearchForm({
   lang = 'ru',
   initialFromId,
@@ -67,6 +66,9 @@ export default function SearchForm({
   const [arrivalStops, setArrivalStops] = useState<Stop[]>([]);
   const [departActive, setDepartActive] = useState<string[]>([]);
   const [returnActive, setReturnActive] = useState<string[]>([]);
+
+  const [showDepart, setShowDepart] = useState(false);
+  const [showReturn, setShowReturn] = useState(false);
 
   const fromId = useMemo(() => Number(from) || 0, [from]);
   const toId   = useMemo(() => Number(to)   || 0, [to]);
@@ -122,6 +124,9 @@ export default function SearchForm({
     setDepartDate(''); setReturnDate('');
   };
 
+  const handleDepartOpen = () => setShowDepart(true);
+  const handleReturnOpen = () => setShowReturn(true);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!fromId || !toId || !departDate) return;
@@ -138,66 +143,136 @@ export default function SearchForm({
   const row = (
     <div className="flex flex-wrap md:flex-nowrap items-center gap-3">
       <div className="relative flex w-full md:w-1/2">
-        <select aria-label={t.from} className={pill + ' w-1/2 pr-10 rounded-r-none'} value={from} onChange={e => setFrom(e.target.value)}>
+        <select
+          aria-label={t.from}
+          className="h-14 w-1/2 pr-10 rounded-2xl rounded-r-none bg-white/90 hover:bg-white text-slate-800 shadow ring-1 ring-black/5 px-4"
+          value={from}
+          onChange={(e) => setFrom(e.target.value)}
+        >
           <option value="">{t.from}</option>
-          {departureStops.map(s => <option key={s.id} value={s.id}>{s.stop_name}</option>)}
+          {departureStops.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.stop_name}
+            </option>
+          ))}
         </select>
-        <select aria-label={t.to} className={pill + ' w-1/2 pl-10 rounded-l-none'} value={to} onChange={e => setTo(e.target.value)} disabled={!fromId}>
+
+        <select
+          aria-label={t.to}
+          className="h-14 w-1/2 pl-10 rounded-2xl rounded-l-none bg-white/90 hover:bg-white text-slate-800 shadow ring-1 ring-black/5 px-4"
+          value={to}
+          onChange={(e) => setTo(e.target.value)}
+          disabled={!fromId}
+        >
           <option value="">{t.to}</option>
-          {arrivalStops.map(s => <option key={s.id} value={s.id}>{s.stop_name}</option>)}
+          {arrivalStops.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.stop_name}
+            </option>
+          ))}
         </select>
-        <button type="button" title={t.swapTitle} onClick={handleSwap}
-                className="absolute left-1/2 top-1/2 z-10 h-10 w-10 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/90 hover:bg-white text-sky-700 shadow ring-1 ring-black/5">⇄</button>
+
+        <button
+          type="button"
+          title={t.swapTitle}
+          onClick={handleSwap}
+          className="absolute left-1/2 top-1/2 z-10 h-10 w-10 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/90 hover:bg-white text-sky-700 shadow ring-1 ring-black/5 grid place-items-center"
+        >
+          ⇄
+        </button>
       </div>
 
-      <div className="flex w-full md:w-1/2 flex-wrap md:flex-nowrap items-center gap-3">
-        <div className="flex flex-col flex-1">
-          <span className="text-white/80 text-sm mb-1">{t.date}</span>
-          <DateInput
-            value={departDate}
-            setValue={setDepartDate}
-            activeDates={departActive}
-            lang={lang}
-            className={pill + ' flex items-center gap-2'}
-            disabled={!fromId || !toId}
-          />
-        </div>
-        <div className="flex flex-col flex-1">
-          <span className="text-white/80 text-sm mb-1">{t.back}</span>
-          <DateInput
-            value={returnDate}
-            setValue={setReturnDate}
-            activeDates={returnActive}
-            lang={lang}
-            className={pill + ' flex items-center gap-2'}
-            disabled={!fromId || !toId}
-          />
-        </div>
+      <div className="flex w-full md:w-1/2 items-center gap-3">
+        <DateInput
+          value={departDate}
+          setValue={setDepartDate}
+          activeDates={departActive}
+          label={t.date}
+          lang={lang}
+          disabled={!fromId || !toId}
+          onOpen={handleDepartOpen}
+        />
+
+        <DateInput
+          value={returnDate}
+          setValue={setReturnDate}
+          activeDates={returnActive}
+          label={t.back}
+          lang={lang}
+          disabled={!fromId || !toId}
+          onOpen={handleReturnOpen}
+        />
+
         <PassengersInput
           value={passengers}
           onChange={setPassengers}
-          className="flex items-center"
-          pillClass="h-12 px-3 rounded-2xl bg-white/90 hover:bg-white text-slate-800 shadow ring-1 ring-black/5 inline-flex items-center gap-2"
+          pillClass="h-14 px-3 rounded-2xl bg-white/90 hover:bg-white text-slate-800 shadow ring-1 ring-black/5 inline-flex items-center gap-2"
         />
-        <button type="submit"
-                className="h-12 px-6 rounded-2xl bg-[#ff6a00] hover:bg-[#ff7a1c] text-white font-medium shadow-lg"
-                disabled={!fromId || !toId || !departDate} aria-label={t.search}>{t.search}</button>
+
+        <button
+          type="submit"
+          className="h-14 px-6 rounded-2xl bg-[#ff6a00] hover:bg-[#ff7a1c] text-white font-medium shadow-lg"
+          disabled={!fromId || !toId || !departDate}
+          aria-label={t.search}
+        >
+          {t.search}
+        </button>
       </div>
     </div>
   );
 
-  // Обёртка: если embedded — возвращаем ТОЛЬКО строку
-  if (embedded) {
-    return <form onSubmit={handleSubmit} className="w-full">{row}</form>;
-  }
-
-  // Старый режим (самостоятельная капсула)
-  return (
+  const form = (
     <form onSubmit={handleSubmit} className="w-full">
-      <div className="mx-auto max-w-5xl rounded-3xl bg-white/20 backdrop-blur p-5 shadow-lg ring-1 ring-white/30">
-        {row}
-      </div>
+      {embedded ? (
+        row
+      ) : (
+        <div className="mx-auto max-w-5xl rounded-3xl bg-white/20 backdrop-blur p-5 shadow-lg ring-1 ring-white/30">
+          {row}
+        </div>
+      )}
     </form>
+  );
+
+  return (
+    <>
+      {form}
+      {showDepart && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/20"
+          onClick={() => setShowDepart(false)}
+        >
+          <div onClick={(e) => e.stopPropagation()}>
+            <Calendar
+              activeDates={departActive}
+              selectedDate={departDate}
+              onSelect={(iso) => {
+                setDepartDate(iso);
+                setShowDepart(false);
+              }}
+              lang={lang}
+            />
+          </div>
+        </div>
+      )}
+      {showReturn && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/20"
+          onClick={() => setShowReturn(false)}
+        >
+          <div onClick={(e) => e.stopPropagation()}>
+            <Calendar
+              activeDates={returnActive}
+              selectedDate={returnDate}
+              onSelect={(iso) => {
+                setReturnDate(iso);
+                setShowReturn(false);
+              }}
+              lang={lang}
+            />
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 

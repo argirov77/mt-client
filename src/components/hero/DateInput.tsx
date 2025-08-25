@@ -1,136 +1,70 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
-import { Calendar as CalendarIcon } from "lucide-react";
-import Calendar from "../Calendar"; // ваш компонент
+import React from "react";
 
 type Props = {
   value: string;
   setValue: (v: string) => void;
   activeDates?: string[];
-  minDate?: string;
   disabled?: boolean;
-  className?: string; // «пилюля» по умолчанию
+  className?: string;
+  label?: string;                 // 🔹 подпись внутри пилюли: "Date" / "Return"
   lang?: "ru" | "bg" | "en" | "ua";
+  onOpen?: () => void;            // если календарь внешне открывается
 };
-
-function toHuman(iso: string) {
-  if (!iso) return "";
-  const [y, m, d] = iso.split("-");
-  return y && m && d ? `${d}.${m}.${y}` : iso;
-}
 
 export default function DateInput({
   value,
-  setValue,
-  activeDates = [],
-  minDate,
+  setValue, // eslint-disable-line @typescript-eslint/no-unused-vars
+  activeDates = [], // eslint-disable-line @typescript-eslint/no-unused-vars
   disabled,
-  className = "h-12 px-4 rounded-2xl bg-white/90 hover:bg-white text-slate-800 shadow ring-1 ring-black/5 flex items-center gap-2",
+  className = "",
+  label,
   lang = "ru",
+  onOpen,
 }: Props) {
-  const [open, setOpen] = useState(false);
-  const anchorRef = useRef<HTMLDivElement>(null);
-  const popRef = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState({ top: 0, left: 0, width: 280 });
-
-  useEffect(() => {
-    if (!open || !anchorRef.current) return;
-    const r = anchorRef.current.getBoundingClientRect();
-    setPos({
-      top: r.bottom + window.scrollY + 6,
-      left: r.left + window.scrollX,
-      width: r.width,
-    });
-  }, [open]);
-
-  // пересчитать при скролле/resize
-  useEffect(() => {
-    if (!open) return;
-    const on = () => {
-      if (!anchorRef.current) return;
-      const r = anchorRef.current.getBoundingClientRect();
-      setPos({
-        top: r.bottom + window.scrollY + 6,
-        left: r.left + window.scrollX,
-        width: r.width,
-      });
-    };
-    window.addEventListener("scroll", on, true);
-    window.addEventListener("resize", on);
-    return () => {
-      window.removeEventListener("scroll", on, true);
-      window.removeEventListener("resize", on);
-    };
-  }, [open]);
-
-  // закрытие по Esc/клику вне
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
-    const onClick = (e: MouseEvent) => {
-      if (!popRef.current || !anchorRef.current) return;
-      if (
-        !popRef.current.contains(e.target as Node) &&
-        !anchorRef.current.contains(e.target as Node)
-      ) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener("keydown", onKey);
-    document.addEventListener("mousedown", onClick);
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.removeEventListener("mousedown", onClick);
-    };
-  }, [open]);
-
-  const hasDate = Boolean(value);
+  // отображаемое значение (если пусто — покажем "— — —")
+  const human =
+    value
+      ? new Date(value + "T00:00:00Z").toLocaleDateString(
+          lang === "en" ? "en-GB" : lang,
+          { day: "2-digit", month: "2-digit", year: "numeric" }
+        )
+      : "— — —";
 
   return (
-    <div ref={anchorRef} className="relative">
-      {/* Пилюля (без плейсхолдера) */}
-      <button
-        type="button"
-        aria-label="Выбрать дату"
-        aria-haspopup="dialog"
-        aria-expanded={open}
-        disabled={disabled}
-        className={className}
-        onClick={() => setOpen((v) => !v)}
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onOpen}
+      className={[
+        // единая «пилюля»: одинаковая высота/радиус/тени
+        "h-14 w-[200px] rounded-2xl bg-white/90 hover:bg-white shadow ring-1 ring-black/5",
+        "px-4 text-left",
+        "flex items-center",
+        className,
+        disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer",
+      ].join(" ")}
+    >
+      {/* левая иконка календаря */}
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="mr-3 h-5 w-5 text-slate-500 shrink-0"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
       >
-        <CalendarIcon className="h-5 w-5 opacity-80" />
-        <span className={hasDate ? "text-slate-900" : "text-transparent select-none"}>
-          {hasDate ? toHuman(value) : ".... .... ...."}
-        </span>
-      </button>
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
 
-      {/* Popover */}
-      {open && !disabled &&
-        createPortal(
-          <div
-            ref={popRef}
-            className="fixed z-[9999] shadow-xl rounded-2xl bg-white ring-1 ring-black/10"
-            style={{ top: pos.top, left: pos.left, minWidth: Math.max(320, pos.width) }}
-          >
-            <div className="px-3 pt-2 pb-1 text-xs text-slate-500">
-              Доступные даты отмечены точкой
-            </div>
-            <Calendar
-              activeDates={activeDates}
-              selectedDate={value}
-              minDate={minDate}
-              onSelect={(iso) => {
-                setValue(iso);
-                setOpen(false);
-              }}
-              lang={lang}
-              className="border-0 shadow-none"
-            />
-          </div>,
-          document.body
+      {/* текстовая часть: маленький лейбл + крупное значение в одну колонку */}
+      <span className="flex min-w-0 flex-col leading-tight">
+        {label && (
+          <span className="text-[11px] text-slate-500">{label}</span>
         )}
-    </div>
+        <span className="truncate text-slate-800">{human}</span>
+      </span>
+    </button>
   );
 }
