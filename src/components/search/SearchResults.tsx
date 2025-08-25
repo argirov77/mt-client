@@ -14,6 +14,9 @@ import BookingPanel from "./BookingPanel";
 export type Tour = {
   id: number;
   date: string;
+  departure_time: string;
+  arrival_time: string;
+  price: number;
   seats: number | { free: number };
   layout_variant?: string | null;
 };
@@ -22,9 +25,12 @@ type Props = {
   lang?: "ru" | "bg" | "en" | "ua";
   from: string;        // id остановки приходит как string
   to: string;          // id остановки приходит как string
+  fromName: string;
+  toName: string;
   date: string;        // YYYY-MM-DD
   returnDate?: string; // YYYY-MM-DD | undefined
   seatCount: number;
+  discountCount: number;
 };
 
 type Dict = {
@@ -43,6 +49,11 @@ type Dict = {
   errSearch: string;
   errAction: string;
   loading: string;
+  inRoute: string;
+  price: string;
+  total: string;
+  adults: string;
+  discounted: string;
 };
 
 const dict: Record<NonNullable<Props["lang"]>, Dict> = {
@@ -62,6 +73,11 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     errSearch: "Ошибка поиска рейсов",
     errAction: "Ошибка операции",
     loading: "Загрузка…",
+    inRoute: "В пути",
+    price: "Цена",
+    total: "Итого",
+    adults: "Взрослых",
+    discounted: "Льготных",
   },
   en: {
     noResults: "No trips found",
@@ -79,6 +95,11 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     errSearch: "Search error",
     errAction: "Operation error",
     loading: "Loading…",
+    inRoute: "Duration",
+    price: "Price",
+    total: "Total",
+    adults: "Adults",
+    discounted: "Discounted",
   },
   bg: {
     noResults: "Няма намерени курсове",
@@ -96,6 +117,11 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     errSearch: "Грешка при търсене",
     errAction: "Грешка при операция",
     loading: "Зареждане…",
+    inRoute: "В път",
+    price: "Цена",
+    total: "Общо",
+    adults: "Възрастни",
+    discounted: "С намаление",
   },
   ua: {
     noResults: "Рейси не знайдено",
@@ -113,6 +139,11 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     errSearch: "Помилка пошуку рейсів",
     errAction: "Помилка операції",
     loading: "Завантаження…",
+    inRoute: "У дорозі",
+    price: "Ціна",
+    total: "Разом",
+    adults: "Дорослих",
+    discounted: "Пільгових",
   },
 };
 
@@ -120,15 +151,19 @@ export default function SearchResults({
   lang = "ru",
   from,
   to,
+  fromName,
+  toName,
   date,
   returnDate,
   seatCount,
+  discountCount,
 }: Props) {
   const t = dict[lang];
 
   // Limit seat count to a reasonable range to avoid huge allocations
   const MAX_SEAT_COUNT = 50;
   const safeSeatCount = Math.max(1, Math.min(seatCount, MAX_SEAT_COUNT));
+  const safeDiscountCount = Math.max(0, Math.min(discountCount, safeSeatCount));
 
   // Числовые id (один раз)
   const fromId = useMemo(() => Number(from), [from]);
@@ -417,7 +452,21 @@ export default function SearchResults({
           selectedId={selectedOutboundTour?.id}
           onSelect={onSelectOutbound}
           freeSeatsValue={freeSeatsValue}
-          t={{ pick: t.pick, chosen: t.chosen, freeSeats: t.freeSeats }}
+          fromName={fromName}
+          toName={toName}
+          lang={lang}
+          seatCount={safeSeatCount}
+          discountCount={safeDiscountCount}
+          t={{
+            pick: t.pick,
+            chosen: t.chosen,
+            freeSeats: t.freeSeats,
+            inRoute: t.inRoute,
+            price: t.price,
+            total: t.total,
+            adults: t.adults,
+            discounted: t.discounted,
+          }}
         />
       )}
 
@@ -429,7 +478,21 @@ export default function SearchResults({
           selectedId={selectedReturnTour?.id}
           onSelect={onSelectReturn}
           freeSeatsValue={freeSeatsValue}
-          t={{ pick: t.pick, chosen: t.chosen, freeSeats: t.freeSeats }}
+          fromName={toName}
+          toName={fromName}
+          lang={lang}
+          seatCount={safeSeatCount}
+          discountCount={safeDiscountCount}
+          t={{
+            pick: t.pick,
+            chosen: t.chosen,
+            freeSeats: t.freeSeats,
+            inRoute: t.inRoute,
+            price: t.price,
+            total: t.total,
+            adults: t.adults,
+            discounted: t.discounted,
+          }}
         />
       )}
 

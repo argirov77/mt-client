@@ -7,9 +7,12 @@ import SearchResults from "@/components/search/SearchResults";
 type Criteria = {
   from: string;
   to: string;
+  fromName: string;
+  toName: string;
   date: string;
   returnDate?: string;
   seatCount: number;
+  discountCount: number;
 };
 
 export default function BookingCard() {

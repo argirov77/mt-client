@@ -23,9 +23,12 @@ type Props = {
   onSearch: (params: {
     from: string;
     to: string;
+    fromName: string;
+    toName: string;
     date: string;
     returnDate?: string;
     seatCount: number;
+    discountCount: number;
   }) => void;
 };
 
@@ -130,12 +133,17 @@ export default function SearchForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!fromId || !toId || !departDate) return;
+    const fromName = departureStops.find((s) => s.id === fromId)?.stop_name || '';
+    const toName = arrivalStops.find((s) => s.id === toId)?.stop_name || '';
     onSearch({
       from: String(fromId),
       to: String(toId),
+      fromName,
+      toName,
       date: departDate,
       returnDate: returnDate || undefined,
       seatCount,
+      discountCount: passengers.discount,
     });
   };
 
