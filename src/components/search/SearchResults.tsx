@@ -461,9 +461,6 @@ export default function SearchResults({
             pick: t.pick,
             chosen: t.chosen,
             freeSeats: t.freeSeats,
-            inRoute: t.inRoute,
-            price: t.price,
-            total: t.total,
             adults: t.adults,
             discounted: t.discounted,
           }}
@@ -487,9 +484,6 @@ export default function SearchResults({
             pick: t.pick,
             chosen: t.chosen,
             freeSeats: t.freeSeats,
-            inRoute: t.inRoute,
-            price: t.price,
-            total: t.total,
             adults: t.adults,
             discounted: t.discounted,
           }}
