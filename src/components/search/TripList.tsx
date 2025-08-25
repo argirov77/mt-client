@@ -45,17 +45,22 @@ export default function TripList({
       <h3 className="mt-3 mb-2">{title}:</h3>
       {tours.map((tour) => {
         const isChosen = selectedId === tour.id;
-        const dep = new Date(tour.departure_time);
-        const arr = new Date(tour.arrival_time);
+
+        const dep = new Date(`${tour.date}T${tour.departure_time}`);
+        const arr = new Date(`${tour.date}T${tour.arrival_time}`);
+        if (arr.getTime() < dep.getTime()) {
+          arr.setDate(arr.getDate() + 1);
+        }
         const dateStr = dep.toLocaleDateString(lang);
         const depTime = dep.toLocaleTimeString(lang, { hour: "2-digit", minute: "2-digit" });
         const arrTime = arr.toLocaleTimeString(lang, { hour: "2-digit", minute: "2-digit" });
         const diffMinutes = Math.max(0, Math.round((arr.getTime() - dep.getTime()) / 60000));
-        const h = Math.floor(diffMinutes / 60)
-          .toString()
-          .padStart(2, "0");
-        const m = (diffMinutes % 60).toString().padStart(2, "0");
-        const duration = `${h}:${m}`;
+        const h = Math.floor(diffMinutes / 60);
+        const m = diffMinutes % 60;
+        const duration =
+          lang === "ru" || lang === "bg" || lang === "ua"
+            ? `${h}ч ${m}м`
+            : `${h}h ${m}m`;
 
         const adults = Math.max(0, seatCount - discountCount);
         const adultSum = adults * tour.price;
@@ -67,7 +72,7 @@ export default function TripList({
           <div key={tour.id} className={styles.item}>
             <div className="flex-1">
               <div>
-                {dateStr} {depTime} {fromName} → {arrTime} {toName} ({t.inRoute} {duration})
+                {dateStr} {depTime} {fromName} → {arrTime} {toName} ({duration})
               </div>
               <div>{t.price}: {tour.price.toFixed(2)}</div>
               {adults > 0 && (
