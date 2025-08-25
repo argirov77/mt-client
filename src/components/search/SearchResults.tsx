@@ -496,6 +496,8 @@ export default function SearchResults({
             seatCount={safeSeatCount}
             fromId={fromId}
             toId={toId}
+            fromName={fromName}
+            toName={toName}
             selectedOutboundTour={selectedOutboundTour}
             selectedReturnTour={selectedReturnTour}
             selectedOutboundSeats={selectedOutboundSeats}

@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { API } from "@/config";
 import Neoplan from "@/components/Neoplan";
 import Travego from "@/components/Travego";
+import { Wifi, Toilet, Snowflake, Plug, Armchair } from "lucide-react";
 
 type SeatStatus = "available" | "occupied" | "blocked";
 type Seat = { seat_id: number; seat_num: number; status: SeatStatus };
@@ -18,6 +19,10 @@ type Props = {
   selectedSeats: number[];
   maxSeats: number;
   onChange: (seats: number[]) => void;
+  departureText?: string;
+  arrivalText?: string;
+  extraBaggage?: boolean;
+  onExtraBaggageChange?: (v: boolean) => void;
 };
 
 const tiny = {
@@ -33,6 +38,10 @@ export default function SeatClient({
   selectedSeats,
   maxSeats,
   onChange,
+  departureText,
+  arrivalText,
+  extraBaggage = false,
+  onExtraBaggageChange,
 }: Props) {
   const [seats, setSeats] = useState<Seat[]>([]);
   const [loading, setLoading] = useState(false);
@@ -153,18 +162,56 @@ export default function SeatClient({
 
       {err && <div className="mt-2 rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-rose-900">{err}</div>}
 
-      <div className="mt-3 overflow-x-auto rounded-xl border p-3 bg-slate-50">
-        {loading ? (
-          <div className="text-sm text-slate-500">Загрузка схемы…</div>
-        ) : (layoutVariant || "").toString().toLowerCase() === "travego" ? (
-          <Travego seats={seats} selectedSeats={selectedSeats} toggleSeat={toggleSeat} interactive renderCell={renderCell} />
-        ) : (
-          <Neoplan seats={seats} selectedSeats={selectedSeats} toggleSeat={toggleSeat} interactive renderCell={renderCell} />
-        )}
+      <div className="mt-3 flex gap-4">
+        <div className="overflow-x-auto rounded-xl border p-3 bg-slate-50">
+          {loading ? (
+            <div className="text-sm text-slate-500">Загрузка схемы…</div>
+          ) : (layoutVariant || "").toString().toLowerCase() === "travego" ? (
+            <Travego
+              seats={seats}
+              selectedSeats={selectedSeats}
+              toggleSeat={toggleSeat}
+              interactive
+              renderCell={renderCell}
+            />
+          ) : (
+            <Neoplan
+              seats={seats}
+              selectedSeats={selectedSeats}
+              toggleSeat={toggleSeat}
+              interactive
+              renderCell={renderCell}
+            />
+          )}
+        </div>
+        <div className="w-64 text-sm flex flex-col gap-2">
+          {departureText && <div>Отправление: {departureText}</div>}
+          {arrivalText && <div>Прибытие: {arrivalText}</div>}
+          <div className="flex gap-2 flex-wrap">
+            <Wifi size={24} title="Wi-Fi" />
+            <Toilet size={24} title="Туалет" />
+            <Snowflake size={24} title="Климат контроль" />
+            <Plug size={24} title="Розетка" />
+            <Armchair size={24} title="Сиденья откидываются" />
+          </div>
+          <div>
+            Включен багаж: {extraBaggage ? "2" : "1"} чемодан и 1 ручная кладь
+          </div>
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={extraBaggage}
+              onChange={(e) => onExtraBaggageChange?.(e.target.checked)}
+            />
+            Дополнительный чемодан
+          </label>
+        </div>
       </div>
 
       {!!selectedSeats.length && (
-        <div className="mt-2 text-sm text-slate-600">Вы выбрали: {selectedSeats.slice().sort((a, b) => a - b).join(", ")}</div>
+        <div className="mt-2 text-sm text-slate-600">
+          Вы выбрали: {selectedSeats.slice().sort((a, b) => a - b).join(", ")}
+        </div>
       )}
     </div>
   );
