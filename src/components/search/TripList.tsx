@@ -1,6 +1,7 @@
 import React from "react";
 import type { Tour } from "./SearchResults";
 import styles from "./TripList.module.css";
+import { formatDate } from "@/utils/date";
 
 type TripListProps = {
   title: string;
@@ -51,7 +52,7 @@ export default function TripList({
         if (arr.getTime() < dep.getTime()) {
           arr.setDate(arr.getDate() + 1);
         }
-        const dateStr = dep.toLocaleDateString(lang);
+        const dateStr = formatDate(dep);
         const depTime = dep.toLocaleTimeString(lang, { hour: "2-digit", minute: "2-digit" });
         const arrTime = arr.toLocaleTimeString(lang, { hour: "2-digit", minute: "2-digit" });
         const diffMinutes = Math.max(0, Math.round((arr.getTime() - dep.getTime()) / 60000));
