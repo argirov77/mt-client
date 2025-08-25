@@ -50,6 +50,8 @@ type Dict = {
   errAction: string;
   loading: string;
   inRoute: string;
+  departure: string;
+  arrival: string;
   price: string;
   total: string;
   adults: string;
@@ -74,6 +76,8 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     errAction: "Ошибка операции",
     loading: "Загрузка…",
     inRoute: "В пути",
+    departure: "Отправление",
+    arrival: "Прибытие",
     price: "Цена",
     total: "Итого",
     adults: "Взрослых",
@@ -96,6 +100,8 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     errAction: "Operation error",
     loading: "Loading…",
     inRoute: "Duration",
+    departure: "Departure",
+    arrival: "Arrival",
     price: "Price",
     total: "Total",
     adults: "Adults",
@@ -118,6 +124,8 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     errAction: "Грешка при операция",
     loading: "Зареждане…",
     inRoute: "В път",
+    departure: "Отпътуване",
+    arrival: "Пристигане",
     price: "Цена",
     total: "Общо",
     adults: "Възрастни",
@@ -140,6 +148,8 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     errAction: "Помилка операції",
     loading: "Завантаження…",
     inRoute: "У дорозі",
+    departure: "Відправлення",
+    arrival: "Прибуття",
     price: "Ціна",
     total: "Разом",
     adults: "Дорослих",
@@ -457,13 +467,7 @@ export default function SearchResults({
           lang={lang}
           seatCount={safeSeatCount}
           discountCount={safeDiscountCount}
-          t={{
-            pick: t.pick,
-            chosen: t.chosen,
-            freeSeats: t.freeSeats,
-            adults: t.adults,
-            discounted: t.discounted,
-          }}
+          t={t}
         />
       )}
 
@@ -480,13 +484,7 @@ export default function SearchResults({
           lang={lang}
           seatCount={safeSeatCount}
           discountCount={safeDiscountCount}
-          t={{
-            pick: t.pick,
-            chosen: t.chosen,
-            freeSeats: t.freeSeats,
-            adults: t.adults,
-            discounted: t.discounted,
-          }}
+          t={t}
         />
       )}
 

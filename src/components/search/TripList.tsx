@@ -20,6 +20,9 @@ type TripListProps = {
     freeSeats: (n: number) => string;
     adults: string;
     discounted: string;
+    departure: string;
+    arrival: string;
+    inRoute: string;
   };
 };
 
@@ -97,6 +100,9 @@ export default function TripList({
               departTime={depTime}
               arriveTime={arrTime}
               duration={duration}
+              departureLabel={t.departure}
+              arrivalLabel={t.arrival}
+              inRouteLabel={t.inRoute}
               freeSeats={freeSeatsValue(tour.seats)}
               rows={rows}
               total={total}
