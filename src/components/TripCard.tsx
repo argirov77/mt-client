@@ -55,7 +55,7 @@ export default function TripCard({
           </span>
         </div>
         <span className="text-xl font-semibold text-slate-900">
-          {total.toFixed(2)} €
+          {total.toFixed(2)} ₴
         </span>
       </div>
 
@@ -68,13 +68,13 @@ export default function TripCard({
       <div className="text-sm text-slate-600 space-y-1">
         {rows.map((r, i) => (
           <div key={i}>
-            {r.count} {r.label} × {r.price.toFixed(2)} €
+            {r.count} {r.label} × {r.price.toFixed(2)} ₴
             {r.discount ? (
               <span className="ml-1 text-emerald-600">(-{r.discount}%)</span>
             ) : null}
             {" = "}
             <span className="font-medium">
-              {(r.count * r.price * (1 - (r.discount ?? 0) / 100)).toFixed(2)} €
+              {(r.count * r.price * (1 - (r.discount ?? 0) / 100)).toFixed(2)} ₴
             </span>
           </div>
         ))}
