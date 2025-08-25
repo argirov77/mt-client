@@ -22,6 +22,9 @@ export type TripCardProps = {
   pickLabel?: string;
   chosenLabel?: string;
   freeSeatsText?: (n: number) => string;
+  departureLabel?: string;
+  arrivalLabel?: string;
+  inRouteLabel?: string;
 };
 
 export default function TripCard({
@@ -39,6 +42,9 @@ export default function TripCard({
   pickLabel = "Выбрать",
   chosenLabel = "Выбрано",
   freeSeatsText,
+  departureLabel = "Отправление",
+  arrivalLabel = "Прибытие",
+  inRouteLabel = "В пути",
 }: TripCardProps) {
   return (
     <div
@@ -48,17 +54,19 @@ export default function TripCard({
       role="button"
       onClick={onSelect}
     >
+      {/* date */}
+      <div className="text-lg font-bold text-slate-900">{dateText}</div>
       {/* top row: departure/arrival */}
       <div className="flex justify-between items-start">
         {/* departure */}
         <div>
-          <div className="text-lg font-bold text-slate-900">
-            {dateText} • {departTime}
-          </div>
+          <div className="text-xs text-slate-500">{departureLabel}</div>
+          <div className="text-lg font-bold text-slate-900">{departTime}</div>
           <div className="text-sm text-slate-500">{fromStop}</div>
         </div>
         {/* arrival */}
         <div className="text-right">
+          <div className="text-xs text-slate-500">{arrivalLabel}</div>
           <div className="text-lg font-bold text-slate-900">{arriveTime}</div>
           <div className="text-sm text-slate-500">{toStop}</div>
         </div>
@@ -67,7 +75,7 @@ export default function TripCard({
       {/* duration */}
       <div className="flex items-center gap-2 text-sm text-slate-600">
         <Clock className="h-4 w-4" />
-        В пути: {duration}
+        {inRouteLabel}: {duration}
       </div>
 
       {/* route line */}
