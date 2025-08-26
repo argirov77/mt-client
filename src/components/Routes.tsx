@@ -1,9 +1,18 @@
 // src/components/routes/Routes.tsx
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { MapPin } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  Clock,
+  LogIn,
+  LogOut,
+  MapPin,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import { API } from "@/config";
+
+/* ===================== Types ===================== */
 
 type Lang = "ru" | "bg" | "en" | "ua";
 
@@ -27,6 +36,8 @@ type ApiResponse = Partial<{
   backward: Route;
 }>;
 
+/* ===================== i18n ===================== */
+
 const T = {
   ru: {
     title: "Наши маршруты",
@@ -36,8 +47,15 @@ const T = {
     arrival: "Прибытие",
     departure: "Отправление",
     map: "Открыть на карте",
-    stopsCount: (n: number) => `${n} остановк${n % 10 === 1 && n % 100 !== 11 ? "а" : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? "и" : ""}`,
+    stopsCount: (n: number) =>
+      `${n} остановк${n % 10 === 1 && n % 100 !== 11
+        ? "а"
+        : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)
+          ? "и"
+          : ""}`,
     duration: "в пути",
+    showAll: "Показать все",
+    showLess: "Свернуть",
   },
   en: {
     title: "Our routes",
@@ -49,6 +67,8 @@ const T = {
     map: "Open in map",
     stopsCount: (n: number) => `${n} stops`,
     duration: "duration",
+    showAll: "Show all",
+    showLess: "Show less",
   },
   bg: {
     title: "Нашите маршрути",
@@ -60,6 +80,8 @@ const T = {
     map: "Отвори на картата",
     stopsCount: (n: number) => `${n} спирк${n === 1 ? "а" : "и"}`,
     duration: "престой",
+    showAll: "Покажи всички",
+    showLess: "Скрий",
   },
   ua: {
     title: "Наші маршрути",
@@ -69,12 +91,15 @@ const T = {
     arrival: "Прибуття",
     departure: "Відправлення",
     map: "Відкрити на мапі",
-    stopsCount: (n: number) => `${n} зупин${n === 1 ? "ка" : n >= 2 && n <= 4 ? "ки" : "ок"}`,
+    stopsCount: (n: number) =>
+      `${n} зупин${n === 1 ? "ка" : n >= 2 && n <= 4 ? "ки" : "ок"}`,
     duration: "у дорозі",
+    showAll: "Показати всі",
+    showLess: "Згорнути",
   },
 } as const;
 
-/* ---------------- helpers ---------------- */
+/* ===================== helpers ===================== */
 
 const titleFromStops = (r?: Route | null) => {
   if (!r || !r.stops?.length) return r?.name ?? "";
@@ -105,7 +130,7 @@ const deepEqualStops = (a: Stop[] = [], b: Stop[] = []) => {
   return true;
 };
 
-/** Только для UI: если forward и backward равны — во второй панели показываем reverse */
+/** Если forward и backward равны — во второй панели показываем reverse */
 const reverseIfEqual = (f?: Route | null, b?: Route | null): Route | null => {
   if (!b) return null;
   if (!f) return shallowClone(b);
@@ -113,10 +138,12 @@ const reverseIfEqual = (f?: Route | null, b?: Route | null): Route | null => {
   return { ...b, stops: [...(b.stops || [])].reverse() };
 };
 
-const firstTime = (s?: Stop[]) => s?.[0]?.departure_time || s?.[0]?.arrival_time || null;
-const lastTime = (s?: Stop[]) => s?.[s.length - 1]?.arrival_time || s?.[s.length - 1]?.departure_time || null;
+const firstTime = (s?: Stop[]) =>
+  s?.[0]?.departure_time || s?.[0]?.arrival_time || null;
+const lastTime = (s?: Stop[]) =>
+  s?.[s.length - 1]?.arrival_time || s?.[s.length - 1]?.departure_time || null;
 
-/* ---------------- component ---------------- */
+/* ===================== Component ===================== */
 
 export default function Routes({ lang = "ru" }: { lang?: Lang }) {
   const L = T[lang];
@@ -185,9 +212,8 @@ export default function Routes({ lang = "ru" }: { lang?: Lang }) {
 
         {!loading && !err && hasAny && (
           <div
-            className={`mt-8 grid gap-8 ${
-              forward && backward ? "md:grid-cols-2" : "grid-cols-1"
-            }`}
+            className={`mt-8 grid gap-8 ${forward && backward ? "md:grid-cols-2" : "grid-cols-1"
+              }`}
           >
             {forward && (
               <RoutePanel
@@ -212,7 +238,7 @@ export default function Routes({ lang = "ru" }: { lang?: Lang }) {
   );
 }
 
-/* ---------------- UI pieces ---------------- */
+/* ===================== UI Pieces ===================== */
 
 function RoutePanel({
   title,
@@ -228,19 +254,17 @@ function RoutePanel({
   const L = T[lang];
   const count = route.stops?.length ?? 0;
 
-  // приблизительная «протяжённость», если времени нет — не показываем
+  // «протяжённость», если времени нет — не показываем
   const t1 = firstTime(route.stops);
   const t2 = lastTime(route.stops);
-  const duration =
-    t1 && t2
-      ? `${t1} → ${t2}`
-      : null;
+  const duration = t1 && t2 ? `${t1} → ${t2}` : null;
 
   return (
     <div className="rounded-3xl bg-white/85 backdrop-blur shadow-xl ring-1 ring-slate-200 p-5 md:p-6">
-      {/* header */}
+      {/* Header */}
       <div className="mb-5 flex flex-wrap items-center gap-3">
-        <div className="text-lg font-semibold text-slate-900">{title}</div>
+        <h3 className="text-lg md:text-xl font-semibold text-slate-900">{title}</h3>
+
         <div className="ml-auto flex items-center gap-2">
           <span className="inline-flex items-center rounded-full bg-sky-50 px-3 py-1 text-xs font-medium text-sky-700 ring-1 ring-sky-100">
             {subtitle}
@@ -250,22 +274,84 @@ function RoutePanel({
           </span>
           {duration && (
             <span className="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-xs text-emerald-700 ring-1 ring-emerald-100">
+              <Clock className="mr-1 h-3.5 w-3.5" />
               {L.duration}: {duration}
             </span>
           )}
         </div>
       </div>
 
-      {/* rail */}
-      <ol className="relative pl-7">
-        <div className="absolute left-[14px] top-0 bottom-0 w-[2px] bg-gradient-to-b from-sky-300 via-slate-200 to-slate-200" />
-        {route.stops?.map((s, i) => (
-          <StopRow key={`${s.id}-${i}`} stop={s} index={i + 1} lang={lang} isLast={i === route.stops.length - 1} />
-        ))}
-      </ol>
+      {/* Rail */}
+      <StopsList stops={route.stops} lang={lang} />
     </div>
   );
 }
+
+/* ===== Список остановок с компактным режимом для мобильных ===== */
+
+function StopsList({ stops, lang = "ru" }: { stops: Stop[]; lang?: Lang }) {
+  const [expanded, setExpanded] = useState(false);
+  const L = T[lang];
+
+  // Мобильный: показываем первую, последнюю и одну из середины (если есть)
+  const compactStops = useMemo(() => {
+    if (stops.length <= 3) return stops;
+    const mid = Math.floor(stops.length / 2);
+    return [stops[0], stops[mid], stops[stops.length - 1]];
+  }, [stops]);
+
+  const renderStops = (list: Stop[]) => (
+    <ol className="relative pl-7">
+      {/* вертикальная линия */}
+      <div className="absolute left-[14px] top-0 bottom-0 w-[2px] bg-gradient-to-b from-sky-300 via-slate-200 to-slate-200" />
+      {list.map((s, i) => (
+        <StopRow
+          key={`${s.id}-${i}`}
+          stop={s}
+          index={i + 1}
+          isLast={i === list.length - 1}
+          lang={lang}
+        />
+      ))}
+    </ol>
+  );
+
+  return (
+    <>
+      {/* Desktop / Tablet: всегда все */}
+      <div className="hidden sm:block">
+        {renderStops(stops)}
+      </div>
+
+      {/* Mobile: компактный вид + «Показать все» */}
+      <div className="sm:hidden">
+        {expanded ? renderStops(stops) : renderStops(compactStops)}
+
+        {stops.length > 3 && (
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            className="mt-2 inline-flex items-center gap-1 rounded-full bg-slate-50 px-3 py-1.5 text-xs text-slate-700 ring-1 ring-slate-200 hover:bg-slate-100"
+          >
+            {expanded ? (
+              <>
+                <ChevronUp className="h-4 w-4" />
+                {L.showLess}
+              </>
+            ) : (
+              <>
+                <ChevronDown className="h-4 w-4" />
+                {L.showAll}
+              </>
+            )}
+          </button>
+        )}
+      </div>
+    </>
+  );
+}
+
+/* ===== Одна остановка ===== */
 
 function StopRow({
   stop,
@@ -282,48 +368,70 @@ function StopRow({
 
   return (
     <li className="relative">
-      {/* порядковый бейдж */}
+      {/* Порядковый бейдж */}
       <span className="absolute left-[6px] top-5 grid h-6 w-6 place-items-center rounded-full bg-sky-600 text-[10px] font-semibold text-white ring-2 ring-white shadow">
         {index}
       </span>
 
-      {/* карточка остановки */}
-      <div className="ml-6 mb-5 rounded-xl border border-slate-100 bg-white p-3.5 shadow-sm">
-        <div className="mb-2 font-medium text-slate-900">{stop.name}</div>
-
-        <div className="grid gap-2 text-xs text-slate-700 sm:grid-cols-2">
-          {stop.arrival_time && (
-            <div>
-              <span className="font-medium">{L.arrival}: </span>
-              <span className="tabular-nums">{stop.arrival_time}</span>
-            </div>
-          )}
-          {stop.departure_time && (
-            <div>
-              <span className="font-medium">{L.departure}: </span>
-              <span className="tabular-nums">{stop.departure_time}</span>
-            </div>
+      {/* Карточка остановки */}
+      <div className="ml-6 mb-5 rounded-xl border border-slate-100 bg-white shadow-sm">
+        {/* Заголовок + описание */}
+        <div className="px-3.5 pt-3">
+          <div className="mb-1.5 font-medium text-slate-900">{stop.name}</div>
+          {stop.description && (
+            <div className="text-xs text-slate-600">{stop.description}</div>
           )}
         </div>
 
-        {stop.description && (
-          <div className="mt-1 text-xs text-slate-600 line-clamp-1">{stop.description}</div>
+        {/* Время: выравниваем по колонкам + акцентные цифры */}
+        {(stop.arrival_time || stop.departure_time) && (
+          <div className="mt-2 grid grid-cols-2 gap-1 border-t border-slate-100 px-3.5 py-2 sm:grid-cols-[1fr_auto_auto]">
+            {/* Заполнитель для заголовка в мобильной сетке */}
+            <div className="hidden sm:block" />
+
+            {stop.arrival_time && (
+              <div className="flex items-center gap-2 justify-start sm:justify-center">
+                <Clock className="h-4 w-4 text-slate-500" />
+                <div className="flex flex-col leading-tight">
+                  <span className="text-[11px] text-slate-500">{L.arrival}</span>
+                  <span className="tabular-nums font-mono font-semibold text-slate-900">
+                    {stop.arrival_time}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {stop.departure_time && (
+              <div className="flex items-center gap-2 justify-end">
+                <LogOut className="h-4 w-4 text-slate-500" />
+                <div className="flex flex-col leading-tight text-right">
+                  <span className="text-[11px] text-slate-500">{L.departure}</span>
+                  <span className="tabular-nums font-mono font-semibold text-slate-900">
+                    {stop.departure_time}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
         )}
 
+        {/* Кнопка карты */}
         {stop.location && (
-          <a
-            href={stop.location}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-2 inline-flex items-center gap-1 rounded-full bg-sky-50 px-2.5 py-1 text-[11px] text-sky-700 ring-1 ring-sky-100 hover:bg-sky-100"
-          >
-            <MapPin className="h-3.5 w-3.5" />
-            {L.map}
-          </a>
+          <div className="border-t border-slate-100 px-3.5 py-2">
+            <a
+              href={stop.location}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-2.5 py-1 text-[11px] text-sky-700 ring-1 ring-sky-100 hover:bg-sky-100"
+            >
+              <MapPin className="h-3.5 w-3.5" />
+              {L.map}
+            </a>
+          </div>
         )}
       </div>
 
-      {/* соединительная линия между карточками (не у последней) */}
+      {/* соединительная линия (не у последней) */}
       {!isLast && (
         <div className="absolute left-[14px] -bottom-3 h-3 w-[2px] bg-slate-200" />
       )}

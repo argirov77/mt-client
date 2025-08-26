@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import axios from "axios";
+import { useEffect, useState } from 'react';
+import axios from 'axios';
+import { API } from '@/config';
+import { ArrowRight, Bus } from 'lucide-react';
 
-import { API } from "@/config";
-
-type Lang = "ru" | "bg" | "en" | "ua";
+type Lang = 'ru' | 'bg' | 'en' | 'ua';
 
 type PriceItem = {
   departure_stop_id: number;
@@ -16,99 +16,113 @@ type PriceItem = {
 };
 
 type Dict = {
-  schedule: string;
-  route: string;
-  price: string;
+  title: string;
   loading: string;
   error: string;
   noData: string;
+  currency: string;
 };
 
-const translations: Record<Lang, Dict> = {
+const i18n: Record<Lang, Dict> = {
   ru: {
-    schedule: "Цены",
-    route: "Маршрут",
-    price: "Цена",
-    loading: "Загрузка…",
-    error: "Ошибка загрузки",
-    noData: "Данные не найдены",
+    title: 'Цены',
+    loading: 'Загрузка…',
+    error: 'Ошибка загрузки',
+    noData: 'Данные не найдены',
+    currency: '₴',
   },
   bg: {
-    schedule: "Цени",
-    route: "Маршрут",
-    price: "Цена",
-    loading: "Зареждане…",
-    error: "Грешка при зареждането",
-    noData: "Няма данни",
+    title: 'Цени',
+    loading: 'Зареждане…',
+    error: 'Грешка при зареждането',
+    noData: 'Няма данни',
+    currency: '₴',
   },
   en: {
-    schedule: "Prices",
-    route: "Route",
-    price: "Price",
-    loading: "Loading…",
-    error: "Failed to load",
-    noData: "No data",
+    title: 'Prices',
+    loading: 'Loading…',
+    error: 'Failed to load',
+    noData: 'No data',
+    currency: '₴',
   },
   ua: {
-    schedule: "Ціни",
-    route: "Маршрут",
-    price: "Ціна",
-    loading: "Завантаження…",
-    error: "Помилка завантаження",
-    noData: "Даних немає",
+    title: 'Ціни',
+    loading: 'Завантаження…',
+    error: 'Помилка завантаження',
+    noData: 'Даних немає',
+    currency: '₴',
   },
 };
 
-export default function Schedule({ lang = "ru" }: { lang?: Lang }) {
-  const t = translations[lang];
-  const [prices, setPrices] = useState<PriceItem[]>([]);
+function formatPrice(n: number, curr: string) {
+  return `${Number(n).toFixed(0)} ${curr}`;
+}
+
+export default function PriceListCompact({ lang = 'ru' }: { lang?: Lang }) {
+  const t = i18n[lang];
+  const [list, setList] = useState<PriceItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const [err, setErr] = useState(false);
 
   useEffect(() => {
-    const fetchPrices = async () => {
+    let cancelled = false;
+    (async () => {
       try {
+        setLoading(true);
         const { data } = await axios.post(`${API}/selected_pricelist`, { lang });
-        setPrices(data?.prices || []);
+        if (!cancelled) setList(data?.prices || []);
       } catch {
-        setError(true);
+        if (!cancelled) setErr(true);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
+    })();
+    return () => {
+      cancelled = true;
     };
-    fetchPrices();
   }, [lang]);
 
   return (
-    <section className="bg-gray-50 py-14" id="prices">
+    <section id="prices" className="bg-gray-50 py-14">
       <div className="container mx-auto px-4">
-        <h2 className="text-2xl font-semibold text-center mb-8">{t.schedule}</h2>
-        {loading ? (
-          <p className="text-center">{t.loading}</p>
-        ) : error ? (
-          <p className="text-center text-red-500">{t.error}</p>
-        ) : prices.length === 0 ? (
-          <p className="text-center">{t.noData}</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full bg-white rounded-xl text-left">
-              <thead>
-                <tr>
-                  <th className="px-6 py-4">{t.route}</th>
-                  <th className="px-6 py-4">{t.price}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {prices.map((p, i) => (
-                  <tr key={`${p.departure_stop_id}-${p.arrival_stop_id}-${i}`}>
-                    <td className="px-6 py-4">
-                      {p.departure_name.trim()} — {p.arrival_name.trim()}
-                    </td>
-                    <td className="px-6 py-4">{p.price}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <h2 className="text-xl md:text-2xl font-semibold text-center mb-6">
+          {t.title}
+        </h2>
+
+        {loading && <p className="text-center text-slate-500">{t.loading}</p>}
+        {!loading && err && <p className="text-center text-red-500">{t.error}</p>}
+        {!loading && !err && list.length === 0 && (
+          <p className="text-center text-slate-500">{t.noData}</p>
+        )}
+
+        {!loading && !err && list.length > 0 && (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {list.map((r, i) => (
+              <article
+                key={`${r.departure_stop_id}-${r.arrival_stop_id}-${i}`}
+                className="group flex items-center justify-between rounded-xl bg-white px-4 py-3 ring-1 ring-slate-200 hover:ring-sky-300 hover:shadow-sm transition"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="h-8 w-8 grid place-items-center rounded-lg bg-sky-100 text-sky-700">
+                    <Bus className="h-4 w-4" />
+                  </span>
+
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 text-[15px] font-medium text-slate-800 truncate">
+                      <span className="truncate">{r.departure_name.trim()}</span>
+                      <ArrowRight className="h-4 w-4 text-slate-400" />
+                      <span className="truncate">{r.arrival_name.trim()}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="shrink-0">
+                  <span className="inline-flex items-center rounded-full bg-orange-500/10 text-orange-600 px-3 py-1 text-sm font-semibold">
+                    {formatPrice(r.price, t.currency)}
+                  </span>
+                </div>
+              </article>
+            ))}
           </div>
         )}
       </div>
