@@ -195,7 +195,8 @@ export default function SeatClient({
             <Armchair size={24} title="Сиденья откидываются" />
           </div>
           <div>
-            Включен багаж: {extraBaggage ? "2" : "1"} чемодан и 1 ручная кладь
+            В стоимость включены 1 чемодан и 1 ручная кладь.
+            {extraBaggage && " Добавлен дополнительный чемодан."}
           </div>
           <label className="flex items-center gap-2">
             <input
@@ -203,7 +204,7 @@ export default function SeatClient({
               checked={extraBaggage}
               onChange={(e) => onExtraBaggageChange?.(e.target.checked)}
             />
-            Дополнительный чемодан
+            Добавить еще один чемодан
           </label>
         </div>
       </div>
