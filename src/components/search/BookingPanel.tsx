@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import SeatClient from "../SeatClient";
 import type { Tour } from "./SearchResults";
 import FormInput from "../common/FormInput";
@@ -12,6 +12,8 @@ type Dict = {
   canceled: string;
   pay: string;
   cancel: string;
+  outboundShort: string;
+  inboundShort: string;
 };
 
 type Props = {
@@ -86,33 +88,58 @@ export default function BookingPanel({
   handleCancel,
   purchaseId,
 }: Props) {
+  const [activeLeg, setActiveLeg] = useState<"outbound" | "return">("outbound");
+
   return (
     <>
-      <h3 className="mt-5">
-        Рейс туда #{selectedOutboundTour.id}, дата: {formatDate(selectedOutboundTour.date)}
-      </h3>
-      <p>{t.freeSeats(free(selectedOutboundTour.seats))}</p>
-      <p>Выберите место:</p>
-
-      <SeatClient
-        tourId={selectedOutboundTour.id}
-        departureStopId={fromId}
-        arrivalStopId={toId}
-        layoutVariant={selectedOutboundTour.layout_variant || undefined}
-        selectedSeats={selectedOutboundSeats}
-        maxSeats={seatCount}
-        onChange={setSelectedOutboundSeats}
-        departureText={`${fromName} ${selectedOutboundTour.departure_time}`}
-        arrivalText={`${toName} ${selectedOutboundTour.arrival_time}`}
-        extraBaggage={extraBaggageOutbound[0] || false}
-        onExtraBaggageChange={(v) => {
-          const arr = [...extraBaggageOutbound];
-          arr[0] = v;
-          setExtraBaggageOutbound(arr);
-        }}
-      />
-
       {selectedReturnTour && (
+        <div className="mt-5 inline-flex overflow-hidden rounded-lg border">
+          <button
+            type="button"
+            onClick={() => setActiveLeg("outbound")}
+            className={`px-4 py-2 ${activeLeg === "outbound" ? "bg-sky-600 text-white" : "bg-white text-sky-600"}`}
+          >
+            {t.outboundShort}
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveLeg("return")}
+            className={`px-4 py-2 ${activeLeg === "return" ? "bg-sky-600 text-white" : "bg-white text-sky-600"}`}
+          >
+            {t.inboundShort}
+          </button>
+        </div>
+      )}
+
+      {(!selectedReturnTour || activeLeg === "outbound") && (
+        <>
+          <h3 className="mt-5">
+            Рейс туда #{selectedOutboundTour.id}, дата: {formatDate(selectedOutboundTour.date)}
+          </h3>
+          <p>{t.freeSeats(free(selectedOutboundTour.seats))}</p>
+          <p>Выберите место:</p>
+
+          <SeatClient
+            tourId={selectedOutboundTour.id}
+            departureStopId={fromId}
+            arrivalStopId={toId}
+            layoutVariant={selectedOutboundTour.layout_variant || undefined}
+            selectedSeats={selectedOutboundSeats}
+            maxSeats={seatCount}
+            onChange={setSelectedOutboundSeats}
+            departureText={`${fromName} ${selectedOutboundTour.departure_time}`}
+            arrivalText={`${toName} ${selectedOutboundTour.arrival_time}`}
+            extraBaggage={extraBaggageOutbound[0] || false}
+            onExtraBaggageChange={(v) => {
+              const arr = [...extraBaggageOutbound];
+              arr[0] = v;
+              setExtraBaggageOutbound(arr);
+            }}
+          />
+        </>
+      )}
+
+      {selectedReturnTour && activeLeg === "return" && (
         <>
           <h3 className="mt-5">
             Рейс обратно #{selectedReturnTour.id}, дата: {formatDate(selectedReturnTour.date)}

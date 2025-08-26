@@ -37,6 +37,8 @@ type Dict = {
   noResults: string;
   outbound: string;
   inbound: string;
+  outboundShort: string;
+  inboundShort: string;
   pick: string;
   chosen: string;
   freeSeats: (n: number) => string;
@@ -63,6 +65,8 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     noResults: "Рейсы не найдены",
     outbound: "Рейсы туда",
     inbound: "Рейсы обратно",
+    outboundShort: "Туда",
+    inboundShort: "Обратно",
     pick: "Выбрать",
     chosen: "Выбрано",
     freeSeats: (n) => `Свободно мест: ${n}`,
@@ -87,6 +91,8 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     noResults: "No trips found",
     outbound: "Outbound trips",
     inbound: "Return trips",
+    outboundShort: "Outbound",
+    inboundShort: "Return",
     pick: "Select",
     chosen: "Selected",
     freeSeats: (n) => `Free seats: ${n}`,
@@ -111,6 +117,8 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     noResults: "Няма намерени курсове",
     outbound: "Курсове натам",
     inbound: "Курсове обратно",
+    outboundShort: "Натам",
+    inboundShort: "Обратно",
     pick: "Избор",
     chosen: "Избрано",
     freeSeats: (n) => `Свободни места: ${n}`,
@@ -135,6 +143,8 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     noResults: "Рейси не знайдено",
     outbound: "Рейси туди",
     inbound: "Рейси назад",
+    outboundShort: "Туди",
+    inboundShort: "Назад",
     pick: "Обрати",
     chosen: "Обрано",
     freeSeats: (n) => `Вільних місць: ${n}`,
