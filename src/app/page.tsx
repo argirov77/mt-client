@@ -33,7 +33,7 @@ export default function Page() {
 
       <section id="schedule" className="bg-slate-50">
         <div className="mx-auto max-w-6xl w-full px-4 py-14">
-          <Schedule />
+          <Schedule lang={lang} />
         </div>
       </section>
 
