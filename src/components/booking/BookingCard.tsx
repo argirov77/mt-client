@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import SearchForm from "@/components/hero/SearchForm";
 import SearchResults from "@/components/search/SearchResults";
+import { useLanguage } from "@/components/common/LanguageProvider";
 
 type Criteria = {
   from: string;
@@ -17,7 +18,7 @@ type Criteria = {
 
 export default function BookingCard() {
   const [criteria, setCriteria] = useState<Criteria | null>(null);
-  const lang = "ru" as const;
+  const { lang } = useLanguage();
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6">

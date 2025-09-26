@@ -1,10 +1,8 @@
 // src/components/Header.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
 import Link from "next/link";
-
-type Lang = "ru" | "bg" | "en" | "ua";
+import { useLanguage, type Lang } from "@/components/common/LanguageProvider";
 
 const menu = [
   { href: "#hero",    label: { ru: "Билеты",       bg: "Билети",       en: "Tickets",   ua: "Квитки"   } },
@@ -15,24 +13,11 @@ const menu = [
   { href: "#contacts",label: { ru: "Контакты",     bg: "Контакти",     en: "Contacts",  ua: "Контакти" } },
 ];
 
-interface HeaderProps {
-  /** Начальный язык (если не передать — RU) */
-  lang?: Lang;
-  /** Опционально: сообщить наружу о смене языка */
-  onLangChange?: (lang: Lang) => void;
-}
-
-export default function Header({ lang = "ru", onLangChange }: HeaderProps) {
-  // локальное состояние чтобы избежать гидрации и не требовать серверный обработчик
-  const [current, setCurrent] = useState<Lang>(lang);
-
-  useEffect(() => {
-    setCurrent(lang); // если проп поменяли сверху — синхронизируем
-  }, [lang]);
+export default function Header() {
+  const { lang: current, setLang } = useLanguage();
 
   const handleChange = (v: Lang) => {
-    setCurrent(v);
-    onLangChange?.(v);
+    setLang(v);
   };
 
   return (

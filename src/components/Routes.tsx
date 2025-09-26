@@ -4,17 +4,15 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Clock,
-  LogIn,
   LogOut,
   MapPin,
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
 import { API } from "@/config";
+import { useLanguage, type Lang } from "@/components/common/LanguageProvider";
 
 /* ===================== Types ===================== */
-
-type Lang = "ru" | "bg" | "en" | "ua";
 
 type Stop = {
   id: number;
@@ -145,7 +143,8 @@ const lastTime = (s?: Stop[]) =>
 
 /* ===================== Component ===================== */
 
-export default function Routes({ lang = "ru" }: { lang?: Lang }) {
+export default function Routes() {
+  const { lang } = useLanguage();
   const L = T[lang];
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -282,7 +281,7 @@ function RoutePanel({
       </div>
 
       {/* Rail */}
-      <StopsList stops={route.stops} lang={lang} />
+    <StopsList stops={route.stops} lang={lang} />
     </div>
   );
 }
