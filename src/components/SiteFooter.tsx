@@ -1,12 +1,57 @@
+"use client";
+
+import { useLanguage } from "@/components/common/LanguageProvider";
+
 // src/components/SiteFooter.tsx
 const translations = {
-  ru: { nav: "Навигация", docs: "Документы", offer: "Публичная оферта", agreement: "Пользовательское соглашение", contacts: "Контакты" },
-  bg: { nav: "Навигация", docs: "Документи", offer: "Публична оферта", agreement: "Потребителско споразумение", contacts: "Контакти" },
-  en: { nav: "Navigation", docs: "Documents", offer: "Public offer", agreement: "User agreement", contacts: "Contacts" },
-  ua: { nav: "Навігація", docs: "Документи", offer: "Публічна оферта", agreement: "Користувацька угода", contacts: "Контакти" },
+  ru: {
+    nav: "Навигация",
+    docs: "Документы",
+    offer: "Публичная оферта",
+    agreement: "Пользовательское соглашение",
+    contacts: "Контакты",
+    popular: "Направления",
+    routes: "Маршруты",
+    about: "О нас",
+    schedule: "Расписание",
+  },
+  bg: {
+    nav: "Навигация",
+    docs: "Документи",
+    offer: "Публична оферта",
+    agreement: "Потребителско споразумение",
+    contacts: "Контакти",
+    popular: "Дестинации",
+    routes: "Маршрути",
+    about: "За нас",
+    schedule: "Разписание",
+  },
+  en: {
+    nav: "Navigation",
+    docs: "Documents",
+    offer: "Public offer",
+    agreement: "User agreement",
+    contacts: "Contacts",
+    popular: "Destinations",
+    routes: "Routes",
+    about: "About",
+    schedule: "Schedule",
+  },
+  ua: {
+    nav: "Навігація",
+    docs: "Документи",
+    offer: "Публічна оферта",
+    agreement: "Користувацька угода",
+    contacts: "Контакти",
+    popular: "Напрями",
+    routes: "Маршрути",
+    about: "Про нас",
+    schedule: "Розклад",
+  },
 };
 
-export default function SiteFooter({ lang = "ru" }: { lang?: "ru" | "bg" | "en" | "ua" }) {
+export default function SiteFooter() {
+  const { lang } = useLanguage();
   const t = translations[lang];
   return (
     <footer className="bg-primary-dark text-gray-100 py-10">
@@ -18,10 +63,10 @@ export default function SiteFooter({ lang = "ru" }: { lang?: "ru" | "bg" | "en" 
         <div>
           <h4 className="font-semibold mb-2">{t.nav}</h4>
           <ul>
-            <li><a href="#popular" className="hover:underline">{t.nav}</a></li>
-            <li><a href="#routes" className="hover:underline">Маршруты</a></li>
-            <li><a href="#about" className="hover:underline">О нас</a></li>
-            <li><a href="#prices" className="hover:underline">Расписание</a></li>
+            <li><a href="#popular" className="hover:underline">{t.popular}</a></li>
+            <li><a href="#routes" className="hover:underline">{t.routes}</a></li>
+            <li><a href="#about" className="hover:underline">{t.about}</a></li>
+            <li><a href="#prices" className="hover:underline">{t.schedule}</a></li>
           </ul>
         </div>
         <div>

@@ -1,13 +1,14 @@
 // src/components/hero/HeroSection.tsx
-'use client';
+"use client";
 
-import { useState } from 'react';
-import SearchForm from './SearchForm';
-import SearchResults from '@/components/search/SearchResults';
+import { useState } from "react";
+import SearchForm from "./SearchForm";
+import SearchResults from "@/components/search/SearchResults";
+import { translations as heroTranslations } from "@/i18n";
 
-type Lang = 'ru' | 'bg' | 'en' | 'ua';
+type Lang = "ru" | "bg" | "en" | "ua";
 
-export default function HeroSection({ lang = 'ru' }: { lang?: Lang }) {
+export default function HeroSection({ lang = "ru" }: { lang?: Lang }) {
   const [criteria, setCriteria] = useState<null | {
     from: string;
     to: string;
@@ -28,10 +29,10 @@ export default function HeroSection({ lang = 'ru' }: { lang?: Lang }) {
     >
       <div className="container mx-auto px-4 py-14">
         <h1 className="text-4xl md:text-5xl font-bold text-center">
-          Поедем с комфортом
+          {heroTranslations[lang].title}
         </h1>
         <p className="mt-3 text-center text-white/90">
-          Покупка автобусных билетов онлайн — быстро и удобно.
+          {heroTranslations[lang].subtitle}
         </p>
 
         {/* ЕДИНАЯ КАПСУЛА: форма + (скрываемый) блок результатов */}
@@ -72,6 +73,10 @@ export default function HeroSection({ lang = 'ru' }: { lang?: Lang }) {
             )}
           </div>
         </div>
+
+        <p className="mt-6 text-center text-sm text-white/80">
+          {heroTranslations[lang].note}
+        </p>
       </div>
     </section>
   );
