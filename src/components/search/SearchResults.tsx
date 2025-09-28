@@ -9,6 +9,7 @@ import { API } from "@/config";
 
 import TripList from "./TripList";
 import BookingPanel from "./BookingPanel";
+import ElectronicTicket from "./ElectronicTicket";
 
 // ======== Типы ========
 export type Tour = {
@@ -58,6 +59,27 @@ type Dict = {
   total: string;
   adults: string;
   discounted: string;
+  ticketTitle: string;
+  ticketNumber: string;
+  ticketActionPurchase: string;
+  ticketActionBook: string;
+  ticketCreated: string;
+  ticketStatus: string;
+  ticketStatusPaid: string;
+  ticketStatusPending: string;
+  ticketStatusCanceled: string;
+  ticketTotal: string;
+  ticketContacts: string;
+  ticketPassengers: string;
+  ticketPassengerSeat: string;
+  ticketPassengerSeatReturn: string;
+  ticketPassengerBaggage: string;
+  ticketPassengerBaggageReturn: string;
+  ticketYes: string;
+  ticketNo: string;
+  ticketDownload: string;
+  ticketOutbound: string;
+  ticketReturn: string;
 };
 
 const dict: Record<NonNullable<Props["lang"]>, Dict> = {
@@ -86,6 +108,27 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     total: "Итого",
     adults: "Взрослых",
     discounted: "Льготных",
+    ticketTitle: "Электронный билет",
+    ticketNumber: "Номер заказа",
+    ticketActionPurchase: "Покупка",
+    ticketActionBook: "Бронирование",
+    ticketCreated: "Дата оформления",
+    ticketStatus: "Статус",
+    ticketStatusPaid: "Оплачен",
+    ticketStatusPending: "Ожидает оплаты",
+    ticketStatusCanceled: "Отменён",
+    ticketTotal: "Сумма",
+    ticketContacts: "Контактные данные",
+    ticketPassengers: "Пассажиры",
+    ticketPassengerSeat: "Место туда",
+    ticketPassengerSeatReturn: "Место обратно",
+    ticketPassengerBaggage: "Багаж туда",
+    ticketPassengerBaggageReturn: "Багаж обратно",
+    ticketYes: "Да",
+    ticketNo: "Нет",
+    ticketDownload: "Скачать билет",
+    ticketOutbound: "Маршрут туда",
+    ticketReturn: "Маршрут обратно",
   },
   en: {
     noResults: "No trips found",
@@ -112,6 +155,27 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     total: "Total",
     adults: "Adults",
     discounted: "Discounted",
+    ticketTitle: "E-ticket",
+    ticketNumber: "Order number",
+    ticketActionPurchase: "Purchase",
+    ticketActionBook: "Reservation",
+    ticketCreated: "Issued on",
+    ticketStatus: "Status",
+    ticketStatusPaid: "Paid",
+    ticketStatusPending: "Awaiting payment",
+    ticketStatusCanceled: "Canceled",
+    ticketTotal: "Amount",
+    ticketContacts: "Contacts",
+    ticketPassengers: "Passengers",
+    ticketPassengerSeat: "Seat outbound",
+    ticketPassengerSeatReturn: "Seat return",
+    ticketPassengerBaggage: "Baggage outbound",
+    ticketPassengerBaggageReturn: "Baggage return",
+    ticketYes: "Yes",
+    ticketNo: "No",
+    ticketDownload: "Download ticket",
+    ticketOutbound: "Outbound route",
+    ticketReturn: "Return route",
   },
   bg: {
     noResults: "Няма намерени курсове",
@@ -138,6 +202,27 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     total: "Общо",
     adults: "Възрастни",
     discounted: "С намаление",
+    ticketTitle: "Електронен билет",
+    ticketNumber: "Номер на поръчка",
+    ticketActionPurchase: "Покупка",
+    ticketActionBook: "Резервация",
+    ticketCreated: "Дата на издаване",
+    ticketStatus: "Статус",
+    ticketStatusPaid: "Платен",
+    ticketStatusPending: "Очаква плащане",
+    ticketStatusCanceled: "Отменен",
+    ticketTotal: "Сума",
+    ticketContacts: "Контакти",
+    ticketPassengers: "Пътници",
+    ticketPassengerSeat: "Място натам",
+    ticketPassengerSeatReturn: "Място обратно",
+    ticketPassengerBaggage: "Багаж натам",
+    ticketPassengerBaggageReturn: "Багаж обратно",
+    ticketYes: "Да",
+    ticketNo: "Не",
+    ticketDownload: "Изтегли билет",
+    ticketOutbound: "Маршрут натам",
+    ticketReturn: "Маршрут обратно",
   },
   ua: {
     noResults: "Рейси не знайдено",
@@ -164,7 +249,61 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     total: "Разом",
     adults: "Дорослих",
     discounted: "Пільгових",
+    ticketTitle: "Електронний квиток",
+    ticketNumber: "Номер замовлення",
+    ticketActionPurchase: "Покупка",
+    ticketActionBook: "Бронювання",
+    ticketCreated: "Дата оформлення",
+    ticketStatus: "Статус",
+    ticketStatusPaid: "Сплачено",
+    ticketStatusPending: "Очікує оплату",
+    ticketStatusCanceled: "Скасовано",
+    ticketTotal: "Сума",
+    ticketContacts: "Контакти",
+    ticketPassengers: "Пасажири",
+    ticketPassengerSeat: "Місце туди",
+    ticketPassengerSeatReturn: "Місце назад",
+    ticketPassengerBaggage: "Багаж туди",
+    ticketPassengerBaggageReturn: "Багаж назад",
+    ticketYes: "Так",
+    ticketNo: "Ні",
+    ticketDownload: "Завантажити квиток",
+    ticketOutbound: "Маршрут туди",
+    ticketReturn: "Маршрут назад",
   },
+};
+
+type TicketStatus = "pending" | "paid" | "canceled";
+
+type TicketSegment = {
+  fromName: string;
+  toName: string;
+  date: string;
+  departure_time: string;
+  arrival_time: string;
+  seatNumbers: number[];
+  extraBaggage: boolean[];
+};
+
+export type ElectronicTicketData = {
+  purchaseId: number;
+  action: "book" | "purchase";
+  total: number;
+  createdAt: string;
+  status: TicketStatus;
+  contact: {
+    phone: string;
+    email: string;
+  };
+  outbound: TicketSegment;
+  inbound?: TicketSegment | null;
+  passengers: {
+    name: string;
+    seatOutbound: number | null;
+    seatReturn: number | null;
+    extraBaggageOutbound: boolean;
+    extraBaggageReturn: boolean;
+  }[];
 };
 
 export default function SearchResults({
@@ -197,6 +336,8 @@ export default function SearchResults({
   // Результаты поиска
   const [outboundTours, setOutboundTours] = useState<Tour[]>([]);
   const [returnTours, setReturnTours] = useState<Tour[]>([]);
+
+  const [ticket, setTicket] = useState<ElectronicTicketData | null>(null);
 
   // Выбор рейсов
   const [selectedOutboundTour, setSelectedOutboundTour] = useState<Tour | null>(null);
@@ -255,7 +396,7 @@ export default function SearchResults({
             departure_stop_id: fromId,
             arrival_stop_id: toId,
             date,
-        seats: safeSeatCount,
+            seats: safeSeatCount,
           },
         });
 
@@ -280,6 +421,7 @@ export default function SearchResults({
         setSelectedReturnTour(null);
         setSelectedOutboundSeats([]);
         setSelectedReturnSeats([]);
+        setTicket(null);
 
         const bothEmpty =
           !(outRes.data && outRes.data.length) &&
@@ -388,6 +530,47 @@ export default function SearchResults({
       }
 
       setPurchaseId(pId);
+      const ticketData: ElectronicTicketData = {
+        purchaseId: pId,
+        action,
+        total: Number(total),
+        createdAt: new Date().toISOString(),
+        status: action === "purchase" ? "paid" : "pending",
+        contact: {
+          phone,
+          email,
+        },
+        outbound: {
+          fromName,
+          toName,
+          date: selectedOutboundTour.date,
+          departure_time: selectedOutboundTour.departure_time,
+          arrival_time: selectedOutboundTour.arrival_time,
+          seatNumbers: [...selectedOutboundSeats],
+          extraBaggage: [...extraBaggageOutbound],
+        },
+        inbound: selectedReturnTour
+          ? {
+              fromName: toName,
+              toName: fromName,
+              date: selectedReturnTour.date,
+              departure_time: selectedReturnTour.departure_time,
+              arrival_time: selectedReturnTour.arrival_time,
+              seatNumbers: [...selectedReturnSeats],
+              extraBaggage: [...extraBaggageReturn],
+            }
+          : null,
+        passengers: passengerNames.map((name, idx) => ({
+          name,
+          seatOutbound: selectedOutboundSeats[idx] ?? null,
+          seatReturn: selectedReturnTour ? selectedReturnSeats[idx] ?? null : null,
+          extraBaggageOutbound: extraBaggageOutbound[idx] ?? false,
+          extraBaggageReturn: selectedReturnTour
+            ? extraBaggageReturn[idx] ?? false
+            : false,
+        })),
+      };
+      setTicket(ticketData);
       setMsg(
         action === "purchase"
           ? `Билеты куплены! Purchase ID: ${pId}. Сумма: ${Number(total).toFixed(2)}`
@@ -426,6 +609,14 @@ export default function SearchResults({
       setMsg(t.paid);
       setMsgType("success");
       setPurchaseId(null);
+      setTicket((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: "paid",
+            }
+          : prev
+      );
     } catch {
       setMsg(t.errAction);
       setMsgType("error");
@@ -447,6 +638,14 @@ export default function SearchResults({
       setMsg(t.canceled);
       setMsgType("success");
       setPurchaseId(null);
+      setTicket((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: "canceled",
+            }
+          : prev
+      );
     } catch {
       setMsg(t.errAction);
       setMsgType("error");
@@ -530,6 +729,8 @@ export default function SearchResults({
             purchaseId={purchaseId}
           />
         )}
+
+      {ticket && <ElectronicTicket ticket={ticket} t={t} />}
     </div>
   );
 }
