@@ -3,8 +3,9 @@
 import { useMemo } from "react";
 
 import { formatDate } from "@/utils/date";
+import { downloadTicketPdf } from "@/utils/ticketPdf";
 
-import type { ElectronicTicketData } from "./SearchResults";
+import type { ElectronicTicketData } from "@/types/ticket";
 
 type Props = {
   ticket: ElectronicTicketData;
@@ -46,43 +47,7 @@ export default function ElectronicTicket({ ticket, t }: Props) {
   );
 
   const downloadTicket = () => {
-    const lines: string[] = [];
-    lines.push(`${t.ticketTitle}`);
-    lines.push(`${t.ticketNumber}: ${ticket.purchaseId}`);
-    lines.push(
-      `${t.ticketStatus}: ${t[statusMap[ticket.status]]} (${ticket.action === "purchase" ? t.ticketActionPurchase : t.ticketActionBook})`
-    );
-    lines.push(`${t.ticketCreated}: ${formattedCreatedAt}`);
-    lines.push(`${t.ticketTotal}: ${ticket.total.toFixed(2)}`);
-    lines.push(`${t.ticketContacts}: ${ticket.contact.phone}, ${ticket.contact.email}`);
-    lines.push(`${t.ticketOutbound}: ${ticket.outbound.fromName} → ${ticket.outbound.toName}`);
-    if (ticket.inbound) {
-      lines.push(`${t.ticketReturn}: ${ticket.inbound.fromName} → ${ticket.inbound.toName}`);
-    }
-    lines.push(`${t.ticketPassengers}:`);
-    ticket.passengers.forEach((passenger, idx) => {
-      lines.push(
-        `  ${idx + 1}. ${passenger.name} | ${t.ticketPassengerSeat}: ${passenger.seatOutbound ?? "-"} | ${t.ticketPassengerSeatReturn}: ${passenger.seatReturn ?? "-"}`
-      );
-      lines.push(
-        `     ${t.ticketPassengerBaggage}: ${passenger.extraBaggageOutbound ? t.ticketYes : t.ticketNo}` +
-          (ticket.inbound
-            ? ` | ${t.ticketPassengerBaggageReturn}: ${passenger.extraBaggageReturn ? t.ticketYes : t.ticketNo}`
-            : "")
-      );
-    });
-
-    const blob = new Blob([lines.join("\n")], {
-      type: "text/plain;charset=utf-8",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `ticket-${ticket.purchaseId}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    downloadTicketPdf(ticket, t);
   };
 
   const renderSegment = (label: string, segment: ElectronicTicketData["outbound"]) => (
