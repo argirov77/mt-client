@@ -10,6 +10,10 @@ import { API } from "@/config";
 import TripList from "./TripList";
 import BookingPanel from "./BookingPanel";
 import ElectronicTicket from "./ElectronicTicket";
+import TicketDownloadPrompt from "./TicketDownloadPrompt";
+
+import { downloadTicketPdf } from "@/utils/ticketPdf";
+import type { ElectronicTicketData } from "@/types/ticket";
 
 // ======== Типы ========
 export type Tour = {
@@ -80,6 +84,8 @@ type Dict = {
   ticketDownload: string;
   ticketOutbound: string;
   ticketReturn: string;
+  ticketDownloadReady: string;
+  ticketDownloadDismiss: string;
 };
 
 const dict: Record<NonNullable<Props["lang"]>, Dict> = {
@@ -129,6 +135,8 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     ticketDownload: "Скачать билет",
     ticketOutbound: "Маршрут туда",
     ticketReturn: "Маршрут обратно",
+    ticketDownloadReady: "Ваш билет готов к скачиванию",
+    ticketDownloadDismiss: "Скрыть",
   },
   en: {
     noResults: "No trips found",
@@ -176,6 +184,8 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     ticketDownload: "Download ticket",
     ticketOutbound: "Outbound route",
     ticketReturn: "Return route",
+    ticketDownloadReady: "Your ticket is ready to download",
+    ticketDownloadDismiss: "Dismiss",
   },
   bg: {
     noResults: "Няма намерени курсове",
@@ -223,6 +233,8 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     ticketDownload: "Изтегли билет",
     ticketOutbound: "Маршрут натам",
     ticketReturn: "Маршрут обратно",
+    ticketDownloadReady: "Вашият билет е готов за изтегляне",
+    ticketDownloadDismiss: "Скрий",
   },
   ua: {
     noResults: "Рейси не знайдено",
@@ -270,40 +282,9 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     ticketDownload: "Завантажити квиток",
     ticketOutbound: "Маршрут туди",
     ticketReturn: "Маршрут назад",
+    ticketDownloadReady: "Ваш квиток готовий до завантаження",
+    ticketDownloadDismiss: "Приховати",
   },
-};
-
-type TicketStatus = "pending" | "paid" | "canceled";
-
-type TicketSegment = {
-  fromName: string;
-  toName: string;
-  date: string;
-  departure_time: string;
-  arrival_time: string;
-  seatNumbers: number[];
-  extraBaggage: boolean[];
-};
-
-export type ElectronicTicketData = {
-  purchaseId: number;
-  action: "book" | "purchase";
-  total: number;
-  createdAt: string;
-  status: TicketStatus;
-  contact: {
-    phone: string;
-    email: string;
-  };
-  outbound: TicketSegment;
-  inbound?: TicketSegment | null;
-  passengers: {
-    name: string;
-    seatOutbound: number | null;
-    seatReturn: number | null;
-    extraBaggageOutbound: boolean;
-    extraBaggageReturn: boolean;
-  }[];
 };
 
 export default function SearchResults({
@@ -338,6 +319,7 @@ export default function SearchResults({
   const [returnTours, setReturnTours] = useState<Tour[]>([]);
 
   const [ticket, setTicket] = useState<ElectronicTicketData | null>(null);
+  const [showDownloadPrompt, setShowDownloadPrompt] = useState(false);
 
   // Выбор рейсов
   const [selectedOutboundTour, setSelectedOutboundTour] = useState<Tour | null>(null);
@@ -422,6 +404,7 @@ export default function SearchResults({
         setSelectedOutboundSeats([]);
         setSelectedReturnSeats([]);
         setTicket(null);
+        setShowDownloadPrompt(false);
 
         const bothEmpty =
           !(outRes.data && outRes.data.length) &&
@@ -571,6 +554,7 @@ export default function SearchResults({
         })),
       };
       setTicket(ticketData);
+      setShowDownloadPrompt(true);
       setMsg(
         action === "purchase"
           ? `Билеты куплены! Purchase ID: ${pId}. Сумма: ${Number(total).toFixed(2)}`
@@ -617,6 +601,7 @@ export default function SearchResults({
             }
           : prev
       );
+      setShowDownloadPrompt(true);
     } catch {
       setMsg(t.errAction);
       setMsgType("error");
@@ -646,12 +631,24 @@ export default function SearchResults({
             }
           : prev
       );
+      setShowDownloadPrompt(false);
     } catch {
       setMsg(t.errAction);
       setMsgType("error");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleTicketDownload = () => {
+    if (!ticket) {
+      return;
+    }
+    downloadTicketPdf(ticket, t);
+  };
+
+  const handlePromptClose = () => {
+    setShowDownloadPrompt(false);
   };
 
   const freeSeatsValue = (s: Tour["seats"]) =>
@@ -731,6 +728,12 @@ export default function SearchResults({
         )}
 
       {ticket && <ElectronicTicket ticket={ticket} t={t} />}
+      <TicketDownloadPrompt
+        visible={showDownloadPrompt && !!ticket}
+        t={t}
+        onDownload={handleTicketDownload}
+        onClose={handlePromptClose}
+      />
     </div>
   );
 }
