@@ -1,7 +1,7 @@
 // src/components/hero/HeroSection.tsx
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import SearchForm from "./SearchForm";
 import SearchResults from "@/components/search/SearchResults";
 import { translations as heroTranslations } from "@/i18n";
@@ -20,7 +20,14 @@ export default function HeroSection({ lang = "ru" }: { lang?: Lang }) {
     discountCount: number;
   }>(null);
 
+  const resultsRef = useRef<HTMLDivElement | null>(null);
   const expanded = !!criteria;
+
+  useEffect(() => {
+    if (criteria && resultsRef.current) {
+      resultsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [criteria]);
 
   return (
     <section
@@ -55,7 +62,7 @@ export default function HeroSection({ lang = "ru" }: { lang?: Lang }) {
             ].join(' ')}
           >
             {expanded && (
-              <div className="px-5 pb-5 pt-0">
+              <div ref={resultsRef} className="px-5 pb-5 pt-0">
                 <div className="rounded-2xl bg-white/80 p-4 text-slate-900 shadow ring-1 ring-black/5">
                   <SearchResults
                     lang={lang}
