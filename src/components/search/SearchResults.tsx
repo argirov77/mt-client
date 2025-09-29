@@ -648,11 +648,23 @@ export default function SearchResults({
     }
   };
 
-  const handleTicketDownload = () => {
+  const handleTicketDownload = async () => {
     if (!ticket) {
       return;
     }
-    void downloadTicketPdf(ticket, t);
+
+    try {
+      await downloadTicketPdf(ticket.purchaseId, lang);
+      setShowDownloadPrompt(false);
+    } catch (error) {
+      console.error(error);
+      setMsg(t.errAction);
+      setMsgType("error");
+    }
+  };
+
+  const handleTicketDownloadClick = () => {
+    void handleTicketDownload();
   };
 
   const handlePromptClose = () => {
@@ -735,11 +747,17 @@ export default function SearchResults({
           />
         )}
 
-      {ticket && <ElectronicTicket ticket={ticket} t={t} />}
+      {ticket && (
+        <ElectronicTicket
+          ticket={ticket}
+          t={t}
+          onDownload={handleTicketDownloadClick}
+        />
+      )}
       <TicketDownloadPrompt
         visible={showDownloadPrompt && !!ticket}
         t={t}
-        onDownload={handleTicketDownload}
+        onDownload={handleTicketDownloadClick}
         onClose={handlePromptClose}
       />
     </div>
