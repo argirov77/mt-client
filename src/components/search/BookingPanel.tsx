@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import SeatClient from "../SeatClient";
 import type { Tour } from "./SearchResults";
 import FormInput from "../common/FormInput";
@@ -92,6 +92,23 @@ export default function BookingPanel({
   onDownloadTicket,
 }: Props) {
   const [activeLeg, setActiveLeg] = useState<"outbound" | "return">("outbound");
+  const formRef = useRef<HTMLFormElement | null>(null);
+  const seatsScrollTriggered = useRef(false);
+
+  useEffect(() => {
+    const outboundComplete = selectedOutboundSeats.length === seatCount;
+    const returnComplete =
+      !selectedReturnTour || selectedReturnSeats.length === seatCount;
+
+    if (seatCount > 0 && outboundComplete && returnComplete) {
+      if (!seatsScrollTriggered.current) {
+        seatsScrollTriggered.current = true;
+        formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    } else {
+      seatsScrollTriggered.current = false;
+    }
+  }, [seatCount, selectedOutboundSeats, selectedReturnSeats, selectedReturnTour]);
 
   return (
     <>
@@ -172,6 +189,7 @@ export default function BookingPanel({
 
       {/* ФОРМА ПАССАЖИРОВ */}
       <form
+        ref={formRef}
         onSubmit={(e) => e.preventDefault()}
         className="mt-5 flex w-full max-w-[440px] flex-col gap-2"
       >

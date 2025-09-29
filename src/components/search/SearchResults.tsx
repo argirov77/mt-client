@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 
 import Loader from "../common/Loader";
@@ -326,6 +326,14 @@ export default function SearchResults({
   const [ticket, setTicket] = useState<ElectronicTicketData | null>(null);
   const [showDownloadPrompt, setShowDownloadPrompt] = useState(false);
 
+  const outboundSectionRef = useRef<HTMLDivElement | null>(null);
+  const returnSectionRef = useRef<HTMLDivElement | null>(null);
+  const bookingSectionRef = useRef<HTMLDivElement | null>(null);
+
+  const scrollToSection = useCallback((ref: React.RefObject<HTMLElement>) => {
+    ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
   // Выбор рейсов
   const [selectedOutboundTour, setSelectedOutboundTour] = useState<Tour | null>(null);
   const [selectedReturnTour, setSelectedReturnTour] = useState<Tour | null>(null);
@@ -436,6 +444,31 @@ export default function SearchResults({
       cancelled = true;
     };
   }, [fromId, toId, date, returnDate, safeSeatCount, t]);
+
+  const hasReturnSection = Boolean(returnDate && returnTours.length > 0);
+
+  useEffect(() => {
+    if (outboundTours.length > 0) {
+      scrollToSection(outboundSectionRef);
+    }
+  }, [outboundTours.length, scrollToSection]);
+
+  useEffect(() => {
+    if (!selectedOutboundTour) {
+      return;
+    }
+    if (hasReturnSection) {
+      scrollToSection(returnSectionRef);
+    } else {
+      scrollToSection(bookingSectionRef);
+    }
+  }, [selectedOutboundTour, hasReturnSection, scrollToSection]);
+
+  useEffect(() => {
+    if (selectedReturnTour) {
+      scrollToSection(bookingSectionRef);
+    }
+  }, [selectedReturnTour, scrollToSection]);
 
   // Выбор рейсов
   const onSelectOutbound = (tour: Tour) => {
@@ -685,70 +718,76 @@ export default function SearchResults({
 
       {/* РЕЙСЫ ТУДА */}
       {outboundTours.length > 0 && (
-        <TripList
-          title={t.outbound}
-          tours={outboundTours}
-          selectedId={selectedOutboundTour?.id}
-          onSelect={onSelectOutbound}
-          freeSeatsValue={freeSeatsValue}
-          fromName={fromName}
-          toName={toName}
-          lang={lang}
-          seatCount={safeSeatCount}
-          discountCount={safeDiscountCount}
-          t={t}
-        />
+        <div ref={outboundSectionRef}>
+          <TripList
+            title={t.outbound}
+            tours={outboundTours}
+            selectedId={selectedOutboundTour?.id}
+            onSelect={onSelectOutbound}
+            freeSeatsValue={freeSeatsValue}
+            fromName={fromName}
+            toName={toName}
+            lang={lang}
+            seatCount={safeSeatCount}
+            discountCount={safeDiscountCount}
+            t={t}
+          />
+        </div>
       )}
 
       {/* РЕЙСЫ ОБРАТНО */}
       {returnDate && returnTours.length > 0 && (
-        <TripList
-          title={t.inbound}
-          tours={returnTours}
-          selectedId={selectedReturnTour?.id}
-          onSelect={onSelectReturn}
-          freeSeatsValue={freeSeatsValue}
-          fromName={toName}
-          toName={fromName}
-          lang={lang}
-          seatCount={safeSeatCount}
-          discountCount={safeDiscountCount}
-          t={t}
-        />
+        <div ref={returnSectionRef}>
+          <TripList
+            title={t.inbound}
+            tours={returnTours}
+            selectedId={selectedReturnTour?.id}
+            onSelect={onSelectReturn}
+            freeSeatsValue={freeSeatsValue}
+            fromName={toName}
+            toName={fromName}
+            lang={lang}
+            seatCount={safeSeatCount}
+            discountCount={safeDiscountCount}
+            t={t}
+          />
+        </div>
       )}
 
       {/* ВЫБОР МЕСТ + ФОРМА */}
       {selectedOutboundTour &&
         (!returnDate || (returnDate && selectedReturnTour)) && (
-        <BookingPanel
-          t={t}
-          seatCount={safeSeatCount}
-          fromId={fromId}
-          toId={toId}
-          fromName={fromName}
-          toName={toName}
-          selectedOutboundTour={selectedOutboundTour}
-          selectedReturnTour={selectedReturnTour}
-          selectedOutboundSeats={selectedOutboundSeats}
-          setSelectedOutboundSeats={setSelectedOutboundSeats}
-          selectedReturnSeats={selectedReturnSeats}
-          setSelectedReturnSeats={setSelectedReturnSeats}
-          passengerNames={passengerNames}
-          setPassengerNames={setPassengerNames}
-          phone={phone}
-          setPhone={setPhone}
-          email={email}
-          setEmail={setEmail}
-          extraBaggageOutbound={extraBaggageOutbound}
-          setExtraBaggageOutbound={setExtraBaggageOutbound}
-          extraBaggageReturn={extraBaggageReturn}
-          setExtraBaggageReturn={setExtraBaggageReturn}
-          handleAction={handleAction}
-          handlePay={handlePay}
-          handleCancel={handleCancel}
-          purchaseId={purchaseId}
-          onDownloadTicket={handleTicketDownloadClick}
-        />
+        <div ref={bookingSectionRef}>
+          <BookingPanel
+            t={t}
+            seatCount={safeSeatCount}
+            fromId={fromId}
+            toId={toId}
+            fromName={fromName}
+            toName={toName}
+            selectedOutboundTour={selectedOutboundTour}
+            selectedReturnTour={selectedReturnTour}
+            selectedOutboundSeats={selectedOutboundSeats}
+            setSelectedOutboundSeats={setSelectedOutboundSeats}
+            selectedReturnSeats={selectedReturnSeats}
+            setSelectedReturnSeats={setSelectedReturnSeats}
+            passengerNames={passengerNames}
+            setPassengerNames={setPassengerNames}
+            phone={phone}
+            setPhone={setPhone}
+            email={email}
+            setEmail={setEmail}
+            extraBaggageOutbound={extraBaggageOutbound}
+            setExtraBaggageOutbound={setExtraBaggageOutbound}
+            extraBaggageReturn={extraBaggageReturn}
+            setExtraBaggageReturn={setExtraBaggageReturn}
+            handleAction={handleAction}
+            handlePay={handlePay}
+            handleCancel={handleCancel}
+            purchaseId={purchaseId}
+            onDownloadTicket={handleTicketDownloadClick}
+          />
+        </div>
       )}
 
       {ticket && (
