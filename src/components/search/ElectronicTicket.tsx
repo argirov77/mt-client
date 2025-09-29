@@ -3,8 +3,6 @@
 import { useMemo } from "react";
 
 import { formatDate } from "@/utils/date";
-import { downloadTicketPdf } from "@/utils/ticketPdf";
-
 import type { ElectronicTicketData } from "@/types/ticket";
 
 type Props = {
@@ -33,6 +31,7 @@ type Props = {
     ticketReturn: string;
     ticketOpenOnline: string;
   };
+  onDownload: () => void;
 };
 
 const statusMap: Record<ElectronicTicketData["status"], keyof Props["t"]> = {
@@ -41,14 +40,14 @@ const statusMap: Record<ElectronicTicketData["status"], keyof Props["t"]> = {
   canceled: "ticketStatusCanceled",
 };
 
-export default function ElectronicTicket({ ticket, t }: Props) {
+export default function ElectronicTicket({ ticket, t, onDownload }: Props) {
   const formattedCreatedAt = useMemo(
     () => formatDate(new Date(ticket.createdAt)),
     [ticket.createdAt]
   );
 
   const downloadTicket = () => {
-    void downloadTicketPdf(ticket, t);
+    onDownload();
   };
 
   const renderSegment = (label: string, segment: ElectronicTicketData["outbound"]) => (

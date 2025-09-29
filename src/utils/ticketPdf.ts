@@ -1,83 +1,36 @@
-import { formatDate } from "./date";
+import { API } from "@/config";
 
-import type { ElectronicTicketData } from "@/types/ticket";
-import { createElectronicTicketPdf } from "@/pdf/createElectronicTicketPdf";
+type SupportedLang = "ru" | "bg" | "en" | "ua";
 
-export type TicketPdfLocale = {
-  ticketTitle: string;
-  ticketNumber: string;
-  ticketActionPurchase: string;
-  ticketActionBook: string;
-  ticketCreated: string;
-  ticketStatus: string;
-  ticketStatusPaid: string;
-  ticketStatusPending: string;
-  ticketStatusCanceled: string;
-  ticketTotal: string;
-  ticketContacts: string;
-  ticketPassengers: string;
-  ticketPassengerSeat: string;
-  ticketPassengerSeatReturn: string;
-  ticketPassengerBaggage: string;
-  ticketPassengerBaggageReturn: string;
-  ticketYes: string;
-  ticketNo: string;
-  ticketDownload: string;
-  ticketOutbound: string;
-  ticketReturn: string;
-  ticketOpenOnline: string;
-};
-
-const statusMap: Record<
-  ElectronicTicketData["status"],
-  "ticketStatusPaid" | "ticketStatusPending" | "ticketStatusCanceled"
-> = {
-  paid: "ticketStatusPaid",
-  pending: "ticketStatusPending",
-  canceled: "ticketStatusCanceled",
-};
-
-const statusPalette: Record<
-  ElectronicTicketData["status"],
-  { background: string; text: string }
-> = {
-  paid: { background: "#16a34a", text: "#ffffff" },
-  pending: { background: "#f97316", text: "#ffffff" },
-  canceled: { background: "#ef4444", text: "#ffffff" },
-};
-
-const getOnlineUrl = (purchaseId: number): string => {
-  if (typeof window === "undefined") {
-    return `/ticket/${purchaseId}`;
-  }
-  const { origin } = window.location;
-  return `${origin}/ticket/${purchaseId}`;
+const buildTicketPdfUrl = (purchaseId: number, lang: SupportedLang): string => {
+  const url = new URL(`${API}/tickets/${purchaseId}/pdf`);
+  url.searchParams.set("lang", lang);
+  return url.toString();
 };
 
 export const downloadTicketPdf = async (
-  ticket: ElectronicTicketData,
-  t: TicketPdfLocale
+  purchaseId: number,
+  lang: SupportedLang
 ): Promise<void> => {
-  const actionLabel =
-    ticket.action === "purchase" ? t.ticketActionPurchase : t.ticketActionBook;
-  const statusLabel = t[statusMap[ticket.status]];
-  const createdAt = formatDate(new Date(ticket.createdAt));
-  const onlineUrl = getOnlineUrl(ticket.purchaseId);
+  if (typeof window === "undefined") {
+    return;
+  }
 
-  const pdfBlob = await createElectronicTicketPdf({
-    ticket,
-    t,
-    statusLabel,
-    actionLabel,
-    createdAt,
-    onlineUrl,
-    statusStyle: statusPalette[ticket.status],
+  const response = await fetch(buildTicketPdfUrl(purchaseId, lang), {
+    headers: {
+      Accept: "application/pdf",
+    },
   });
 
-  const url = URL.createObjectURL(pdfBlob);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch ticket PDF: ${response.status}`);
+  }
+
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `electronic-ticket-${ticket.purchaseId}.pdf`;
+  link.download = `electronic-ticket-${purchaseId}.pdf`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
