@@ -215,6 +215,15 @@ export default function BookingPanel({
                 Багаж обратно
               </label>
             )}
+            {purchaseId && (
+              <button
+                type="button"
+                onClick={() => onDownloadTicket(purchaseId)}
+                className="whitespace-nowrap rounded border px-2 py-1 text-sm hover:bg-slate-100"
+              >
+                {t.ticketDownload}
+              </button>
+            )}
           </div>
         ))}
 

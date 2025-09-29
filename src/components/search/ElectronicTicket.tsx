@@ -107,7 +107,7 @@ export default function ElectronicTicket({ ticket, t, onDownload }: Props) {
         <h4 className="font-semibold text-sky-800">{t.ticketPassengers}</h4>
         <div className="mt-2 grid gap-3 md:grid-cols-2">
           {ticket.passengers.map((passenger, index) => (
-            <div key={`${passenger.name}-${index}`} className="rounded-lg border bg-white p-4">
+            <div key={`${passenger.name}-${index}`} className="flex flex-col gap-2 rounded-lg border bg-white p-4">
               <p className="font-semibold text-slate-800">{passenger.name}</p>
               <p className="text-sm text-slate-600">
                 {t.ticketPassengerSeat}: {passenger.seatOutbound ?? "—"}
@@ -125,6 +125,13 @@ export default function ElectronicTicket({ ticket, t, onDownload }: Props) {
                   {t.ticketPassengerBaggageReturn}: {passenger.extraBaggageReturn ? t.ticketYes : t.ticketNo}
                 </p>
               )}
+              <button
+                type="button"
+                onClick={downloadTicket}
+                className="self-start rounded border border-sky-500 px-3 py-1 text-sm text-sky-700 transition hover:bg-sky-500 hover:text-white"
+              >
+                {t.ticketDownload}
+              </button>
             </div>
           ))}
         </div>
