@@ -581,6 +581,13 @@ const drawHeader = (
   const leftX = contentX;
   const summaryX = leftX + leftWidth + 36;
   const summaryWidth = 360;
+  const columnHeight = headerHeight - paddingY * 2;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(leftX, y + paddingY, leftWidth, columnHeight);
+  ctx.clip();
+
   let currentY = y + paddingY;
 
   const logoRadius = 24;
@@ -674,6 +681,13 @@ const drawHeader = (
     }
   });
 
+  ctx.restore();
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(summaryX, y + paddingY, summaryWidth, columnHeight);
+  ctx.clip();
+
   let summaryY = y + paddingY;
 
   const passengerPrimary = ticket.passengers[0]?.name ?? "—";
@@ -715,6 +729,8 @@ const drawHeader = (
 
   const qrSize = 220;
   drawQrCode(ctx, onlineUrl, summaryX, summaryY, qrSize);
+
+  ctx.restore();
 };
 
 export const drawElectronicTicketTemplate = (
