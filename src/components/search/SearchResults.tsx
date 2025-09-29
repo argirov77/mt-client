@@ -648,13 +648,16 @@ export default function SearchResults({
     }
   };
 
-  const handleTicketDownload = async () => {
-    if (!ticket) {
+  const handleTicketDownload = async (purchaseIdOverride?: number) => {
+    const targetPurchaseId = purchaseIdOverride ?? ticket?.purchaseId;
+    if (!targetPurchaseId) {
       return;
     }
 
+    const resolvedLang: NonNullable<Props["lang"]> = lang ?? "ru";
+
     try {
-      await downloadTicketPdf(ticket.purchaseId, lang);
+      await downloadTicketPdf(targetPurchaseId, resolvedLang);
       setShowDownloadPrompt(false);
     } catch (error) {
       console.error(error);
@@ -663,8 +666,8 @@ export default function SearchResults({
     }
   };
 
-  const handleTicketDownloadClick = () => {
-    void handleTicketDownload();
+  const handleTicketDownloadClick = (purchaseIdOverride?: number) => {
+    void handleTicketDownload(purchaseIdOverride);
   };
 
   const handlePromptClose = () => {
@@ -717,47 +720,48 @@ export default function SearchResults({
       {/* ВЫБОР МЕСТ + ФОРМА */}
       {selectedOutboundTour &&
         (!returnDate || (returnDate && selectedReturnTour)) && (
-          <BookingPanel
-            t={t}
-            seatCount={safeSeatCount}
-            fromId={fromId}
-            toId={toId}
-            fromName={fromName}
-            toName={toName}
-            selectedOutboundTour={selectedOutboundTour}
-            selectedReturnTour={selectedReturnTour}
-            selectedOutboundSeats={selectedOutboundSeats}
-            setSelectedOutboundSeats={setSelectedOutboundSeats}
-            selectedReturnSeats={selectedReturnSeats}
-            setSelectedReturnSeats={setSelectedReturnSeats}
-            passengerNames={passengerNames}
-            setPassengerNames={setPassengerNames}
-            phone={phone}
-            setPhone={setPhone}
-            email={email}
-            setEmail={setEmail}
-            extraBaggageOutbound={extraBaggageOutbound}
-            setExtraBaggageOutbound={setExtraBaggageOutbound}
-            extraBaggageReturn={extraBaggageReturn}
-            setExtraBaggageReturn={setExtraBaggageReturn}
-            handleAction={handleAction}
-            handlePay={handlePay}
-            handleCancel={handleCancel}
-            purchaseId={purchaseId}
-          />
-        )}
+        <BookingPanel
+          t={t}
+          seatCount={safeSeatCount}
+          fromId={fromId}
+          toId={toId}
+          fromName={fromName}
+          toName={toName}
+          selectedOutboundTour={selectedOutboundTour}
+          selectedReturnTour={selectedReturnTour}
+          selectedOutboundSeats={selectedOutboundSeats}
+          setSelectedOutboundSeats={setSelectedOutboundSeats}
+          selectedReturnSeats={selectedReturnSeats}
+          setSelectedReturnSeats={setSelectedReturnSeats}
+          passengerNames={passengerNames}
+          setPassengerNames={setPassengerNames}
+          phone={phone}
+          setPhone={setPhone}
+          email={email}
+          setEmail={setEmail}
+          extraBaggageOutbound={extraBaggageOutbound}
+          setExtraBaggageOutbound={setExtraBaggageOutbound}
+          extraBaggageReturn={extraBaggageReturn}
+          setExtraBaggageReturn={setExtraBaggageReturn}
+          handleAction={handleAction}
+          handlePay={handlePay}
+          handleCancel={handleCancel}
+          purchaseId={purchaseId}
+          onDownloadTicket={handleTicketDownloadClick}
+        />
+      )}
 
       {ticket && (
         <ElectronicTicket
           ticket={ticket}
           t={t}
-          onDownload={handleTicketDownloadClick}
+          onDownload={() => handleTicketDownloadClick()}
         />
       )}
       <TicketDownloadPrompt
         visible={showDownloadPrompt && !!ticket}
         t={t}
-        onDownload={handleTicketDownloadClick}
+        onDownload={() => handleTicketDownloadClick()}
         onClose={handlePromptClose}
       />
     </div>

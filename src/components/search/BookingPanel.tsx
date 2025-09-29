@@ -14,6 +14,7 @@ type Dict = {
   cancel: string;
   outboundShort: string;
   inboundShort: string;
+  ticketDownload: string;
 };
 
 type Props = {
@@ -52,6 +53,7 @@ type Props = {
   handlePay: () => void;
   handleCancel: () => void;
   purchaseId: number | null;
+  onDownloadTicket: (purchaseId: number) => void;
 };
 
 const free = (s: Tour["seats"]) => (typeof s === "number" ? s : s?.free ?? 0);
@@ -87,6 +89,7 @@ export default function BookingPanel({
   handlePay,
   handleCancel,
   purchaseId,
+  onDownloadTicket,
 }: Props) {
   const [activeLeg, setActiveLeg] = useState<"outbound" | "return">("outbound");
 
@@ -262,6 +265,13 @@ export default function BookingPanel({
                 className="border rounded p-2 hover:bg-slate-100"
               >
                 {t.cancel}
+              </button>
+              <button
+                type="button"
+                onClick={() => onDownloadTicket(purchaseId)}
+                className="border rounded p-2 hover:bg-slate-100"
+              >
+                {t.ticketDownload}
               </button>
             </>
           )}
