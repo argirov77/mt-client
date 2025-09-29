@@ -482,13 +482,16 @@ export default function SearchResults({
         passenger_names: passengerNames,
         passenger_phone: phone,
         passenger_email: email,
+        adult_count: safeSeatCount - safeDiscountCount,
+        discount_count: safeDiscountCount,
+        ...(lang ? { lang } : {}),
       };
 
       // туда
       const outRes = await axios.post(`${API}/${endpoint}`, {
         ...basePayload,
         seat_nums: selectedOutboundSeats,
-        extra_baggage: extraBaggageOutbound,
+        extra_baggage: extraBaggageOutbound.slice(0, safeSeatCount),
         tour_id: selectedOutboundTour.id,
         departure_stop_id: fromId,
         arrival_stop_id: toId,
@@ -502,7 +505,7 @@ export default function SearchResults({
         const retRes = await axios.post(`${API}/${endpoint}`, {
           ...basePayload,
           seat_nums: selectedReturnSeats,
-          extra_baggage: extraBaggageReturn,
+          extra_baggage: extraBaggageReturn.slice(0, safeSeatCount),
           tour_id: selectedReturnTour.id,
           departure_stop_id: toId,
           arrival_stop_id: fromId,
