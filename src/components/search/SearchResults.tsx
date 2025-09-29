@@ -84,6 +84,7 @@ type Dict = {
   ticketDownload: string;
   ticketOutbound: string;
   ticketReturn: string;
+  ticketOpenOnline: string;
   ticketDownloadReady: string;
   ticketDownloadDismiss: string;
 };
@@ -135,6 +136,7 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     ticketDownload: "Скачать билет",
     ticketOutbound: "Маршрут туда",
     ticketReturn: "Маршрут обратно",
+    ticketOpenOnline: "Открыть онлайн",
     ticketDownloadReady: "Ваш билет готов к скачиванию",
     ticketDownloadDismiss: "Скрыть",
   },
@@ -184,6 +186,7 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     ticketDownload: "Download ticket",
     ticketOutbound: "Outbound route",
     ticketReturn: "Return route",
+    ticketOpenOnline: "Open online",
     ticketDownloadReady: "Your ticket is ready to download",
     ticketDownloadDismiss: "Dismiss",
   },
@@ -233,6 +236,7 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     ticketDownload: "Изтегли билет",
     ticketOutbound: "Маршрут натам",
     ticketReturn: "Маршрут обратно",
+    ticketOpenOnline: "Отвори онлайн",
     ticketDownloadReady: "Вашият билет е готов за изтегляне",
     ticketDownloadDismiss: "Скрий",
   },
@@ -282,6 +286,7 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     ticketDownload: "Завантажити квиток",
     ticketOutbound: "Маршрут туди",
     ticketReturn: "Маршрут назад",
+    ticketOpenOnline: "Відкрити онлайн",
     ticketDownloadReady: "Ваш квиток готовий до завантаження",
     ticketDownloadDismiss: "Приховати",
   },
@@ -647,7 +652,7 @@ export default function SearchResults({
     if (!ticket) {
       return;
     }
-    downloadTicketPdf(ticket, t);
+    void downloadTicketPdf(ticket, t);
   };
 
   const handlePromptClose = () => {

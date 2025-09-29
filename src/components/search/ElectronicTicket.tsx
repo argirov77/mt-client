@@ -31,6 +31,7 @@ type Props = {
     ticketDownload: string;
     ticketOutbound: string;
     ticketReturn: string;
+    ticketOpenOnline: string;
   };
 };
 
@@ -47,7 +48,7 @@ export default function ElectronicTicket({ ticket, t }: Props) {
   );
 
   const downloadTicket = () => {
-    downloadTicketPdf(ticket, t);
+    void downloadTicketPdf(ticket, t);
   };
 
   const renderSegment = (label: string, segment: ElectronicTicketData["outbound"]) => (
