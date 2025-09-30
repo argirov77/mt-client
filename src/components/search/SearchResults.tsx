@@ -525,6 +525,59 @@ export default function SearchResults({
         ...(lang ? { lang } : {}),
       };
 
+      const coerceTicketNumber = (value: unknown): string | null => {
+        if (value == null) {
+          return null;
+        }
+
+        if (Array.isArray(value)) {
+          for (const item of value) {
+            const normalized = coerceTicketNumber(item);
+            if (normalized) {
+              return normalized;
+            }
+          }
+          return null;
+        }
+
+        if (typeof value === "object") {
+          const obj = value as Record<string, unknown>;
+          return (
+            coerceTicketNumber(obj["ticket_number"]) ??
+            coerceTicketNumber(obj["ticketNumber"]) ??
+            coerceTicketNumber(obj["number"]) ??
+            coerceTicketNumber(obj["id"])
+          );
+        }
+
+        if (typeof value === "string" || typeof value === "number") {
+          const normalized = String(value).trim();
+          return normalized ? normalized : null;
+        }
+
+        return null;
+      };
+
+      const extractTicketNumber = (payload: unknown): string | null => {
+        if (!payload || typeof payload !== "object") {
+          return null;
+        }
+
+        const data = payload as Record<string, unknown>;
+
+        return (
+          coerceTicketNumber(data["ticket_number"]) ??
+          coerceTicketNumber(data["ticketNumber"]) ??
+          coerceTicketNumber(data["ticket_id"]) ??
+          coerceTicketNumber(data["ticketId"]) ??
+          coerceTicketNumber(data["ticket_numbers"]) ??
+          coerceTicketNumber(data["ticketNumbers"]) ??
+          coerceTicketNumber(data["ticket_ids"]) ??
+          coerceTicketNumber(data["ticketIds"]) ??
+          coerceTicketNumber(data["tickets"])
+        );
+      };
+
       // туда
       const outRes = await axios.post(`${API}/${endpoint}`, {
         ...basePayload,
@@ -537,6 +590,7 @@ export default function SearchResults({
 
       let total = outRes.data.amount_due;
       let pId = outRes.data.purchase_id as number;
+      let ticketNumberValue = extractTicketNumber(outRes.data);
 
       // обратно
       if (selectedReturnTour) {
@@ -551,10 +605,13 @@ export default function SearchResults({
         });
         total = retRes.data.amount_due;
         pId = retRes.data.purchase_id;
+        ticketNumberValue = extractTicketNumber(retRes.data) ?? ticketNumberValue;
       }
 
       setPurchaseId(pId);
+      const resolvedTicketNumber = ticketNumberValue ?? String(pId);
       const ticketData: ElectronicTicketData = {
+        ticketNumber: resolvedTicketNumber,
         purchaseId: pId,
         action,
         total: Number(total),
@@ -681,14 +738,18 @@ export default function SearchResults({
     }
   };
 
-  const handleTicketDownload = async (purchaseIdOverride?: number) => {
-    const targetPurchaseId = purchaseIdOverride ?? ticket?.purchaseId;
-    if (!targetPurchaseId) {
+  const handleTicketDownload = async (ticketNumberOverride?: string) => {
+    const targetTicketNumber =
+      ticketNumberOverride ??
+      ticket?.ticketNumber ??
+      (ticket?.purchaseId != null ? ticket.purchaseId : null);
+
+    if (targetTicketNumber == null) {
       return;
     }
 
     try {
-      await downloadTicketPdf(targetPurchaseId);
+      await downloadTicketPdf(targetTicketNumber);
       setShowDownloadPrompt(false);
     } catch (error) {
       console.error(error);
@@ -697,8 +758,8 @@ export default function SearchResults({
     }
   };
 
-  const handleTicketDownloadClick = (purchaseIdOverride?: number) => {
-    void handleTicketDownload(purchaseIdOverride);
+  const handleTicketDownloadClick = (ticketNumberOverride?: string) => {
+    void handleTicketDownload(ticketNumberOverride);
   };
 
   const handlePromptClose = () => {
@@ -783,6 +844,7 @@ export default function SearchResults({
             handlePay={handlePay}
             handleCancel={handleCancel}
             purchaseId={purchaseId}
+            ticketNumber={ticket?.ticketNumber ?? null}
             onDownloadTicket={handleTicketDownloadClick}
           />
         </div>
