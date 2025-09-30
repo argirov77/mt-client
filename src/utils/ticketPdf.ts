@@ -1,23 +1,18 @@
 import { API } from "@/config";
 
-type SupportedLang = "ru" | "bg" | "en" | "ua";
-
-const buildTicketPdfUrl = (purchaseId: number, lang: SupportedLang): string => {
+const buildTicketPdfUrl = (purchaseId: number): string => {
   const url = new URL(`${API}/tickets/${purchaseId}/pdf`);
   url.hostname = "127.0.0.1";
-  url.searchParams.set("lang", lang);
+  url.search = "";
   return url.toString();
 };
 
-export const downloadTicketPdf = async (
-  purchaseId: number,
-  lang: SupportedLang
-): Promise<void> => {
+export const downloadTicketPdf = async (purchaseId: number): Promise<void> => {
   if (typeof window === "undefined") {
     return;
   }
 
-  const pdfUrl = buildTicketPdfUrl(purchaseId, lang);
+  const pdfUrl = buildTicketPdfUrl(purchaseId);
   const response = await fetch(pdfUrl, {
     method: "GET",
     headers: { Accept: "application/pdf" },

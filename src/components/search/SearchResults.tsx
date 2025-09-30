@@ -687,10 +687,8 @@ export default function SearchResults({
       return;
     }
 
-    const resolvedLang: NonNullable<Props["lang"]> = lang ?? "ru";
-
     try {
-      await downloadTicketPdf(targetPurchaseId, resolvedLang);
+      await downloadTicketPdf(targetPurchaseId);
       setShowDownloadPrompt(false);
     } catch (error) {
       console.error(error);
