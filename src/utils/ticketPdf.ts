@@ -16,23 +16,10 @@ export const downloadTicketPdf = async (
     return;
   }
 
-  const response = await fetch(buildTicketPdfUrl(purchaseId, lang), {
-    headers: {
-      Accept: "application/pdf",
-    },
-  });
+  const pdfUrl = buildTicketPdfUrl(purchaseId, lang);
+  const newTab = window.open(pdfUrl, "_blank", "noopener,noreferrer");
 
-  if (!response.ok) {
-    throw new Error(`Failed to fetch ticket PDF: ${response.status}`);
+  if (!newTab) {
+    throw new Error("Browser blocked the PDF pop-up window");
   }
-
-  const blob = await response.blob();
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `electronic-ticket-${purchaseId}.pdf`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
 };
