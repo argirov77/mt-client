@@ -437,45 +437,61 @@ export default function TicketClient({ ticketId }: TicketClientProps) {
     });
   };
 
-  const renderSegment = (segment: TicketSegment, title: string) => (
-    <div className="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm">
-      <h3 className="text-lg font-semibold text-slate-800">{title}</h3>
-      <p className="mt-2 text-sm text-slate-500">{formatDate(segment.date)}</p>
-      <div className="mt-3 grid gap-2 md:grid-cols-2">
-        <div>
-          <p className="text-xs uppercase text-slate-400">Откуда</p>
-          <p className="text-base font-medium text-slate-800">{segment.fromName}</p>
+  const renderSegment = (
+    segment: TicketSegment | null | undefined,
+    title: string
+  ) => {
+    if (!segment) {
+      return (
+        <div className="rounded-xl border border-slate-200 bg-white/80 p-4 text-sm text-slate-500 shadow-sm">
+          <h3 className="text-lg font-semibold text-slate-800">{title}</h3>
+          <p className="mt-2">Данные о рейсе недоступны</p>
         </div>
-        <div>
-          <p className="text-xs uppercase text-slate-400">Куда</p>
-          <p className="text-base font-medium text-slate-800">{segment.toName}</p>
+      );
+    }
+
+    return (
+      <div className="rounded-xl border border-slate-200 bg-white/80 p-4 shadow-sm">
+        <h3 className="text-lg font-semibold text-slate-800">{title}</h3>
+        <p className="mt-2 text-sm text-slate-500">{formatDate(segment.date)}</p>
+        <div className="mt-3 grid gap-2 md:grid-cols-2">
+          <div>
+            <p className="text-xs uppercase text-slate-400">Откуда</p>
+            <p className="text-base font-medium text-slate-800">{segment.fromName}</p>
+          </div>
+          <div>
+            <p className="text-xs uppercase text-slate-400">Куда</p>
+            <p className="text-base font-medium text-slate-800">{segment.toName}</p>
+          </div>
+          <div>
+            <p className="text-xs uppercase text-slate-400">Отправление</p>
+            <p className="text-base font-medium text-slate-800">
+              {formatTime(segment.departure_time)}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs uppercase text-slate-400">Прибытие</p>
+            <p className="text-base font-medium text-slate-800">
+              {formatTime(segment.arrival_time)}
+            </p>
+          </div>
         </div>
-        <div>
-          <p className="text-xs uppercase text-slate-400">Отправление</p>
+        <div className="mt-4">
+          <p className="text-xs uppercase text-slate-400">Места</p>
           <p className="text-base font-medium text-slate-800">
-            {formatTime(segment.departure_time)}
+            {segment.seatNumbers?.length
+              ? segment.seatNumbers.join(", ")
+              : "Будет назначено позже"}
           </p>
         </div>
-        <div>
-          <p className="text-xs uppercase text-slate-400">Прибытие</p>
-          <p className="text-base font-medium text-slate-800">
-            {formatTime(segment.arrival_time)}
-          </p>
-        </div>
+        {segment.extraBaggage?.length ? (
+          <div className="mt-2 text-sm text-slate-500">
+            Доп. багаж: {segment.extraBaggage.filter(Boolean).length} мест
+          </div>
+        ) : null}
       </div>
-      <div className="mt-4">
-        <p className="text-xs uppercase text-slate-400">Места</p>
-        <p className="text-base font-medium text-slate-800">
-          {segment.seatNumbers?.length ? segment.seatNumbers.join(", ") : "Будет назначено позже"}
-        </p>
-      </div>
-      {segment.extraBaggage?.length ? (
-        <div className="mt-2 text-sm text-slate-500">
-          Доп. багаж: {segment.extraBaggage.filter(Boolean).length} мест
-        </div>
-      ) : null}
-    </div>
-  );
+    );
+  };
 
   if (isLoading) {
     return (
@@ -590,7 +606,7 @@ export default function TicketClient({ ticketId }: TicketClientProps) {
 
         <section className="grid gap-5 md:grid-cols-2">
           {renderSegment(ticket.outbound, "Рейс туда")}
-          {ticket.inbound ? renderSegment(ticket.inbound, "Рейс обратно") : null}
+          {renderSegment(ticket.inbound, "Рейс обратно")}
         </section>
 
         <section className="rounded-3xl bg-white/90 p-6 shadow-xl ring-1 ring-white/70">
