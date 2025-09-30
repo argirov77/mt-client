@@ -407,6 +407,34 @@ export default function TicketClient({ ticketId }: TicketClientProps) {
     };
   }, [rescheduleAmountDiff, reschedulePrice, resolvedCurrency]);
 
+  const startOtpFlow = useCallback(
+    async (action: TicketAction, payload: Record<string, unknown> | null = null) => {
+      setActionLoading(action);
+      setBanner(null);
+
+      try {
+        const response = await fetchWithInclude(`${API}/public/otp/start`, {
+          method: "POST",
+          body: JSON.stringify({ action, ticket_id: ticketId }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Ошибка ${response.status}`);
+        }
+
+        setOtpAction(action);
+        setPendingPayload(payload);
+        setOtpModalOpen(true);
+      } catch (error) {
+        console.error(error);
+        setBanner({ type: "error", message: "Не удалось отправить код подтверждения" });
+      } finally {
+        setActionLoading(null);
+      }
+    },
+    [ticketId]
+  );
+
   const handleRescheduleRequest = useCallback(() => {
     if (!selectedRescheduleId || !selectedOption) {
       setBanner({ type: "error", message: "Выберите новый рейс для переноса" });
@@ -468,7 +496,6 @@ export default function TicketClient({ ticketId }: TicketClientProps) {
     setPendingPayload(payload);
     void startOtpFlow("reschedule", payload);
   }, [
-    passengerCount,
     rescheduleAmountDiff,
     rescheduleDraftPayload,
     selectedOption,
@@ -478,6 +505,7 @@ export default function TicketClient({ ticketId }: TicketClientProps) {
     selectedRescheduleId,
     selectedSeatIds,
     selectedSeats,
+    requiredSeats,
     startOtpFlow,
     ticket?.total,
   ]);
@@ -756,34 +784,6 @@ export default function TicketClient({ ticketId }: TicketClientProps) {
     setOtpCode("");
     setOtpError(null);
     setPendingPayload(null);
-  };
-
-  const startOtpFlow = async (
-    action: TicketAction,
-    payload: Record<string, unknown> | null = null
-  ) => {
-    setActionLoading(action);
-    setBanner(null);
-
-    try {
-      const response = await fetchWithInclude(`${API}/public/otp/start`, {
-        method: "POST",
-        body: JSON.stringify({ action, ticket_id: ticketId }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Ошибка ${response.status}`);
-      }
-
-      setOtpAction(action);
-      setPendingPayload(payload);
-      setOtpModalOpen(true);
-    } catch (error) {
-      console.error(error);
-      setBanner({ type: "error", message: "Не удалось отправить код подтверждения" });
-    } finally {
-      setActionLoading(null);
-    }
   };
 
   const submitPaymentForm = (payload: PaymentPayload) => {
