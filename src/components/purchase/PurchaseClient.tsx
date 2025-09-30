@@ -294,7 +294,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
   const isActionDisabled = ACTION_DISABLED_STATUSES.has(String(data?.purchase?.status ?? ""));
 
   const passengerNameMap = useMemo(() => {
-    if (!data) return new Map<string, string>();
+    if (!data || !data.passengers) return new Map<string, string>();
     const map = new Map<string, string>();
     data.passengers.forEach((passenger) => {
       map.set(String(passenger.id), passenger.name);
@@ -303,7 +303,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
   }, [data]);
 
   const passengerTickets = useMemo(() => {
-    if (!data) return new Map<string, PurchaseTicket[]>();
+    if (!data || !data.passengers) return new Map<string, PurchaseTicket[]>();
     const map = new Map<string, PurchaseTicket[]>();
     data.passengers.forEach((passenger) => {
       const related = data.tickets.filter(
@@ -994,7 +994,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
         <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
           <h3 className="text-lg font-semibold text-gray-900">Пассажиры и билеты</h3>
           <ul className="mt-4 space-y-4">
-            {data.passengers.map((passenger) => {
+            {(data?.passengers ?? []).map((passenger) => {
               const tickets = passengerTickets.get(String(passenger.id)) ?? [];
               return (
                 <li key={passenger.id} className="rounded-xl bg-gray-50 p-4">
