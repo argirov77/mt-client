@@ -20,6 +20,7 @@ export type ElectronicTicketPassenger = {
 
 export type ElectronicTicketData = {
   purchaseId: number;
+  ticketNumber: string | null;
   action: "book" | "purchase";
   total: number;
   createdAt: string;

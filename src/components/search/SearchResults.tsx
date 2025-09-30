@@ -89,6 +89,64 @@ type Dict = {
   ticketDownloadDismiss: string;
 };
 
+const extractTicketNumbers = (payload: unknown): string[] => {
+  if (!payload || typeof payload !== "object") {
+    return [];
+  }
+
+  const result = new Set<string>();
+  const addCandidate = (value: unknown) => {
+    if (typeof value === "string" || typeof value === "number") {
+      const normalized = String(value).trim();
+      if (normalized) {
+        result.add(normalized);
+      }
+    }
+  };
+
+  const data = payload as Record<string, unknown>;
+
+  addCandidate(data.ticket_number);
+  addCandidate(data.ticketNumber);
+  addCandidate(data.ticket_no);
+  addCandidate(data.ticketNo);
+  addCandidate(data.ticket_id);
+  addCandidate(data.ticketId);
+
+  const maybeTickets = data.tickets;
+  if (Array.isArray(maybeTickets)) {
+    for (const ticket of maybeTickets) {
+      if (!ticket || typeof ticket !== "object") {
+        continue;
+      }
+      const ticketData = ticket as Record<string, unknown>;
+      addCandidate(ticketData.ticket_number);
+      addCandidate(ticketData.ticketNumber);
+      addCandidate(ticketData.ticket_no);
+      addCandidate(ticketData.ticketNo);
+      addCandidate(ticketData.ticket_id);
+      addCandidate(ticketData.ticketId);
+      addCandidate(ticketData.number);
+      addCandidate(ticketData.id);
+    }
+  }
+
+  const maybeTicket = data.ticket;
+  if (maybeTicket && typeof maybeTicket === "object") {
+    const ticketData = maybeTicket as Record<string, unknown>;
+    addCandidate(ticketData.ticket_number);
+    addCandidate(ticketData.ticketNumber);
+    addCandidate(ticketData.ticket_no);
+    addCandidate(ticketData.ticketNo);
+    addCandidate(ticketData.ticket_id);
+    addCandidate(ticketData.ticketId);
+    addCandidate(ticketData.number);
+    addCandidate(ticketData.id);
+  }
+
+  return Array.from(result);
+};
+
 const dict: Record<NonNullable<Props["lang"]>, Dict> = {
   ru: {
     noResults: "Рейсы не найдены",
@@ -526,6 +584,8 @@ export default function SearchResults({
       };
 
       // туда
+      const collectedTicketNumbers = new Set<string>();
+
       const outRes = await axios.post(`${API}/${endpoint}`, {
         ...basePayload,
         seat_nums: selectedOutboundSeats,
@@ -537,6 +597,9 @@ export default function SearchResults({
 
       let total = outRes.data.amount_due;
       let pId = outRes.data.purchase_id as number;
+      extractTicketNumbers(outRes.data).forEach((identifier) => {
+        collectedTicketNumbers.add(identifier);
+      });
 
       // обратно
       if (selectedReturnTour) {
@@ -551,11 +614,17 @@ export default function SearchResults({
         });
         total = retRes.data.amount_due;
         pId = retRes.data.purchase_id;
+        extractTicketNumbers(retRes.data).forEach((identifier) => {
+          collectedTicketNumbers.add(identifier);
+        });
       }
+
+      const [primaryTicketNumber] = Array.from(collectedTicketNumbers);
 
       setPurchaseId(pId);
       const ticketData: ElectronicTicketData = {
         purchaseId: pId,
+        ticketNumber: primaryTicketNumber ?? null,
         action,
         total: Number(total),
         createdAt: new Date().toISOString(),
@@ -681,16 +750,19 @@ export default function SearchResults({
     }
   };
 
-  const handleTicketDownload = async (purchaseIdOverride?: number) => {
-    const targetPurchaseId = purchaseIdOverride ?? ticket?.purchaseId;
-    if (!targetPurchaseId) {
+  const handleTicketDownload = async (
+    ticketNumberOverride?: string | number
+  ) => {
+    const targetTicketNumber =
+      ticketNumberOverride ??
+      ticket?.ticketNumber ??
+      (ticket?.purchaseId ?? null);
+    if (!targetTicketNumber) {
       return;
     }
 
-    const resolvedLang: NonNullable<Props["lang"]> = lang ?? "ru";
-
     try {
-      await downloadTicketPdf(targetPurchaseId, resolvedLang);
+      await downloadTicketPdf(targetTicketNumber);
       setShowDownloadPrompt(false);
     } catch (error) {
       console.error(error);
@@ -699,8 +771,10 @@ export default function SearchResults({
     }
   };
 
-  const handleTicketDownloadClick = (purchaseIdOverride?: number) => {
-    void handleTicketDownload(purchaseIdOverride);
+  const handleTicketDownloadClick = (
+    ticketNumberOverride?: string | number
+  ) => {
+    void handleTicketDownload(ticketNumberOverride);
   };
 
   const handlePromptClose = () => {
@@ -782,15 +856,16 @@ export default function SearchResults({
             extraBaggageReturn={extraBaggageReturn}
             setExtraBaggageReturn={setExtraBaggageReturn}
             handleAction={handleAction}
-            handlePay={handlePay}
-            handleCancel={handleCancel}
-            purchaseId={purchaseId}
-            onDownloadTicket={handleTicketDownloadClick}
-          />
-        </div>
-      )}
+          handlePay={handlePay}
+          handleCancel={handleCancel}
+          purchaseId={purchaseId}
+          ticketNumber={ticket?.ticketNumber ?? null}
+          onDownloadTicket={() => handleTicketDownloadClick()}
+        />
+      </div>
+    )}
 
-      {ticket && (
+    {ticket && (
         <ElectronicTicket
           ticket={ticket}
           t={t}

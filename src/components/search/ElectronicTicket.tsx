@@ -82,7 +82,7 @@ export default function ElectronicTicket({ ticket, t, onDownload }: Props) {
         <div>
           <h3 className="text-xl font-semibold text-sky-900">{t.ticketTitle}</h3>
           <p className="text-sm text-slate-600">
-            {t.ticketNumber}: {ticket.purchaseId}
+            {t.ticketNumber}: {ticket.ticketNumber ?? ticket.purchaseId}
           </p>
         </div>
         <button

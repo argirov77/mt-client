@@ -53,7 +53,8 @@ type Props = {
   handlePay: () => void;
   handleCancel: () => void;
   purchaseId: number | null;
-  onDownloadTicket: (purchaseId: number) => void;
+  ticketNumber: string | null;
+  onDownloadTicket: () => void;
 };
 
 const free = (s: Tour["seats"]) => (typeof s === "number" ? s : s?.free ?? 0);
@@ -89,11 +90,13 @@ export default function BookingPanel({
   handlePay,
   handleCancel,
   purchaseId,
+  ticketNumber,
   onDownloadTicket,
 }: Props) {
   const [activeLeg, setActiveLeg] = useState<"outbound" | "return">("outbound");
   const formRef = useRef<HTMLFormElement | null>(null);
   const seatsScrollTriggered = useRef(false);
+  const hasTicketIdentifier = Boolean(ticketNumber ?? purchaseId);
 
   useEffect(() => {
     const outboundComplete = selectedOutboundSeats.length === seatCount;
@@ -233,10 +236,10 @@ export default function BookingPanel({
                 Багаж обратно
               </label>
             )}
-            {purchaseId && (
+            {hasTicketIdentifier && (
               <button
                 type="button"
-                onClick={() => onDownloadTicket(purchaseId)}
+                onClick={onDownloadTicket}
                 className="whitespace-nowrap rounded border px-2 py-1 text-sm hover:bg-slate-100"
               >
                 {t.ticketDownload}
@@ -293,13 +296,15 @@ export default function BookingPanel({
               >
                 {t.cancel}
               </button>
-              <button
-                type="button"
-                onClick={() => onDownloadTicket(purchaseId)}
-                className="border rounded p-2 hover:bg-slate-100"
-              >
-                {t.ticketDownload}
-              </button>
+              {hasTicketIdentifier && (
+                <button
+                  type="button"
+                  onClick={onDownloadTicket}
+                  className="border rounded p-2 hover:bg-slate-100"
+                >
+                  {t.ticketDownload}
+                </button>
+              )}
             </>
           )}
         </div>

@@ -1,23 +1,20 @@
 import { API } from "@/config";
 
-type SupportedLang = "ru" | "bg" | "en" | "ua";
-
-const buildTicketPdfUrl = (purchaseId: number, lang: SupportedLang): string => {
-  const url = new URL(`${API}/tickets/${purchaseId}/pdf`);
+const buildTicketPdfUrl = (ticketNumber: string | number): string => {
+  const url = new URL(`${API}/tickets/${ticketNumber}/pdf`);
   url.hostname = "127.0.0.1";
-  url.searchParams.set("lang", lang);
+  url.search = "";
   return url.toString();
 };
 
 export const downloadTicketPdf = async (
-  purchaseId: number,
-  lang: SupportedLang
+  ticketNumber: string | number
 ): Promise<void> => {
   if (typeof window === "undefined") {
     return;
   }
 
-  const pdfUrl = buildTicketPdfUrl(purchaseId, lang);
+  const pdfUrl = buildTicketPdfUrl(ticketNumber);
   const response = await fetch(pdfUrl, {
     method: "GET",
     headers: { Accept: "application/pdf" },
@@ -33,7 +30,7 @@ export const downloadTicketPdf = async (
 
   const link = document.createElement("a");
   link.href = objectUrl;
-  link.download = `ticket-${purchaseId}.pdf`;
+  link.download = `ticket-${ticketNumber}.pdf`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
