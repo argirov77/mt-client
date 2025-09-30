@@ -73,3 +73,24 @@ export type PurchaseView = {
   totals: PurchaseTotals;
   history?: PurchaseHistoryEvent[];
 };
+
+export type RescheduleOption = {
+  id: string | number;
+  date: string;
+  departure_time: string;
+  arrival_time: string;
+  availability: number;
+  price_change: number;
+  currency: string;
+  description?: string;
+};
+
+export type CancelPreview = {
+  total_refund: number;
+  currency: string;
+};
+
+export type BaggageQuote = {
+  total: number;
+  currency: string;
+};
