@@ -1168,8 +1168,6 @@ export default function TicketClient({ ticketId }: TicketClientProps) {
     );
   }
 
-  const passengerCount = ticket.passengers?.length ?? 0;
-
   return (
     <main className="min-h-screen bg-gradient-to-b from-sky-100 via-white to-slate-100 p-4">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
