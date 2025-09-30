@@ -1,16 +1,20 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { API } from "@/config";
+
 import UiAlert from "@/components/common/Alert";
 import Loader from "@/components/common/Loader";
-import { fetchWithInclude } from "@/utils/fetchWithInclude";
+import { API } from "@/config";
 import type {
+  BaggageQuote,
+  CancelPreview,
   PurchaseHistoryEvent,
   PurchaseTicket,
   PurchaseTrip,
   PurchaseView,
+  RescheduleOption,
 } from "@/types/purchase";
+import { fetchWithInclude } from "@/utils/fetchWithInclude";
 
 const STATUS_LABELS: Record<string, string> = {
   pending: "Ожидает оплаты",
@@ -30,27 +34,6 @@ type ActionBanner = {
 
 type RescheduleScope = "all" | "selected";
 type CancelScope = "all" | "selected";
-
-type RescheduleOption = {
-  id: string;
-  date: string;
-  departure_time: string;
-  arrival_time: string;
-  availability: number;
-  price_change: number;
-  currency: string;
-  description?: string;
-};
-
-type CancelPreview = {
-  total_refund: number;
-  currency: string;
-};
-
-type BaggageQuote = {
-  total: number;
-  currency: string;
-};
 
 const formatDate = (value: string | undefined | null) => {
   if (!value) return "";
@@ -118,20 +101,13 @@ const formatDuration = (minutes: number | null) => {
   return mins > 0 ? `${hours} ч ${mins} мин` : `${hours} ч`;
 };
 
-const buildDownloadUrl = (path: string) => {
-  const url = new URL(`${API}${path}`);
-  url.hostname = "127.0.0.1";
-  return url.toString();
-};
-
 const downloadPdf = async (path: string, filename: string, onError: (message: string) => void) => {
   if (typeof window === "undefined") return;
 
   try {
-    const response = await fetch(buildDownloadUrl(path), {
+    const response = await fetchWithInclude(`${API}${path}`, {
       method: "GET",
       headers: { Accept: "application/pdf" },
-      credentials: "include",
     });
 
     if (!response.ok) {
@@ -214,8 +190,12 @@ type PurchaseClientProps = {
   purchaseId: string;
 };
 
+type OtpStartResponse = {
+  challenge_id?: string | number;
+} & Record<string, unknown>;
+
 type VerifyResponse = {
-  otp_token?: string;
+  op_token?: string;
   payment?: PaymentPayload;
 } & Record<string, unknown>;
 
@@ -288,6 +268,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
   const [otpError, setOtpError] = useState<string | null>(null);
   const [otpAction, setOtpAction] = useState<PurchaseAction | null>(null);
   const [pendingPayload, setPendingPayload] = useState<Record<string, unknown> | null>(null);
+  const [otpChallengeId, setOtpChallengeId] = useState<string | null>(null);
   const [otpSubmitting, setOtpSubmitting] = useState(false);
   const [actionLoading, setActionLoading] = useState<PurchaseAction | null>(null);
 
@@ -322,6 +303,20 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
     });
   }, [data]);
 
+  const toOriginalTicketIds = useCallback(
+    (selected: string[]) => {
+      if (!data) {
+        return selected as PurchaseTicket["id"][];
+      }
+
+      return selected.map((id) => {
+        const ticket = data.tickets.find((item) => String(item.id) === id);
+        return (ticket?.id ?? id) as PurchaseTicket["id"];
+      });
+    },
+    [data]
+  );
+
   const resetActionState = useCallback(() => {
     setRescheduleOptions([]);
     setRescheduleOptionId(null);
@@ -338,6 +333,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
     setOtpError(null);
     setOtpAction(null);
     setPendingPayload(null);
+    setOtpChallengeId(null);
     setOtpSubmitting(false);
     setActionLoading(null);
   }, []);
@@ -416,12 +412,31 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
           throw new Error(`HTTP ${response.status}`);
         }
 
+        let startPayload: OtpStartResponse | null = null;
+        try {
+          startPayload = (await response.json()) as OtpStartResponse;
+        } catch {
+          startPayload = null;
+        }
+
+        const challengeIdRaw = startPayload?.challenge_id;
+        const challengeId =
+          challengeIdRaw !== undefined && challengeIdRaw !== null ? String(challengeIdRaw) : null;
+
+        if (!challengeId) {
+          throw new Error("Missing challenge id in OTP start response");
+        }
+
         setOtpAction(action);
         setPendingPayload(payload);
+        setOtpChallengeId(challengeId);
+        setOtpCode("");
+        setOtpError(null);
         setOtpModalOpen(true);
       } catch (otpError) {
         console.error(otpError);
         setBanner({ type: "error", message: "Не удалось отправить код подтверждения" });
+      } finally {
         setActionLoading(null);
       }
     },
@@ -438,9 +453,15 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
       setRescheduleError(null);
 
       try {
+        const ticketIdentifiers = toOriginalTicketIds(ticketIds);
+        const body: Record<string, unknown> = { date };
+        if (ticketIdentifiers.length > 0) {
+          body.ticket_ids = ticketIdentifiers;
+        }
+
         const response = await fetchWithInclude(`${API}/public/purchase/${purchaseId}/reschedule-options`, {
           method: "POST",
-          body: JSON.stringify({ ticket_ids: ticketIds, date }),
+          body: JSON.stringify(body),
         });
 
         if (!response.ok) {
@@ -458,7 +479,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
         setRescheduleLoading(false);
       }
     },
-    [purchaseId]
+    [purchaseId, toOriginalTicketIds]
   );
 
   const submitCancelPreview = useCallback(
@@ -471,9 +492,10 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
       setCancelError(null);
 
       try {
+        const ticketIdentifiers = toOriginalTicketIds(ticketIds);
         const response = await fetchWithInclude(`${API}/public/purchase/${purchaseId}/cancel/preview`, {
           method: "POST",
-          body: JSON.stringify({ ticket_ids: ticketIds }),
+          body: JSON.stringify({ ticket_ids: ticketIdentifiers }),
         });
 
         if (!response.ok) {
@@ -490,7 +512,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
         setCancelLoading(false);
       }
     },
-    [purchaseId]
+    [purchaseId, toOriginalTicketIds]
   );
 
   const submitBaggageQuote = useCallback(
@@ -527,8 +549,10 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
 
   const submitPayment = useCallback(
     async (verifyData?: VerifyResponse) => {
-      if (!pendingPayload) {
-        setOtpError("Нет данных для оплаты");
+      const opToken = verifyData?.op_token;
+
+      if (!opToken) {
+        setOtpError("Не удалось подтвердить код");
         setOtpSubmitting(false);
         return;
       }
@@ -536,7 +560,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
       try {
         const response = await fetchWithInclude(`${API}/public/purchase/${purchaseId}/pay`, {
           method: "POST",
-          body: JSON.stringify({ ...pendingPayload, ...(verifyData?.otp_token ? { otp_token: verifyData.otp_token } : {}) }),
+          body: JSON.stringify({ ...(pendingPayload ?? {}), op_token: opToken }),
         });
 
         if (!response.ok) {
@@ -574,10 +598,17 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
         return;
       }
 
+      const opToken = verifyData?.op_token;
+      if (!opToken) {
+        setOtpError("Не удалось подтвердить код");
+        setOtpSubmitting(false);
+        return;
+      }
+
       try {
         const response = await fetchWithInclude(`${API}/public/purchase/${purchaseId}/reschedule`, {
           method: "POST",
-          body: JSON.stringify({ ...pendingPayload, ...(verifyData?.otp_token ? { otp_token: verifyData.otp_token } : {}) }),
+          body: JSON.stringify({ ...pendingPayload, op_token: opToken }),
         });
 
         if (!response.ok) {
@@ -603,10 +634,17 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
         return;
       }
 
+      const opToken = verifyData?.op_token;
+      if (!opToken) {
+        setOtpError("Не удалось подтвердить код");
+        setOtpSubmitting(false);
+        return;
+      }
+
       try {
         const response = await fetchWithInclude(`${API}/public/purchase/${purchaseId}/cancel`, {
           method: "POST",
-          body: JSON.stringify({ ...pendingPayload, ...(verifyData?.otp_token ? { otp_token: verifyData.otp_token } : {}) }),
+          body: JSON.stringify({ ...pendingPayload, op_token: opToken }),
         });
 
         if (!response.ok) {
@@ -632,10 +670,17 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
         return;
       }
 
+      const opToken = verifyData?.op_token;
+      if (!opToken) {
+        setOtpError("Не удалось подтвердить код");
+        setOtpSubmitting(false);
+        return;
+      }
+
       try {
         const response = await fetchWithInclude(`${API}/public/purchase/${purchaseId}/baggage`, {
           method: "POST",
-          body: JSON.stringify({ ...pendingPayload, ...(verifyData?.otp_token ? { otp_token: verifyData.otp_token } : {}) }),
+          body: JSON.stringify({ ...pendingPayload, op_token: opToken }),
         });
 
         if (!response.ok) {
@@ -656,8 +701,18 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
   const handleVerifyOtp = useCallback(
     async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
-      if (!otpAction || !pendingPayload) {
+      if (!otpAction) {
         setOtpError("Нет действия для подтверждения");
+        return;
+      }
+
+      if (!otpChallengeId) {
+        setOtpError("Нет активного запроса подтверждения");
+        return;
+      }
+
+      if (!pendingPayload && otpAction !== "pay") {
+        setOtpError("Нет данных для выполнения действия");
         return;
       }
 
@@ -672,7 +727,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
       try {
         const response = await fetchWithInclude(`${API}/public/otp/verify`, {
           method: "POST",
-          body: JSON.stringify({ action: otpAction, purchase_id: purchaseId, code: otpCode }),
+          body: JSON.stringify({ challenge_id: otpChallengeId, code: otpCode }),
         });
 
         if (!response.ok) {
@@ -713,9 +768,9 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
     },
     [
       otpAction,
+      otpChallengeId,
       otpCode,
       pendingPayload,
-      purchaseId,
       submitBaggage,
       submitCancel,
       submitPayment,
@@ -789,16 +844,30 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
   };
 
   const confirmReschedule = () => {
-    if (isActionDisabled || rescheduleTickets.length === 0 || !rescheduleOptionId || !rescheduleDate) {
-      setBanner({ type: "error", message: "Выберите билеты, дату и новый рейс" });
+    if (isActionDisabled) {
       return;
     }
 
+    if (rescheduleTickets.length === 0) {
+      setBanner({ type: "error", message: "Выберите билеты для переноса" });
+      return;
+    }
+
+    const selectedOption = rescheduleOptions.find((option) => String(option.id) === rescheduleOptionId);
+
+    if (!selectedOption) {
+      setBanner({ type: "error", message: "Выберите новый рейс" });
+      return;
+    }
+
+    const ticketIdentifiers = toOriginalTicketIds(rescheduleTickets);
     const payload: Record<string, unknown> = {
-      ticket_ids: rescheduleTickets,
-      option_id: rescheduleOptionId,
-      date: rescheduleDate,
+      new_tour_id: selectedOption.id,
     };
+
+    if (ticketIdentifiers.length > 0) {
+      payload.ticket_ids = ticketIdentifiers;
+    }
 
     void startOtpFlow("reschedule", payload);
   };
@@ -809,9 +878,12 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
       return;
     }
 
-    const payload: Record<string, unknown> = {
-      ticket_ids: cancelTickets,
-    };
+    const ticketIdentifiers = toOriginalTicketIds(cancelTickets);
+    const payload: Record<string, unknown> = {};
+
+    if (ticketIdentifiers.length > 0) {
+      payload.ticket_ids = ticketIdentifiers;
+    }
 
     void startOtpFlow("cancel", payload);
   };
@@ -834,12 +906,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
       return;
     }
 
-    const payload: Record<string, unknown> = {
-      amount: data.totals?.due ?? data.purchase.amount_due,
-      currency: data.purchase.currency,
-    };
-
-    void startOtpFlow("pay", payload);
+    void startOtpFlow("pay", {});
   };
 
   useEffect(() => {
@@ -1164,8 +1231,8 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
                         <input
                           type="radio"
                           name="reschedule-option"
-                          checked={rescheduleOptionId === option.id}
-                          onChange={() => setRescheduleOptionId(option.id)}
+                          checked={rescheduleOptionId === String(option.id)}
+                          onChange={() => setRescheduleOptionId(String(option.id))}
                           className="h-4 w-4"
                         />
                       </div>
