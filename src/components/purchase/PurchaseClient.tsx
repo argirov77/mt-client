@@ -291,7 +291,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
   const [otpSubmitting, setOtpSubmitting] = useState(false);
   const [actionLoading, setActionLoading] = useState<PurchaseAction | null>(null);
 
-  const isActionDisabled = ACTION_DISABLED_STATUSES.has(String(data?.purchase.status ?? ""));
+  const isActionDisabled = ACTION_DISABLED_STATUSES.has(String(data?.purchase?.status ?? ""));
 
   const passengerNameMap = useMemo(() => {
     if (!data) return new Map<string, string>();
