@@ -53,7 +53,8 @@ type Props = {
   handlePay: () => void;
   handleCancel: () => void;
   purchaseId: number | null;
-  onDownloadTicket: (purchaseId: number) => void;
+  ticketNumber: string | null;
+  onDownloadTicket: (ticketNumber: string) => void;
 };
 
 const free = (s: Tour["seats"]) => (typeof s === "number" ? s : s?.free ?? 0);
@@ -89,6 +90,7 @@ export default function BookingPanel({
   handlePay,
   handleCancel,
   purchaseId,
+  ticketNumber,
   onDownloadTicket,
 }: Props) {
   const [activeLeg, setActiveLeg] = useState<"outbound" | "return">("outbound");
@@ -233,10 +235,10 @@ export default function BookingPanel({
                 Багаж обратно
               </label>
             )}
-            {purchaseId && (
+            {ticketNumber && (
               <button
                 type="button"
-                onClick={() => onDownloadTicket(purchaseId)}
+                onClick={() => onDownloadTicket(ticketNumber)}
                 className="whitespace-nowrap rounded border px-2 py-1 text-sm hover:bg-slate-100"
               >
                 {t.ticketDownload}
@@ -293,14 +295,16 @@ export default function BookingPanel({
               >
                 {t.cancel}
               </button>
-              <button
-                type="button"
-                onClick={() => onDownloadTicket(purchaseId)}
-                className="border rounded p-2 hover:bg-slate-100"
-              >
-                {t.ticketDownload}
-              </button>
             </>
+          )}
+          {ticketNumber && (
+            <button
+              type="button"
+              onClick={() => onDownloadTicket(ticketNumber)}
+              className="border rounded p-2 hover:bg-slate-100"
+            >
+              {t.ticketDownload}
+            </button>
           )}
         </div>
       </form>
