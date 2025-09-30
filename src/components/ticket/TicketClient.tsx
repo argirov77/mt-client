@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { API } from "@/config";
 import type { ElectronicTicketData, TicketSegment } from "@/types/ticket";
 import { downloadTicketPdf } from "@/utils/ticketPdf";
+import { fetchWithInclude } from "@/utils/fetchWithInclude";
 import SeatClient, { type SeatMapSeat } from "@/components/SeatClient";
 
 const STATUS_LABELS: Record<ElectronicTicketData["status"], string> = {
@@ -65,16 +66,6 @@ type SeatContext = {
 interface TicketClientProps {
   ticketId: string;
 }
-
-const fetchWithInclude = (input: RequestInfo | URL, init?: RequestInit) =>
-  fetch(input, {
-    credentials: "include",
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...(init?.headers ?? {}),
-    },
-  });
 
 const formatTime = (time: string) => time.slice(0, 5);
 
@@ -516,11 +507,9 @@ export default function TicketClient({ ticketId }: TicketClientProps) {
     setIsUnauthorized(false);
 
     try {
-      const response = await fetch(`${API}/public/tickets/${ticketId}`, {
-        credentials: "include",
-      });
+      const response = await fetchWithInclude(`${API}/public/tickets/${ticketId}`);
 
-      if (response.status === 401 || response.status === 403) {
+      if (response.status === 401 || response.status === 403 || response.status === 404) {
         setIsUnauthorized(true);
         setTicket(null);
         return;
