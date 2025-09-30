@@ -28,7 +28,7 @@ export type ElectronicTicketData = {
     phone: string;
     email: string;
   };
-  outbound: TicketSegment;
+  outbound: TicketSegment | null | undefined;
   inbound?: TicketSegment | null;
   passengers: ElectronicTicketPassenger[];
 };

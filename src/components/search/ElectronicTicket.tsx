@@ -50,17 +50,31 @@ export default function ElectronicTicket({ ticket, t, onDownload }: Props) {
     onDownload();
   };
 
-  const renderSegment = (label: string, segment: ElectronicTicketData["outbound"]) => (
-    <div className="rounded-lg border bg-white/60 p-4">
-      <h4 className="font-semibold">{label}</h4>
-      <p>
-        {segment.fromName} → {segment.toName}
-      </p>
-      <p>
-        {formatDate(segment.date)} · {segment.departure_time} – {segment.arrival_time}
-      </p>
-    </div>
-  );
+  const renderSegment = (
+    label: string,
+    segment: ElectronicTicketData["outbound"]
+  ) => {
+    if (!segment) {
+      return (
+        <div className="rounded-lg border bg-white/60 p-4 text-sm text-slate-600">
+          <h4 className="font-semibold text-slate-800">{label}</h4>
+          <p>Данные о рейсе недоступны</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="rounded-lg border bg-white/60 p-4">
+        <h4 className="font-semibold">{label}</h4>
+        <p>
+          {segment.fromName} → {segment.toName}
+        </p>
+        <p>
+          {formatDate(segment.date)} · {segment.departure_time} – {segment.arrival_time}
+        </p>
+      </div>
+    );
+  };
 
   return (
     <section className="mt-6 rounded-3xl bg-sky-50/80 p-6 shadow-inner">
@@ -99,7 +113,7 @@ export default function ElectronicTicket({ ticket, t, onDownload }: Props) {
 
         <div className="space-y-3">
           {renderSegment(t.ticketOutbound, ticket.outbound)}
-          {ticket.inbound && renderSegment(t.ticketReturn, ticket.inbound)}
+          {renderSegment(t.ticketReturn, ticket.inbound)}
         </div>
       </div>
 
