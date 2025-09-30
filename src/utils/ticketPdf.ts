@@ -4,6 +4,7 @@ type SupportedLang = "ru" | "bg" | "en" | "ua";
 
 const buildTicketPdfUrl = (purchaseId: number, lang: SupportedLang): string => {
   const url = new URL(`${API}/tickets/${purchaseId}/pdf`);
+  url.hostname = "127.0.0.1";
   url.searchParams.set("lang", lang);
   return url.toString();
 };
@@ -17,9 +18,25 @@ export const downloadTicketPdf = async (
   }
 
   const pdfUrl = buildTicketPdfUrl(purchaseId, lang);
-  const newTab = window.open(pdfUrl, "_blank", "noopener,noreferrer");
+  const response = await fetch(pdfUrl, {
+    method: "GET",
+    headers: { Accept: "application/pdf" },
+    credentials: "include",
+  });
 
-  if (!newTab) {
-    throw new Error("Browser blocked the PDF pop-up window");
+  if (!response.ok) {
+    throw new Error("Failed to download the ticket PDF");
   }
+
+  const pdfBlob = await response.blob();
+  const objectUrl = URL.createObjectURL(pdfBlob);
+
+  const link = document.createElement("a");
+  link.href = objectUrl;
+  link.download = `ticket-${purchaseId}.pdf`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  URL.revokeObjectURL(objectUrl);
 };
