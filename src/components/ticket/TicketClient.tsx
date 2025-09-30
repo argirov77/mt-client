@@ -547,6 +547,8 @@ export default function TicketClient({ ticketId }: TicketClientProps) {
     );
   }
 
+  const passengerCount = ticket.passengers?.length ?? 0;
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-sky-100 via-white to-slate-100 p-4">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
@@ -555,7 +557,7 @@ export default function TicketClient({ ticketId }: TicketClientProps) {
             <p className="text-sm uppercase tracking-wide text-slate-400">Билет #{ticket.purchaseId}</p>
             <h1 className="mt-2 text-3xl font-bold text-slate-900">Миникабинет билета</h1>
             <p className="mt-2 text-sm text-slate-500">
-              {ticket.passengers.length} пассажир(ов) • Статус: {STATUS_LABELS[ticket.status]}
+              {passengerCount} пассажир(ов) • Статус: {STATUS_LABELS[ticket.status]}
             </p>
           </div>
           <div className="flex flex-col gap-3 md:items-end">
@@ -594,7 +596,7 @@ export default function TicketClient({ ticketId }: TicketClientProps) {
         <section className="rounded-3xl bg-white/90 p-6 shadow-xl ring-1 ring-white/70">
           <h2 className="text-xl font-semibold text-slate-800">Пассажиры</h2>
           <div className="mt-4 grid gap-4 md:grid-cols-2">
-            {ticket.passengers.map((passenger, index) => (
+            {(ticket.passengers ?? []).map((passenger, index) => (
               <div key={`${passenger.name}-${index}`} className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm">
                 <p className="text-base font-semibold text-slate-800">{passenger.name}</p>
                 <div className="mt-2 space-y-1 text-sm text-slate-500">
