@@ -7,6 +7,7 @@ import Loader from "@/components/common/Loader";
 import { fetchWithInclude } from "@/utils/fetchWithInclude";
 import type {
   PurchaseHistoryEvent,
+  PurchasePassenger,
   PurchaseTicket,
   PurchaseTrip,
   PurchaseView,
@@ -304,9 +305,10 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
 
   const passengerTickets = useMemo(() => {
     if (!data || !data.passengers) return new Map<string, PurchaseTicket[]>();
+    const tickets = Array.isArray(data.tickets) ? data.tickets : [];
     const map = new Map<string, PurchaseTicket[]>();
     data.passengers.forEach((passenger) => {
-      const related = data.tickets.filter(
+      const related = tickets.filter(
         (ticket) => String(ticket.passenger_id) === String(passenger.id)
       );
       map.set(String(passenger.id), related);
@@ -315,10 +317,17 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
   }, [data]);
 
   const tripsDetailed = useMemo(() => {
-    if (!data) return [] as Array<{ trip: PurchaseTrip; tickets: PurchaseTicket[]; summary: ReturnType<typeof tripSummary> }>;
-    return data.trips.map((trip) => {
-      const tickets = tripTickets(trip, data.tickets);
-      return { trip, tickets, summary: tripSummary(tickets) };
+    if (!data)
+      return [] as Array<{
+        trip: PurchaseTrip;
+        tickets: PurchaseTicket[];
+        summary: ReturnType<typeof tripSummary>;
+      }>;
+    const tickets = Array.isArray(data.tickets) ? data.tickets : [];
+    const trips = Array.isArray(data.trips) ? data.trips : [];
+    return trips.map((trip) => {
+      const tripRelatedTickets = tripTickets(trip, tickets);
+      return { trip, tickets: tripRelatedTickets, summary: tripSummary(tripRelatedTickets) };
     });
   }, [data]);
 
@@ -361,9 +370,18 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
       }
 
       const payload = (await response.json()) as PurchaseView;
-      setData(payload);
+      const tickets: PurchaseTicket[] = Array.isArray(payload.tickets) ? payload.tickets : [];
+      const trips: PurchaseTrip[] = Array.isArray(payload.trips) ? payload.trips : [];
+      const passengers: PurchasePassenger[] = Array.isArray(payload.passengers) ? payload.passengers : [];
+      const normalizedPayload: PurchaseView = {
+        ...payload,
+        passengers,
+        tickets,
+        trips,
+      };
+      setData(normalizedPayload);
       const initialBaggage: Record<string, number> = {};
-      payload.tickets.forEach((ticket) => {
+      tickets.forEach((ticket) => {
         initialBaggage[String(ticket.id)] = Number(ticket.extra_baggage ?? 0);
       });
       setBaggageDraft(initialBaggage);
