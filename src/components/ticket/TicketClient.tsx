@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { API } from "@/config";
 import type { ElectronicTicketData, TicketSegment } from "@/types/ticket";
 import { downloadTicketPdf } from "@/utils/ticketPdf";
+import SeatClient, { type SeatMapSeat } from "@/components/SeatClient";
 
 const STATUS_LABELS: Record<ElectronicTicketData["status"], string> = {
   pending: "Ожидает оплаты",
@@ -49,6 +50,18 @@ type RescheduleOption = {
   payload: RescheduleOptionPayload;
 };
 
+type SeatSelectionDetail = {
+  seatId: number;
+  seatNumber: number;
+};
+
+type SeatContext = {
+  tourId: number;
+  departureStopId: number;
+  arrivalStopId: number;
+  layoutVariant?: string | null;
+};
+
 interface TicketClientProps {
   ticketId: string;
 }
@@ -90,6 +103,21 @@ const formatCurrency = (amount: number, currency: string) => {
   }
 };
 
+const toNumber = (value: unknown): number | null => {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+
+  return null;
+};
+
 export default function TicketClient({ ticketId }: TicketClientProps) {
   const [ticket, setTicket] = useState<ElectronicTicketData | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -104,10 +132,355 @@ export default function TicketClient({ ticketId }: TicketClientProps) {
   const [otpSubmitting, setOtpSubmitting] = useState<boolean>(false);
   const [actionLoading, setActionLoading] = useState<TicketAction | null>(null);
   const [pendingPayload, setPendingPayload] = useState<Record<string, unknown> | null>(null);
+  const [rescheduleDraftPayload, setRescheduleDraftPayload] = useState<Record<string, unknown> | null>(null);
   const [selectedRescheduleId, setSelectedRescheduleId] = useState<string | null>(null);
   const [rescheduleOptions, setRescheduleOptions] = useState<RescheduleOption[]>([]);
   const [rescheduleLoading, setRescheduleLoading] = useState<boolean>(false);
   const [rescheduleError, setRescheduleError] = useState<string | null>(null);
+  const [rescheduleSeatContext, setRescheduleSeatContext] = useState<SeatContext | null>(null);
+  const [rescheduleSeatMap, setRescheduleSeatMap] = useState<SeatMapSeat[]>([]);
+  const [selectedSeats, setSelectedSeats] = useState<number[]>([]);
+  const [selectedSeatIds, setSelectedSeatIds] = useState<number[]>([]);
+  const [reschedulePrice, setReschedulePrice] = useState<{ total: number; currency: string } | null>(null);
+  const [rescheduleAmountDiff, setRescheduleAmountDiff] = useState<number | null>(null);
+  const [reschedulePriceLoading, setReschedulePriceLoading] = useState<boolean>(false);
+  const [reschedulePriceError, setReschedulePriceError] = useState<string | null>(null);
+  const [downloadLabel, setDownloadLabel] = useState<string>("Скачать PDF");
+
+  const passengerCount = ticket?.passengers?.length ?? 0;
+  const outboundDetails = useMemo(() => {
+    if (!ticket?.outbound) {
+      return null;
+    }
+
+    const segment = ticket.outbound as (TicketSegment & {
+      fromId?: string | number;
+      toId?: string | number;
+      tripId?: string | number;
+      departureStopId?: string | number;
+      arrivalStopId?: string | number;
+      layoutVariant?: string | null;
+    }) | null;
+
+    return segment ?? null;
+  }, [ticket]);
+
+  const updateRescheduleDraft = useCallback((patch: Record<string, unknown>) => {
+    setRescheduleDraftPayload((prev) => (prev ? { ...prev, ...patch } : prev));
+  }, []);
+
+  const loadReschedulePricing = useCallback(
+    async (option: RescheduleOption) => {
+      if (!outboundDetails) {
+        setReschedulePrice(null);
+        setRescheduleAmountDiff(null);
+        setReschedulePriceError("Данные о направлении недоступны");
+        return;
+      }
+
+      const fromId =
+        option.payload["departure_stop_id"] ??
+        option.payload["from_id"] ??
+        outboundDetails.fromId ??
+        outboundDetails.departureStopId ??
+        null;
+      const toId =
+        option.payload["arrival_stop_id"] ??
+        option.payload["to_id"] ??
+        outboundDetails.toId ??
+        outboundDetails.arrivalStopId ??
+        null;
+
+      if (!fromId || !toId) {
+        setReschedulePrice(null);
+        setRescheduleAmountDiff(null);
+        setReschedulePriceError("Не удалось определить остановки рейса");
+        return;
+      }
+
+      const seatsRequired = Math.max(1, passengerCount || 0);
+
+      setReschedulePriceLoading(true);
+      setReschedulePriceError(null);
+
+      try {
+        const params = new URLSearchParams({
+          departure_stop_id: String(fromId),
+          arrival_stop_id: String(toId),
+          date: option.date,
+          seats: String(seatsRequired),
+        });
+
+        const response = await fetch(`${API}/tours/search?${params.toString()}`, {
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          throw new Error(`Ошибка ${response.status}`);
+        }
+
+        const tours = (await response.json()) as Array<{
+          id?: number | string;
+          price?: number;
+          layout_variant?: string | null;
+        }>;
+
+        const optionTripId = toNumber(option.payload.trip_id ?? option.tripId);
+
+        const matchedTour =
+          tours.find((tour) => {
+            const tourId = toNumber(tour.id);
+            return (
+              (tourId !== null && optionTripId !== null && tourId === optionTripId) ||
+              (tour?.id !== undefined && optionTripId !== null && String(tour.id) === String(optionTripId))
+            );
+          }) ?? null;
+
+        const pricePerSeat =
+          typeof matchedTour?.price === "number" && Number.isFinite(matchedTour.price)
+            ? matchedTour.price
+            : passengerCount > 0
+              ? option.price / passengerCount
+              : option.price;
+
+        const total = pricePerSeat * seatsRequired;
+        const currency = option.currency;
+
+        setReschedulePrice({ total, currency });
+        const diff = total - (ticket?.total ?? 0);
+        setRescheduleAmountDiff(diff);
+        if (matchedTour?.layout_variant) {
+          setRescheduleSeatContext((prev) =>
+            prev ? { ...prev, layoutVariant: matchedTour.layout_variant ?? prev.layoutVariant } : prev
+          );
+        }
+        updateRescheduleDraft({
+          new_total: total,
+          currency,
+          amount_difference: diff,
+        });
+      } catch (error) {
+        console.error(error);
+        setReschedulePrice(null);
+        setRescheduleAmountDiff(null);
+        setReschedulePriceError("Не удалось рассчитать стоимость нового рейса");
+      } finally {
+        setReschedulePriceLoading(false);
+      }
+    },
+    [outboundDetails, passengerCount, ticket?.total, updateRescheduleDraft]
+  );
+
+  const handleRescheduleSelect = useCallback(
+    (option: RescheduleOption) => {
+      setSelectedRescheduleId(option.id);
+
+      const basePayload: Record<string, unknown> = {
+        ...option.payload,
+        option_id: option.payload.option_id ?? option.id,
+        trip_id: option.payload.trip_id ?? option.tripId,
+        date: option.payload.date ?? option.date,
+        departure_time: option.payload.departure_time ?? option.departureTime,
+        arrival_time: option.payload.arrival_time ?? option.arrivalTime,
+      };
+
+      setRescheduleDraftPayload(basePayload);
+      setPendingPayload(null);
+
+      const tourId = toNumber(option.payload.trip_id ?? option.tripId);
+      const departureStopId = toNumber(
+        option.payload["departure_stop_id"] ??
+          option.payload["from_id"] ??
+          option.payload["departure_stop"] ??
+          outboundDetails?.fromId ??
+          outboundDetails?.departureStopId
+      );
+      const arrivalStopId = toNumber(
+        option.payload["arrival_stop_id"] ??
+          option.payload["to_id"] ??
+          option.payload["arrival_stop"] ??
+          outboundDetails?.toId ??
+          outboundDetails?.arrivalStopId
+      );
+      const layoutVariant = option.payload["layout_variant"] ?? outboundDetails?.layoutVariant ?? null;
+
+      if (tourId !== null && departureStopId !== null && arrivalStopId !== null) {
+        setRescheduleSeatContext({
+          tourId,
+          departureStopId,
+          arrivalStopId,
+          layoutVariant,
+        });
+      } else {
+        setRescheduleSeatContext(null);
+      }
+
+      setRescheduleSeatMap([]);
+      setSelectedSeats([]);
+      setSelectedSeatIds([]);
+      setReschedulePrice(null);
+      setRescheduleAmountDiff(null);
+      setReschedulePriceError(null);
+      updateRescheduleDraft({ seat_map: [], seat_ids: [], seat_numbers: [] });
+
+      void loadReschedulePricing(option);
+    },
+    [loadReschedulePricing, outboundDetails, updateRescheduleDraft]
+  );
+
+  const handleSeatMapLoad = useCallback(
+    (seats: SeatMapSeat[]) => {
+      setRescheduleSeatMap(seats);
+      updateRescheduleDraft({
+        seat_map: seats.map((seat) => ({
+          seat_id: seat.seat_id,
+          seat_num: seat.seat_num,
+          status: seat.status,
+        })),
+      });
+    },
+    [updateRescheduleDraft]
+  );
+
+  const handleSeatSelectionDetails = useCallback(
+    (selection: SeatSelectionDetail[]) => {
+      const seatIds = selection.map((item) => item.seatId);
+      const seatNumbers = selection.map((item) => item.seatNumber);
+      setSelectedSeatIds(seatIds);
+      updateRescheduleDraft({
+        seat_ids: seatIds,
+        seat_numbers: seatNumbers,
+      });
+    },
+    [updateRescheduleDraft]
+  );
+
+  const selectedOption = useMemo(
+    () => rescheduleOptions.find((option) => option.id === selectedRescheduleId) ?? null,
+    [rescheduleOptions, selectedRescheduleId]
+  );
+
+  const requiredSeats = Math.max(passengerCount, 0);
+  const seatSelectionAvailable = !selectedRescheduleId || Boolean(rescheduleSeatContext);
+  const seatsReady =
+    seatSelectionAvailable &&
+    (requiredSeats === 0 ||
+      (selectedSeats.length === requiredSeats && selectedSeatIds.length === requiredSeats));
+  const priceReady = Boolean(reschedulePrice && rescheduleAmountDiff !== null);
+  const rescheduleButtonDisabled =
+    actionLoading === "reschedule" ||
+    rescheduleLoading ||
+    reschedulePriceLoading ||
+    !selectedRescheduleId ||
+    !seatSelectionAvailable ||
+    !seatsReady ||
+    !priceReady;
+  const resolvedCurrency = selectedOption
+    ? reschedulePrice?.currency ?? selectedOption.currency
+    : reschedulePrice?.currency ?? selectedOption?.currency ?? "RUB";
+  const currentTotal = ticket?.total ?? 0;
+  const differenceSummary = useMemo(() => {
+    if (!reschedulePrice || rescheduleAmountDiff === null) {
+      return null;
+    }
+
+    if (rescheduleAmountDiff > 0) {
+      return {
+        text: `Доплата: ${formatCurrency(rescheduleAmountDiff, resolvedCurrency)}`,
+        tone: "text-amber-600",
+        description: "После подтверждения отправим ссылку на оплату.",
+      };
+    }
+
+    if (rescheduleAmountDiff < 0) {
+      return {
+        text: `К возврату: ${formatCurrency(Math.abs(rescheduleAmountDiff), resolvedCurrency)}`,
+        tone: "text-emerald-600",
+        description: "Возврат будет оформлен автоматически.",
+      };
+    }
+
+    return {
+      text: "Стоимость не изменится",
+      tone: "text-slate-600",
+      description: "Перенос не требует доплаты или возврата.",
+    };
+  }, [rescheduleAmountDiff, reschedulePrice, resolvedCurrency]);
+
+  const handleRescheduleRequest = useCallback(() => {
+    if (!selectedRescheduleId || !selectedOption) {
+      setBanner({ type: "error", message: "Выберите новый рейс для переноса" });
+      return;
+    }
+
+    if (!rescheduleSeatContext) {
+      setBanner({ type: "error", message: "Схема мест недоступна для выбранного рейса" });
+      return;
+    }
+
+    if (requiredSeats > 0 && selectedSeats.length !== requiredSeats) {
+      setBanner({
+        type: "error",
+        message:
+          requiredSeats === 1
+            ? "Выберите место перед переносом"
+            : `Выберите ${requiredSeats} мест перед переносом`,
+      });
+      return;
+    }
+
+    if (requiredSeats > 0 && selectedSeatIds.length !== selectedSeats.length) {
+      setBanner({ type: "error", message: "Данные о выбранных местах недоступны" });
+      return;
+    }
+
+    if (!rescheduleDraftPayload) {
+      setBanner({ type: "error", message: "Перенос недоступен. Попробуйте обновить страницу" });
+      return;
+    }
+
+    if (!reschedulePrice || rescheduleAmountDiff === null) {
+      setBanner({ type: "error", message: "Не удалось рассчитать стоимость нового рейса" });
+      return;
+    }
+
+    const payload: Record<string, unknown> = {
+      ...rescheduleDraftPayload,
+      option_id: selectedOption.payload.option_id ?? selectedOption.id,
+      trip_id: selectedOption.payload.trip_id ?? selectedOption.tripId,
+      date: selectedOption.payload.date ?? selectedOption.date,
+      departure_time: selectedOption.payload.departure_time ?? selectedOption.departureTime,
+      arrival_time: selectedOption.payload.arrival_time ?? selectedOption.arrivalTime,
+      seat_ids: selectedSeatIds,
+      seat_numbers: selectedSeats,
+      seat_map: rescheduleSeatMap.map((seat) => ({
+        seat_id: seat.seat_id,
+        seat_num: seat.seat_num,
+        status: seat.status,
+      })),
+      new_total: reschedulePrice.total,
+      currency: reschedulePrice.currency ?? selectedOption.currency,
+      amount_difference: rescheduleAmountDiff,
+      original_total: ticket?.total ?? 0,
+    };
+
+    setBanner(null);
+    setPendingPayload(payload);
+    void startOtpFlow("reschedule", payload);
+  }, [
+    passengerCount,
+    rescheduleAmountDiff,
+    rescheduleDraftPayload,
+    selectedOption,
+    reschedulePrice,
+    rescheduleSeatMap,
+    rescheduleSeatContext,
+    selectedRescheduleId,
+    selectedSeatIds,
+    selectedSeats,
+    startOtpFlow,
+    ticket?.total,
+  ]);
 
   const fetchTicket = useCallback(async () => {
     setIsLoading(true);
@@ -144,34 +517,43 @@ export default function TicketClient({ ticketId }: TicketClientProps) {
   }, [fetchTicket]);
 
   useEffect(() => {
-    const outbound = ticket?.outbound as (TicketSegment & {
-      fromId?: string | number;
-      toId?: string | number;
-      tripId?: string | number;
-    }) | null;
-
-    if (!outbound) {
+    if (!outboundDetails) {
       setRescheduleOptions([]);
       setRescheduleError(null);
       setRescheduleLoading(false);
       setSelectedRescheduleId(null);
-      setPendingPayload(null);
+      setRescheduleDraftPayload(null);
+      setRescheduleSeatContext(null);
+      setRescheduleSeatMap([]);
+      setSelectedSeats([]);
+      setSelectedSeatIds([]);
+      setReschedulePrice(null);
+      setRescheduleAmountDiff(null);
+      setReschedulePriceError(null);
       return;
     }
 
-    const fromId = outbound.fromId ?? null;
-    const toId = outbound.toId ?? null;
+    const fromId = outboundDetails.fromId ?? outboundDetails.departureStopId ?? null;
+    const toId = outboundDetails.toId ?? outboundDetails.arrivalStopId ?? null;
 
     if (!fromId || !toId) {
       setRescheduleOptions([]);
       setRescheduleError("Данные о направлении недоступны для переноса");
       setRescheduleLoading(false);
       setSelectedRescheduleId(null);
-      setPendingPayload(null);
+      setRescheduleDraftPayload(null);
+      setRescheduleSeatContext(null);
+      setRescheduleSeatMap([]);
+      setSelectedSeats([]);
+      setSelectedSeatIds([]);
+      setReschedulePrice(null);
+      setRescheduleAmountDiff(null);
+      setReschedulePriceError(null);
       return;
     }
 
     const controller = new AbortController();
+    const previousSelectionId = selectedRescheduleId;
 
     const fetchOptions = async () => {
       setRescheduleLoading(true);
@@ -184,7 +566,7 @@ export default function TicketClient({ ticketId }: TicketClientProps) {
             ticket_id: ticketId,
             from_id: fromId,
             to_id: toId,
-            date: outbound.date,
+            date: outboundDetails.date,
           }),
           signal: controller.signal,
         });
@@ -213,22 +595,22 @@ export default function TicketClient({ ticketId }: TicketClientProps) {
                 `option-${index}`
             );
             const optionDate = String(
-              rawOption["date"] ?? rawOption["departure_date"] ?? outbound.date ?? ""
+              rawOption["date"] ?? rawOption["departure_date"] ?? outboundDetails.date ?? ""
             );
             const departureTime = String(
               rawOption["departure_time"] ??
                 rawOption["departureTime"] ??
-                outbound.departure_time ??
+                outboundDetails.departure_time ??
                 ""
             );
             const arrivalTime = String(
               rawOption["arrival_time"] ??
                 rawOption["arrivalTime"] ??
-                outbound.arrival_time ??
+                outboundDetails.arrival_time ??
                 ""
             );
             const description = String(
-              rawOption["description"] ?? `${outbound.fromName} → ${outbound.toName}`
+              rawOption["description"] ?? `${outboundDetails.fromName} → ${outboundDetails.toName}`
             );
 
             const priceRaw = rawOption["price"] ?? 0;
@@ -291,8 +673,23 @@ export default function TicketClient({ ticketId }: TicketClientProps) {
         );
 
         setRescheduleOptions(normalizedOptions);
-        setSelectedRescheduleId(normalizedOptions[0]?.id ?? null);
-        setPendingPayload(normalizedOptions[0]?.payload ?? null);
+
+        if (normalizedOptions.length) {
+          const nextOption =
+            normalizedOptions.find((option) => option.id === previousSelectionId) ??
+            normalizedOptions[0];
+          handleRescheduleSelect(nextOption);
+        } else {
+          setSelectedRescheduleId(null);
+          setRescheduleDraftPayload(null);
+          setRescheduleSeatContext(null);
+          setRescheduleSeatMap([]);
+          setSelectedSeats([]);
+          setSelectedSeatIds([]);
+          setReschedulePrice(null);
+          setRescheduleAmountDiff(null);
+          setReschedulePriceError(null);
+        }
       } catch (error) {
         if ((error as { name?: string }).name === "AbortError") {
           return;
@@ -301,7 +698,14 @@ export default function TicketClient({ ticketId }: TicketClientProps) {
         console.error(error);
         setRescheduleOptions([]);
         setSelectedRescheduleId(null);
-        setPendingPayload(null);
+        setRescheduleDraftPayload(null);
+        setRescheduleSeatContext(null);
+        setRescheduleSeatMap([]);
+        setSelectedSeats([]);
+        setSelectedSeatIds([]);
+        setReschedulePrice(null);
+        setRescheduleAmountDiff(null);
+        setReschedulePriceError(null);
         setRescheduleError("Не удалось загрузить варианты переноса");
       } finally {
         setRescheduleLoading(false);
@@ -313,7 +717,8 @@ export default function TicketClient({ ticketId }: TicketClientProps) {
     return () => {
       controller.abort();
     };
-  }, [ticket, ticketId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [outboundDetails, ticketId, handleRescheduleSelect]);
 
   const handleResendLink = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -517,9 +922,40 @@ export default function TicketClient({ ticketId }: TicketClientProps) {
         payload = null;
       }
 
+      const rawDifference = pendingPayload?.amount_difference;
+      const amountDifference =
+        typeof rawDifference === "number"
+          ? rawDifference
+          : Number(rawDifference ?? 0);
+      const payloadCurrency =
+        typeof pendingPayload?.currency === "string"
+          ? (pendingPayload.currency as string)
+          : resolvedCurrency;
+
+      let successMessage = "Рейс перенесён. Скачайте обновлённый билет.";
+
+      if (Number.isFinite(amountDifference) && payloadCurrency) {
+        if (amountDifference > 0) {
+          successMessage = `Рейс перенесён. Доплата ${formatCurrency(amountDifference, payloadCurrency)} будет доступна после подтверждения.`;
+        } else if (amountDifference < 0) {
+          successMessage = `Рейс перенесён. К возврату ${formatCurrency(Math.abs(amountDifference), payloadCurrency)}.`;
+        } else {
+          successMessage = "Рейс перенесён. Стоимость не изменилась, скачайте обновлённый билет.";
+        }
+      }
+
       closeOtpModal();
-      setBanner({ type: "success", message: "Перенос успешно оформлен" });
+      setBanner({ type: "success", message: successMessage });
       setSelectedRescheduleId(null);
+      setRescheduleDraftPayload(null);
+      setRescheduleSeatContext(null);
+      setRescheduleSeatMap([]);
+      setSelectedSeats([]);
+      setSelectedSeatIds([]);
+      setReschedulePrice(null);
+      setRescheduleAmountDiff(null);
+      setReschedulePriceError(null);
+      setDownloadLabel("Скачать обновлённый PDF");
       await fetchTicket();
 
       const paymentData = (payload?.payment ?? payload?.paymentPayload) as PaymentPayload | null;
@@ -573,18 +1009,6 @@ export default function TicketClient({ ticketId }: TicketClientProps) {
     }
   };
 
-  const handleRescheduleSelect = (option: RescheduleOption) => {
-    setSelectedRescheduleId(option.id);
-    setPendingPayload({
-      ...option.payload,
-      option_id: option.payload.option_id ?? option.id,
-      trip_id: option.payload.trip_id ?? option.tripId,
-      date: option.payload.date ?? option.date,
-      departure_time: option.payload.departure_time ?? option.departureTime,
-      arrival_time: option.payload.arrival_time ?? option.arrivalTime,
-    });
-  };
-
   const handleManualReschedule = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
@@ -598,17 +1022,24 @@ export default function TicketClient({ ticketId }: TicketClientProps) {
     }
 
     setSelectedRescheduleId(null);
-    setPendingPayload({
-      date,
-      departure_time: departure,
-      arrival_time: arrival || undefined,
-    });
+    setRescheduleDraftPayload(null);
+    setRescheduleSeatContext(null);
+    setRescheduleSeatMap([]);
+    setSelectedSeats([]);
+    setSelectedSeatIds([]);
+    setReschedulePrice(null);
+    setRescheduleAmountDiff(null);
+    setReschedulePriceError(null);
 
-    void startOtpFlow("reschedule", {
+    const manualPayload = {
       date,
       departure_time: departure,
       arrival_time: arrival || undefined,
-    });
+    };
+
+    setPendingPayload(manualPayload);
+
+    void startOtpFlow("reschedule", manualPayload);
   };
 
   const renderSegment = (
@@ -756,7 +1187,7 @@ export default function TicketClient({ ticketId }: TicketClientProps) {
               onClick={() => void downloadTicketPdf(ticket.purchaseId, "ru")}
               className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-lg hover:bg-slate-800"
             >
-              Скачать PDF
+              {downloadLabel}
             </button>
             <div className="rounded-xl bg-slate-100 px-4 py-2 text-sm text-slate-600">
               Создан: {formatDate(ticket.createdAt)}
@@ -819,30 +1250,10 @@ export default function TicketClient({ ticketId }: TicketClientProps) {
             </button>
             <button
               type="button"
-              onClick={() => {
-                if (pendingPayload) {
-                  void startOtpFlow("reschedule", pendingPayload);
-                } else if (rescheduleOptions.length) {
-                  handleRescheduleSelect(rescheduleOptions[0]);
-                  void startOtpFlow("reschedule", {
-                    ...rescheduleOptions[0].payload,
-                    option_id: rescheduleOptions[0].payload.option_id ?? rescheduleOptions[0].id,
-                    trip_id: rescheduleOptions[0].payload.trip_id ?? rescheduleOptions[0].tripId,
-                    date: rescheduleOptions[0].payload.date ?? rescheduleOptions[0].date,
-                    departure_time:
-                      rescheduleOptions[0].payload.departure_time ??
-                      rescheduleOptions[0].departureTime,
-                    arrival_time:
-                      rescheduleOptions[0].payload.arrival_time ??
-                      rescheduleOptions[0].arrivalTime,
-                  });
-                } else {
-                  setBanner({ type: "error", message: "Выберите новый рейс для переноса" });
-                }
-              }}
-              disabled={actionLoading === "reschedule" || rescheduleLoading}
+              onClick={handleRescheduleRequest}
+              disabled={rescheduleButtonDisabled}
               className={`rounded-2xl px-4 py-3 text-sm font-semibold shadow transition ${
-                actionLoading === "reschedule" || rescheduleLoading
+                rescheduleButtonDisabled
                   ? "bg-slate-300 text-slate-500"
                   : "bg-sky-500 text-white hover:bg-sky-600"
               }`}
@@ -851,7 +1262,9 @@ export default function TicketClient({ ticketId }: TicketClientProps) {
                 ? "Запрос кода…"
                 : rescheduleLoading
                   ? "Загружаем варианты…"
-                  : "Перенести рейс"}
+                  : reschedulePriceLoading
+                    ? "Рассчитываем стоимость…"
+                    : "Перенести рейс"}
             </button>
             <button
               type="button"
@@ -919,6 +1332,59 @@ export default function TicketClient({ ticketId }: TicketClientProps) {
                 </div>
               )}
             </div>
+
+            {selectedOption ? (
+              <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow">
+                <div className="flex flex-col gap-1">
+                  <h4 className="text-sm font-semibold text-slate-700">Выбор мест</h4>
+                  <p className="text-xs text-slate-500">
+                    {requiredSeats === 1
+                      ? "Выберите место для нового рейса"
+                      : `Выберите ${requiredSeats} мест для нового рейса`}
+                  </p>
+                </div>
+                {rescheduleSeatContext ? (
+                  <SeatClient
+                    tourId={rescheduleSeatContext.tourId}
+                    departureStopId={rescheduleSeatContext.departureStopId}
+                    arrivalStopId={rescheduleSeatContext.arrivalStopId}
+                    layoutVariant={rescheduleSeatContext.layoutVariant}
+                    selectedSeats={selectedSeats}
+                    maxSeats={Math.max(requiredSeats, 1)}
+                    onChange={setSelectedSeats}
+                    onSeatMapLoad={handleSeatMapLoad}
+                    onSelectionDetailsChange={handleSeatSelectionDetails}
+                    departureText={`${ticket?.outbound?.fromName ?? ""} · ${formatTime(selectedOption.departureTime)}`}
+                    arrivalText={`${ticket?.outbound?.toName ?? ""} · ${formatTime(selectedOption.arrivalTime)}`}
+                    extraBaggage={false}
+                  />
+                ) : (
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700">
+                    Схема мест недоступна для выбранного варианта. Попробуйте выбрать другой рейс.
+                  </div>
+                )}
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
+                  {reschedulePriceLoading ? (
+                    "Рассчитываем стоимость…"
+                  ) : reschedulePriceError ? (
+                    reschedulePriceError
+                  ) : reschedulePrice ? (
+                    <div className="space-y-1">
+                      <div>Текущий билет: {formatCurrency(currentTotal, resolvedCurrency)}</div>
+                      <div>Новый рейс: {formatCurrency(reschedulePrice.total, resolvedCurrency)}</div>
+                      {differenceSummary ? (
+                        <div className={`font-semibold ${differenceSummary.tone}`}>
+                          {differenceSummary.text}
+                          <div className="text-xs font-normal text-slate-500">{differenceSummary.description}</div>
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : (
+                    "Выберите рейс, чтобы увидеть стоимость"
+                  )}
+                </div>
+              </div>
+            ) : null}
 
             <form onSubmit={handleManualReschedule} className="rounded-2xl border border-dashed border-slate-300 p-4">
               <h4 className="text-sm font-semibold text-slate-700">Другой рейс</h4>

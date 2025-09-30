@@ -7,7 +7,12 @@ import Travego from "@/components/Travego";
 import { Wifi, Toilet, Snowflake, Plug, Armchair } from "lucide-react";
 
 type SeatStatus = "available" | "occupied" | "blocked";
-type Seat = { seat_id: number; seat_num: number; status: SeatStatus };
+export type SeatMapSeat = { seat_id: number; seat_num: number; status: SeatStatus };
+
+type SeatSelectionDetail = {
+  seatId: number;
+  seatNumber: number;
+};
 
 type LayoutVariant = "neoplan" | "travego" | string;
 
@@ -23,6 +28,8 @@ type Props = {
   arrivalText?: string;
   extraBaggage?: boolean;
   onExtraBaggageChange?: (v: boolean) => void;
+  onSeatMapLoad?: (seats: SeatMapSeat[]) => void;
+  onSelectionDetailsChange?: (selection: SeatSelectionDetail[]) => void;
 };
 
 const tiny = {
@@ -42,13 +49,19 @@ export default function SeatClient({
   arrivalText,
   extraBaggage = false,
   onExtraBaggageChange,
+  onSeatMapLoad,
+  onSelectionDetailsChange,
 }: Props) {
-  const [seats, setSeats] = useState<Seat[]>([]);
+  const [seats, setSeats] = useState<SeatMapSeat[]>([]);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string>("");
 
   useEffect(() => {
     let aborted = false;
+    setSeats([]);
+    onChange([]);
+    onSeatMapLoad?.([]);
+    onSelectionDetailsChange?.([]);
     (async () => {
       try {
         setLoading(true);
@@ -61,14 +74,19 @@ export default function SeatClient({
           const text = await res.text().catch(() => "");
           throw new Error(`HTTP ${res.status} ${res.statusText}: ${text.slice(0, 200)}`);
         }
-        const data = (await res.json()) as { seats: Seat[] };
+        const data = (await res.json()) as { seats: SeatMapSeat[] };
         if (aborted) return;
 
-        setSeats(data.seats || []);
+        const seatData = data.seats || [];
+        setSeats(seatData);
         onChange([]); // сброс при смене рейса
+        onSeatMapLoad?.(seatData);
+        onSelectionDetailsChange?.([]);
       } catch (e) {
         if (aborted) return;
         setErr(e instanceof Error ? e.message : String(e));
+        onSeatMapLoad?.([]);
+        onSelectionDetailsChange?.([]);
       } finally {
         if (!aborted) setLoading(false);
       }
@@ -78,6 +96,24 @@ export default function SeatClient({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tourId, departureStopId, arrivalStopId]);
+
+  useEffect(() => {
+    if (!onSelectionDetailsChange) {
+      return;
+    }
+
+    const details = selectedSeats.reduce<SeatSelectionDetail[]>((accumulator, seatNumber) => {
+      const seat = seats.find((item) => item.seat_num === seatNumber);
+      if (!seat || typeof seat.seat_id !== "number") {
+        return accumulator;
+      }
+
+      accumulator.push({ seatId: seat.seat_id, seatNumber });
+      return accumulator;
+    }, []);
+
+    onSelectionDetailsChange(details);
+  }, [onSelectionDetailsChange, seats, selectedSeats]);
 
   const statusMap = useMemo(() => {
     const m = new Map<number, SeatStatus>();
