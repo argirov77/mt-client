@@ -1,4 +1,4 @@
-import TicketClient from "@/components/ticket/TicketClient";
+import PurchaseClient from "@/components/purchase/PurchaseClient";
 
 interface TicketPageProps {
   params: Promise<{
@@ -9,5 +9,5 @@ interface TicketPageProps {
 export default async function TicketPage({ params }: TicketPageProps) {
   const { id } = await params;
 
-  return <TicketClient ticketId={id} />;
+  return <PurchaseClient purchaseId={id} />;
 }
