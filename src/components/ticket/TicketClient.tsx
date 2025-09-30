@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { API } from "@/config";
 import type { ElectronicTicketData, TicketSegment } from "@/types/ticket";
 import { downloadTicketPdf } from "@/utils/ticketPdf";
@@ -28,13 +28,25 @@ type PaymentPayload = {
   [key: string]: unknown;
 };
 
+type RescheduleOptionPayload = {
+  option_id?: string;
+  trip_id?: string;
+  date?: string;
+  departure_time?: string;
+  arrival_time?: string;
+} & Record<string, unknown>;
+
 type RescheduleOption = {
   id: string;
   date: string;
   departureTime: string;
   arrivalTime: string;
   description: string;
-  priceDifference?: number;
+  price: number;
+  currency: string;
+  availability: number;
+  tripId: string;
+  payload: RescheduleOptionPayload;
 };
 
 interface TicketClientProps {
@@ -66,26 +78,16 @@ const formatDate = (value: string) => {
   }
 };
 
-const buildRescheduleOptions = (segment?: TicketSegment | null): RescheduleOption[] => {
-  if (!segment) {
-    return [];
+const formatCurrency = (amount: number, currency: string) => {
+  try {
+    return new Intl.NumberFormat("ru-RU", {
+      style: "currency",
+      currency,
+      minimumFractionDigits: 0,
+    }).format(amount);
+  } catch {
+    return `${amount.toFixed(2)} ${currency}`;
   }
-
-  const baseDate = new Date(segment.date);
-
-  return Array.from({ length: 5 }, (_, index) => {
-    const optionDate = new Date(baseDate);
-    optionDate.setDate(baseDate.getDate() + index + 1);
-
-    return {
-      id: `reschedule-${index + 1}`,
-      date: optionDate.toISOString().slice(0, 10),
-      departureTime: segment.departure_time,
-      arrivalTime: segment.arrival_time,
-      description: `${segment.fromName} → ${segment.toName}`,
-      priceDifference: index === 0 ? 0 : (index + 1) * 10,
-    } satisfies RescheduleOption;
-  });
 };
 
 export default function TicketClient({ ticketId }: TicketClientProps) {
@@ -103,11 +105,9 @@ export default function TicketClient({ ticketId }: TicketClientProps) {
   const [actionLoading, setActionLoading] = useState<TicketAction | null>(null);
   const [pendingPayload, setPendingPayload] = useState<Record<string, unknown> | null>(null);
   const [selectedRescheduleId, setSelectedRescheduleId] = useState<string | null>(null);
-
-  const rescheduleOptions = useMemo(
-    () => buildRescheduleOptions(ticket?.outbound ?? null),
-    [ticket]
-  );
+  const [rescheduleOptions, setRescheduleOptions] = useState<RescheduleOption[]>([]);
+  const [rescheduleLoading, setRescheduleLoading] = useState<boolean>(false);
+  const [rescheduleError, setRescheduleError] = useState<string | null>(null);
 
   const fetchTicket = useCallback(async () => {
     setIsLoading(true);
@@ -142,6 +142,178 @@ export default function TicketClient({ ticketId }: TicketClientProps) {
   useEffect(() => {
     void fetchTicket();
   }, [fetchTicket]);
+
+  useEffect(() => {
+    const outbound = ticket?.outbound as (TicketSegment & {
+      fromId?: string | number;
+      toId?: string | number;
+      tripId?: string | number;
+    }) | null;
+
+    if (!outbound) {
+      setRescheduleOptions([]);
+      setRescheduleError(null);
+      setRescheduleLoading(false);
+      setSelectedRescheduleId(null);
+      setPendingPayload(null);
+      return;
+    }
+
+    const fromId = outbound.fromId ?? null;
+    const toId = outbound.toId ?? null;
+
+    if (!fromId || !toId) {
+      setRescheduleOptions([]);
+      setRescheduleError("Данные о направлении недоступны для переноса");
+      setRescheduleLoading(false);
+      setSelectedRescheduleId(null);
+      setPendingPayload(null);
+      return;
+    }
+
+    const controller = new AbortController();
+
+    const fetchOptions = async () => {
+      setRescheduleLoading(true);
+      setRescheduleError(null);
+
+      try {
+        const response = await fetchWithInclude(`${API}/public/reschedule/options`, {
+          method: "POST",
+          body: JSON.stringify({
+            ticket_id: ticketId,
+            from_id: fromId,
+            to_id: toId,
+            date: outbound.date,
+          }),
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          throw new Error(`Ошибка ${response.status}`);
+        }
+
+        const data = (await response.json()) as {
+          options?: Array<Record<string, unknown>>;
+        };
+
+        const normalizedOptions = (Array.isArray(data?.options) ? data.options : []).reduce<RescheduleOption[]>(
+          (accumulator, option, index) => {
+            if (!option) {
+              return accumulator;
+            }
+
+            const rawOption = option as Record<string, unknown>;
+
+            const optionId = String(
+              rawOption["id"] ??
+                rawOption["option_id"] ??
+                rawOption["trip_id"] ??
+                rawOption["tripId"] ??
+                `option-${index}`
+            );
+            const optionDate = String(
+              rawOption["date"] ?? rawOption["departure_date"] ?? outbound.date ?? ""
+            );
+            const departureTime = String(
+              rawOption["departure_time"] ??
+                rawOption["departureTime"] ??
+                outbound.departure_time ??
+                ""
+            );
+            const arrivalTime = String(
+              rawOption["arrival_time"] ??
+                rawOption["arrivalTime"] ??
+                outbound.arrival_time ??
+                ""
+            );
+            const description = String(
+              rawOption["description"] ?? `${outbound.fromName} → ${outbound.toName}`
+            );
+
+            const priceRaw = rawOption["price"] ?? 0;
+            const priceAmount =
+              typeof priceRaw === "number"
+                ? priceRaw
+                : typeof priceRaw === "object" && priceRaw
+                  ? Number((priceRaw as { amount?: number }).amount ?? 0)
+                  : Number(priceRaw);
+            const currency =
+              (typeof priceRaw === "object" && priceRaw
+                ? (priceRaw as { currency?: string }).currency
+                : (rawOption["currency"] as string | undefined)) ?? "RUB";
+
+            const availability = Number(
+              rawOption["availability"] ?? rawOption["available_seats"] ?? rawOption["seats"] ?? 0
+            );
+
+            const tripId = String(
+              rawOption["trip_id"] ?? rawOption["tripId"] ?? optionId
+            );
+
+            const rawPayload =
+              (typeof rawOption["payload"] === "object" && rawOption["payload"]
+                ? (rawOption["payload"] as RescheduleOptionPayload)
+                : undefined) ?? undefined;
+            const requestPayload =
+              (typeof rawOption["request_payload"] === "object" && rawOption["request_payload"]
+                ? (rawOption["request_payload"] as RescheduleOptionPayload)
+                : undefined) ?? undefined;
+
+            const payload: RescheduleOptionPayload = {
+              ...requestPayload,
+              ...rawPayload,
+              option_id: rawPayload?.option_id ?? requestPayload?.option_id ?? optionId,
+              trip_id: rawPayload?.trip_id ?? requestPayload?.trip_id ?? tripId,
+              date: rawPayload?.date ?? requestPayload?.date ?? optionDate,
+              departure_time:
+                rawPayload?.departure_time ?? requestPayload?.departure_time ?? departureTime,
+              arrival_time:
+                rawPayload?.arrival_time ?? requestPayload?.arrival_time ?? arrivalTime,
+            };
+
+            accumulator.push({
+              id: optionId,
+              date: optionDate,
+              departureTime,
+              arrivalTime,
+              description,
+              price: Number.isFinite(priceAmount) ? priceAmount : 0,
+              currency,
+              availability: Number.isFinite(availability) ? availability : 0,
+              tripId,
+              payload,
+            });
+
+            return accumulator;
+          },
+          []
+        );
+
+        setRescheduleOptions(normalizedOptions);
+        setSelectedRescheduleId(normalizedOptions[0]?.id ?? null);
+        setPendingPayload(normalizedOptions[0]?.payload ?? null);
+      } catch (error) {
+        if ((error as { name?: string }).name === "AbortError") {
+          return;
+        }
+
+        console.error(error);
+        setRescheduleOptions([]);
+        setSelectedRescheduleId(null);
+        setPendingPayload(null);
+        setRescheduleError("Не удалось загрузить варианты переноса");
+      } finally {
+        setRescheduleLoading(false);
+      }
+    };
+
+    void fetchOptions();
+
+    return () => {
+      controller.abort();
+    };
+  }, [ticket, ticketId]);
 
   const handleResendLink = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -404,10 +576,12 @@ export default function TicketClient({ ticketId }: TicketClientProps) {
   const handleRescheduleSelect = (option: RescheduleOption) => {
     setSelectedRescheduleId(option.id);
     setPendingPayload({
-      option_id: option.id,
-      date: option.date,
-      departure_time: option.departureTime,
-      arrival_time: option.arrivalTime,
+      ...option.payload,
+      option_id: option.payload.option_id ?? option.id,
+      trip_id: option.payload.trip_id ?? option.tripId,
+      date: option.payload.date ?? option.date,
+      departure_time: option.payload.departure_time ?? option.departureTime,
+      arrival_time: option.payload.arrival_time ?? option.arrivalTime,
     });
   };
 
@@ -651,21 +825,33 @@ export default function TicketClient({ ticketId }: TicketClientProps) {
                 } else if (rescheduleOptions.length) {
                   handleRescheduleSelect(rescheduleOptions[0]);
                   void startOtpFlow("reschedule", {
-                    option_id: rescheduleOptions[0].id,
-                    date: rescheduleOptions[0].date,
-                    departure_time: rescheduleOptions[0].departureTime,
-                    arrival_time: rescheduleOptions[0].arrivalTime,
+                    ...rescheduleOptions[0].payload,
+                    option_id: rescheduleOptions[0].payload.option_id ?? rescheduleOptions[0].id,
+                    trip_id: rescheduleOptions[0].payload.trip_id ?? rescheduleOptions[0].tripId,
+                    date: rescheduleOptions[0].payload.date ?? rescheduleOptions[0].date,
+                    departure_time:
+                      rescheduleOptions[0].payload.departure_time ??
+                      rescheduleOptions[0].departureTime,
+                    arrival_time:
+                      rescheduleOptions[0].payload.arrival_time ??
+                      rescheduleOptions[0].arrivalTime,
                   });
                 } else {
                   setBanner({ type: "error", message: "Выберите новый рейс для переноса" });
                 }
               }}
-              disabled={actionLoading === "reschedule"}
+              disabled={actionLoading === "reschedule" || rescheduleLoading}
               className={`rounded-2xl px-4 py-3 text-sm font-semibold shadow transition ${
-                actionLoading === "reschedule" ? "bg-slate-300 text-slate-500" : "bg-sky-500 text-white hover:bg-sky-600"
+                actionLoading === "reschedule" || rescheduleLoading
+                  ? "bg-slate-300 text-slate-500"
+                  : "bg-sky-500 text-white hover:bg-sky-600"
               }`}
             >
-              {actionLoading === "reschedule" ? "Запрос кода…" : "Перенести рейс"}
+              {actionLoading === "reschedule"
+                ? "Запрос кода…"
+                : rescheduleLoading
+                  ? "Загружаем варианты…"
+                  : "Перенести рейс"}
             </button>
             <button
               type="button"
@@ -689,30 +875,49 @@ export default function TicketClient({ ticketId }: TicketClientProps) {
               </p>
             </div>
             <div className="grid gap-3 md:grid-cols-2">
-              {rescheduleOptions.map((option) => (
-                <button
-                  key={option.id}
-                  type="button"
-                  onClick={() => handleRescheduleSelect(option)}
-                  className={`flex w-full flex-col rounded-2xl border p-4 text-left shadow transition ${
-                    selectedRescheduleId === option.id
-                      ? "border-sky-400 bg-sky-50"
-                      : "border-slate-200 bg-white hover:border-sky-300"
-                  }`}
-                >
-                  <span className="text-sm font-semibold text-slate-800">
-                    {formatDate(option.date)} • {formatTime(option.departureTime)}
-                  </span>
-                  <span className="text-sm text-slate-500">{option.description}</span>
-                  {option.priceDifference ? (
-                    <span className="mt-2 text-xs text-slate-400">
-                      Доплата: {option.priceDifference.toFixed(2)}
+              {rescheduleLoading ? (
+                <div className="flex items-center justify-center rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-500 shadow">
+                  Загружаем доступные рейсы…
+                </div>
+              ) : rescheduleError ? (
+                <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-600 shadow">
+                  {rescheduleError}
+                </div>
+              ) : rescheduleOptions.length ? (
+                rescheduleOptions.map((option) => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    onClick={() => handleRescheduleSelect(option)}
+                    className={`flex w-full flex-col rounded-2xl border p-4 text-left shadow transition ${
+                      selectedRescheduleId === option.id
+                        ? "border-sky-400 bg-sky-50"
+                        : "border-slate-200 bg-white hover:border-sky-300"
+                    }`}
+                  >
+                    <span className="text-sm font-semibold text-slate-800">
+                      {formatDate(option.date)} • {formatTime(option.departureTime)}
                     </span>
-                  ) : (
-                    <span className="mt-2 text-xs text-emerald-500">Без доплаты</span>
-                  )}
-                </button>
-              ))}
+                    <span className="text-sm text-slate-500">{option.description}</span>
+                    <span className="mt-2 text-xs font-medium text-slate-500">
+                      Стоимость: {formatCurrency(option.price, option.currency)}
+                    </span>
+                    <span
+                      className={`mt-1 text-xs font-medium ${
+                        option.availability > 0 ? "text-emerald-500" : "text-red-500"
+                      }`}
+                    >
+                      {option.availability > 0
+                        ? `Доступно мест: ${option.availability}`
+                        : "Нет свободных мест"}
+                    </span>
+                  </button>
+                ))
+              ) : (
+                <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-500 shadow">
+                  Подходящих вариантов пока нет. Попробуйте изменить параметры вручную.
+                </div>
+              )}
             </div>
 
             <form onSubmit={handleManualReschedule} className="rounded-2xl border border-dashed border-slate-300 p-4">
