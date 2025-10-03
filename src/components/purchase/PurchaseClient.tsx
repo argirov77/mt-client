@@ -13,6 +13,7 @@ import type {
   PurchaseTicket,
   PurchaseTrip,
   PurchaseView,
+  PurchaseTotals,
   RescheduleOption,
 } from "@/types/purchase";
 import { fetchWithInclude } from "@/utils/fetchWithInclude";
@@ -35,6 +36,14 @@ type ActionBanner = {
 
 type RescheduleScope = "all" | "selected";
 type CancelScope = "all" | "selected";
+
+const DEFAULT_TOTALS: PurchaseTotals = {
+  paid: 0,
+  due: 0,
+  refundable_now: 0,
+  baggage_count: 0,
+  pax_count: 0,
+};
 
 const formatDate = (value: string | undefined | null) => {
   if (!value) return "";
@@ -369,11 +378,15 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
       const tickets: PurchaseTicket[] = Array.isArray(payload.tickets) ? payload.tickets : [];
       const trips: PurchaseTrip[] = Array.isArray(payload.trips) ? payload.trips : [];
       const passengers: PurchasePassenger[] = Array.isArray(payload.passengers) ? payload.passengers : [];
+      const totals: PurchaseTotals = payload?.totals
+        ? { ...DEFAULT_TOTALS, ...payload.totals }
+        : { ...DEFAULT_TOTALS };
       const normalizedPayload: PurchaseView = {
         ...payload,
         passengers,
         tickets,
         trips,
+        totals,
       };
       setData(normalizedPayload);
       const initialBaggage: Record<string, number> = {};
@@ -985,6 +998,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
   );
 
   const history: PurchaseHistoryEvent[] = Array.isArray(data.history) ? data.history : [];
+  const totals = data.totals ? { ...DEFAULT_TOTALS, ...data.totals } : { ...DEFAULT_TOTALS };
 
   return (
     <div className="mx-auto max-w-5xl space-y-10 px-4 py-10">
@@ -1002,10 +1016,10 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
               {statusLabel}
             </span>
             <span className="inline-flex items-center rounded-full bg-gray-100 px-4 py-1 text-sm text-gray-700">
-              Пассажиры: {data.totals.pax_count}
+              Пассажиры: {totals.pax_count}
             </span>
             <span className="inline-flex items-center rounded-full bg-gray-100 px-4 py-1 text-sm text-gray-700">
-              Багаж: {data.totals.baggage_count}+ручная
+              Багаж: {totals.baggage_count}+ручная
             </span>
             <span className="inline-flex items-center rounded-full bg-emerald-50 px-4 py-1 text-sm font-semibold text-emerald-700">
               {formatCurrency(data.purchase.amount_due, data.purchase.currency)}
@@ -1029,8 +1043,8 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
             Скачать все билеты (PDF)
           </button>
           <div className="text-right text-sm text-gray-500">
-            <p>Оплачено: {formatCurrency(data.totals.paid, data.purchase.currency)}</p>
-            <p>К оплате: {formatCurrency(data.totals.due, data.purchase.currency)}</p>
+            <p>Оплачено: {formatCurrency(totals.paid, data.purchase.currency)}</p>
+            <p>К оплате: {formatCurrency(totals.due, data.purchase.currency)}</p>
           </div>
         </div>
       </section>
@@ -1142,7 +1156,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
                 onClick={confirmPayment}
                 className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-gray-300"
               >
-                Оплатить {formatCurrency(data.totals.due, data.purchase.currency)}
+                Оплатить {formatCurrency(totals.due, data.purchase.currency)}
               </button>
             </div>
           </div>
