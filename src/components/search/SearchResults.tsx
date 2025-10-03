@@ -543,7 +543,6 @@ export default function SearchResults({
         if (typeof value === "object") {
           const obj = value as Record<string, unknown>;
           return (
-            coerceTicketNumber(obj["ticket_id"]) ??
             coerceTicketNumber(obj["ticket_number"]) ??
             coerceTicketNumber(obj["ticketNumber"]) ??
             coerceTicketNumber(obj["number"]) ??
