@@ -2,7 +2,7 @@ import "../globals.css";
 import type { ReactNode } from "react";
 
 export const metadata = {
-  title: "Личный кабинет — Бронирование №2690574",
+  title: "Личный кабинет",
 };
 
 export default function CabinetLayout({ children }: { children: ReactNode }) {
