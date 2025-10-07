@@ -16,6 +16,12 @@ export type PurchasePassenger = {
   phone?: string | null;
 };
 
+export type PurchaseCustomer = {
+  name: string;
+  email?: string | null;
+  phone?: string | null;
+};
+
 export type PurchaseSegment = {
   stop_id: number | string;
   stop_name: string;
@@ -40,6 +46,45 @@ export type PurchaseTicket = {
   extra_baggage?: number | null;
   tour: PurchaseTour;
   segments: PurchaseSegment[];
+  route?: {
+    id?: number | string;
+    name?: string;
+    stops?: Array<{
+      id: number | string;
+      order?: number;
+      name: string;
+      arrival_time?: string | null;
+      departure_time?: string | null;
+      description?: string | null;
+    }>;
+  };
+  pricing?: {
+    price?: number | null;
+    currency?: string | null;
+  };
+  segment_details?: {
+    departure?: {
+      id?: number | string;
+      name?: string;
+      order?: number;
+      time?: string;
+    } | null;
+    arrival?: {
+      id?: number | string;
+      name?: string;
+      order?: number;
+      time?: string;
+    } | null;
+    intermediate_stops?: Array<{
+      id?: number | string;
+      name?: string;
+      order?: number;
+      arrival_time?: string | null;
+      departure_time?: string | null;
+    }>;
+    duration_minutes?: number | null;
+    duration_human?: string | null;
+  };
 };
 
 export type PurchaseTrip = {
@@ -72,6 +117,7 @@ export type PurchaseView = {
   trips: PurchaseTrip[];
   totals: PurchaseTotals;
   history?: PurchaseHistoryEvent[];
+  customer?: PurchaseCustomer | null;
 };
 
 export type RescheduleOption = {

@@ -9,6 +9,7 @@ import type {
   BaggageQuote,
   CancelPreview,
   PurchaseHistoryEvent,
+  PurchaseSummary,
   PurchasePassenger,
   PurchaseTicket,
   PurchaseTrip,
@@ -23,6 +24,7 @@ const STATUS_LABELS: Record<string, string> = {
   paid: "Оплачено",
   canceled: "Отменено",
   expired: "Истёкло",
+  reserved: "Забронировано",
 };
 
 const ACTION_DISABLED_STATUSES = new Set(["canceled", "expired"]);
@@ -79,8 +81,19 @@ const parseDate = (value: string | undefined | null) => {
 };
 
 const formatCurrency = (amount: number | undefined | null, currency: string | undefined | null) => {
-  if (amount === undefined || amount === null || currency === undefined || currency === null) {
+  if (amount === undefined || amount === null) {
     return "—";
+  }
+
+  if (!currency) {
+    try {
+      return new Intl.NumberFormat("ru-RU", {
+        minimumFractionDigits: amount % 1 === 0 ? 0 : 2,
+        maximumFractionDigits: 2,
+      }).format(amount);
+    } catch {
+      return amount.toFixed(2);
+    }
   }
 
   try {
@@ -145,6 +158,347 @@ const mapById = <T extends { id: string | number }>(items: T[]) => {
     map.set(String(item.id), item);
   });
   return map;
+};
+
+const isObject = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const toNumberSafe = (value: unknown, fallback = 0) => {
+  if (value === undefined || value === null) {
+    return fallback;
+  }
+
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : fallback;
+};
+
+const toDateTimeString = (date?: string | null, time?: string | null) => {
+  if (!date && !time) {
+    return "";
+  }
+
+  if (!date) {
+    return String(time ?? "");
+  }
+
+  if (!time) {
+    return String(date ?? "");
+  }
+
+  const normalizedTime = /^\d{2}:\d{2}$/.test(time) ? `${time}:00` : time;
+  return `${date}T${normalizedTime}`;
+};
+
+const buildSegments = (
+  segment: Record<string, unknown> | undefined,
+  tourDate: string | undefined,
+  routeStops: Array<Record<string, unknown>>
+) => {
+  if (!segment) {
+    if (routeStops.length === 0) {
+      return [];
+    }
+
+    return routeStops.map((stop, index) => ({
+      stop_id: stop.id ?? `route-stop-${index}`,
+      stop_name: String(stop.name ?? ""),
+      time: toDateTimeString(tourDate, String(stop.departure_time ?? stop.arrival_time ?? stop.time ?? "")),
+      is_departure: index === 0,
+      is_arrival: index === routeStops.length - 1,
+    }));
+  }
+
+  const segments: PurchaseSegment[] = [];
+
+  const departure = segment?.departure as Record<string, unknown> | undefined;
+  if (departure) {
+    segments.push({
+      stop_id: departure.id ?? departure.stop_id ?? "departure",
+      stop_name: String(departure.name ?? departure.stop_name ?? ""),
+      time: toDateTimeString(tourDate, String(departure.time ?? "")),
+      is_departure: true,
+      is_arrival: false,
+    });
+  }
+
+  const intermediate = Array.isArray(segment?.intermediate_stops)
+    ? (segment.intermediate_stops as Array<Record<string, unknown>>)
+    : [];
+
+  intermediate.forEach((stop, index) => {
+    segments.push({
+      stop_id: stop.id ?? stop.stop_id ?? `stop-${index}`,
+      stop_name: String(stop.name ?? stop.stop_name ?? ""),
+      time: toDateTimeString(tourDate, String(stop.departure_time ?? stop.arrival_time ?? "")),
+      is_departure: false,
+      is_arrival: false,
+    });
+  });
+
+  const arrival = segment?.arrival as Record<string, unknown> | undefined;
+  if (arrival) {
+    segments.push({
+      stop_id: arrival.id ?? arrival.stop_id ?? "arrival",
+      stop_name: String(arrival.name ?? arrival.stop_name ?? ""),
+      time: toDateTimeString(tourDate, String(arrival.time ?? "")),
+      is_departure: false,
+      is_arrival: true,
+    });
+  }
+
+  if (segments.length === 0 && routeStops.length > 0) {
+    routeStops.forEach((stop, index) => {
+      segments.push({
+        stop_id: stop.id ?? `route-stop-${index}`,
+        stop_name: String(stop.name ?? ""),
+        time: toDateTimeString(
+          tourDate,
+          String(stop.departure_time ?? stop.arrival_time ?? stop.time ?? "")
+        ),
+        is_departure: index === 0,
+        is_arrival: index === routeStops.length - 1,
+      });
+    });
+  }
+
+  return segments;
+};
+
+const normalizePurchasePayload = (payload: unknown): PurchaseView => {
+  const raw = (isObject(payload) ? payload : {}) as Record<string, unknown>;
+  const rawPurchase = (isObject(raw.purchase) ? raw.purchase : raw) as Record<string, unknown>;
+
+  const rawTickets = Array.isArray(raw.tickets)
+    ? (raw.tickets as Array<Record<string, unknown>>)
+    : Array.isArray((rawPurchase?.tickets as unknown[]))
+      ? (rawPurchase.tickets as Array<Record<string, unknown>>)
+      : [];
+
+  const passengersMap = new Map<string, PurchasePassenger>();
+
+  const normalizedTickets: PurchaseTicket[] = rawTickets.map((entry, index) => {
+    const ticketInfo = isObject(entry.ticket) ? entry.ticket : entry;
+    const passengerInfo = isObject(entry.passenger) ? entry.passenger : undefined;
+    const tourInfo = isObject(entry.tour) ? entry.tour : undefined;
+    const routeInfo = isObject(entry.route) ? entry.route : undefined;
+    const segmentInfo = isObject(entry.segment) ? entry.segment : undefined;
+    const pricingInfo = isObject(entry.pricing) ? entry.pricing : undefined;
+    const paymentStatus = isObject(entry.payment_status) ? entry.payment_status : undefined;
+
+    const passengerIdRaw = passengerInfo?.id ?? ticketInfo?.passenger_id ?? `passenger-${index}`;
+    const passengerId = String(passengerIdRaw ?? `passenger-${index}`);
+    const passengerName = passengerInfo?.name ?? ticketInfo?.passenger_name ?? rawPurchase?.customer?.name ?? "Пассажир";
+
+    if (!passengersMap.has(passengerId)) {
+      passengersMap.set(passengerId, {
+        id: passengerId,
+        name: String(passengerName ?? passengerId),
+        email: (passengerInfo?.email ?? null) as string | null,
+        phone: (passengerInfo?.phone ?? null) as string | null,
+      });
+    }
+
+    const tourDate = (tourInfo?.date as string | undefined) ?? (rawPurchase?.date as string | undefined);
+    const routeStops = Array.isArray(routeInfo?.stops)
+      ? (routeInfo?.stops as Array<Record<string, unknown>>)
+      : [];
+    const intermediateStops = Array.isArray(segmentInfo?.intermediate_stops)
+      ? (segmentInfo?.intermediate_stops as Array<Record<string, unknown>>)
+      : [];
+
+    const segments = buildSegments(segmentInfo, tourDate, routeStops);
+
+    return {
+      id: ticketInfo?.id ?? index,
+      passenger_id: passengerId,
+      status: (paymentStatus?.status as string | undefined) ?? (ticketInfo?.status as string | undefined) ?? (rawPurchase?.status as string | undefined) ?? "pending",
+      seat_id: (ticketInfo?.seat_id ?? ticketInfo?.seatId ?? null) as number | string | null,
+      seat_num: (ticketInfo?.seat_number ?? ticketInfo?.seat_num ?? ticketInfo?.seat ?? null) as number | string | null,
+      extra_baggage: toNumberSafe(ticketInfo?.extra_baggage ?? ticketInfo?.extraBaggage, 0),
+      tour: {
+        id: (tourInfo?.id ?? rawPurchase?.tour_id ?? rawPurchase?.id ?? index) as number | string,
+        date: String(tourDate ?? rawPurchase?.created_at ?? ""),
+        route_id: (routeInfo?.id ?? tourInfo?.route_id) as number | string | undefined,
+        route_name: String(routeInfo?.name ?? tourInfo?.route_name ?? rawPurchase?.route_name ?? ""),
+      },
+      segments,
+      route: routeInfo
+        ? {
+            id: routeInfo.id as number | string | undefined,
+            name: routeInfo.name as string | undefined,
+            stops: routeStops.map((stop) => ({
+              id: stop.id as number | string,
+              order: stop.order as number | undefined,
+              name: String(stop.name ?? ""),
+              arrival_time: (stop.arrival_time ?? stop.arrivalTime ?? null) as string | null,
+              departure_time: (stop.departure_time ?? stop.departureTime ?? null) as string | null,
+              description: (stop.description ?? null) as string | null,
+            })),
+          }
+        : undefined,
+      pricing: pricingInfo
+        ? {
+            price: (pricingInfo.price ?? pricingInfo.total ?? null) as number | null,
+            currency: (pricingInfo.currency ?? pricingInfo.currency_code ?? null) as string | null,
+          }
+        : undefined,
+      segment_details: {
+        departure: segmentInfo?.departure
+          ? {
+              id: (segmentInfo.departure as Record<string, unknown>).id as number | string | undefined,
+              name: (segmentInfo.departure as Record<string, unknown>).name as string | undefined,
+              order: (segmentInfo.departure as Record<string, unknown>).order as number | undefined,
+              time: (segmentInfo.departure as Record<string, unknown>).time as string | undefined,
+            }
+          : null,
+        arrival: segmentInfo?.arrival
+          ? {
+              id: (segmentInfo.arrival as Record<string, unknown>).id as number | string | undefined,
+              name: (segmentInfo.arrival as Record<string, unknown>).name as string | undefined,
+              order: (segmentInfo.arrival as Record<string, unknown>).order as number | undefined,
+              time: (segmentInfo.arrival as Record<string, unknown>).time as string | undefined,
+            }
+          : null,
+        intermediate_stops: intermediateStops.map((stop) => ({
+          id: stop.id as number | string | undefined,
+          name: stop.name as string | undefined,
+          order: stop.order as number | undefined,
+          arrival_time: (stop.arrival_time ?? stop.arrivalTime ?? null) as string | null,
+          departure_time: (stop.departure_time ?? stop.departureTime ?? null) as string | null,
+        })),
+        duration_minutes: (segmentInfo?.duration_minutes as number | undefined) ?? null,
+        duration_human: (segmentInfo?.duration_human as string | undefined) ?? null,
+      },
+    };
+  });
+
+  const rawPassengers = Array.isArray(raw.passengers)
+    ? (raw.passengers as Array<Record<string, unknown>>)
+    : Array.isArray((rawPurchase?.passengers as unknown[]))
+      ? (rawPurchase.passengers as Array<Record<string, unknown>>)
+      : [];
+
+  rawPassengers.forEach((passenger, index) => {
+    const passengerId = String(passenger.id ?? `passenger-${index}`);
+    if (!passengersMap.has(passengerId)) {
+      passengersMap.set(passengerId, {
+        id: passengerId,
+        name: String(passenger.name ?? passengerId),
+        email: (passenger.email ?? null) as string | null,
+        phone: (passenger.phone ?? null) as string | null,
+      });
+    }
+  });
+
+  const passengers = Array.from(passengersMap.values());
+
+  const totalsSource = isObject(raw.totals)
+    ? raw.totals
+    : (isObject(rawPurchase?.totals) ? (rawPurchase.totals as Record<string, unknown>) : {});
+
+  const totals: PurchaseTotals = {
+    ...DEFAULT_TOTALS,
+    ...(totalsSource as Partial<PurchaseTotals>),
+  };
+
+  totals.due = toNumberSafe(totals.due ?? rawPurchase?.amount_due ?? raw.amount_due, 0);
+  totals.paid = toNumberSafe(totals.paid ?? rawPurchase?.amount_paid, 0);
+  totals.baggage_count = toNumberSafe(
+    totals.baggage_count,
+    normalizedTickets.reduce((acc, ticket) => acc + toNumberSafe(ticket.extra_baggage, 0), 0)
+  );
+  totals.pax_count = toNumberSafe(totals.pax_count, passengers.length);
+
+  const inferredCurrency =
+    (normalizedTickets.find((ticket) => ticket.pricing?.currency)?.pricing?.currency as string | undefined) ??
+    (rawPurchase?.currency as string | undefined) ??
+    (raw.currency as string | undefined) ??
+    null;
+
+  const purchaseSummary = {
+    id: rawPurchase?.id ?? raw.id ?? "",
+    status: (rawPurchase?.status ?? raw.status ?? "pending") as string,
+    created_at: String(rawPurchase?.created_at ?? raw.created_at ?? ""),
+      amount_due: toNumberSafe(rawPurchase?.amount_due ?? raw.amount_due ?? totals.due, 0),
+    currency: inferredCurrency ?? "",
+    deadline: (rawPurchase?.deadline ?? rawPurchase?.payment_deadline ?? null) as string | null,
+  } satisfies PurchaseSummary;
+
+  const historySource = Array.isArray(raw.history)
+    ? raw.history
+    : Array.isArray(rawPurchase?.history)
+      ? (rawPurchase.history as Array<Record<string, unknown>>)
+      : [];
+
+  const history: PurchaseHistoryEvent[] = historySource
+    .map((event) => ({
+      id: event.id ?? event.event_id ?? event.uuid ?? undefined,
+      date: String(event.date ?? event.created_at ?? ""),
+      category: String(event.category ?? event.type ?? "Событие"),
+      amount:
+        event.amount !== undefined
+          ? Number(event.amount)
+          : event.value !== undefined
+            ? Number(event.value)
+            : null,
+      currency: (event.currency ?? event.currency_code ?? inferredCurrency ?? null) as string | null,
+      method: (event.method ?? event.payment_method ?? null) as string | null,
+      comment: (event.comment ?? event.description ?? null) as string | null,
+    }))
+    .filter((event) => Boolean(event.date));
+
+  let trips: PurchaseTrip[] = Array.isArray(raw.trips)
+    ? (raw.trips as Array<Record<string, unknown>>)
+        .map((trip) => {
+          const ticketIds = Array.isArray(trip.tickets)
+            ? (trip.tickets as Array<PurchaseTicket["id"]>)
+            : [];
+
+          if (ticketIds.length === 0) {
+            return null;
+          }
+
+          return {
+            direction: trip.direction === "return" ? "return" : "outbound",
+            tickets: ticketIds,
+          } satisfies PurchaseTrip;
+        })
+        .filter((trip): trip is PurchaseTrip => Boolean(trip))
+    : [];
+
+  if (trips.length === 0 && normalizedTickets.length > 0) {
+    const grouped = new Map<string, Array<PurchaseTicket["id"]>>();
+    normalizedTickets.forEach((ticket) => {
+      const key = String(ticket.tour?.id ?? ticket.id);
+      if (!grouped.has(key)) {
+        grouped.set(key, []);
+      }
+      grouped.get(key)?.push(ticket.id);
+    });
+
+    trips = Array.from(grouped.values()).map((ticketIds) => ({
+      direction: "outbound" as const,
+      tickets: ticketIds,
+    }));
+  }
+
+  const customerRaw = isObject(rawPurchase?.customer) ? (rawPurchase.customer as Record<string, unknown>) : null;
+
+  return {
+    purchase: purchaseSummary,
+    passengers,
+    tickets: normalizedTickets,
+    trips,
+    totals,
+    history,
+    customer: customerRaw
+      ? {
+          name: String(customerRaw.name ?? ""),
+          email: (customerRaw.email ?? null) as string | null,
+          phone: (customerRaw.phone ?? null) as string | null,
+        }
+      : null,
+  };
 };
 
 const tripTickets = (trip: PurchaseTrip, tickets: PurchaseTicket[]) => {
@@ -374,20 +728,9 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
         throw new Error(`HTTP ${response.status}`);
       }
 
-      const payload = (await response.json()) as PurchaseView;
-      const tickets: PurchaseTicket[] = Array.isArray(payload.tickets) ? payload.tickets : [];
-      const trips: PurchaseTrip[] = Array.isArray(payload.trips) ? payload.trips : [];
-      const passengers: PurchasePassenger[] = Array.isArray(payload.passengers) ? payload.passengers : [];
-      const totals: PurchaseTotals = payload?.totals
-        ? { ...DEFAULT_TOTALS, ...payload.totals }
-        : { ...DEFAULT_TOTALS };
-      const normalizedPayload: PurchaseView = {
-        ...payload,
-        passengers,
-        tickets,
-        trips,
-        totals,
-      };
+      const rawPayload = await response.json();
+      const normalizedPayload = normalizePurchasePayload(rawPayload);
+      const tickets = normalizedPayload.tickets ?? [];
       setData(normalizedPayload);
       const initialBaggage: Record<string, number> = {};
       tickets.forEach((ticket) => {
@@ -996,55 +1339,87 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
         .filter((date): date is string => Boolean(date))
     )
   );
+  const customer = data.customer ?? null;
 
   const history: PurchaseHistoryEvent[] = Array.isArray(data.history) ? data.history : [];
   const totals = data.totals ? { ...DEFAULT_TOTALS, ...data.totals } : { ...DEFAULT_TOTALS };
 
   return (
     <div className="mx-auto max-w-5xl space-y-10 px-4 py-10">
-      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
+      <section className="space-y-6 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-semibold text-gray-900">Покупка #{data.purchase.id}</h1>
             <p className="text-sm text-gray-500">Создана {formatDate(data.purchase.created_at)}</p>
-            {purchaseDeadline ? (
-              <p className="mt-1 text-sm text-gray-500">Оплатить до {purchaseDeadline}</p>
-            ) : null}
           </div>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center rounded-full bg-blue-50 px-4 py-1 text-sm font-medium text-blue-700">
               {statusLabel}
-            </span>
-            <span className="inline-flex items-center rounded-full bg-gray-100 px-4 py-1 text-sm text-gray-700">
-              Пассажиры: {totals.pax_count}
-            </span>
-            <span className="inline-flex items-center rounded-full bg-gray-100 px-4 py-1 text-sm text-gray-700">
-              Багаж: {totals.baggage_count}+ручная
             </span>
             <span className="inline-flex items-center rounded-full bg-emerald-50 px-4 py-1 text-sm font-semibold text-emerald-700">
               {formatCurrency(data.purchase.amount_due, data.purchase.currency)}
             </span>
           </div>
         </div>
-        {routeNames.length > 0 ? (
-          <div className="mt-4 text-sm text-gray-600">
-            <p className="font-medium">Маршрут: {routeNames.join(", ")}</p>
-            {tripDates.length > 0 ? (
-              <p className="mt-1">Даты: {tripDates.map((date) => formatDate(date)).join(", ")}</p>
+
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {customer ? (
+            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+              <h3 className="text-sm font-semibold text-gray-900">Покупатель</h3>
+              <p className="mt-2 text-base font-semibold text-gray-900">{customer.name}</p>
+              {customer.email ? (
+                <p className="text-sm text-gray-600">{customer.email}</p>
+              ) : null}
+              {customer.phone ? (
+                <p className="text-sm text-gray-600">{customer.phone}</p>
+              ) : null}
+            </div>
+          ) : null}
+
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+            <h3 className="text-sm font-semibold text-gray-900">Оплата</h3>
+            <dl className="mt-2 space-y-1 text-sm text-gray-600">
+              <div className="flex items-center justify-between">
+                <dt>К оплате</dt>
+                <dd className="font-semibold text-gray-900">{formatCurrency(totals.due, data.purchase.currency)}</dd>
+              </div>
+              <div className="flex items-center justify-between">
+                <dt>Оплачено</dt>
+                <dd>{formatCurrency(totals.paid, data.purchase.currency)}</dd>
+              </div>
+              <div className="flex items-center justify-between">
+                <dt>Пассажиры</dt>
+                <dd>{totals.pax_count}</dd>
+              </div>
+              <div className="flex items-center justify-between">
+                <dt>Багаж</dt>
+                <dd>{totals.baggage_count} + ручная кладь</dd>
+              </div>
+            </dl>
+            {purchaseDeadline ? (
+              <p className="mt-3 text-xs text-gray-500">Оплатить до {purchaseDeadline}</p>
             ) : null}
           </div>
-        ) : null}
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
-          <button
-            type="button"
-            onClick={handleDownloadAll}
-            className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700"
-          >
-            Скачать все билеты (PDF)
-          </button>
-          <div className="text-right text-sm text-gray-500">
-            <p>Оплачено: {formatCurrency(totals.paid, data.purchase.currency)}</p>
-            <p>К оплате: {formatCurrency(totals.due, data.purchase.currency)}</p>
+
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+            <h3 className="text-sm font-semibold text-gray-900">Маршрут и документы</h3>
+            {routeNames.length > 0 ? (
+              <p className="mt-2 text-sm text-gray-700">{routeNames.join(", ")}</p>
+            ) : (
+              <p className="mt-2 text-sm text-gray-500">Маршрут не указан</p>
+            )}
+            {tripDates.length > 0 ? (
+              <p className="mt-2 text-xs text-gray-500">
+                Даты поездки: {tripDates.map((date) => formatDate(date)).join(", ")}
+              </p>
+            ) : null}
+            <button
+              type="button"
+              onClick={handleDownloadAll}
+              className="mt-4 inline-flex w-full items-center justify-center rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700"
+            >
+              Скачать все билеты (PDF)
+            </button>
           </div>
         </div>
       </section>
@@ -1055,40 +1430,49 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
 
       <section className="space-y-4">
         <h2 className="text-xl font-semibold text-gray-900">Состав покупки</h2>
-        <div className="grid gap-6 md:grid-cols-2">
-          {tripsDetailed.map(({ trip, summary }) => (
-            <div key={trip.direction} className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
-              <div className="flex items-center justify-between gap-2">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Рейс {trip.direction === "outbound" ? "туда" : "обратно"}
-                </h3>
-                {summary ? (
-                  <span className="text-sm text-gray-500">{formatDuration(summary.durationMinutes)}</span>
-                ) : null}
-              </div>
-              {summary ? (
-                <div className="mt-4 space-y-2 text-sm text-gray-700">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">{summary.from}</p>
-                      <p className="text-xs text-gray-500">Отправление</p>
-                    </div>
-                    <span className="text-base font-semibold">{formatTime(summary.start)}</span>
+        {tripsDetailed.length > 0 ? (
+          <div className="grid gap-6 md:grid-cols-2">
+            {tripsDetailed.map(({ trip, summary }, index) => (
+              <div key={`${trip.direction}-${index}`} className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
+                <div className="flex items-center justify-between gap-2">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Рейс {trip.direction === "outbound" ? "туда" : "обратно"}
+                    </h3>
+                    <p className="text-xs text-gray-500">Билетов: {trip.tickets.length}</p>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">{summary.to}</p>
-                      <p className="text-xs text-gray-500">Прибытие</p>
-                    </div>
-                    <span className="text-base font-semibold">{formatTime(summary.end)}</span>
-                  </div>
+                  {summary ? (
+                    <span className="text-sm text-gray-500">{formatDuration(summary.durationMinutes)}</span>
+                  ) : null}
                 </div>
-              ) : (
-                <p className="mt-3 text-sm text-gray-500">Информация о рейсе недоступна.</p>
-              )}
-            </div>
-          ))}
-        </div>
+                {summary ? (
+                  <div className="mt-4 space-y-2 text-sm text-gray-700">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">{summary.from}</p>
+                        <p className="text-xs text-gray-500">Отправление</p>
+                      </div>
+                      <span className="text-base font-semibold">{formatTime(summary.start)}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">{summary.to}</p>
+                        <p className="text-xs text-gray-500">Прибытие</p>
+                      </div>
+                      <span className="text-base font-semibold">{formatTime(summary.end)}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="mt-3 text-sm text-gray-500">Информация о рейсе недоступна.</p>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="rounded-2xl border border-dashed border-gray-200 px-4 py-6 text-sm text-gray-500">
+            Информация о рейсах пока недоступна.
+          </p>
+        )}
 
         <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
           <h3 className="text-lg font-semibold text-gray-900">Пассажиры и билеты</h3>
@@ -1111,27 +1495,83 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
                   </div>
 
                   <ul className="mt-3 space-y-3">
-                    {tickets.map((ticket) => (
-                      <li
-                        key={ticket.id}
-                        className="flex flex-wrap items-center justify-between gap-4 rounded-lg border border-gray-200 bg-white px-4 py-3"
-                      >
-                        <div>
-                          <p className="text-sm font-semibold text-gray-900">Билет #{ticket.id}</p>
-                          <p className="text-sm text-gray-600">
-                            Место {ticket.seat_num ?? "—"} • {Number(ticket.extra_baggage ?? 0)} багаж (+ручная)
-                          </p>
-                          <p className="text-xs text-gray-500">Статус: {STATUS_LABELS[ticket.status] ?? ticket.status}</p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleDownloadTicket(ticket.id)}
-                          className="text-sm font-medium text-blue-600 hover:text-blue-500"
-                        >
-                          Скачать PDF
-                        </button>
-                      </li>
-                    ))}
+                    {tickets.map((ticket) => {
+                      const departureSegment =
+                        ticket.segments.find((segment) => segment.is_departure) ?? ticket.segments[0];
+                      const arrivalSegment =
+                        [...ticket.segments].reverse().find((segment) => segment.is_arrival) ??
+                        ticket.segments[ticket.segments.length - 1];
+                      const departureName =
+                        ticket.segment_details?.departure?.name ?? departureSegment?.stop_name ?? "—";
+                      const arrivalName =
+                        ticket.segment_details?.arrival?.name ?? arrivalSegment?.stop_name ?? "—";
+                      const departureTime =
+                        ticket.segment_details?.departure?.time ?? departureSegment?.time ?? "";
+                      const arrivalTime =
+                        ticket.segment_details?.arrival?.time ?? arrivalSegment?.time ?? "";
+                      const intermediateStops = ticket.segment_details?.intermediate_stops ?? [];
+                      const summarySingle = tripSummary([ticket]);
+                      const durationMinutes =
+                        ticket.segment_details?.duration_minutes ?? summarySingle?.durationMinutes ?? null;
+                      const priceText = formatCurrency(
+                        ticket.pricing?.price ?? null,
+                        ticket.pricing?.currency ?? data.purchase.currency
+                      );
+                      const extraBaggage = toNumberSafe(ticket.extra_baggage, 0);
+
+                      return (
+                        <li key={ticket.id} className="space-y-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                          <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                              <p className="text-sm font-semibold text-gray-900">Билет #{ticket.id}</p>
+                              <p className="text-xs text-gray-500">
+                                {formatDate(ticket.tour.date)} • {ticket.tour.route_name || "Маршрут не указан"}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                Статус: {STATUS_LABELS[ticket.status] ?? ticket.status}
+                              </p>
+                            </div>
+                            <div className="flex flex-col items-end gap-1 text-sm text-gray-600">
+                              <span className="font-semibold text-gray-900">{priceText}</span>
+                              <span>Место: {ticket.seat_num ?? "—"}</span>
+                              <span>Багаж: {extraBaggage}</span>
+                              <button
+                                type="button"
+                                onClick={() => handleDownloadTicket(ticket.id)}
+                                className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-500"
+                              >
+                                Скачать PDF
+                              </button>
+                            </div>
+                          </div>
+                          <div className="rounded-lg bg-gray-50 px-4 py-3 text-sm text-gray-700">
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                              <div>
+                                <p className="font-medium">{departureName}</p>
+                                <p className="text-xs text-gray-500">Отправление • {formatTime(departureTime)}</p>
+                              </div>
+                              <div className="flex items-center text-lg font-semibold text-gray-400">→</div>
+                              <div className="text-right">
+                                <p className="font-medium">{arrivalName}</p>
+                                <p className="text-xs text-gray-500">Прибытие • {formatTime(arrivalTime)}</p>
+                              </div>
+                            </div>
+                            {durationMinutes ? (
+                              <p className="mt-2 text-xs text-gray-500">В пути {formatDuration(durationMinutes)}</p>
+                            ) : null}
+                            {intermediateStops.length > 0 ? (
+                              <p className="mt-2 text-xs text-gray-500">
+                                Промежуточные остановки: {" "}
+                                {intermediateStops
+                                  .map((stop) => stop?.name)
+                                  .filter((name): name is string => Boolean(name))
+                                  .join(", ")}
+                              </p>
+                            ) : null}
+                          </div>
+                        </li>
+                      );
+                    })}
                   </ul>
                 </li>
               );
