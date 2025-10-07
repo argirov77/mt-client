@@ -635,6 +635,9 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
   const [otpChallengeId, setOtpChallengeId] = useState<string | null>(null);
   const [otpSubmitting, setOtpSubmitting] = useState(false);
   const [actionLoading, setActionLoading] = useState<PurchaseAction | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [actionsOpen, setActionsOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   const isActionDisabled = ACTION_DISABLED_STATUSES.has(String(data?.purchase?.status ?? ""));
 
@@ -1429,185 +1432,215 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
       ) : null}
 
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold text-gray-900">Состав покупки</h2>
-        {tripsDetailed.length > 0 ? (
-          <div className="grid gap-6 md:grid-cols-2">
-            {tripsDetailed.map(({ trip, summary }, index) => (
-              <div key={`${trip.direction}-${index}`} className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
-                <div className="flex items-center justify-between gap-2">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      Рейс {trip.direction === "outbound" ? "туда" : "обратно"}
-                    </h3>
-                    <p className="text-xs text-gray-500">Билетов: {trip.tickets.length}</p>
-                  </div>
-                  {summary ? (
-                    <span className="text-sm text-gray-500">{formatDuration(summary.durationMinutes)}</span>
-                  ) : null}
-                </div>
-                {summary ? (
-                  <div className="mt-4 space-y-2 text-sm text-gray-700">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">{summary.from}</p>
-                        <p className="text-xs text-gray-500">Отправление</p>
-                      </div>
-                      <span className="text-base font-semibold">{formatTime(summary.start)}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">{summary.to}</p>
-                        <p className="text-xs text-gray-500">Прибытие</p>
-                      </div>
-                      <span className="text-base font-semibold">{formatTime(summary.end)}</span>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="mt-3 text-sm text-gray-500">Информация о рейсе недоступна.</p>
-                )}
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="rounded-2xl border border-dashed border-gray-200 px-4 py-6 text-sm text-gray-500">
-            Информация о рейсах пока недоступна.
-          </p>
-        )}
-
-        <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Пассажиры и билеты</h3>
-          <ul className="mt-4 space-y-4">
-            {(data?.passengers ?? []).map((passenger) => {
-              const tickets = passengerTickets.get(String(passenger.id)) ?? [];
-              return (
-                <li key={passenger.id} className="rounded-xl bg-gray-50 p-4">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <p className="text-base font-semibold text-gray-900">{passenger.name}</p>
-                      <p className="text-sm text-gray-500">
-                        {passenger.email ? `${passenger.email} • ` : ""}
-                        {passenger.phone ?? ""}
-                      </p>
-                    </div>
-                    <span className="text-sm text-gray-500">
-                      Всего билетов: {tickets.length}
-                    </span>
-                  </div>
-
-                  <ul className="mt-3 space-y-3">
-                    {tickets.map((ticket) => {
-                      const departureSegment =
-                        ticket.segments.find((segment) => segment.is_departure) ?? ticket.segments[0];
-                      const arrivalSegment =
-                        [...ticket.segments].reverse().find((segment) => segment.is_arrival) ??
-                        ticket.segments[ticket.segments.length - 1];
-                      const departureName =
-                        ticket.segment_details?.departure?.name ?? departureSegment?.stop_name ?? "—";
-                      const arrivalName =
-                        ticket.segment_details?.arrival?.name ?? arrivalSegment?.stop_name ?? "—";
-                      const departureTime =
-                        ticket.segment_details?.departure?.time ?? departureSegment?.time ?? "";
-                      const arrivalTime =
-                        ticket.segment_details?.arrival?.time ?? arrivalSegment?.time ?? "";
-                      const intermediateStops = ticket.segment_details?.intermediate_stops ?? [];
-                      const summarySingle = tripSummary([ticket]);
-                      const durationMinutes =
-                        ticket.segment_details?.duration_minutes ?? summarySingle?.durationMinutes ?? null;
-                      const priceText = formatCurrency(
-                        ticket.pricing?.price ?? null,
-                        ticket.pricing?.currency ?? data.purchase.currency
-                      );
-                      const extraBaggage = toNumberSafe(ticket.extra_baggage, 0);
-
-                      return (
-                        <li key={ticket.id} className="space-y-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                          <div className="flex flex-wrap items-center justify-between gap-3">
-                            <div>
-                              <p className="text-sm font-semibold text-gray-900">Билет #{ticket.id}</p>
-                              <p className="text-xs text-gray-500">
-                                {formatDate(ticket.tour.date)} • {ticket.tour.route_name || "Маршрут не указан"}
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                Статус: {STATUS_LABELS[ticket.status] ?? ticket.status}
-                              </p>
-                            </div>
-                            <div className="flex flex-col items-end gap-1 text-sm text-gray-600">
-                              <span className="font-semibold text-gray-900">{priceText}</span>
-                              <span>Место: {ticket.seat_num ?? "—"}</span>
-                              <span>Багаж: {extraBaggage}</span>
-                              <button
-                                type="button"
-                                onClick={() => handleDownloadTicket(ticket.id)}
-                                className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-500"
-                              >
-                                Скачать PDF
-                              </button>
-                            </div>
-                          </div>
-                          <div className="rounded-lg bg-gray-50 px-4 py-3 text-sm text-gray-700">
-                            <div className="flex flex-wrap items-center justify-between gap-3">
-                              <div>
-                                <p className="font-medium">{departureName}</p>
-                                <p className="text-xs text-gray-500">Отправление • {formatTime(departureTime)}</p>
-                              </div>
-                              <div className="flex items-center text-lg font-semibold text-gray-400">→</div>
-                              <div className="text-right">
-                                <p className="font-medium">{arrivalName}</p>
-                                <p className="text-xs text-gray-500">Прибытие • {formatTime(arrivalTime)}</p>
-                              </div>
-                            </div>
-                            {durationMinutes ? (
-                              <p className="mt-2 text-xs text-gray-500">В пути {formatDuration(durationMinutes)}</p>
-                            ) : null}
-                            {intermediateStops.length > 0 ? (
-                              <p className="mt-2 text-xs text-gray-500">
-                                Промежуточные остановки: {" "}
-                                {intermediateStops
-                                  .map((stop) => stop?.name)
-                                  .filter((name): name is string => Boolean(name))
-                                  .join(", ")}
-                              </p>
-                            ) : null}
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </li>
-              );
-            })}
-          </ul>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <h2 className="text-xl font-semibold text-gray-900">Состав покупки</h2>
+          <button
+            type="button"
+            onClick={() => setDetailsOpen((prev) => !prev)}
+            className="text-sm font-semibold text-blue-600 transition hover:text-blue-500"
+          >
+            {detailsOpen ? "Скрыть" : "Показать"}
+          </button>
         </div>
+
+        {detailsOpen ? (
+          <>
+            {tripsDetailed.length > 0 ? (
+              <div className="grid gap-6 md:grid-cols-2">
+                {tripsDetailed.map(({ trip, summary }, index) => (
+                  <div
+                    key={`${trip.direction}-${index}`}
+                    className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          Рейс {trip.direction === "outbound" ? "туда" : "обратно"}
+                        </h3>
+                        <p className="text-xs text-gray-500">Билетов: {trip.tickets.length}</p>
+                      </div>
+                      {summary ? (
+                        <span className="text-sm text-gray-500">{formatDuration(summary.durationMinutes)}</span>
+                      ) : null}
+                    </div>
+                    {summary ? (
+                      <div className="mt-4 space-y-2 text-sm text-gray-700">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium">{summary.from}</p>
+                            <p className="text-xs text-gray-500">Отправление</p>
+                          </div>
+                          <span className="text-base font-semibold">{formatTime(summary.start)}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium">{summary.to}</p>
+                            <p className="text-xs text-gray-500">Прибытие</p>
+                          </div>
+                          <span className="text-base font-semibold">{formatTime(summary.end)}</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="mt-3 text-sm text-gray-500">Информация о рейсе недоступна.</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="rounded-2xl border border-dashed border-gray-200 px-4 py-6 text-sm text-gray-500">
+                Информация о рейсах пока недоступна.
+              </p>
+            )}
+
+            <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">Пассажиры и билеты</h3>
+              <ul className="mt-4 space-y-4">
+                {(data?.passengers ?? []).map((passenger) => {
+                  const tickets = passengerTickets.get(String(passenger.id)) ?? [];
+                  return (
+                    <li key={passenger.id} className="rounded-xl bg-gray-50 p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <p className="text-base font-semibold text-gray-900">{passenger.name}</p>
+                          <p className="text-sm text-gray-500">
+                            {passenger.email ? `${passenger.email} • ` : ""}
+                            {passenger.phone ?? ""}
+                          </p>
+                        </div>
+                        <span className="text-sm text-gray-500">Всего билетов: {tickets.length}</span>
+                      </div>
+
+                      <ul className="mt-3 space-y-3">
+                        {tickets.map((ticket) => {
+                          const departureSegment =
+                            ticket.segments.find((segment) => segment.is_departure) ?? ticket.segments[0];
+                          const arrivalSegment =
+                            [...ticket.segments].reverse().find((segment) => segment.is_arrival) ??
+                            ticket.segments[ticket.segments.length - 1];
+                          const departureName =
+                            ticket.segment_details?.departure?.name ?? departureSegment?.stop_name ?? "—";
+                          const arrivalName =
+                            ticket.segment_details?.arrival?.name ?? arrivalSegment?.stop_name ?? "—";
+                          const departureTime =
+                            ticket.segment_details?.departure?.time ?? departureSegment?.time ?? "";
+                          const arrivalTime =
+                            ticket.segment_details?.arrival?.time ?? arrivalSegment?.time ?? "";
+                          const intermediateStops = ticket.segment_details?.intermediate_stops ?? [];
+                          const summarySingle = tripSummary([ticket]);
+                          const durationMinutes =
+                            ticket.segment_details?.duration_minutes ?? summarySingle?.durationMinutes ?? null;
+                          const priceText = formatCurrency(
+                            ticket.pricing?.price ?? null,
+                            ticket.pricing?.currency ?? data.purchase.currency
+                          );
+                          const extraBaggage = toNumberSafe(ticket.extra_baggage, 0);
+
+                          return (
+                            <li
+                              key={ticket.id}
+                              className="space-y-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
+                            >
+                              <div className="flex flex-wrap items-center justify-between gap-3">
+                                <div>
+                                  <p className="text-sm font-semibold text-gray-900">Билет #{ticket.id}</p>
+                                  <p className="text-xs text-gray-500">
+                                    {formatDate(ticket.tour.date)} • {ticket.tour.route_name || "Маршрут не указан"}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    Статус: {STATUS_LABELS[ticket.status] ?? ticket.status}
+                                  </p>
+                                </div>
+                                <div className="flex flex-col items-end gap-1 text-sm text-gray-600">
+                                  <span className="font-semibold text-gray-900">{priceText}</span>
+                                  <span>Место: {ticket.seat_num ?? "—"}</span>
+                                  <span>Багаж: {extraBaggage}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDownloadTicket(ticket.id)}
+                                    className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-500"
+                                  >
+                                    Скачать PDF
+                                  </button>
+                                </div>
+                              </div>
+                              <div className="rounded-lg bg-gray-50 px-4 py-3 text-sm text-gray-700">
+                                <div className="flex flex-wrap items-center justify-between gap-3">
+                                  <div>
+                                    <p className="font-medium">{departureName}</p>
+                                    <p className="text-xs text-gray-500">Отправление • {formatTime(departureTime)}</p>
+                                  </div>
+                                  <div className="flex items-center text-lg font-semibold text-gray-400">→</div>
+                                  <div className="text-right">
+                                    <p className="font-medium">{arrivalName}</p>
+                                    <p className="text-xs text-gray-500">Прибытие • {formatTime(arrivalTime)}</p>
+                                  </div>
+                                </div>
+                                {durationMinutes ? (
+                                  <p className="mt-2 text-xs text-gray-500">В пути {formatDuration(durationMinutes)}</p>
+                                ) : null}
+                                {intermediateStops.length > 0 ? (
+                                  <p className="mt-2 text-xs text-gray-500">
+                                    Промежуточные остановки: {" "}
+                                    {intermediateStops
+                                      .map((stop) => stop?.name)
+                                      .filter((name): name is string => Boolean(name))
+                                      .join(", ")}
+                                  </p>
+                                ) : null}
+                              </div>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </>
+        ) : (
+          <p className="text-sm text-gray-500">Нажмите «Показать», чтобы увидеть детали поездки и билетов.</p>
+        )}
       </section>
 
       <section className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">Действия с покупкой</h2>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <h2 className="text-xl font-semibold text-gray-900">Действия с покупкой</h2>
+          <button
+            type="button"
+            onClick={() => setActionsOpen((prev) => !prev)}
+            className="text-sm font-semibold text-blue-600 transition hover:text-blue-500"
+          >
+            {actionsOpen ? "Скрыть" : "Показать"}
+          </button>
+        </div>
 
-        <div className="grid gap-6">
-          <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">Оплата покупки</h3>
-                <p className="text-sm text-gray-500">Оплатить всю покупку целиком</p>
+        {actionsOpen ? (
+          <div className="grid gap-6">
+            <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Оплата покупки</h3>
+                  <p className="text-sm text-gray-500">Оплатить всю покупку целиком</p>
+                </div>
+                <button
+                  type="button"
+                  disabled={isActionDisabled || actionLoading === "pay"}
+                  onClick={confirmPayment}
+                  className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-gray-300"
+                >
+                  Оплатить {formatCurrency(totals.due, data.purchase.currency)}
+                </button>
               </div>
-              <button
-                type="button"
-                disabled={isActionDisabled || actionLoading === "pay"}
-                onClick={confirmPayment}
-                className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-gray-300"
-              >
-                Оплатить {formatCurrency(totals.due, data.purchase.currency)}
-              </button>
             </div>
-          </div>
 
-          <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200 space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">Перенос рейса</h3>
-                <p className="text-sm text-gray-500">Выберите пассажиров и новый рейс</p>
-              </div>
-              <div className="flex items-center gap-3 text-sm text-gray-600">
+            <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200 space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Перенос рейса</h3>
+                  <p className="text-sm text-gray-500">Выберите пассажиров и новый рейс</p>
+                </div>
+                <div className="flex items-center gap-3 text-sm text-gray-600">
                 <label className="flex items-center gap-2">
                   <input
                     type="radio"
@@ -1880,36 +1913,53 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
               </button>
             </div>
           </div>
-        </div>
+          </div>
+        ) : (
+          <p className="text-sm text-gray-500">Разверните раздел, чтобы управлять покупкой.</p>
+        )}
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold text-gray-900">История действий</h2>
-        {history.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-gray-200 px-4 py-6 text-sm text-gray-500">
-            История пока пуста.
-          </p>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <h2 className="text-xl font-semibold text-gray-900">История действий</h2>
+          <button
+            type="button"
+            onClick={() => setHistoryOpen((prev) => !prev)}
+            className="text-sm font-semibold text-blue-600 transition hover:text-blue-500"
+          >
+            {historyOpen ? "Скрыть" : "Показать"}
+          </button>
+        </div>
+        {historyOpen ? (
+          history.length === 0 ? (
+            <p className="rounded-2xl border border-dashed border-gray-200 px-4 py-6 text-sm text-gray-500">
+              История пока пуста.
+            </p>
+          ) : (
+            <ul className="space-y-3">
+              {history.map((event) => (
+                <li
+                  key={event.id ?? `${event.date}-${event.category}`}
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-white px-4 py-3 shadow-sm ring-1 ring-gray-200"
+                >
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">{formatDate(event.date)} • {event.category}</p>
+                    {event.comment ? <p className="text-xs text-gray-500">{event.comment}</p> : null}
+                  </div>
+                  <div className="text-right text-sm text-gray-600">
+                    {event.amount !== undefined && event.amount !== null ? (
+                      <p className="font-semibold text-gray-900">
+                        {formatCurrency(event.amount, event.currency ?? data.purchase.currency)}
+                      </p>
+                    ) : null}
+                    {event.method ? <p className="text-xs text-gray-500">{event.method}</p> : null}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )
         ) : (
-          <ul className="space-y-3">
-            {history.map((event) => (
-              <li key={event.id ?? `${event.date}-${event.category}`}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-white px-4 py-3 shadow-sm ring-1 ring-gray-200"
-              >
-                <div>
-                  <p className="text-sm font-semibold text-gray-900">{formatDate(event.date)} • {event.category}</p>
-                  {event.comment ? <p className="text-xs text-gray-500">{event.comment}</p> : null}
-                </div>
-                <div className="text-right text-sm text-gray-600">
-                  {event.amount !== undefined && event.amount !== null ? (
-                    <p className="font-semibold text-gray-900">
-                      {formatCurrency(event.amount, event.currency ?? data.purchase.currency)}
-                    </p>
-                  ) : null}
-                  {event.method ? <p className="text-xs text-gray-500">{event.method}</p> : null}
-                </div>
-              </li>
-            ))}
-          </ul>
+          <p className="text-sm text-gray-500">Откройте раздел, чтобы посмотреть историю операций.</p>
         )}
       </section>
 
