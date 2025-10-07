@@ -111,16 +111,6 @@ const minutesBetween = (from: Date | null, to: Date | null) => {
   return diffMs > 0 ? Math.round(diffMs / 60000) : null;
 };
 
-const formatDuration = (minutes: number | null) => {
-  if (minutes === null) return "—";
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  if (hours <= 0) {
-    return `${mins} мин`;
-  }
-  return mins > 0 ? `${hours} ч ${mins} мин` : `${hours} ч`;
-};
-
 const downloadPdf = async (path: string, filename: string, onError: (message: string) => void) => {
   if (typeof window === "undefined") return;
 
@@ -630,20 +620,16 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
   const [otpChallengeId, setOtpChallengeId] = useState<string | null>(null);
   const [otpSubmitting, setOtpSubmitting] = useState(false);
   const [actionLoading, setActionLoading] = useState<PurchaseAction | null>(null);
-  const [detailsOpen, setDetailsOpen] = useState(true);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [activePanel, setActivePanel] = useState<"reschedule" | "cancel" | "baggage" | null>(null);
+  const [rescheduleScope, setRescheduleScope] = useState<"all" | "selected">("selected");
 
   const isActionDisabled = ACTION_DISABLED_STATUSES.has(String(data?.purchase?.status ?? ""));
 
-  const passengerTickets = useMemo(() => {
-    if (!data || !data.passengers) return new Map<string, PurchaseTicket[]>();
-    const tickets = Array.isArray(data.tickets) ? data.tickets : [];
-    const map = new Map<string, PurchaseTicket[]>();
-    data.passengers.forEach((passenger) => {
-      const related = tickets.filter(
-        (ticket) => String(ticket.passenger_id) === String(passenger.id)
-      );
-      map.set(String(passenger.id), related);
+  const passengerMap = useMemo(() => {
+    const map = new Map<string, PurchasePassenger>();
+    (data?.passengers ?? []).forEach((passenger) => {
+      map.set(String(passenger.id), passenger);
     });
     return map;
   }, [data]);
@@ -662,6 +648,27 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
       return { trip, tickets: tripRelatedTickets, summary: tripSummary(tripRelatedTickets) };
     });
   }, [data]);
+
+  const allTicketIds = useMemo(() => {
+    if (!data) return [] as string[];
+    return data.tickets.map((ticket) => String(ticket.id));
+  }, [data]);
+
+  const outboundTickets = useMemo(() => {
+    const outbound = tripsDetailed
+      .filter((entry) => entry.trip.direction === "outbound")
+      .flatMap((entry) => entry.tickets);
+    if (outbound.length > 0) {
+      return outbound;
+    }
+    return data?.tickets ?? [];
+  }, [tripsDetailed, data]);
+
+  const returnTickets = useMemo(() => {
+    return tripsDetailed
+      .filter((entry) => entry.trip.direction === "return")
+      .flatMap((entry) => entry.tickets);
+  }, [tripsDetailed]);
 
   const toOriginalTicketIds = useCallback(
     (selected: string[]) => {
@@ -1152,6 +1159,10 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
     return cancelSelected.filter((id) => validIds.has(id));
   }, [data, cancelSelected]);
 
+  const rescheduleSelectionCount = rescheduleScope === "all" ? allTicketIds.length : rescheduleTickets.length;
+
+  const cancelSelectionCount = cancelTickets.length;
+
   const baggageChanged = useMemo(() => {
     if (!data) return false;
     return data.tickets.some((ticket) => {
@@ -1219,7 +1230,9 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
       return;
     }
 
-    if (rescheduleTickets.length === 0) {
+    const targetTickets = rescheduleScope === "all" ? allTicketIds : rescheduleTickets;
+
+    if (targetTickets.length === 0) {
       setBanner({ type: "error", message: "Выберите билеты для переноса" });
       return;
     }
@@ -1231,7 +1244,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
       return;
     }
 
-    const ticketIdentifiers = toOriginalTicketIds(rescheduleTickets);
+    const ticketIdentifiers = toOriginalTicketIds(targetTickets);
     const payload: Record<string, unknown> = {
       new_tour_id: selectedOption.id,
     };
@@ -1287,6 +1300,12 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
     setCancelSelected((prev) => prev.filter((id) => validIds.has(id)));
   }, [data]);
 
+  useEffect(() => {
+    if (rescheduleScope === "all") {
+      setRescheduleSelected(allTicketIds);
+    }
+  }, [rescheduleScope, allTicketIds]);
+
   if (loading) {
     return (
       <div className="mx-auto max-w-5xl px-4 py-10">
@@ -1337,11 +1356,220 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
 
   const history: PurchaseHistoryEvent[] = Array.isArray(data.history) ? data.history : [];
   const totals = data.totals ? { ...DEFAULT_TOTALS, ...data.totals } : { ...DEFAULT_TOTALS };
+  const isPaid = data.purchase.status === "paid";
+  const primaryActionLabel = isPaid ? "Оформить возврат" : "Оплатить";
+  const primaryButtonClasses = isPaid ? "bg-red-600 hover:bg-red-500" : "bg-emerald-600 hover:bg-emerald-500";
+  const hasTickets = allTicketIds.length > 0;
+  const primaryActionDisabled = isActionDisabled || (isPaid && cancelSelectionCount === 0);
+  const cancelButtonDisabled = isActionDisabled || cancelSelectionCount === 0;
+  const rescheduleButtonDisabled = isActionDisabled || !hasTickets;
+  const baggageButtonDisabled = isActionDisabled;
+  const showReturnTickets = returnTickets.length > 0;
+  const effectiveRescheduleTickets =
+    rescheduleScope === "all" ? allTicketIds : rescheduleTickets;
+  const canRequestRescheduleOptions =
+    rescheduleScope === "all" ? hasTickets : rescheduleSelectionCount > 0;
+
+  const handlePrimaryAction = () => {
+    if (isActionDisabled) {
+      return;
+    }
+
+    if (isPaid) {
+      setActivePanel("cancel");
+      if (cancelSelectionCount > 0) {
+        void submitCancelPreview(cancelTickets);
+      }
+      return;
+    }
+
+    confirmPayment();
+  };
+
+  const handleCancelAction = () => {
+    if (cancelButtonDisabled) {
+      return;
+    }
+
+    setActivePanel("cancel");
+    void submitCancelPreview(cancelTickets);
+  };
+
+  const handleRescheduleAction = () => {
+    if (rescheduleButtonDisabled) {
+      return;
+    }
+
+    setActivePanel("reschedule");
+  };
+
+  const handleBaggageAction = () => {
+    if (baggageButtonDisabled) {
+      return;
+    }
+
+    setActivePanel("baggage");
+  };
+
+  const renderTicketSection = (title: string, tickets: PurchaseTicket[]) => {
+    if (tickets.length === 0) {
+      return null;
+    }
+
+    return (
+      <section key={title} className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
+          <span className="text-sm text-gray-500">Всего билетов: {tickets.length}</span>
+        </div>
+        <ul className="space-y-4">
+          {tickets.map((ticket) => {
+            const ticketId = String(ticket.id);
+            const passenger = passengerMap.get(String(ticket.passenger_id));
+            const passengerName = passenger?.name ?? `Пассажир #${ticket.passenger_id}`;
+            const ticketStatusLabel = STATUS_LABELS[ticket.status] ?? ticket.status;
+            const departureSegment =
+              ticket.segments.find((segment) => segment.is_departure) ?? ticket.segments[0];
+            const arrivalSegment =
+              [...ticket.segments].reverse().find((segment) => segment.is_arrival) ??
+              ticket.segments[ticket.segments.length - 1];
+            const departureName =
+              ticket.segment_details?.departure?.name ?? departureSegment?.stop_name ?? "—";
+            const arrivalName =
+              ticket.segment_details?.arrival?.name ?? arrivalSegment?.stop_name ?? "—";
+            const departureTimeSource =
+              ticket.segment_details?.departure?.time ?? departureSegment?.time ?? null;
+            const arrivalTimeSource =
+              ticket.segment_details?.arrival?.time ?? arrivalSegment?.time ?? null;
+            const departureDateSource =
+              ticket.segment_details?.departure?.time ??
+              toDateTimeString(ticket.tour.date, departureSegment?.time ?? null);
+            const arrivalDateSource =
+              ticket.segment_details?.arrival?.time ??
+              toDateTimeString(ticket.tour.date, arrivalSegment?.time ?? null);
+            const departureDate = formatDate(departureDateSource);
+            const arrivalDate = formatDate(arrivalDateSource);
+            const departureTime = formatTime(departureTimeSource);
+            const arrivalTime = formatTime(arrivalTimeSource);
+            const extraBaggage = toNumberSafe(ticket.extra_baggage, 0);
+            const baggageValue = baggageDraft[ticketId] ?? extraBaggage;
+            const isRescheduleSelected = rescheduleTickets.includes(ticketId);
+            const isCancelSelected = cancelTickets.includes(ticketId);
+            const priceText = formatCurrency(
+              ticket.pricing?.price ?? null,
+              ticket.pricing?.currency ?? data.purchase.currency
+            );
+            const routeName = ticket.tour.route_name || "Маршрут не указан";
+
+            return (
+              <li
+                key={ticket.id}
+                className="space-y-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="space-y-2">
+                    <p className="text-base font-semibold text-gray-900">{passengerName}</p>
+                    <p className="text-sm text-gray-500">
+                      Билет #{ticket.id} • {ticketStatusLabel}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {formatDate(ticket.tour.date)} • {routeName}
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 text-sm text-gray-600">
+                    <span className="font-semibold text-gray-900">{priceText}</span>
+                    <span>Место: {ticket.seat_num ?? "—"}</span>
+                    <span>Доп. багаж: {baggageValue}</span>
+                    {baggageValue !== extraBaggage ? (
+                      <span className="text-xs font-semibold text-blue-600">изменено</span>
+                    ) : null}
+                  </div>
+                </div>
+                <div className="grid gap-4 border-t border-gray-100 pt-4 text-sm text-gray-700 md:grid-cols-2">
+                  <div className="space-y-1">
+                    <p className="text-xs uppercase text-gray-500">Отправление</p>
+                    <p className="text-base font-semibold text-gray-900">{departureName}</p>
+                    <p>
+                      {(departureDate || "—")} • {departureTime}
+                    </p>
+                  </div>
+                  <div className="space-y-1 md:text-right">
+                    <p className="text-xs uppercase text-gray-500">Прибытие</p>
+                    <p className="text-base font-semibold text-gray-900">{arrivalName}</p>
+                    <p>
+                      {(arrivalDate || "—")} • {arrivalTime}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-4 text-sm">
+                  <div className="flex flex-wrap items-center gap-3 text-gray-700">
+                    <label className="inline-flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={isRescheduleSelected}
+                        onChange={() => toggleRescheduleTicket(ticketId)}
+                        disabled={isActionDisabled || rescheduleScope === "all"}
+                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:cursor-not-allowed"
+                      />
+                      Перенести
+                    </label>
+                    <label className="inline-flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={isCancelSelected}
+                        onChange={() => toggleCancelTicket(ticketId)}
+                        disabled={isActionDisabled}
+                        className="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500 disabled:cursor-not-allowed"
+                      />
+                      {cancelActionLabel}
+                    </label>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3 text-gray-600">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-gray-900">Доп. багаж</span>
+                      <div className="flex items-center gap-2 rounded-full border border-gray-200 px-3 py-1">
+                        <button
+                          type="button"
+                          onClick={() => decrementBaggage(ticketId)}
+                          disabled={isActionDisabled || baggageValue <= 0}
+                          className="flex h-7 w-7 items-center justify-center rounded-full border border-gray-300 text-base text-gray-700 transition hover:border-gray-400 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-300"
+                        >
+                          −
+                        </button>
+                        <span className="min-w-[2rem] text-center text-sm font-semibold text-gray-900">
+                          {baggageValue}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => incrementBaggage(ticketId)}
+                          disabled={isActionDisabled}
+                          className="flex h-7 w-7 items-center justify-center rounded-full border border-gray-300 text-base text-gray-700 transition hover:border-gray-400 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-300"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadTicket(ticket.id)}
+                      className="text-sm font-semibold text-blue-600 transition hover:text-blue-500"
+                    >
+                      Скачать PDF
+                    </button>
+                  </div>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+    );
+  };
 
   return (
-    <div className="mx-auto max-w-5xl space-y-10 px-4 py-10">
+    <div className="mx-auto max-w-5xl space-y-8 px-4 py-10">
       <section className="space-y-6 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl font-semibold text-gray-900">Покупка #{data.purchase.id}</h1>
             <p className="text-sm text-gray-500">Создана {formatDate(data.purchase.created_at)}</p>
@@ -1355,21 +1583,23 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
             </span>
           </div>
         </div>
-
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {customer ? (
-            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-              <h3 className="text-sm font-semibold text-gray-900">Покупатель</h3>
-              <p className="mt-2 text-base font-semibold text-gray-900">{customer.name}</p>
-              {customer.email ? (
-                <p className="text-sm text-gray-600">{customer.email}</p>
-              ) : null}
-              {customer.phone ? (
-                <p className="text-sm text-gray-600">{customer.phone}</p>
-              ) : null}
-            </div>
-          ) : null}
-
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+            <h3 className="text-sm font-semibold text-gray-900">Покупатель</h3>
+            {customer ? (
+              <>
+                <p className="mt-2 text-base font-semibold text-gray-900">{customer.name}</p>
+                {customer.phone ? (
+                  <p className="text-sm text-gray-600">{customer.phone}</p>
+                ) : null}
+                {customer.email ? (
+                  <p className="text-sm text-gray-600">{customer.email}</p>
+                ) : null}
+              </>
+            ) : (
+              <p className="mt-2 text-sm text-gray-500">Информация о покупателе недоступна.</p>
+            )}
+          </div>
           <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
             <h3 className="text-sm font-semibold text-gray-900">Оплата</h3>
             <dl className="mt-2 space-y-1 text-sm text-gray-600">
@@ -1382,498 +1612,347 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
                 <dd>{formatCurrency(totals.paid, data.purchase.currency)}</dd>
               </div>
               <div className="flex items-center justify-between">
-                <dt>Пассажиры</dt>
+                <dt>Билеты</dt>
                 <dd>{totals.pax_count}</dd>
               </div>
               <div className="flex items-center justify-between">
-                <dt>Багаж</dt>
-                <dd>{totals.baggage_count} + ручная кладь</dd>
+                <dt>Доп. багаж</dt>
+                <dd>{totals.baggage_count}</dd>
               </div>
             </dl>
             {purchaseDeadline ? (
               <p className="mt-3 text-xs text-gray-500">Оплатить до {purchaseDeadline}</p>
             ) : null}
           </div>
-
-          <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-            <h3 className="text-sm font-semibold text-gray-900">Маршрут и документы</h3>
-            {routeNames.length > 0 ? (
-              <p className="mt-2 text-sm text-gray-700">{routeNames.join(", ")}</p>
-            ) : (
-              <p className="mt-2 text-sm text-gray-500">Маршрут не указан</p>
-            )}
-            {tripDates.length > 0 ? (
-              <p className="mt-2 text-xs text-gray-500">
-                Даты поездки: {tripDates.map((date) => formatDate(date)).join(", ")}
-              </p>
-            ) : null}
-            <button
-              type="button"
-              onClick={handleDownloadAll}
-              className="mt-4 inline-flex w-full items-center justify-center rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700"
-            >
-              Скачать все билеты (PDF)
-            </button>
-          </div>
         </div>
-      </section>
-
-      {banner ? (
-        <UiAlert type={banner.type}>{banner.message}</UiAlert>
-      ) : null}
-
-      <section className="space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <h2 className="text-xl font-semibold text-gray-900">Состав покупки</h2>
+        <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+          <h3 className="text-sm font-semibold text-gray-900">Маршрут и документы</h3>
+          {routeNames.length > 0 ? (
+            <p className="mt-2 text-sm text-gray-700">{routeNames.join(", ")}</p>
+          ) : (
+            <p className="mt-2 text-sm text-gray-500">Маршрут не указан</p>
+          )}
+          {tripDates.length > 0 ? (
+            <p className="mt-2 text-xs text-gray-500">
+              Даты поездки: {tripDates.map((date) => formatDate(date)).join(", ")}
+            </p>
+          ) : null}
           <button
             type="button"
-            onClick={() => setDetailsOpen((prev) => !prev)}
-            className="text-sm font-semibold text-blue-600 transition hover:text-blue-500"
+            onClick={handleDownloadAll}
+            className="mt-4 inline-flex w-full items-center justify-center rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700"
           >
-            {detailsOpen ? "Скрыть" : "Показать"}
+            Скачать все билеты (PDF)
           </button>
         </div>
-
-        {detailsOpen ? (
-          <>
-            {tripsDetailed.length > 0 ? (
-              <div className="grid gap-6 md:grid-cols-2">
-                {tripsDetailed.map(({ trip, summary }, index) => (
-                  <div
-                    key={`${trip.direction}-${index}`}
-                    className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          Рейс {trip.direction === "outbound" ? "туда" : "обратно"}
-                        </h3>
-                        <p className="text-xs text-gray-500">Билетов: {trip.tickets.length}</p>
-                      </div>
-                      {summary ? (
-                        <span className="text-sm text-gray-500">{formatDuration(summary.durationMinutes)}</span>
-                      ) : null}
-                    </div>
-                    {summary ? (
-                      <div className="mt-4 space-y-2 text-sm text-gray-700">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-medium">{summary.from}</p>
-                            <p className="text-xs text-gray-500">Отправление</p>
-                          </div>
-                          <span className="text-base font-semibold">{formatTime(summary.start)}</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-medium">{summary.to}</p>
-                            <p className="text-xs text-gray-500">Прибытие</p>
-                          </div>
-                          <span className="text-base font-semibold">{formatTime(summary.end)}</span>
-                        </div>
-                      </div>
-                    ) : (
-                      <p className="mt-3 text-sm text-gray-500">Информация о рейсе недоступна.</p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="rounded-2xl border border-dashed border-gray-200 px-4 py-6 text-sm text-gray-500">
-                Информация о рейсах пока недоступна.
-              </p>
-            )}
-
-            <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">Пассажиры и билеты</h3>
-              <ul className="mt-4 space-y-4">
-                {(data?.passengers ?? []).map((passenger) => {
-                  const tickets = passengerTickets.get(String(passenger.id)) ?? [];
-                  return (
-                    <li key={passenger.id} className="rounded-xl bg-gray-50 p-4">
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div>
-                          <p className="text-base font-semibold text-gray-900">{passenger.name}</p>
-                          <p className="text-sm text-gray-500">
-                            {passenger.email ? `${passenger.email} • ` : ""}
-                            {passenger.phone ?? ""}
-                          </p>
-                        </div>
-                        <span className="text-sm text-gray-500">Всего билетов: {tickets.length}</span>
-                      </div>
-
-                      <ul className="mt-3 space-y-3">
-                        {tickets.map((ticket) => {
-                          const ticketId = String(ticket.id);
-                          const departureSegment =
-                            ticket.segments.find((segment) => segment.is_departure) ?? ticket.segments[0];
-                          const arrivalSegment =
-                            [...ticket.segments].reverse().find((segment) => segment.is_arrival) ??
-                            ticket.segments[ticket.segments.length - 1];
-                          const departureName =
-                            ticket.segment_details?.departure?.name ?? departureSegment?.stop_name ?? "—";
-                          const arrivalName =
-                            ticket.segment_details?.arrival?.name ?? arrivalSegment?.stop_name ?? "—";
-                          const departureTime =
-                            ticket.segment_details?.departure?.time ?? departureSegment?.time ?? "";
-                          const arrivalTime =
-                            ticket.segment_details?.arrival?.time ?? arrivalSegment?.time ?? "";
-                          const intermediateStops = ticket.segment_details?.intermediate_stops ?? [];
-                          const summarySingle = tripSummary([ticket]);
-                          const durationMinutes =
-                            ticket.segment_details?.duration_minutes ?? summarySingle?.durationMinutes ?? null;
-                          const priceText = formatCurrency(
-                            ticket.pricing?.price ?? null,
-                            ticket.pricing?.currency ?? data.purchase.currency
-                          );
-                          const extraBaggage = toNumberSafe(ticket.extra_baggage, 0);
-                          const baggageValue = baggageDraft[ticketId] ?? extraBaggage;
-                          const isRescheduleSelected = rescheduleTickets.includes(ticketId);
-                          const isCancelSelected = cancelTickets.includes(ticketId);
-                          const cancelLabel = cancelActionLabel;
-
-                          return (
-                            <li
-                              key={ticket.id}
-                              className="space-y-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
-                            >
-                              <div className="flex flex-wrap items-center justify-between gap-3">
-                                <div>
-                                  <p className="text-sm font-semibold text-gray-900">Билет #{ticket.id}</p>
-                                  <p className="text-xs text-gray-500">
-                                    {formatDate(ticket.tour.date)} • {ticket.tour.route_name || "Маршрут не указан"}
-                                  </p>
-                                  <p className="text-xs text-gray-500">
-                                    Статус: {STATUS_LABELS[ticket.status] ?? ticket.status}
-                                  </p>
-                                </div>
-                                <div className="flex flex-col items-end gap-1 text-sm text-gray-600">
-                                  <span className="font-semibold text-gray-900">{priceText}</span>
-                                  <span>Место: {ticket.seat_num ?? "—"}</span>
-                                  <span>Багаж: {baggageValue}</span>
-                                  {baggageValue !== extraBaggage ? (
-                                    <span className="text-xs font-semibold text-blue-600">обновлено</span>
-                                  ) : null}
-                                  <button
-                                    type="button"
-                                    onClick={() => handleDownloadTicket(ticket.id)}
-                                    className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-500"
-                                  >
-                                    Скачать PDF
-                                  </button>
-                                </div>
-                              </div>
-                              <div className="rounded-lg bg-gray-50 px-4 py-3 text-sm text-gray-700">
-                                <div className="flex flex-wrap items-center justify-between gap-3">
-                                  <div>
-                                    <p className="font-medium">{departureName}</p>
-                                    <p className="text-xs text-gray-500">Отправление • {formatTime(departureTime)}</p>
-                                  </div>
-                                  <div className="flex items-center text-lg font-semibold text-gray-400">→</div>
-                                  <div className="text-right">
-                                    <p className="font-medium">{arrivalName}</p>
-                                    <p className="text-xs text-gray-500">Прибытие • {formatTime(arrivalTime)}</p>
-                                  </div>
-                                </div>
-                                {durationMinutes ? (
-                                  <p className="mt-2 text-xs text-gray-500">В пути {formatDuration(durationMinutes)}</p>
-                                ) : null}
-                                {intermediateStops.length > 0 ? (
-                                  <p className="mt-2 text-xs text-gray-500">
-                                    Промежуточные остановки: {" "}
-                                    {intermediateStops
-                                      .map((stop) => stop?.name)
-                                      .filter((name): name is string => Boolean(name))
-                                      .join(", ")}
-                                  </p>
-                                ) : null}
-                              </div>
-                              <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-gray-100 bg-white px-3 py-2 text-xs">
-                                <div className="flex flex-wrap gap-2">
-                                  <button
-                                    type="button"
-                                    onClick={() => toggleRescheduleTicket(ticketId)}
-                                    className={`inline-flex items-center rounded-full border px-3 py-1 font-semibold transition ${
-                                      isRescheduleSelected
-                                        ? "border-blue-500 bg-blue-50 text-blue-700"
-                                        : "border-gray-300 text-gray-600 hover:border-blue-300 hover:text-blue-600"
-                                    }`}
-                                  >
-                                    Перенести
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => toggleCancelTicket(ticketId)}
-                                    className={`inline-flex items-center rounded-full border px-3 py-1 font-semibold transition ${
-                                      isCancelSelected
-                                        ? "border-red-500 bg-red-50 text-red-700"
-                                        : "border-gray-300 text-gray-600 hover:border-red-300 hover:text-red-600"
-                                    }`}
-                                  >
-                                    {cancelLabel}
-                                  </button>
-                                </div>
-                                <div className="flex items-center gap-2 text-xs text-gray-600">
-                                  <span className="font-medium text-gray-900">Багаж</span>
-                                  <div className="flex items-center gap-2">
-                                    <button
-                                      type="button"
-                                      onClick={() => decrementBaggage(ticketId)}
-                                      className="flex h-7 w-7 items-center justify-center rounded-full border border-gray-300 text-base text-gray-700"
-                                    >
-                                      −
-                                    </button>
-                                    <span className="min-w-[2rem] text-center text-sm font-semibold text-gray-900">{baggageValue}</span>
-                                    <button
-                                      type="button"
-                                      onClick={() => incrementBaggage(ticketId)}
-                                      className="flex h-7 w-7 items-center justify-center rounded-full border border-gray-300 text-base text-gray-700"
-                                    >
-                                      +
-                                    </button>
-                                  </div>
-                                </div>
-                              </div>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          </>
-        ) : (
-          <p className="text-sm text-gray-500">Нажмите «Показать», чтобы увидеть детали поездки и билетов.</p>
-        )}
       </section>
 
-      <section className="space-y-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="space-y-1">
-            <h2 className="text-xl font-semibold text-gray-900">Управление покупкой</h2>
-            <p className="text-sm text-gray-500">
-              Отмечайте билеты в списке выше и выполняйте действия выборочно или для всей поездки.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600">
-            <span className="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 font-medium text-gray-700">
-              К оплате: {formatCurrency(totals.due, data.purchase.currency)}
-            </span>
-            <span className="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 font-medium text-gray-700">
-              Перенос: {rescheduleTickets.length}
-            </span>
-            <span className="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 font-medium text-gray-700">
-              {cancelActionLabel}: {cancelTickets.length}
-            </span>
-          </div>
-        </div>
+      {banner ? <UiAlert type={banner.type}>{banner.message}</UiAlert> : null}
 
-        <div className="grid gap-6">
-          <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">Оплата покупки</h3>
-                <p className="text-sm text-gray-500">Оплатите всю покупку одним нажатием</p>
-              </div>
+      {renderTicketSection("Билеты туда", outboundTickets)}
+
+      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200 space-y-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={handlePrimaryAction}
+            disabled={primaryActionDisabled}
+            className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 ${primaryButtonClasses}`}
+          >
+            {isPaid ? primaryActionLabel : `${primaryActionLabel} ${formatCurrency(totals.due, data.purchase.currency)}`}
+          </button>
+          <button
+            type="button"
+            onClick={handleCancelAction}
+            disabled={cancelButtonDisabled}
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:border-red-300 hover:text-red-600 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-400"
+          >
+            Отменить
+          </button>
+          <button
+            type="button"
+            onClick={handleRescheduleAction}
+            disabled={rescheduleButtonDisabled}
+            className="inline-flex items-center gap-2 rounded-lg border border-blue-200 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:border-blue-400 hover:text-blue-600 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-400"
+          >
+            Перенести поездку
+          </button>
+          <button
+            type="button"
+            onClick={handleBaggageAction}
+            disabled={baggageButtonDisabled}
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:border-gray-400 hover:text-gray-900 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-400"
+          >
+            Доп багаж
+          </button>
+        </div>
+        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
+          <span>К оплате: {formatCurrency(totals.due, data.purchase.currency)}</span>
+          <span>Для переноса выбрано: {rescheduleSelectionCount}</span>
+          <span>
+            {cancelActionLabel}: {cancelSelectionCount}
+          </span>
+          <span>Изменено багажа: {baggageChangedCount}</span>
+        </div>
+      </section>
+
+      {activePanel === "reschedule" ? (
+        <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200 space-y-4">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">Перенос поездки</h3>
+              <p className="text-sm text-gray-500">Выбрано билетов: {rescheduleSelectionCount}</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
+              <label className="inline-flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="reschedule-scope"
+                  value="all"
+                  checked={rescheduleScope === "all"}
+                  onChange={() => setRescheduleScope("all")}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                />
+                Для всех пассажиров
+              </label>
+              <label className="inline-flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="reschedule-scope"
+                  value="selected"
+                  checked={rescheduleScope === "selected"}
+                  onChange={() => setRescheduleScope("selected")}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                />
+                Только выбранные
+              </label>
               <button
                 type="button"
-                disabled={isActionDisabled || actionLoading === "pay"}
-                onClick={confirmPayment}
-                className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-gray-300"
+                onClick={() => setActivePanel(null)}
+                className="ml-auto text-sm font-semibold text-gray-400 transition hover:text-gray-600"
               >
-                Оплатить {formatCurrency(totals.due, data.purchase.currency)}
+                Скрыть
               </button>
             </div>
           </div>
-
-          <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200 space-y-4">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">Перенос билетов</h3>
-                <p className="text-sm text-gray-500">Выбрано билетов: {rescheduleTickets.length}</p>
-              </div>
-              <div className="flex flex-wrap items-center gap-2 text-xs">
-                <button
-                  type="button"
-                  onClick={selectAllReschedule}
-                  className="inline-flex items-center rounded-full border border-gray-300 px-3 py-1 font-semibold text-gray-600 transition hover:border-blue-300 hover:text-blue-600"
-                >
-                  Выбрать все
-                </button>
-                <button
-                  type="button"
-                  onClick={clearRescheduleSelection}
-                  className="inline-flex items-center rounded-full border border-gray-200 px-3 py-1 font-semibold text-gray-500 transition hover:border-gray-300 hover:text-gray-700"
-                >
-                  Сбросить
-                </button>
-              </div>
-            </div>
-            <div className="grid gap-4 md:grid-cols-[minmax(200px,240px)_1fr]">
-              <div>
-                <label className="block text-sm font-medium text-gray-700" htmlFor="reschedule-date">
-                  Дата нового рейса
-                </label>
-                <input
-                  id="reschedule-date"
-                  type="date"
-                  value={rescheduleDate}
-                  onChange={(event) => setRescheduleDate(event.target.value)}
-                  className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-                />
-                <button
-                  type="button"
-                  className="mt-3 inline-flex w-full items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-gray-300"
-                  onClick={() => void submitRescheduleOptions(rescheduleTickets, rescheduleDate)}
-                  disabled={isActionDisabled || rescheduleTickets.length === 0 || !rescheduleDate}
-                >
-                  {rescheduleLoading ? "Загрузка..." : "Показать рейсы"}
-                </button>
-                {rescheduleError ? <p className="mt-2 text-sm text-red-500">{rescheduleError}</p> : null}
-              </div>
-              <div className="space-y-3">
-                {rescheduleOptions.length === 0 ? (
-                  <p className="rounded-lg border border-dashed border-gray-200 px-4 py-6 text-sm text-gray-500">
-                    Выберите дату, чтобы увидеть доступные рейсы.
-                  </p>
-                ) : (
-                  rescheduleOptions.map((option) => (
-                    <label
-                      key={option.id}
-                      className="flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700 hover:border-blue-400"
-                    >
-                      <div className="flex flex-col">
-                        <span className="text-base font-semibold text-gray-900">
-                          {formatTime(option.departure_time)} → {formatTime(option.arrival_time)}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          Свободных мест: {option.availability}
-                        </span>
-                        {option.description ? (
-                          <span className="mt-1 text-xs text-gray-500">{option.description}</span>
-                        ) : null}
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-sm font-semibold text-gray-900">
-                          {formatCurrency(option.price_change, option.currency)}
-                        </span>
-                        <input
-                          type="radio"
-                          name="reschedule-option"
-                          checked={rescheduleOptionId === String(option.id)}
-                          onChange={() => setRescheduleOptionId(String(option.id))}
-                          className="h-4 w-4"
-                        />
-                      </div>
-                    </label>
-                  ))
-                )}
-              </div>
-            </div>
-            <div className="flex flex-wrap items-center justify-between gap-4 text-xs text-gray-500">
-              <span>Чтобы перенести рейс, выберите билеты и новый вариант.</span>
+          {rescheduleScope === "selected" ? (
+            <div className="flex flex-wrap items-center gap-2 text-xs">
               <button
                 type="button"
-                onClick={confirmReschedule}
-                disabled={isActionDisabled || actionLoading === "reschedule"}
+                onClick={selectAllReschedule}
+                className="inline-flex items-center rounded-full border border-gray-300 px-3 py-1 font-semibold text-gray-600 transition hover:border-blue-300 hover:text-blue-600"
+              >
+                Выбрать все
+              </button>
+              <button
+                type="button"
+                onClick={clearRescheduleSelection}
+                className="inline-flex items-center rounded-full border border-gray-200 px-3 py-1 font-semibold text-gray-500 transition hover:border-gray-300 hover:text-gray-700"
+              >
+                Сбросить
+              </button>
+            </div>
+          ) : null}
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="space-y-2 md:col-span-1">
+              <label className="text-sm font-semibold text-gray-700" htmlFor="reschedule-date">
+                Дата новой поездки
+              </label>
+              <input
+                id="reschedule-date"
+                type="date"
+                value={rescheduleDate}
+                onChange={(event) => setRescheduleDate(event.target.value)}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+            <div className="flex flex-col justify-end gap-2 md:col-span-2 md:flex-row md:items-end">
+              <button
+                type="button"
+                onClick={() => void submitRescheduleOptions(effectiveRescheduleTickets, rescheduleDate)}
+                disabled={
+                  rescheduleButtonDisabled ||
+                  !rescheduleDate ||
+                  !canRequestRescheduleOptions
+                }
                 className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-gray-300"
               >
-                Подтвердить перенос
+                Подобрать варианты
               </button>
+              {rescheduleLoading ? <span className="text-sm text-gray-500">Ищем варианты...</span> : null}
             </div>
           </div>
-
-          <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200 space-y-4">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">{cancelActionLabel} билетов</h3>
-                <p className="text-sm text-gray-500">Выбрано билетов: {cancelTickets.length}</p>
-              </div>
-              <div className="flex flex-wrap items-center gap-2 text-xs">
-                <button
-                  type="button"
-                  onClick={selectAllCancel}
-                  className="inline-flex items-center rounded-full border border-gray-300 px-3 py-1 font-semibold text-gray-600 transition hover:border-red-300 hover:text-red-600"
+          {rescheduleError ? <p className="text-sm text-red-500">{rescheduleError}</p> : null}
+          {rescheduleOptions.length > 0 ? (
+            <div className="space-y-2">
+              {rescheduleOptions.map((option) => (
+                <label
+                  key={option.id}
+                  className="flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700 hover:border-blue-400"
                 >
-                  Выбрать все
-                </button>
-                <button
-                  type="button"
-                  onClick={clearCancelSelection}
-                  className="inline-flex items-center rounded-full border border-gray-200 px-3 py-1 font-semibold text-gray-500 transition hover:border-gray-300 hover:text-gray-700"
-                >
-                  Сбросить
-                </button>
-              </div>
+                  <div className="flex flex-col">
+                    <span className="text-base font-semibold text-gray-900">
+                      {formatTime(option.departure_time)} → {formatTime(option.arrival_time)}
+                    </span>
+                    <span className="text-xs text-gray-500">Свободных мест: {option.availability}</span>
+                    {option.description ? (
+                      <span className="mt-1 text-xs text-gray-500">{option.description}</span>
+                    ) : null}
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-semibold text-gray-900">
+                      {formatCurrency(option.price_change, option.currency)}
+                    </span>
+                    <input
+                      type="radio"
+                      name="reschedule-option"
+                      checked={rescheduleOptionId === String(option.id)}
+                      onChange={() => setRescheduleOptionId(String(option.id))}
+                      className="h-4 w-4"
+                    />
+                  </div>
+                </label>
+              ))}
             </div>
-            <div className="flex flex-wrap items-center justify-between gap-4">
+          ) : (
+            rescheduleLoading ? null : (
+              <p className="text-sm text-gray-500">Выберите дату, чтобы увидеть доступные варианты.</p>
+            )
+          )}
+          <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-gray-500">
+            <span>После выбора варианта подтвердите перенос.</span>
+            <button
+              type="button"
+              onClick={confirmReschedule}
+              disabled={
+                isActionDisabled ||
+                actionLoading === "reschedule" ||
+                !rescheduleOptionId ||
+                (rescheduleScope === "selected" && rescheduleSelectionCount === 0)
+              }
+              className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+            >
+              Подтвердить перенос
+            </button>
+          </div>
+        </section>
+      ) : null}
+
+      {activePanel === "cancel" ? (
+        <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200 space-y-4">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">{cancelActionLabel} билетов</h3>
+              <p className="text-sm text-gray-500">Выбрано билетов: {cancelSelectionCount}</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 text-xs">
               <button
                 type="button"
-                className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700 disabled:cursor-not-allowed disabled:bg-gray-300"
-                onClick={() => void submitCancelPreview(cancelTickets)}
-                disabled={isActionDisabled || cancelTickets.length === 0}
+                onClick={selectAllCancel}
+                className="inline-flex items-center rounded-full border border-gray-300 px-3 py-1 font-semibold text-gray-600 transition hover:border-red-300 hover:text-red-600"
               >
-                Рассчитать возврат
+                Выбрать все
               </button>
-              {cancelLoading ? <span className="text-sm text-gray-500">Расчёт...</span> : null}
-            </div>
-            {cancelError ? <p className="text-sm text-red-500">{cancelError}</p> : null}
-            {cancelPreview ? (
-              <div className="rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                К возврату сейчас: {formatCurrency(cancelPreview.total_refund, cancelPreview.currency)}
-              </div>
-            ) : null}
-            <div className="flex items-center justify-end">
               <button
                 type="button"
-                onClick={confirmCancel}
-                disabled={isActionDisabled || actionLoading === "cancel"}
-                className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:bg-gray-300"
+                onClick={clearCancelSelection}
+                className="inline-flex items-center rounded-full border border-gray-200 px-3 py-1 font-semibold text-gray-500 transition hover:border-gray-300 hover:text-gray-700"
               >
-                {cancelConfirmLabel}
+                Сбросить
+              </button>
+              <button
+                type="button"
+                onClick={() => setActivePanel(null)}
+                className="text-sm font-semibold text-gray-400 transition hover:text-gray-600"
+              >
+                Скрыть
               </button>
             </div>
           </div>
-
-          <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200 space-y-4">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">Дополнительный багаж</h3>
-                <p className="text-sm text-gray-500">
-                  Изменено билетов: {baggageChangedCount}. Настраивайте багаж рядом с нужными билетами.
-                </p>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-gray-300"
-                  onClick={() => void submitBaggageQuote(baggageDraft)}
-                  disabled={isActionDisabled}
-                >
-                  Рассчитать доплату
-                </button>
-                <button
-                  type="button"
-                  onClick={confirmBaggage}
-                  disabled={isActionDisabled || actionLoading === "baggage"}
-                  className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700 disabled:cursor-not-allowed disabled:bg-gray-300"
-                >
-                  Сохранить изменения
-                </button>
-              </div>
-            </div>
-            {baggageError ? <p className="text-sm text-red-500">{baggageError}</p> : null}
-            {baggageLoading ? <p className="text-sm text-gray-500">Рассчитываем стоимость...</p> : null}
-            {baggageQuote ? (
-              <div className="rounded-xl bg-blue-50 px-4 py-3 text-sm text-blue-700">
-                Доплата за багаж: {formatCurrency(baggageQuote.total, baggageQuote.currency)}
-              </div>
-            ) : null}
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+              onClick={() => void submitCancelPreview(cancelTickets)}
+              disabled={cancelButtonDisabled}
+            >
+              Рассчитать {cancelActionLabel.toLowerCase()}
+            </button>
+            {cancelLoading ? <span className="text-sm text-gray-500">Расчёт...</span> : null}
           </div>
-        </div>
-      </section>
+          {cancelError ? <p className="text-sm text-red-500">{cancelError}</p> : null}
+          {cancelPreview ? (
+            <div className="rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+              К возврату сейчас: {formatCurrency(cancelPreview.total_refund, cancelPreview.currency)}
+            </div>
+          ) : (
+            cancelLoading ? null : (
+              <p className="text-sm text-gray-500">Выберите билеты, чтобы рассчитать {cancelActionLabel.toLowerCase()}.</p>
+            )
+          )}
+          <div className="flex items-center justify-end">
+            <button
+              type="button"
+              onClick={confirmCancel}
+              disabled={cancelButtonDisabled || actionLoading === "cancel"}
+              className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:bg-gray-300"
+            >
+              {cancelConfirmLabel}
+            </button>
+          </div>
+        </section>
+      ) : null}
 
+      {activePanel === "baggage" ? (
+        <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200 space-y-4">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">Дополнительный багаж</h3>
+              <p className="text-sm text-gray-500">
+                Изменено билетов: {baggageChangedCount}. Настраивайте багаж рядом с нужными билетами.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setActivePanel(null)}
+              className="text-sm font-semibold text-gray-400 transition hover:text-gray-600"
+            >
+              Скрыть
+            </button>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-gray-300"
+              onClick={() => void submitBaggageQuote(baggageDraft)}
+              disabled={isActionDisabled}
+            >
+              Рассчитать доплату
+            </button>
+            <button
+              type="button"
+              onClick={confirmBaggage}
+              disabled={isActionDisabled || actionLoading === "baggage" || !baggageChanged}
+              className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+            >
+              Сохранить изменения
+            </button>
+            {baggageLoading ? <span className="text-sm text-gray-500">Рассчитываем стоимость...</span> : null}
+          </div>
+          {baggageError ? <p className="text-sm text-red-500">{baggageError}</p> : null}
+          {baggageQuote ? (
+            <div className="rounded-xl bg-blue-50 px-4 py-3 text-sm text-blue-700">
+              Доплата за багаж: {formatCurrency(baggageQuote.total, baggageQuote.currency)}
+            </div>
+          ) : (
+            baggageLoading ? null : (
+              <p className="text-sm text-gray-500">Укажите нужное количество багажа в карточках билетов.</p>
+            )
+          )}
+        </section>
+      ) : null}
+
+      {showReturnTickets ? renderTicketSection("Билеты обратно", returnTickets) : null}
       <section className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h2 className="text-xl font-semibold text-gray-900">История действий</h2>
