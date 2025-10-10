@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import UiAlert from "@/components/common/Alert";
 import Loader from "@/components/common/Loader";
+import SeatClient from "@/components/SeatClient";
 import { API } from "@/config";
 import type {
   BaggageQuote,
@@ -15,7 +16,6 @@ import type {
   PurchaseTrip,
   PurchaseView,
   PurchaseTotals,
-  RescheduleOption,
 } from "@/types/purchase";
 import { fetchWithInclude } from "@/utils/fetchWithInclude";
 
@@ -174,6 +174,64 @@ const toDateTimeString = (date?: string | null, time?: string | null) => {
 
   const normalizedTime = /^\d{2}:\d{2}$/.test(time) ? `${time}:00` : time;
   return `${date}T${normalizedTime}`;
+};
+
+const normalizeStopId = (value: unknown): number | null => {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return null;
+    }
+
+    const parsed = Number(trimmed);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  return null;
+};
+
+type RescheduleContext = {
+  ticketIds: string[];
+  ticketIdentifiers: PurchaseTicket["id"][];
+  seatCount: number;
+  departureStopId: number;
+  arrivalStopId: number;
+  departureName: string;
+  arrivalName: string;
+};
+
+type RescheduleTour = {
+  id: number;
+  date: string;
+  departure_time: string;
+  arrival_time: string;
+  seats: number | { free: number };
+  layout_variant?: string | null;
+  price?: number | null;
+  description?: string | null;
+};
+
+type RescheduleQuote = {
+  can_apply: boolean;
+  price_change: number;
+  currency: string;
+  note?: string | null;
+};
+
+type RescheduleApplyResponse = {
+  status?: string;
+  amount_due?: number;
+  currency?: string;
+};
+
+type BaggageApplyResponse = {
+  status?: string;
+  amount_due?: number;
+  currency?: string;
 };
 
 const buildSegments = (
@@ -541,15 +599,6 @@ type PurchaseClientProps = {
   purchaseId: string;
 };
 
-type OtpStartResponse = {
-  challenge_id?: string | number;
-} & Record<string, unknown>;
-
-type VerifyResponse = {
-  op_token?: string;
-  payment?: PaymentPayload;
-} & Record<string, unknown>;
-
 type PaymentPayload = {
   url: string;
   [key: string]: unknown;
@@ -596,10 +645,15 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
   const [isUnauthorized, setIsUnauthorized] = useState(false);
 
   const [rescheduleSelected, setRescheduleSelected] = useState<string[]>([]);
+  const [rescheduleDates, setRescheduleDates] = useState<string[]>([]);
   const [rescheduleDate, setRescheduleDate] = useState<string>("");
-  const [rescheduleOptions, setRescheduleOptions] = useState<RescheduleOption[]>([]);
-  const [rescheduleOptionId, setRescheduleOptionId] = useState<string | null>(null);
-  const [rescheduleLoading, setRescheduleLoading] = useState(false);
+  const [rescheduleTours, setRescheduleTours] = useState<RescheduleTour[]>([]);
+  const [rescheduleTourId, setRescheduleTourId] = useState<number | null>(null);
+  const [rescheduleSeatNumbers, setRescheduleSeatNumbers] = useState<number[]>([]);
+  const [rescheduleQuote, setRescheduleQuote] = useState<RescheduleQuote | null>(null);
+  const [rescheduleFetchingDates, setRescheduleFetchingDates] = useState(false);
+  const [rescheduleFetchingTours, setRescheduleFetchingTours] = useState(false);
+  const [rescheduleQuoteLoading, setRescheduleQuoteLoading] = useState(false);
   const [rescheduleError, setRescheduleError] = useState<string | null>(null);
 
   const [cancelSelected, setCancelSelected] = useState<string[]>([]);
@@ -612,13 +666,6 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
   const [baggageLoading, setBaggageLoading] = useState(false);
   const [baggageError, setBaggageError] = useState<string | null>(null);
 
-  const [otpModalOpen, setOtpModalOpen] = useState(false);
-  const [otpCode, setOtpCode] = useState("");
-  const [otpError, setOtpError] = useState<string | null>(null);
-  const [otpAction, setOtpAction] = useState<PurchaseAction | null>(null);
-  const [pendingPayload, setPendingPayload] = useState<Record<string, unknown> | null>(null);
-  const [otpChallengeId, setOtpChallengeId] = useState<string | null>(null);
-  const [otpSubmitting, setOtpSubmitting] = useState(false);
   const [actionLoading, setActionLoading] = useState<PurchaseAction | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [activePanel, setActivePanel] = useState<"reschedule" | "cancel" | "baggage" | null>(null);
@@ -684,27 +731,6 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
     [data]
   );
 
-  const resetActionState = useCallback(() => {
-    setRescheduleOptions([]);
-    setRescheduleOptionId(null);
-    setRescheduleLoading(false);
-    setRescheduleError(null);
-    setCancelPreview(null);
-    setCancelLoading(false);
-    setCancelError(null);
-    setBaggageQuote(null);
-    setBaggageLoading(false);
-    setBaggageError(null);
-    setOtpModalOpen(false);
-    setOtpCode("");
-    setOtpError(null);
-    setOtpAction(null);
-    setPendingPayload(null);
-    setOtpChallengeId(null);
-    setOtpSubmitting(false);
-    setActionLoading(null);
-  }, []);
-
   const fetchPurchase = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -745,11 +771,6 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
     void fetchPurchase();
   }, [fetchPurchase]);
 
-  const refreshAfterAction = useCallback(async () => {
-    await fetchPurchase();
-    setBanner({ type: "success", message: "Успешно" });
-  }, [fetchPurchase]);
-
   const handleDownloadAll = useCallback(() => {
     if (!data) return;
     void downloadPdf(`/purchase/${data.purchase.id}/pdf`, `purchase-${data.purchase.id}.pdf`, (message) =>
@@ -766,401 +787,22 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
     []
   );
 
-  const startOtpFlow = useCallback(
-    async (action: PurchaseAction, payload: Record<string, unknown>) => {
-      setActionLoading(action);
-      setBanner(null);
-
-      try {
-        const response = await fetchWithInclude(`${API}/public/otp/start`, {
-          method: "POST",
-          body: JSON.stringify({ action, purchase_id: purchaseId }),
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-
-        let startPayload: OtpStartResponse | null = null;
-        try {
-          startPayload = (await response.json()) as OtpStartResponse;
-        } catch {
-          startPayload = null;
-        }
-
-        const challengeIdRaw = startPayload?.challenge_id;
-        const challengeId =
-          challengeIdRaw !== undefined && challengeIdRaw !== null ? String(challengeIdRaw) : null;
-
-        if (!challengeId) {
-          throw new Error("Missing challenge id in OTP start response");
-        }
-
-        setOtpAction(action);
-        setPendingPayload(payload);
-        setOtpChallengeId(challengeId);
-        setOtpCode("");
-        setOtpError(null);
-        setOtpModalOpen(true);
-      } catch (otpError) {
-        console.error(otpError);
-        setBanner({ type: "error", message: "Не удалось отправить код подтверждения" });
-      } finally {
-        setActionLoading(null);
-      }
-    },
-    [purchaseId]
-  );
-
-  const submitRescheduleOptions = useCallback(
-    async (ticketIds: string[], date: string) => {
-      if (ticketIds.length === 0 || !date) {
-        setRescheduleOptions([]);
-        return;
-      }
-      setRescheduleLoading(true);
-      setRescheduleError(null);
-
-      try {
-        const ticketIdentifiers = toOriginalTicketIds(ticketIds);
-        const body: Record<string, unknown> = { date };
-        if (ticketIdentifiers.length > 0) {
-          body.ticket_ids = ticketIdentifiers;
-        }
-
-        const response = await fetchWithInclude(`${API}/public/purchase/${purchaseId}/reschedule-options`, {
-          method: "POST",
-          body: JSON.stringify(body),
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-
-        const payload = (await response.json()) as { options?: RescheduleOption[] };
-        setRescheduleOptions(Array.isArray(payload?.options) ? payload.options : []);
-        setRescheduleOptionId(null);
-      } catch (optionsError) {
-        console.error(optionsError);
-        setRescheduleOptions([]);
-        setRescheduleError("Не удалось получить варианты переноса");
-      } finally {
-        setRescheduleLoading(false);
-      }
-    },
-    [purchaseId, toOriginalTicketIds]
-  );
-
-  const submitCancelPreview = useCallback(
-    async (ticketIds: string[]) => {
-      if (ticketIds.length === 0) {
-        setCancelPreview(null);
-        return;
-      }
-      setCancelLoading(true);
-      setCancelError(null);
-
-      try {
-        const ticketIdentifiers = toOriginalTicketIds(ticketIds);
-        const response = await fetchWithInclude(`${API}/public/purchase/${purchaseId}/cancel/preview`, {
-          method: "POST",
-          body: JSON.stringify({ ticket_ids: ticketIdentifiers }),
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-
-        const payload = (await response.json()) as CancelPreview;
-        setCancelPreview(payload);
-      } catch (previewError) {
-        console.error(previewError);
-        setCancelPreview(null);
-        setCancelError("Не удалось рассчитать возврат");
-      } finally {
-        setCancelLoading(false);
-      }
-    },
-    [purchaseId, toOriginalTicketIds]
-  );
-
-  const submitBaggageQuote = useCallback(
-    async (draft: Record<string, number>) => {
-      if (Object.keys(draft).length === 0) {
-        setBaggageQuote(null);
-        return;
-      }
-      setBaggageLoading(true);
-      setBaggageError(null);
-
-      try {
-        const response = await fetchWithInclude(`${API}/public/purchase/${purchaseId}/baggage/quote`, {
-          method: "POST",
-          body: JSON.stringify({ baggage: draft }),
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-
-        const payload = (await response.json()) as BaggageQuote;
-        setBaggageQuote(payload);
-      } catch (quoteError) {
-        console.error(quoteError);
-        setBaggageQuote(null);
-        setBaggageError("Не удалось рассчитать доплату за багаж");
-      } finally {
-        setBaggageLoading(false);
-      }
-    },
-    [purchaseId]
-  );
-
-  const submitPayment = useCallback(
-    async (verifyData?: VerifyResponse) => {
-      const opToken = verifyData?.op_token;
-
-      if (!opToken) {
-        setOtpError("Не удалось подтвердить код");
-        setOtpSubmitting(false);
-        return;
-      }
-
-      try {
-        const response = await fetchWithInclude(`${API}/public/purchase/${purchaseId}/pay`, {
-          method: "POST",
-          body: JSON.stringify({ ...(pendingPayload ?? {}), op_token: opToken }),
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-
-        let payload: VerifyResponse | null = null;
-        try {
-          payload = (await response.json()) as VerifyResponse;
-        } catch {
-          payload = null;
-        }
-
-        const paymentPayload = (payload?.payment ?? payload) as PaymentPayload | undefined;
-        if (paymentPayload) {
-          submitPaymentForm(paymentPayload);
-        }
-
-        resetActionState();
-        await refreshAfterAction();
-      } catch (paymentError) {
-        console.error(paymentError);
-        setOtpError("Не удалось инициировать оплату");
-        setOtpSubmitting(false);
-      }
-    },
-    [pendingPayload, purchaseId, refreshAfterAction, resetActionState]
-  );
-
-  const submitReschedule = useCallback(
-    async (verifyData?: VerifyResponse) => {
-      if (!pendingPayload) {
-        setOtpError("Нет данных для переноса");
-        setOtpSubmitting(false);
-        return;
-      }
-
-      const opToken = verifyData?.op_token;
-      if (!opToken) {
-        setOtpError("Не удалось подтвердить код");
-        setOtpSubmitting(false);
-        return;
-      }
-
-      try {
-        const response = await fetchWithInclude(`${API}/public/purchase/${purchaseId}/reschedule`, {
-          method: "POST",
-          body: JSON.stringify({ ...pendingPayload, op_token: opToken }),
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-
-        resetActionState();
-        await refreshAfterAction();
-      } catch (rescheduleError) {
-        console.error(rescheduleError);
-        setOtpError("Не удалось выполнить перенос");
-        setOtpSubmitting(false);
-      }
-    },
-    [pendingPayload, purchaseId, refreshAfterAction, resetActionState]
-  );
-
-  const submitCancel = useCallback(
-    async (verifyData?: VerifyResponse) => {
-      if (!pendingPayload) {
-        setOtpError("Нет данных для отмены");
-        setOtpSubmitting(false);
-        return;
-      }
-
-      const opToken = verifyData?.op_token;
-      if (!opToken) {
-        setOtpError("Не удалось подтвердить код");
-        setOtpSubmitting(false);
-        return;
-      }
-
-      try {
-        const response = await fetchWithInclude(`${API}/public/purchase/${purchaseId}/cancel`, {
-          method: "POST",
-          body: JSON.stringify({ ...pendingPayload, op_token: opToken }),
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-
-        resetActionState();
-        await refreshAfterAction();
-      } catch (cancelError) {
-        console.error(cancelError);
-        setOtpError("Не удалось отменить билеты");
-        setOtpSubmitting(false);
-      }
-    },
-    [pendingPayload, purchaseId, refreshAfterAction, resetActionState]
-  );
-
-  const submitBaggage = useCallback(
-    async (verifyData?: VerifyResponse) => {
-      if (!pendingPayload) {
-        setOtpError("Нет данных по багажу");
-        setOtpSubmitting(false);
-        return;
-      }
-
-      const opToken = verifyData?.op_token;
-      if (!opToken) {
-        setOtpError("Не удалось подтвердить код");
-        setOtpSubmitting(false);
-        return;
-      }
-
-      try {
-        const response = await fetchWithInclude(`${API}/public/purchase/${purchaseId}/baggage`, {
-          method: "POST",
-          body: JSON.stringify({ ...pendingPayload, op_token: opToken }),
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-
-        resetActionState();
-        await refreshAfterAction();
-      } catch (baggageSubmitError) {
-        console.error(baggageSubmitError);
-        setOtpError("Не удалось обновить багаж");
-        setOtpSubmitting(false);
-      }
-    },
-    [pendingPayload, purchaseId, refreshAfterAction, resetActionState]
-  );
-
-  const handleVerifyOtp = useCallback(
-    async (event: React.FormEvent<HTMLFormElement>) => {
-      event.preventDefault();
-      if (!otpAction) {
-        setOtpError("Нет действия для подтверждения");
-        return;
-      }
-
-      if (!otpChallengeId) {
-        setOtpError("Нет активного запроса подтверждения");
-        return;
-      }
-
-      if (!pendingPayload && otpAction !== "pay") {
-        setOtpError("Нет данных для выполнения действия");
-        return;
-      }
-
-      if (!otpCode) {
-        setOtpError("Введите код из SMS");
-        return;
-      }
-
-      setOtpSubmitting(true);
-      setOtpError(null);
-
-      try {
-        const response = await fetchWithInclude(`${API}/public/otp/verify`, {
-          method: "POST",
-          body: JSON.stringify({ challenge_id: otpChallengeId, code: otpCode }),
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-
-        let verifyData: VerifyResponse | null = null;
-        try {
-          verifyData = (await response.json()) as VerifyResponse;
-        } catch {
-          verifyData = null;
-        }
-
-        if (otpAction === "pay") {
-          await submitPayment(verifyData ?? undefined);
-          return;
-        }
-
-        if (otpAction === "reschedule") {
-          await submitReschedule(verifyData ?? undefined);
-          return;
-        }
-
-        if (otpAction === "cancel") {
-          await submitCancel(verifyData ?? undefined);
-          return;
-        }
-
-        if (otpAction === "baggage") {
-          await submitBaggage(verifyData ?? undefined);
-          return;
-        }
-      } catch (verifyError) {
-        console.error(verifyError);
-        setOtpError("Не удалось подтвердить код");
-        setOtpSubmitting(false);
-      }
-    },
-    [
-      otpAction,
-      otpChallengeId,
-      otpCode,
-      pendingPayload,
-      submitBaggage,
-      submitCancel,
-      submitPayment,
-      submitReschedule,
-    ]
-  );
+  const validTicketIds = useMemo(() => {
+    if (!data) {
+      return new Set<string>();
+    }
+    return new Set(data.tickets.map((ticket) => String(ticket.id)));
+  }, [data]);
 
   const rescheduleTickets = useMemo(() => {
-    if (!data) return [] as string[];
-    const validIds = new Set(data.tickets.map((ticket) => String(ticket.id)));
-    return rescheduleSelected.filter((id) => validIds.has(id));
-  }, [data, rescheduleSelected]);
+    return rescheduleSelected.filter((id) => validTicketIds.has(id));
+  }, [rescheduleSelected, validTicketIds]);
 
   const cancelTickets = useMemo(() => {
-    if (!data) return [] as string[];
-    const validIds = new Set(data.tickets.map((ticket) => String(ticket.id)));
-    return cancelSelected.filter((id) => validIds.has(id));
-  }, [data, cancelSelected]);
+    return cancelSelected.filter((id) => validTicketIds.has(id));
+  }, [cancelSelected, validTicketIds]);
 
   const rescheduleSelectionCount = rescheduleScope === "all" ? allTicketIds.length : rescheduleTickets.length;
-
   const cancelSelectionCount = cancelTickets.length;
 
   const baggageChanged = useMemo(() => {
@@ -1219,92 +861,1076 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
 
   const incrementBaggage = (ticketId: string) => {
     setBaggageDraft((prev) => ({ ...prev, [ticketId]: (prev[ticketId] ?? 0) + 1 }));
+    setBaggageQuote(null);
+    setBaggageError(null);
   };
 
   const decrementBaggage = (ticketId: string) => {
     setBaggageDraft((prev) => ({ ...prev, [ticketId]: Math.max(0, (prev[ticketId] ?? 0) - 1) }));
+    setBaggageQuote(null);
+    setBaggageError(null);
   };
 
-  const confirmReschedule = () => {
-    if (isActionDisabled) {
-      return;
+  const { rescheduleContext, rescheduleConsistencyError } = useMemo(() => {
+    if (!data) {
+      return { rescheduleContext: null as RescheduleContext | null, rescheduleConsistencyError: null as string | null };
     }
 
-    const targetTickets = rescheduleScope === "all" ? allTicketIds : rescheduleTickets;
+    const targetIds = rescheduleScope === "all" ? allTicketIds : rescheduleTickets;
+    if (targetIds.length === 0) {
+      return { rescheduleContext: null, rescheduleConsistencyError: null };
+    }
+
+    const targetTickets = targetIds
+      .map((id) => data.tickets.find((ticket) => String(ticket.id) === id) ?? null)
+      .filter((ticket): ticket is PurchaseTicket => Boolean(ticket));
 
     if (targetTickets.length === 0) {
-      setBanner({ type: "error", message: "Выберите билеты для переноса" });
-      return;
+      return { rescheduleContext: null, rescheduleConsistencyError: null };
     }
 
-    const selectedOption = rescheduleOptions.find((option) => String(option.id) === rescheduleOptionId);
+    const extractStop = (
+      ticket: PurchaseTicket,
+      key: "departure" | "arrival"
+    ): { id: number; name: string } | null => {
+      const details = ticket.segment_details?.[key] as Record<string, unknown> | undefined;
+      const candidates = [details?.id, details?.stop_id];
 
-    if (!selectedOption) {
-      setBanner({ type: "error", message: "Выберите новый рейс" });
-      return;
-    }
+      for (const candidate of candidates) {
+        const normalized = normalizeStopId(candidate);
+        if (normalized !== null) {
+          const label = String(details?.name ?? details?.stop_name ?? "");
+          return { id: normalized, name: label };
+        }
+      }
 
-    const ticketIdentifiers = toOriginalTicketIds(targetTickets);
-    const payload: Record<string, unknown> = {
-      new_tour_id: selectedOption.id,
+      const segments = ticket.segments ?? [];
+      const segment =
+        key === "departure"
+          ? segments.find((item) => item.is_departure) ?? segments[0]
+          : [...segments].reverse().find((item) => item.is_arrival) ?? segments[segments.length - 1];
+
+      if (!segment) {
+        return null;
+      }
+
+      const normalized = normalizeStopId(segment.stop_id);
+      if (normalized === null) {
+        return null;
+      }
+
+      return { id: normalized, name: String(segment.stop_name ?? "") };
     };
 
-    if (ticketIdentifiers.length > 0) {
-      payload.ticket_ids = ticketIdentifiers;
+    const baseDeparture = extractStop(targetTickets[0], "departure");
+    const baseArrival = extractStop(targetTickets[0], "arrival");
+
+    if (!baseDeparture || !baseArrival) {
+      return {
+        rescheduleContext: null,
+        rescheduleConsistencyError: "Не удалось определить остановки для выбранных билетов",
+      };
     }
 
-    void startOtpFlow("reschedule", payload);
-  };
+    for (const ticket of targetTickets) {
+      const departure = extractStop(ticket, "departure");
+      const arrival = extractStop(ticket, "arrival");
 
-  const confirmCancel = () => {
-    if (isActionDisabled || cancelTickets.length === 0) {
-      setBanner({ type: "error", message: "Выберите билеты для отмены" });
-      return;
+      if (!departure || !arrival) {
+        return {
+          rescheduleContext: null,
+          rescheduleConsistencyError: "Не удалось определить остановки для выбранных билетов",
+        };
+      }
+
+      if (departure.id !== baseDeparture.id || arrival.id !== baseArrival.id) {
+        return {
+          rescheduleContext: null,
+          rescheduleConsistencyError: "Выбранные билеты имеют разные остановки и не могут быть перенесены вместе",
+        };
+      }
     }
 
-    const ticketIdentifiers = toOriginalTicketIds(cancelTickets);
-    const payload: Record<string, unknown> = {};
-
-    if (ticketIdentifiers.length > 0) {
-      payload.ticket_ids = ticketIdentifiers;
-    }
-
-    void startOtpFlow("cancel", payload);
-  };
-
-  const confirmBaggage = () => {
-    if (isActionDisabled || !baggageChanged) {
-      setBanner({ type: "error", message: "Изменений по багажу нет" });
-      return;
-    }
-
-    const payload: Record<string, unknown> = {
-      baggage: baggageDraft,
+    return {
+      rescheduleContext: {
+        ticketIds: targetIds,
+        ticketIdentifiers: toOriginalTicketIds(targetIds),
+        seatCount: targetIds.length,
+        departureStopId: baseDeparture.id,
+        arrivalStopId: baseArrival.id,
+        departureName: baseDeparture.name,
+        arrivalName: baseArrival.name,
+      },
+      rescheduleConsistencyError: null,
     };
-
-    void startOtpFlow("baggage", payload);
-  };
-
-  const confirmPayment = () => {
-    if (!data || isActionDisabled) {
-      return;
-    }
-
-    void startOtpFlow("pay", {});
-  };
+  }, [data, rescheduleScope, allTicketIds, rescheduleTickets, toOriginalTicketIds]);
 
   useEffect(() => {
     if (!data) return;
-    const validIds = new Set(data.tickets.map((ticket) => String(ticket.id)));
-    setRescheduleSelected((prev) => prev.filter((id) => validIds.has(id)));
-    setCancelSelected((prev) => prev.filter((id) => validIds.has(id)));
-  }, [data]);
+    setRescheduleSelected((prev) => prev.filter((id) => validTicketIds.has(id)));
+    setCancelSelected((prev) => prev.filter((id) => validTicketIds.has(id)));
+  }, [data, validTicketIds]);
 
   useEffect(() => {
     if (rescheduleScope === "all") {
       setRescheduleSelected(allTicketIds);
     }
   }, [rescheduleScope, allTicketIds]);
+
+  useEffect(() => {
+    if (activePanel !== "reschedule") {
+      return;
+    }
+
+    if (!rescheduleContext || rescheduleContext.seatCount === 0 || rescheduleConsistencyError) {
+      setRescheduleDates([]);
+      setRescheduleDate("");
+      setRescheduleTours([]);
+      setRescheduleTourId(null);
+      setRescheduleSeatNumbers([]);
+      setRescheduleQuote(null);
+      return;
+    }
+
+    let cancelled = false;
+    setRescheduleFetchingDates(true);
+    setRescheduleError(null);
+
+    const params = new URLSearchParams({
+      departure_stop_id: String(rescheduleContext.departureStopId),
+      arrival_stop_id: String(rescheduleContext.arrivalStopId),
+      seats: String(Math.max(rescheduleContext.seatCount, 1)),
+    });
+
+    (async () => {
+      try {
+        const response = await fetchWithInclude(`${API}/search/dates?${params.toString()}`);
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const payload = await response.json();
+        const rawDates = Array.isArray(payload)
+          ? payload
+          : Array.isArray((payload as Record<string, unknown>)?.dates)
+          ? (payload as Record<string, unknown>).dates
+          : [];
+
+        const normalized = (rawDates as unknown[])
+          .map((value) => String(value ?? ""))
+          .filter((value) => Boolean(value));
+
+        if (cancelled) {
+          return;
+        }
+
+        setRescheduleDates(normalized);
+        setRescheduleDate((prev) => {
+          if (prev && normalized.includes(prev)) {
+            return prev;
+          }
+          return normalized[0] ?? "";
+        });
+      } catch (datesError) {
+        if (cancelled) {
+          return;
+        }
+
+        console.error(datesError);
+        setRescheduleDates([]);
+        setRescheduleDate("");
+        setRescheduleTours([]);
+        setRescheduleTourId(null);
+        setRescheduleSeatNumbers([]);
+        setRescheduleQuote(null);
+        setRescheduleError("Не удалось получить доступные даты для переноса");
+      } finally {
+        if (!cancelled) {
+          setRescheduleFetchingDates(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activePanel, rescheduleContext, rescheduleConsistencyError]);
+
+  useEffect(() => {
+    if (activePanel !== "reschedule") {
+      return;
+    }
+
+    if (!rescheduleContext || rescheduleContext.seatCount === 0 || rescheduleConsistencyError) {
+      setRescheduleTours([]);
+      setRescheduleTourId(null);
+      setRescheduleSeatNumbers([]);
+      setRescheduleQuote(null);
+      return;
+    }
+
+    if (!rescheduleDate) {
+      setRescheduleTours([]);
+      setRescheduleTourId(null);
+      setRescheduleSeatNumbers([]);
+      setRescheduleQuote(null);
+      return;
+    }
+
+    let cancelled = false;
+    setRescheduleFetchingTours(true);
+    setRescheduleError(null);
+
+    const params = new URLSearchParams({
+      departure_stop_id: String(rescheduleContext.departureStopId),
+      arrival_stop_id: String(rescheduleContext.arrivalStopId),
+      date: rescheduleDate,
+      seats: String(Math.max(rescheduleContext.seatCount, 1)),
+    });
+
+    (async () => {
+      try {
+        const response = await fetchWithInclude(`${API}/tours/search?${params.toString()}`);
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const payload = await response.json();
+        const rawTours = Array.isArray(payload)
+          ? payload
+          : Array.isArray((payload as Record<string, unknown>)?.tours)
+          ? (payload as Record<string, unknown>).tours
+          : [];
+
+        const normalized = (rawTours as Array<Record<string, unknown>>)
+          .map((tour) => {
+            const id = Number(tour?.id ?? tour?.tour_id ?? NaN);
+            if (!Number.isFinite(id)) {
+              return null;
+            }
+
+            const layoutVariant =
+              typeof tour?.layout_variant === "string"
+                ? tour.layout_variant
+                : typeof tour?.bus_layout === "string"
+                ? tour.bus_layout
+                : null;
+
+            const price =
+              typeof tour?.price_change === "number"
+                ? tour.price_change
+                : typeof tour?.price === "number"
+                ? tour.price
+                : null;
+
+            const description =
+              typeof tour?.description === "string"
+                ? tour.description
+                : typeof tour?.note === "string"
+                ? tour.note
+                : null;
+
+            return {
+              id,
+              date: String(tour?.date ?? rescheduleDate ?? ""),
+              departure_time: String(tour?.departure_time ?? tour?.time ?? ""),
+              arrival_time: String(tour?.arrival_time ?? ""),
+              seats: tour?.seats ?? 0,
+              layout_variant: layoutVariant,
+              price,
+              description,
+            } as RescheduleTour;
+          })
+          .filter((tour): tour is RescheduleTour => Boolean(tour));
+
+        if (cancelled) {
+          return;
+        }
+
+        setRescheduleTours(normalized);
+        setRescheduleTourId((prev) => {
+          if (prev !== null && normalized.some((tour) => tour.id === prev)) {
+            return prev;
+          }
+          return null;
+        });
+        setRescheduleSeatNumbers([]);
+        setRescheduleQuote(null);
+      } catch (toursError) {
+        if (cancelled) {
+          return;
+        }
+
+        console.error(toursError);
+        setRescheduleTours([]);
+        setRescheduleTourId(null);
+        setRescheduleSeatNumbers([]);
+        setRescheduleQuote(null);
+        setRescheduleError("Не удалось получить список доступных рейсов");
+      } finally {
+        if (!cancelled) {
+          setRescheduleFetchingTours(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activePanel, rescheduleContext, rescheduleConsistencyError, rescheduleDate]);
+
+  const handleRescheduleSeatChange = (seats: number[]) => {
+    const seatLimit = rescheduleContext?.seatCount ?? seats.length;
+    const normalized = seats.slice(0, seatLimit);
+    setRescheduleSeatNumbers(normalized);
+    setRescheduleQuote(null);
+  };
+
+  const handleSelectRescheduleTour = (tourId: number) => {
+    setRescheduleTourId(tourId);
+    setRescheduleSeatNumbers([]);
+    setRescheduleQuote(null);
+  };
+
+  const rescheduleSeatRequirement = rescheduleContext?.seatCount ?? 0;
+
+  const canSubmitRescheduleQuote =
+    !!rescheduleContext &&
+    !!rescheduleTourId &&
+    rescheduleSeatRequirement > 0 &&
+    rescheduleSeatNumbers.length === rescheduleSeatRequirement;
+
+  const reschedulePassengers = useMemo(() => {
+    if (!data || !rescheduleContext) {
+      return [] as Array<{ ticket: PurchaseTicket | null; passenger: PurchasePassenger | null }>;
+    }
+
+    return rescheduleContext.ticketIds.map((ticketId) => {
+      const ticket = data.tickets.find((item) => String(item.id) === ticketId) ?? null;
+      const passenger = ticket ? passengerMap.get(String(ticket.passenger_id)) ?? null : null;
+      return { ticket, passenger };
+    });
+  }, [data, passengerMap, rescheduleContext]);
+
+  const handleRescheduleQuote = useCallback(async () => {
+    if (!rescheduleContext) {
+      setRescheduleError("Выберите билеты для переноса");
+      return;
+    }
+
+    if (!rescheduleTourId) {
+      setRescheduleError("Выберите новый рейс");
+      return;
+    }
+
+    if (rescheduleSeatNumbers.length !== rescheduleContext.seatCount) {
+      setRescheduleError("Выберите места для всех билетов");
+      return;
+    }
+
+    setRescheduleQuoteLoading(true);
+    setRescheduleError(null);
+
+    const body = {
+      ticket_ids: rescheduleContext.ticketIdentifiers,
+      new_tour_id: rescheduleTourId,
+      new_seat_nums: rescheduleSeatNumbers,
+      departure_stop_id: rescheduleContext.departureStopId,
+      arrival_stop_id: rescheduleContext.arrivalStopId,
+    };
+
+    try {
+      const response = await fetchWithInclude(`${API}/public/purchase/${purchaseId}/reschedule/quote`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const payload = (await response.json()) as RescheduleQuote;
+      setRescheduleQuote(payload);
+    } catch (quoteError) {
+      console.error(quoteError);
+      setRescheduleQuote(null);
+      setRescheduleError("Не удалось рассчитать разницу");
+    } finally {
+      setRescheduleQuoteLoading(false);
+    }
+  }, [purchaseId, rescheduleContext, rescheduleSeatNumbers, rescheduleTourId]);
+
+  const applyReschedule = useCallback(async () => {
+    if (!rescheduleContext) {
+      setRescheduleError("Выберите билеты для переноса");
+      return;
+    }
+
+    if (!rescheduleTourId) {
+      setRescheduleError("Выберите новый рейс");
+      return;
+    }
+
+    if (rescheduleSeatNumbers.length !== rescheduleContext.seatCount) {
+      setRescheduleError("Выберите места для всех билетов");
+      return;
+    }
+
+    setActionLoading("reschedule");
+    setRescheduleError(null);
+
+    const body = {
+      ticket_ids: rescheduleContext.ticketIdentifiers,
+      new_tour_id: rescheduleTourId,
+      new_seat_nums: rescheduleSeatNumbers,
+      departure_stop_id: rescheduleContext.departureStopId,
+      arrival_stop_id: rescheduleContext.arrivalStopId,
+    };
+
+    const currentCurrency = data?.purchase.currency;
+
+    try {
+      const response = await fetchWithInclude(`${API}/public/purchase/${purchaseId}/reschedule`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      let payload: RescheduleApplyResponse | null = null;
+      try {
+        payload = (await response.json()) as RescheduleApplyResponse;
+      } catch {
+        payload = null;
+      }
+
+      await fetchPurchase();
+      setRescheduleQuote(null);
+      setRescheduleSeatNumbers([]);
+      setActivePanel(null);
+      setRescheduleSelected([]);
+
+      if (payload?.status === "pending" && typeof payload?.amount_due === "number") {
+        setBanner({
+          type: "info",
+          message: `Перенос оформлен. К оплате: ${formatCurrency(
+            payload.amount_due,
+            payload.currency ?? currentCurrency ?? ""
+          )}`,
+        });
+      } else {
+        setBanner({ type: "success", message: "Перенос выполнен" });
+      }
+    } catch (applyError) {
+      console.error(applyError);
+      setRescheduleError("Не удалось выполнить перенос");
+    } finally {
+      setActionLoading(null);
+    }
+  }, [
+    data?.purchase.currency,
+    fetchPurchase,
+    purchaseId,
+    rescheduleContext,
+    rescheduleSeatNumbers,
+    rescheduleTourId,
+  ]);
+
+  const submitCancelPreview = useCallback(
+    async (ticketIds: string[]) => {
+      if (ticketIds.length === 0) {
+        setCancelPreview(null);
+        return;
+      }
+      setCancelLoading(true);
+      setCancelError(null);
+
+      try {
+        const ticketIdentifiers = toOriginalTicketIds(ticketIds);
+        const response = await fetchWithInclude(`${API}/public/purchase/${purchaseId}/cancel/preview`, {
+          method: "POST",
+          body: JSON.stringify({ ticket_ids: ticketIdentifiers }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const payload = (await response.json()) as CancelPreview;
+        setCancelPreview(payload);
+      } catch (previewError) {
+        console.error(previewError);
+        setCancelPreview(null);
+        setCancelError("Не удалось рассчитать возврат");
+      } finally {
+        setCancelLoading(false);
+      }
+    },
+    [purchaseId, toOriginalTicketIds]
+  );
+
+  const confirmCancel = useCallback(async () => {
+    if (isActionDisabled || !data) {
+      return;
+    }
+
+    if (cancelSelectionCount === 0) {
+      setCancelError("Выберите билеты");
+      return;
+    }
+
+    setActionLoading("cancel");
+    setCancelError(null);
+
+    const identifiers = toOriginalTicketIds(cancelTickets);
+    const body: Record<string, unknown> = {};
+
+    if (identifiers.length > 0 && cancelTickets.length !== allTicketIds.length) {
+      body.ticket_ids = identifiers;
+    }
+
+    try {
+      const response = await fetchWithInclude(`${API}/public/purchase/${purchaseId}/cancel`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      await fetchPurchase();
+      setCancelPreview(null);
+      setCancelSelected([]);
+      setActivePanel(null);
+
+      const label = data.purchase.status === "paid" ? "Возврат" : "Отмена";
+      setBanner({ type: "success", message: `${label} оформлена` });
+    } catch (cancelError) {
+      console.error(cancelError);
+      setCancelError("Не удалось выполнить операцию");
+    } finally {
+      setActionLoading(null);
+    }
+  }, [
+    allTicketIds,
+    cancelSelectionCount,
+    cancelTickets,
+    data,
+    fetchPurchase,
+    isActionDisabled,
+    purchaseId,
+    toOriginalTicketIds,
+  ]);
+
+  const submitBaggageQuote = useCallback(
+    async (draft: Record<string, number>) => {
+      if (Object.keys(draft).length === 0) {
+        setBaggageQuote(null);
+        return;
+      }
+      setBaggageLoading(true);
+      setBaggageError(null);
+
+      try {
+        const response = await fetchWithInclude(`${API}/public/purchase/${purchaseId}/baggage/quote`, {
+          method: "POST",
+          body: JSON.stringify({ baggage: draft }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const payload = (await response.json()) as BaggageQuote;
+        setBaggageQuote(payload);
+        if (payload && payload.can_apply === false) {
+          setBaggageError("Изменения недоступны согласно правилам");
+        }
+      } catch (quoteError) {
+        console.error(quoteError);
+        setBaggageQuote(null);
+        setBaggageError("Не удалось рассчитать изменения по багажу");
+      } finally {
+        setBaggageLoading(false);
+      }
+    },
+    [purchaseId]
+  );
+
+  const confirmBaggage = useCallback(async () => {
+    if (!data || isActionDisabled) {
+      return;
+    }
+
+    if (!baggageChanged) {
+      setBanner({ type: "info", message: "Изменений по багажу нет" });
+      return;
+    }
+
+    setActionLoading("baggage");
+    setBaggageError(null);
+
+    try {
+      const response = await fetchWithInclude(`${API}/public/purchase/${purchaseId}/baggage`, {
+        method: "POST",
+        body: JSON.stringify({ baggage: baggageDraft }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      let payload: BaggageApplyResponse | null = null;
+      try {
+        payload = (await response.json()) as BaggageApplyResponse;
+      } catch {
+        payload = null;
+      }
+
+      await fetchPurchase();
+      setBaggageQuote(null);
+      setActivePanel(null);
+
+      if (payload?.status === "pending" && typeof payload?.amount_due === "number") {
+        setBanner({
+          type: "info",
+          message: `Необходимо доплатить: ${formatCurrency(
+            payload.amount_due,
+            payload.currency ?? data.purchase.currency
+          )}`,
+        });
+      } else {
+        setBanner({ type: "success", message: "Багаж обновлён" });
+      }
+    } catch (baggageSubmitError) {
+      console.error(baggageSubmitError);
+      setBaggageError("Не удалось обновить багаж");
+    } finally {
+      setActionLoading(null);
+    }
+  }, [
+    baggageChanged,
+    baggageDraft,
+    data,
+    fetchPurchase,
+    isActionDisabled,
+    purchaseId,
+  ]);
+
+  const confirmPayment = useCallback(async () => {
+    if (!data || isActionDisabled) {
+      return;
+    }
+
+    setActionLoading("pay");
+    setBanner(null);
+
+    try {
+      const response = await fetchWithInclude(`${API}/public/purchase/${purchaseId}/pay`, {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const payload = (await response.json()) as PaymentPayload;
+      submitPaymentForm(payload);
+      setBanner({ type: "info", message: "Перенаправляем на оплату…" });
+    } catch (paymentError) {
+      console.error(paymentError);
+      setBanner({ type: "error", message: "Не удалось инициировать оплату" });
+    } finally {
+      setActionLoading(null);
+    }
+  }, [data, isActionDisabled, purchaseId]);
+
+  const selectedRescheduleTour = useMemo(() => {
+    if (!rescheduleTourId) {
+      return null;
+    }
+
+    return rescheduleTours.find((tour) => tour.id === rescheduleTourId) ?? null;
+  }, [rescheduleTourId, rescheduleTours]);
+
+  const rescheduleFreeSeats = useMemo(() => {
+    if (!selectedRescheduleTour) {
+      return null;
+    }
+
+    const seats = selectedRescheduleTour.seats;
+    if (typeof seats === "number") {
+      return seats;
+    }
+
+    if (seats && typeof (seats as { free?: unknown }).free === "number") {
+      return (seats as { free: number }).free;
+    }
+
+    return null;
+  }, [selectedRescheduleTour]);
+
+  useEffect(() => {
+    if (activePanel !== "reschedule") {
+      return;
+    }
+
+    if (!rescheduleContext || rescheduleContext.seatCount === 0 || rescheduleConsistencyError) {
+      setRescheduleDates([]);
+      setRescheduleDate("");
+      setRescheduleTours([]);
+      setRescheduleTourId(null);
+      setRescheduleSeatNumbers([]);
+      setRescheduleQuote(null);
+      return;
+    }
+
+    let cancelled = false;
+    setRescheduleFetchingDates(true);
+    setRescheduleError(null);
+
+    const params = new URLSearchParams({
+      departure_stop_id: String(rescheduleContext.departureStopId),
+      arrival_stop_id: String(rescheduleContext.arrivalStopId),
+      seats: String(Math.max(rescheduleContext.seatCount, 1)),
+    });
+
+    (async () => {
+      try {
+        const response = await fetchWithInclude(`${API}/search/dates?${params.toString()}`);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const payload = await response.json();
+        const rawDates = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload?.dates)
+          ? payload.dates
+          : [];
+
+        const normalized = rawDates
+          .map((value: unknown) => String(value ?? ""))
+          .filter((value) => Boolean(value));
+
+        if (cancelled) {
+          return;
+        }
+
+        setRescheduleDates(normalized);
+        setRescheduleDate((prev) => {
+          if (prev && normalized.includes(prev)) {
+            return prev;
+          }
+          return normalized[0] ?? "";
+        });
+      } catch (datesError) {
+        if (cancelled) {
+          return;
+        }
+
+        console.error(datesError);
+        setRescheduleDates([]);
+        setRescheduleDate("");
+        setRescheduleTours([]);
+        setRescheduleTourId(null);
+        setRescheduleSeatNumbers([]);
+        setRescheduleQuote(null);
+        setRescheduleError("Не удалось получить доступные даты для переноса");
+      } finally {
+        if (!cancelled) {
+          setRescheduleFetchingDates(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activePanel, rescheduleContext, rescheduleConsistencyError]);
+
+  useEffect(() => {
+    if (activePanel !== "reschedule") {
+      return;
+    }
+
+    if (!rescheduleContext || rescheduleContext.seatCount === 0 || rescheduleConsistencyError) {
+      setRescheduleTours([]);
+      setRescheduleTourId(null);
+      setRescheduleSeatNumbers([]);
+      setRescheduleQuote(null);
+      return;
+    }
+
+    if (!rescheduleDate) {
+      setRescheduleTours([]);
+      setRescheduleTourId(null);
+      setRescheduleSeatNumbers([]);
+      setRescheduleQuote(null);
+      return;
+    }
+
+    let cancelled = false;
+    setRescheduleFetchingTours(true);
+    setRescheduleError(null);
+
+    const params = new URLSearchParams({
+      departure_stop_id: String(rescheduleContext.departureStopId),
+      arrival_stop_id: String(rescheduleContext.arrivalStopId),
+      date: rescheduleDate,
+      seats: String(Math.max(rescheduleContext.seatCount, 1)),
+    });
+
+    (async () => {
+      try {
+        const response = await fetchWithInclude(`${API}/tours/search?${params.toString()}`);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const payload = await response.json();
+        const rawTours = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload?.tours)
+          ? payload.tours
+          : [];
+
+        const normalized: RescheduleTour[] = rawTours
+          .map((tour: Record<string, unknown>) => {
+            const id = Number(tour?.id ?? tour?.tour_id ?? NaN);
+            if (!Number.isFinite(id)) {
+              return null;
+            }
+
+            const layoutVariantRaw =
+              typeof tour?.layout_variant === "string"
+                ? tour.layout_variant
+                : typeof tour?.bus_layout === "string"
+                ? tour.bus_layout
+                : null;
+
+            const priceRaw =
+              typeof tour?.price_change === "number"
+                ? tour.price_change
+                : typeof tour?.price === "number"
+                ? tour.price
+                : null;
+
+            const noteRaw =
+              typeof tour?.description === "string"
+                ? tour.description
+                : typeof tour?.note === "string"
+                ? tour.note
+                : null;
+
+            return {
+              id,
+              date: String(tour?.date ?? rescheduleDate ?? ""),
+              departure_time: String(tour?.departure_time ?? tour?.time ?? ""),
+              arrival_time: String(tour?.arrival_time ?? ""),
+              seats: tour?.seats ?? 0,
+              layout_variant: layoutVariantRaw,
+              price: priceRaw,
+              description: noteRaw,
+            } as RescheduleTour;
+          })
+          .filter((tour): tour is RescheduleTour => Boolean(tour));
+
+        if (cancelled) {
+          return;
+        }
+
+        setRescheduleTours(normalized);
+        setRescheduleTourId((prev) => {
+          if (prev !== null && normalized.some((tour) => tour.id === prev)) {
+            return prev;
+          }
+          return null;
+        });
+        setRescheduleSeatNumbers([]);
+        setRescheduleQuote(null);
+      } catch (toursError) {
+        if (cancelled) {
+          return;
+        }
+
+        console.error(toursError);
+        setRescheduleTours([]);
+        setRescheduleTourId(null);
+        setRescheduleSeatNumbers([]);
+        setRescheduleQuote(null);
+        setRescheduleError("Не удалось получить список доступных рейсов");
+      } finally {
+        if (!cancelled) {
+          setRescheduleFetchingTours(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activePanel, rescheduleContext, rescheduleConsistencyError, rescheduleDate]);
+
+  const handleRescheduleSeatChange = (seats: number[]) => {
+    const seatLimit = rescheduleContext?.seatCount ?? seats.length;
+    const normalized = seats.slice(0, seatLimit);
+    setRescheduleSeatNumbers(normalized);
+    setRescheduleQuote(null);
+  };
+
+  const rescheduleSeatRequirement = rescheduleContext?.seatCount ?? 0;
+
+  const canSubmitRescheduleQuote =
+    !!rescheduleContext &&
+    !!rescheduleTourId &&
+    rescheduleSeatRequirement > 0 &&
+    rescheduleSeatNumbers.length === rescheduleSeatRequirement;
+
+  const reschedulePassengers = useMemo(() => {
+    if (!data || !rescheduleContext) {
+      return [] as Array<{ ticket: PurchaseTicket | null; passenger: PurchasePassenger | null }>;
+    }
+
+    return rescheduleContext.ticketIds.map((ticketId) => {
+      const ticket = data.tickets.find((item) => String(item.id) === ticketId) ?? null;
+      const passenger = ticket ? passengerMap.get(String(ticket.passenger_id)) ?? null : null;
+      return { ticket, passenger };
+    });
+  }, [data, passengerMap, rescheduleContext]);
+
+  const handleRescheduleQuote = useCallback(async () => {
+    if (!rescheduleContext) {
+      setRescheduleError("Выберите билеты для переноса");
+      return;
+    }
+
+    if (!rescheduleTourId) {
+      setRescheduleError("Выберите новый рейс");
+      return;
+    }
+
+    if (rescheduleSeatNumbers.length !== rescheduleContext.seatCount) {
+      setRescheduleError("Выберите места для всех билетов");
+      return;
+    }
+
+    setRescheduleQuoteLoading(true);
+    setRescheduleError(null);
+
+    const body = {
+      ticket_ids: rescheduleContext.ticketIdentifiers,
+      new_tour_id: rescheduleTourId,
+      new_seat_nums: rescheduleSeatNumbers,
+      departure_stop_id: rescheduleContext.departureStopId,
+      arrival_stop_id: rescheduleContext.arrivalStopId,
+    };
+
+    try {
+      const response = await fetchWithInclude(`${API}/public/purchase/${purchaseId}/reschedule/quote`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const payload = (await response.json()) as RescheduleQuote;
+      setRescheduleQuote(payload);
+    } catch (quoteError) {
+      console.error(quoteError);
+      setRescheduleQuote(null);
+      setRescheduleError("Не удалось рассчитать разницу");
+    } finally {
+      setRescheduleQuoteLoading(false);
+    }
+  }, [
+    purchaseId,
+    rescheduleContext,
+    rescheduleSeatNumbers,
+    rescheduleTourId,
+  ]);
+
+  const applyReschedule = useCallback(async () => {
+    if (!rescheduleContext) {
+      setRescheduleError("Выберите билеты для переноса");
+      return;
+    }
+
+    if (!rescheduleTourId) {
+      setRescheduleError("Выберите новый рейс");
+      return;
+    }
+
+    if (rescheduleSeatNumbers.length !== rescheduleContext.seatCount) {
+      setRescheduleError("Выберите места для всех билетов");
+      return;
+    }
+
+    setActionLoading("reschedule");
+    setRescheduleError(null);
+
+    const body = {
+      ticket_ids: rescheduleContext.ticketIdentifiers,
+      new_tour_id: rescheduleTourId,
+      new_seat_nums: rescheduleSeatNumbers,
+      departure_stop_id: rescheduleContext.departureStopId,
+      arrival_stop_id: rescheduleContext.arrivalStopId,
+    };
+
+    const currentCurrency = data?.purchase.currency;
+
+    try {
+      const response = await fetchWithInclude(`${API}/public/purchase/${purchaseId}/reschedule`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      let payload: RescheduleApplyResponse | null = null;
+      try {
+        payload = (await response.json()) as RescheduleApplyResponse;
+      } catch {
+        payload = null;
+      }
+
+      await fetchPurchase();
+      setRescheduleQuote(null);
+      setRescheduleSeatNumbers([]);
+      setActivePanel(null);
+      setRescheduleSelected([]);
+
+      if (payload?.status === "pending" && typeof payload?.amount_due === "number") {
+        setBanner({
+          type: "info",
+          message: `Перенос оформлен. К оплате: ${formatCurrency(payload.amount_due, payload.currency ?? currentCurrency ?? "")}`,
+        });
+      } else {
+        setBanner({ type: "success", message: "Перенос выполнен" });
+      }
+    } catch (applyError) {
+      console.error(applyError);
+      setRescheduleError("Не удалось выполнить перенос");
+    } finally {
+      setActionLoading(null);
+    }
+  }, [
+    data?.purchase.currency,
+    fetchPurchase,
+    purchaseId,
+    rescheduleContext,
+    rescheduleSeatNumbers,
+    rescheduleTourId,
+  ]);
 
   if (loading) {
     return (
@@ -1365,10 +1991,6 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
   const rescheduleButtonDisabled = isActionDisabled || !hasTickets;
   const baggageButtonDisabled = isActionDisabled;
   const showReturnTickets = returnTickets.length > 0;
-  const effectiveRescheduleTickets =
-    rescheduleScope === "all" ? allTicketIds : rescheduleTickets;
-  const canRequestRescheduleOptions =
-    rescheduleScope === "all" ? hasTickets : rescheduleSelectionCount > 0;
 
   const handlePrimaryAction = () => {
     if (isActionDisabled) {
@@ -1391,6 +2013,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
       return;
     }
 
+    setCancelError(null);
     setActivePanel("cancel");
     void submitCancelPreview(cancelTickets);
   };
@@ -1400,6 +2023,8 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
       return;
     }
 
+    setRescheduleError(null);
+    setRescheduleQuote(null);
     setActivePanel("reschedule");
   };
 
@@ -1408,6 +2033,8 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
       return;
     }
 
+    setBaggageError(null);
+    setBaggageQuote(null);
     setActivePanel("baggage");
   };
 
@@ -1697,7 +2324,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
       </section>
 
       {activePanel === "reschedule" ? (
-        <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200 space-y-4">
+        <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200 space-y-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <h3 className="text-lg font-semibold text-gray-900">Перенос поездки</h3>
@@ -1728,7 +2355,11 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
               </label>
               <button
                 type="button"
-                onClick={() => setActivePanel(null)}
+                onClick={() => {
+                  setActivePanel(null);
+                  setRescheduleError(null);
+                  setRescheduleQuote(null);
+                }}
                 className="ml-auto text-sm font-semibold text-gray-400 transition hover:text-gray-600"
               >
                 Скрыть
@@ -1753,88 +2384,163 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
               </button>
             </div>
           ) : null}
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="space-y-2 md:col-span-1">
-              <label className="text-sm font-semibold text-gray-700" htmlFor="reschedule-date">
-                Дата новой поездки
-              </label>
-              <input
-                id="reschedule-date"
-                type="date"
-                value={rescheduleDate}
-                onChange={(event) => setRescheduleDate(event.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-              />
-            </div>
-            <div className="flex flex-col justify-end gap-2 md:col-span-2 md:flex-row md:items-end">
-              <button
-                type="button"
-                onClick={() => void submitRescheduleOptions(effectiveRescheduleTickets, rescheduleDate)}
-                disabled={
-                  rescheduleButtonDisabled ||
-                  !rescheduleDate ||
-                  !canRequestRescheduleOptions
-                }
-                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-gray-300"
-              >
-                Подобрать варианты
-              </button>
-              {rescheduleLoading ? <span className="text-sm text-gray-500">Ищем варианты...</span> : null}
-            </div>
-          </div>
-          {rescheduleError ? <p className="text-sm text-red-500">{rescheduleError}</p> : null}
-          {rescheduleOptions.length > 0 ? (
-            <div className="space-y-2">
-              {rescheduleOptions.map((option) => (
-                <label
-                  key={option.id}
-                  className="flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700 hover:border-blue-400"
-                >
-                  <div className="flex flex-col">
-                    <span className="text-base font-semibold text-gray-900">
-                      {formatTime(option.departure_time)} → {formatTime(option.arrival_time)}
-                    </span>
-                    <span className="text-xs text-gray-500">Свободных мест: {option.availability}</span>
-                    {option.description ? (
-                      <span className="mt-1 text-xs text-gray-500">{option.description}</span>
-                    ) : null}
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-semibold text-gray-900">
-                      {formatCurrency(option.price_change, option.currency)}
-                    </span>
-                    <input
-                      type="radio"
-                      name="reschedule-option"
-                      checked={rescheduleOptionId === String(option.id)}
-                      onChange={() => setRescheduleOptionId(String(option.id))}
-                      className="h-4 w-4"
-                    />
-                  </div>
+          {rescheduleConsistencyError ? (
+            <UiAlert type="error">{rescheduleConsistencyError}</UiAlert>
+          ) : null}
+          {rescheduleContext ? (
+            <div className="space-y-6">
+              <div className="grid gap-4 rounded-xl border border-gray-100 bg-gray-50 p-4 md:grid-cols-2">
+                <div>
+                  <p className="text-xs uppercase text-gray-500">Маршрут</p>
+                  <p className="text-sm font-semibold text-gray-900">
+                    {rescheduleContext.departureName} → {rescheduleContext.arrivalName}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase text-gray-500">Количество мест</p>
+                  <p className="text-sm font-semibold text-gray-900">
+                    {rescheduleSeatRequirement}
+                    {rescheduleFreeSeats !== null ? ` • свободно: ${rescheduleFreeSeats}` : ""}
+                  </p>
+                </div>
+              </div>
+              {reschedulePassengers.length > 0 ? (
+                <div className="rounded-xl border border-gray-100 p-4">
+                  <p className="text-xs uppercase text-gray-500">Пассажиры</p>
+                  <ul className="mt-2 grid gap-1 text-sm text-gray-700 md:grid-cols-2">
+                    {reschedulePassengers.map(({ ticket, passenger }, index) => (
+                      <li key={`${ticket?.id ?? "ticket"}-${index}`}>
+                        {passenger?.name ?? `Пассажир #${ticket?.passenger_id ?? "?"}`} • билет #{ticket?.id ?? "—"} • текущее место: {ticket?.seat_num ?? "—"}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+              <div className="space-y-2">
+                <label htmlFor="reschedule-date" className="text-sm font-semibold text-gray-700">
+                  Доступные даты
                 </label>
-              ))}
+                {rescheduleFetchingDates ? (
+                  <p className="text-sm text-gray-500">Загружаем даты…</p>
+                ) : rescheduleDates.length > 0 ? (
+                  <select
+                    id="reschedule-date"
+                    value={rescheduleDate}
+                    onChange={(event) => setRescheduleDate(event.target.value)}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                  >
+                    {rescheduleDates.map((dateValue) => (
+                      <option key={dateValue} value={dateValue}>
+                        {formatDate(dateValue)} ({dateValue})
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <p className="text-sm text-gray-500">Нет доступных дат для выбранных билетов.</p>
+                )}
+              </div>
+              <div className="space-y-3">
+                <p className="text-sm font-semibold text-gray-700">Доступные рейсы</p>
+                {rescheduleFetchingTours ? (
+                  <p className="text-sm text-gray-500">Подбираем рейсы…</p>
+                ) : rescheduleTours.length > 0 ? (
+                  <div className="space-y-2">
+                    {rescheduleTours.map((tour) => (
+                      <label
+                        key={tour.id}
+                        className={`flex cursor-pointer items-center justify-between gap-4 rounded-xl border px-4 py-3 transition ${
+                          rescheduleTourId === tour.id
+                            ? "border-blue-400 bg-blue-50"
+                            : "border-gray-200 bg-gray-50 hover:border-blue-300"
+                        }`}
+                      >
+                        <div>
+                          <p className="text-base font-semibold text-gray-900">
+                            {formatTime(tour.departure_time)} → {formatTime(tour.arrival_time)}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Свободных мест: {typeof tour.seats === "number" ? tour.seats : Number((tour.seats as { free?: number }).free ?? 0)}
+                          </p>
+                          {tour.description ? (
+                            <p className="text-xs text-gray-500">{tour.description}</p>
+                          ) : null}
+                        </div>
+                        <input
+                          type="radio"
+                          name="reschedule-tour"
+                          className="h-4 w-4"
+                          checked={rescheduleTourId === tour.id}
+                          onChange={() => handleSelectRescheduleTour(tour.id)}
+                        />
+                      </label>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">
+                    {rescheduleDate ? "Нет подходящих рейсов на выбранную дату." : "Выберите дату, чтобы увидеть рейсы."}
+                  </p>
+                )}
+              </div>
+              {rescheduleTourId ? (
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold text-gray-700">Выбор мест</p>
+                  <SeatClient
+                    tourId={rescheduleTourId}
+                    departureStopId={rescheduleContext.departureStopId}
+                    arrivalStopId={rescheduleContext.arrivalStopId}
+                    layoutVariant={selectedRescheduleTour?.layout_variant ?? null}
+                    selectedSeats={rescheduleSeatNumbers}
+                    maxSeats={rescheduleSeatRequirement}
+                    onChange={handleRescheduleSeatChange}
+                  />
+                  <p className="text-xs text-gray-500">
+                    Выбрано мест: {rescheduleSeatNumbers.length} из {rescheduleSeatRequirement}
+                  </p>
+                </div>
+              ) : null}
+              {rescheduleQuote ? (
+                <div
+                  className={`rounded-xl border px-4 py-3 text-sm ${
+                    rescheduleQuote.can_apply
+                      ? "border-emerald-200 bg-emerald-50 text-emerald-900"
+                      : "border-amber-200 bg-amber-50 text-amber-900"
+                  }`}
+                >
+                  <p className="font-semibold">
+                    Разница: {formatCurrency(rescheduleQuote.price_change, rescheduleQuote.currency)}
+                  </p>
+                  {rescheduleQuote.note ? <p>{rescheduleQuote.note}</p> : null}
+                  {!rescheduleQuote.can_apply ? <p>Перенос недоступен: скорректируйте выбор.</p> : null}
+                </div>
+              ) : null}
+              {rescheduleError ? <p className="text-sm text-red-500">{rescheduleError}</p> : null}
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={handleRescheduleQuote}
+                  disabled={!canSubmitRescheduleQuote || rescheduleQuoteLoading}
+                  className="inline-flex items-center gap-2 rounded-lg border border-blue-200 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:border-blue-400 hover:text-blue-600 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-300"
+                >
+                  {rescheduleQuoteLoading ? "Считаем…" : "Рассчитать разницу"}
+                </button>
+                <button
+                  type="button"
+                  onClick={applyReschedule}
+                  disabled={
+                    !canSubmitRescheduleQuote ||
+                    actionLoading === "reschedule" ||
+                    !rescheduleQuote ||
+                    rescheduleQuote.can_apply === false
+                  }
+                  className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+                >
+                  {actionLoading === "reschedule" ? "Переносим…" : "Подтвердить перенос"}
+                </button>
+              </div>
             </div>
           ) : (
-            rescheduleLoading ? null : (
-              <p className="text-sm text-gray-500">Выберите дату, чтобы увидеть доступные варианты.</p>
-            )
+            <p className="text-sm text-gray-500">Выберите билеты, чтобы продолжить перенос.</p>
           )}
-          <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-gray-500">
-            <span>После выбора варианта подтвердите перенос.</span>
-            <button
-              type="button"
-              onClick={confirmReschedule}
-              disabled={
-                isActionDisabled ||
-                actionLoading === "reschedule" ||
-                !rescheduleOptionId ||
-                (rescheduleScope === "selected" && rescheduleSelectionCount === 0)
-              }
-              className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700 disabled:cursor-not-allowed disabled:bg-gray-300"
-            >
-              Подтвердить перенос
-            </button>
-          </div>
         </section>
       ) : null}
 
@@ -1932,7 +2638,12 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
             <button
               type="button"
               onClick={confirmBaggage}
-              disabled={isActionDisabled || actionLoading === "baggage" || !baggageChanged}
+              disabled={
+                isActionDisabled ||
+                actionLoading === "baggage" ||
+                !baggageChanged ||
+                (baggageQuote && !baggageQuote.can_apply)
+              }
               className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700 disabled:cursor-not-allowed disabled:bg-gray-300"
             >
               Сохранить изменения
@@ -1941,8 +2652,28 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
           </div>
           {baggageError ? <p className="text-sm text-red-500">{baggageError}</p> : null}
           {baggageQuote ? (
-            <div className="rounded-xl bg-blue-50 px-4 py-3 text-sm text-blue-700">
-              Доплата за багаж: {formatCurrency(baggageQuote.total, baggageQuote.currency)}
+            <div
+              className={`rounded-xl px-4 py-3 text-sm ${
+                baggageQuote.can_apply
+                  ? "border border-blue-200 bg-blue-50 text-blue-700"
+                  : "border border-amber-200 bg-amber-50 text-amber-900"
+              }`}
+            >
+              <p className="font-semibold">
+                Изменение долга: {formatCurrency(baggageQuote.delta, baggageQuote.currency)}
+              </p>
+              {Array.isArray(baggageQuote.breakdown) && baggageQuote.breakdown.length > 0 ? (
+                <ul className="mt-2 space-y-1 text-xs">
+                  {baggageQuote.breakdown.map((item) => (
+                    <li key={String(item.ticket_id)}>
+                      Билет #{item.ticket_id}: {item.old ?? 0} → {item.new ?? 0} ({formatCurrency(item.delta ?? 0, baggageQuote.currency)})
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              {!baggageQuote.can_apply ? (
+                <p className="mt-2 text-xs">Изменения недоступны. Проверьте правила перевозчика или попробуйте изменить запрос.</p>
+              ) : null}
             </div>
           ) : (
             baggageLoading ? null : (
@@ -1997,44 +2728,6 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
         )}
       </section>
 
-      {otpModalOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-lg">
-            <h3 className="text-lg font-semibold text-gray-900">Подтверждение действия</h3>
-            <p className="mt-2 text-sm text-gray-500">
-              Введите код, отправленный на ваш телефон, чтобы подтвердить действие.
-            </p>
-            <form className="mt-4 space-y-4" onSubmit={handleVerifyOtp}>
-              <input
-                type="text"
-                inputMode="numeric"
-                maxLength={6}
-                value={otpCode}
-                onChange={(event) => setOtpCode(event.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-center text-lg tracking-widest focus:border-blue-500 focus:outline-none"
-                placeholder="••••••"
-              />
-              {otpError ? <p className="text-sm text-red-500">{otpError}</p> : null}
-              <div className="flex items-center justify-end gap-3">
-                <button
-                  type="button"
-                  className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600"
-                  onClick={resetActionState}
-                >
-                  Отмена
-                </button>
-                <button
-                  type="submit"
-                  disabled={otpSubmitting}
-                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-gray-300"
-                >
-                  {otpSubmitting ? "Отправка..." : "Подтвердить"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }
