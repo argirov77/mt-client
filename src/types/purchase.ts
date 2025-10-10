@@ -120,23 +120,19 @@ export type PurchaseView = {
   customer?: PurchaseCustomer | null;
 };
 
-export type RescheduleOption = {
-  id: string | number;
-  date: string;
-  departure_time: string;
-  arrival_time: string;
-  availability: number;
-  price_change: number;
-  currency: string;
-  description?: string;
-};
-
 export type CancelPreview = {
   total_refund: number;
   currency: string;
 };
 
 export type BaggageQuote = {
-  total: number;
+  can_apply: boolean;
+  delta: number;
   currency: string;
+  breakdown?: Array<{
+    ticket_id: number | string;
+    old?: number | null;
+    new?: number | null;
+    delta?: number | null;
+  }>;
 };
