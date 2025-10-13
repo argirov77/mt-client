@@ -48,7 +48,12 @@ const formatDate = (value: string | undefined | null) => {
   if (!value) return "";
 
   try {
-    return new Date(value).toLocaleDateString("ru-RU", {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return value;
+    }
+
+    return date.toLocaleDateString("ru-RU", {
       day: "2-digit",
       month: "long",
       year: "numeric",
@@ -62,13 +67,22 @@ const formatTime = (value: string | undefined | null) => {
   if (!value) return "--:--";
 
   try {
-    return new Date(value).toLocaleTimeString("ru-RU", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    const date = new Date(value);
+    if (!Number.isNaN(date.getTime())) {
+      return date.toLocaleTimeString("ru-RU", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    }
   } catch {
-    return value.slice(11, 16) || value;
+    // ignore parsing errors and fall back to manual formatting below
   }
+
+  if (/^\d{2}:\d{2}(?::\d{2})?$/.test(value)) {
+    return value.slice(0, 5);
+  }
+
+  return value.slice(11, 16) || value;
 };
 
 const parseDate = (value: string | undefined | null) => {
@@ -174,6 +188,29 @@ const toDateTimeString = (date?: string | null, time?: string | null) => {
 
   const normalizedTime = /^\d{2}:\d{2}$/.test(time) ? `${time}:00` : time;
   return `${date}T${normalizedTime}`;
+};
+
+const ensureDateTimeString = (
+  primary: string | undefined | null,
+  fallbackDate: string | undefined | null,
+  fallbackTime: string | undefined | null
+) => {
+  if (primary) {
+    const parsed = Date.parse(primary);
+    if (!Number.isNaN(parsed)) {
+      return primary;
+    }
+  }
+
+  if (fallbackTime) {
+    const parsed = Date.parse(fallbackTime);
+    if (!Number.isNaN(parsed)) {
+      return fallbackTime;
+    }
+  }
+
+  const timeCandidate = primary ?? fallbackTime;
+  return toDateTimeString(fallbackDate ?? undefined, timeCandidate ?? null);
 };
 
 const normalizeStopId = (value: unknown): number | null => {
@@ -1781,18 +1818,22 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
               ticket.segment_details?.departure?.name ?? departureSegment?.stop_name ?? "—";
             const arrivalName =
               ticket.segment_details?.arrival?.name ?? arrivalSegment?.stop_name ?? "—";
+            const departureDateTime = ensureDateTimeString(
+              ticket.segment_details?.departure?.time ?? null,
+              ticket.tour.date,
+              departureSegment?.time ?? null
+            );
+            const arrivalDateTime = ensureDateTimeString(
+              ticket.segment_details?.arrival?.time ?? null,
+              ticket.tour.date,
+              arrivalSegment?.time ?? null
+            );
             const departureTimeSource =
-              ticket.segment_details?.departure?.time ?? departureSegment?.time ?? null;
+              departureDateTime || departureSegment?.time || ticket.segment_details?.departure?.time || null;
             const arrivalTimeSource =
-              ticket.segment_details?.arrival?.time ?? arrivalSegment?.time ?? null;
-            const departureDateSource =
-              ticket.segment_details?.departure?.time ??
-              toDateTimeString(ticket.tour.date, departureSegment?.time ?? null);
-            const arrivalDateSource =
-              ticket.segment_details?.arrival?.time ??
-              toDateTimeString(ticket.tour.date, arrivalSegment?.time ?? null);
-            const departureDate = formatDate(departureDateSource);
-            const arrivalDate = formatDate(arrivalDateSource);
+              arrivalDateTime || arrivalSegment?.time || ticket.segment_details?.arrival?.time || null;
+            const departureDate = formatDate(departureDateTime);
+            const arrivalDate = formatDate(arrivalDateTime);
             const departureTime = formatTime(departureTimeSource);
             const arrivalTime = formatTime(arrivalTimeSource);
             const extraBaggage = toNumberSafe(ticket.extra_baggage, 0);
