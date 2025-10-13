@@ -780,7 +780,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
 
   const handleDownloadTicket = useCallback(
     (ticketId: string | number) => {
-      void downloadPdf(`/tickets/${ticketId}/pdf`, `ticket-${ticketId}.pdf`, (message) =>
+    void downloadPdf(`/public/tickets/${ticketId}/pdf`, `ticket-${ticketId}.pdf`, (message) =>
         setBanner({ type: "error", message })
       );
     },

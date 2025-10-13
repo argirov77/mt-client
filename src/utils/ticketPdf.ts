@@ -1,7 +1,7 @@
 import { API } from "@/config";
 
 const buildTicketPdfUrl = (ticketNumber: string | number): string => {
-  const url = new URL(`${API}/tickets/${ticketNumber}/pdf`);
+  const url = new URL(`${API}/public/tickets/${ticketNumber}/pdf`);
   url.hostname = "127.0.0.1";
   url.search = "";
   return url.toString();
