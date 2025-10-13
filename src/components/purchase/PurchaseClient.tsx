@@ -169,6 +169,42 @@ const toNumberSafe = (value: unknown, fallback = 0) => {
     return fallback;
   }
 
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (trimmed === "") {
+      return fallback;
+    }
+
+    const cleaned = trimmed.replace(/[^0-9,.-]+/g, "");
+    if (cleaned === "" || cleaned === "-" || cleaned === "+") {
+      return fallback;
+    }
+
+    const lastComma = cleaned.lastIndexOf(",");
+    const lastDot = cleaned.lastIndexOf(".");
+
+    let normalized = cleaned;
+
+    if (lastComma > lastDot) {
+      normalized = normalized.replace(/\./g, "");
+      normalized = normalized.replace(/,/g, ".");
+    } else if (lastDot > lastComma) {
+      normalized = normalized.replace(/,/g, "");
+    } else {
+      normalized = normalized.replace(/,/g, "");
+    }
+
+    // allow a single leading minus sign
+    const sign = normalized.startsWith("-") ? "-" : "";
+    const unsigned = sign ? normalized.slice(1) : normalized;
+    const sanitized = `${sign}${unsigned.replace(/[-]/g, "")}`;
+
+    const parsed = Number(sanitized);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+
   const numeric = Number(value);
   return Number.isFinite(numeric) ? numeric : fallback;
 };
