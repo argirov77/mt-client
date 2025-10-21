@@ -1,4 +1,5 @@
 import { API } from "@/config";
+import { fetchWithInclude } from "@/utils/fetchWithInclude";
 
 type DownloadTicketPdfParams = {
   ticketId: string | number;
@@ -6,10 +7,16 @@ type DownloadTicketPdfParams = {
   email: string;
 };
 
-const buildTicketPdfUrl = (): string => {
-  const url = new URL(`${API}/public/tickets/pdf`);
+const buildTicketPdfUrl = ({
+  ticketId,
+  purchaseId,
+  email,
+}: DownloadTicketPdfParams): string => {
+  const encodedTicketId = encodeURIComponent(String(ticketId));
+  const url = new URL(`${API}/public/tickets/${encodedTicketId}/pdf`);
   url.hostname = "127.0.0.1";
-  url.search = "";
+  url.searchParams.set("purchase_id", String(purchaseId));
+  url.searchParams.set("email", email);
   return url.toString();
 };
 
@@ -27,19 +34,12 @@ export const downloadTicketPdf = async ({
     throw new Error("Email is required to download the ticket PDF");
   }
 
-  const pdfUrl = buildTicketPdfUrl();
-  const response = await fetch(pdfUrl, {
-    method: "POST",
+  const pdfUrl = buildTicketPdfUrl({ ticketId, purchaseId, email: normalizedEmail });
+  const response = await fetchWithInclude(pdfUrl, {
+    method: "GET",
     headers: {
       Accept: "application/pdf",
-      "Content-Type": "application/json",
     },
-    credentials: "include",
-    body: JSON.stringify({
-      purchase_id: purchaseId,
-      ticket_id: ticketId,
-      email: normalizedEmail,
-    }),
   });
 
   if (!response.ok) {

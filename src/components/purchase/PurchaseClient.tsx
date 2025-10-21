@@ -126,34 +126,6 @@ const minutesBetween = (from: Date | null, to: Date | null) => {
   return diffMs > 0 ? Math.round(diffMs / 60000) : null;
 };
 
-const downloadPdf = async (path: string, filename: string, onError: (message: string) => void) => {
-  if (typeof window === "undefined") return;
-
-  try {
-    const response = await fetchWithInclude(`${API}${path}`, {
-      method: "GET",
-      headers: { Accept: "application/pdf" },
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-
-    const blob = await response.blob();
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  } catch (error) {
-    console.error(error);
-    onError("Не удалось скачать PDF. Попробуйте позже");
-  }
-};
-
 const mapById = <T extends { id: string | number }>(items: T[]) => {
   const map = new Map<string, T>();
   items.forEach((item) => {
@@ -845,12 +817,54 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
     void fetchPurchase();
   }, [fetchPurchase]);
 
+  const resolveContactEmail = useCallback((): string | null => {
+    if (!data) {
+      return null;
+    }
+
+    const emailCandidates: Array<string | null | undefined> = [
+      data.customer?.email,
+      ...data.passengers.map((passenger) => passenger.email),
+    ];
+
+    for (const candidate of emailCandidates) {
+      if (typeof candidate !== "string") {
+        continue;
+      }
+      const trimmed = candidate.trim();
+      if (trimmed) {
+        return trimmed;
+      }
+    }
+
+    return null;
+  }, [data]);
+
   const handleDownloadAll = useCallback(() => {
     if (!data) return;
-    void downloadPdf(`/purchase/${data.purchase.id}/pdf`, `purchase-${data.purchase.id}.pdf`, (message) =>
-      setBanner({ type: "error", message })
-    );
-  }, [data]);
+
+    const contactEmail = resolveContactEmail();
+    if (!contactEmail) {
+      setBanner({ type: "error", message: "Не указан email для скачивания билетов" });
+      return;
+    }
+
+    void (async () => {
+      for (const ticket of data.tickets) {
+        try {
+          await downloadTicketPdf({
+            ticketId: ticket.id,
+            purchaseId: data.purchase.id,
+            email: contactEmail,
+          });
+        } catch (error) {
+          console.error(error);
+          setBanner({ type: "error", message: "Не удалось скачать PDF. Попробуйте позже" });
+          break;
+        }
+      }
+    })();
+  }, [data, resolveContactEmail]);
 
   const handleDownloadTicket = useCallback(
     async (ticketId: string | number) => {
@@ -858,23 +872,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
         return;
       }
 
-      const emailCandidates: Array<string | null | undefined> = [
-        data.customer?.email,
-        ...data.passengers.map((passenger) => passenger.email),
-      ];
-
-      let contactEmail: string | null = null;
-      for (const candidate of emailCandidates) {
-        if (typeof candidate !== "string") {
-          continue;
-        }
-        const trimmed = candidate.trim();
-        if (trimmed) {
-          contactEmail = trimmed;
-          break;
-        }
-      }
-
+      const contactEmail = resolveContactEmail();
       if (!contactEmail) {
         setBanner({ type: "error", message: "Не указан email для скачивания билета" });
         return;
@@ -891,7 +889,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
         setBanner({ type: "error", message: "Не удалось скачать PDF. Попробуйте позже" });
       }
     },
-    [data]
+    [data, resolveContactEmail]
   );
 
   const validTicketIds = useMemo(() => {
