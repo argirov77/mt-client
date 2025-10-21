@@ -104,11 +104,7 @@ export default function SeatClient({
 
     const details = selectedSeats.reduce<SeatSelectionDetail[]>((accumulator, seatNumber) => {
       const seat = seats.find((item) => item.seat_num === seatNumber);
-      if (!seat) {
-        return accumulator;
-      }
-
-      const seatId = typeof seat.seat_id === "number" ? seat.seat_id : null;
+      const seatId = seat && typeof seat.seat_id === "number" ? seat.seat_id : null;
 
       accumulator.push({ seatId, seatNumber });
       return accumulator;
