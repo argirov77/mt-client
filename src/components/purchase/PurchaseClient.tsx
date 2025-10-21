@@ -1643,6 +1643,21 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
     });
   }, []);
 
+  const handleSelectRescheduleTour = useCallback((tourId: number) => {
+    setRescheduleTourId((prev) => {
+      if (prev === tourId) {
+        return prev;
+      }
+
+      setRescheduleSeatNumbers([]);
+      setRescheduleSeatDetails([]);
+      setRescheduleQuote(null);
+      setRescheduleError(null);
+
+      return tourId;
+    });
+  }, []);
+
   const rescheduleSeatRequirement = rescheduleContext?.seatCount ?? 0;
 
   const canSubmitRescheduleQuote =
