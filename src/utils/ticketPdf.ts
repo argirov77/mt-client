@@ -1,24 +1,45 @@
 import { API } from "@/config";
 
-const buildTicketPdfUrl = (ticketNumber: string | number): string => {
-  const url = new URL(`${API}/public/tickets/${ticketNumber}/pdf`);
+type DownloadTicketPdfParams = {
+  ticketId: string | number;
+  purchaseId: string | number;
+  email: string;
+};
+
+const buildTicketPdfUrl = (): string => {
+  const url = new URL(`${API}/public/tickets/pdf`);
   url.hostname = "127.0.0.1";
   url.search = "";
   return url.toString();
 };
 
-export const downloadTicketPdf = async (
-  ticketNumber: string | number
-): Promise<void> => {
+export const downloadTicketPdf = async ({
+  ticketId,
+  purchaseId,
+  email,
+}: DownloadTicketPdfParams): Promise<void> => {
   if (typeof window === "undefined") {
     return;
   }
 
-  const pdfUrl = buildTicketPdfUrl(ticketNumber);
+  const normalizedEmail = email.trim();
+  if (!normalizedEmail) {
+    throw new Error("Email is required to download the ticket PDF");
+  }
+
+  const pdfUrl = buildTicketPdfUrl();
   const response = await fetch(pdfUrl, {
-    method: "GET",
-    headers: { Accept: "application/pdf" },
+    method: "POST",
+    headers: {
+      Accept: "application/pdf",
+      "Content-Type": "application/json",
+    },
     credentials: "include",
+    body: JSON.stringify({
+      purchase_id: purchaseId,
+      ticket_id: ticketId,
+      email: normalizedEmail,
+    }),
   });
 
   if (!response.ok) {
@@ -30,7 +51,7 @@ export const downloadTicketPdf = async (
 
   const link = document.createElement("a");
   link.href = objectUrl;
-  link.download = `ticket-${ticketNumber}.pdf`;
+  link.download = `ticket-${ticketId}.pdf`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
