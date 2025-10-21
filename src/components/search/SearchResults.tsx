@@ -545,6 +545,8 @@ export default function SearchResults({
           return (
             coerceTicketNumber(obj["ticket_number"]) ??
             coerceTicketNumber(obj["ticketNumber"]) ??
+            coerceTicketNumber(obj["ticket_id"]) ??
+            coerceTicketNumber(obj["ticketId"]) ??
             coerceTicketNumber(obj["number"]) ??
             coerceTicketNumber(obj["id"])
           );
