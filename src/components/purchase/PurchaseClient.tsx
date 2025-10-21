@@ -2431,8 +2431,8 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
                   disabled={
                     !canSubmitRescheduleQuote ||
                     actionLoading === "reschedule" ||
-                    !rescheduleQuote ||
-                    rescheduleQuote.can_apply === false
+                    rescheduleQuoteLoading ||
+                    rescheduleQuote?.can_apply === false
                   }
                   className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700 disabled:cursor-not-allowed disabled:bg-gray-300"
                 >
