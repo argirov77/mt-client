@@ -399,8 +399,17 @@ const normalizePurchasePayload = (payload: unknown): PurchaseView => {
 
     const segments = buildSegments(segmentInfo, tourDate, routeStops);
 
+    const ticketId =
+      ticketInfo?.id ??
+      ticketInfo?.ticket_id ??
+      ticketInfo?.ticketId ??
+      entry.id ??
+      entry.ticket_id ??
+      entry.ticketId ??
+      index;
+
     return {
-      id: ticketInfo?.id ?? index,
+      id: ticketId,
       passenger_id: passengerId,
       status: (paymentStatus?.status as string | undefined) ?? (ticketInfo?.status as string | undefined) ?? (rawPurchase?.status as string | undefined) ?? "pending",
       seat_id: (ticketInfo?.seat_id ?? ticketInfo?.seatId ?? null) as number | string | null,
@@ -507,7 +516,7 @@ const normalizePurchasePayload = (payload: unknown): PurchaseView => {
     null;
 
   const purchaseSummary = {
-    id: rawPurchase?.id ?? raw.id ?? "",
+    id: rawPurchase?.id ?? rawPurchase?.purchase_id ?? raw.id ?? raw.purchase_id ?? "",
     status: (rawPurchase?.status ?? raw.status ?? "pending") as string,
     created_at: String(rawPurchase?.created_at ?? raw.created_at ?? ""),
       amount_due: toNumberSafe(rawPurchase?.amount_due ?? raw.amount_due ?? totals.due, 0),
