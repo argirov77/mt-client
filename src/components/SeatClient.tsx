@@ -9,8 +9,8 @@ import { Wifi, Toilet, Snowflake, Plug, Armchair } from "lucide-react";
 type SeatStatus = "available" | "occupied" | "blocked";
 export type SeatMapSeat = { seat_id: number; seat_num: number; status: SeatStatus };
 
-type SeatSelectionDetail = {
-  seatId: number;
+export type SeatSelectionDetail = {
+  seatId: number | null;
   seatNumber: number;
 };
 
@@ -104,11 +104,13 @@ export default function SeatClient({
 
     const details = selectedSeats.reduce<SeatSelectionDetail[]>((accumulator, seatNumber) => {
       const seat = seats.find((item) => item.seat_num === seatNumber);
-      if (!seat || typeof seat.seat_id !== "number") {
+      if (!seat) {
         return accumulator;
       }
 
-      accumulator.push({ seatId: seat.seat_id, seatNumber });
+      const seatId = typeof seat.seat_id === "number" ? seat.seat_id : null;
+
+      accumulator.push({ seatId, seatNumber });
       return accumulator;
     }, []);
 
