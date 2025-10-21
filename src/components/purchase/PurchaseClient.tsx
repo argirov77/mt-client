@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import UiAlert from "@/components/common/Alert";
 import Loader from "@/components/common/Loader";
+import Calendar from "@/components/Calendar";
 import SeatClient from "@/components/SeatClient";
 import { API } from "@/config";
 import { downloadTicketPdf } from "@/utils/ticketPdf";
@@ -1406,6 +1407,20 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
     return null;
   }, [selectedRescheduleTour]);
 
+  const rescheduleMinDate = useMemo(() => {
+    if (rescheduleDates.length === 0) {
+      return undefined;
+    }
+
+    return rescheduleDates.reduce<string | undefined>((earliest, current) => {
+      if (!earliest) {
+        return current;
+      }
+
+      return earliest < current ? earliest : current;
+    }, undefined);
+  }, [rescheduleDates]);
+
   useEffect(() => {
     if (activePanel !== "reschedule") {
       return;
@@ -1614,6 +1629,22 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
     setRescheduleSeatNumbers(normalized);
     setRescheduleQuote(null);
   };
+
+  const handleRescheduleDateSelect = useCallback((iso: string) => {
+    setRescheduleDate((prev) => {
+      if (prev === iso) {
+        return prev;
+      }
+
+      setRescheduleTours([]);
+      setRescheduleTourId(null);
+      setRescheduleSeatNumbers([]);
+      setRescheduleQuote(null);
+      setRescheduleError(null);
+
+      return iso;
+    });
+  }, []);
 
   const rescheduleSeatRequirement = rescheduleContext?.seatCount ?? 0;
 
@@ -2252,24 +2283,17 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
                 </div>
               ) : null}
               <div className="space-y-2">
-                <label htmlFor="reschedule-date" className="text-sm font-semibold text-gray-700">
-                  Доступные даты
-                </label>
+                <p className="text-sm font-semibold text-gray-700">Доступные даты</p>
                 {rescheduleFetchingDates ? (
                   <p className="text-sm text-gray-500">Загружаем даты…</p>
                 ) : rescheduleDates.length > 0 ? (
-                  <select
-                    id="reschedule-date"
-                    value={rescheduleDate}
-                    onChange={(event) => setRescheduleDate(event.target.value)}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-                  >
-                    {rescheduleDates.map((dateValue) => (
-                      <option key={dateValue} value={dateValue}>
-                        {formatDate(dateValue)} ({dateValue})
-                      </option>
-                    ))}
-                  </select>
+                  <Calendar
+                    activeDates={rescheduleDates}
+                    selectedDate={rescheduleDate || undefined}
+                    minDate={rescheduleMinDate}
+                    onSelect={handleRescheduleDateSelect}
+                    className="max-w-full"
+                  />
                 ) : (
                   <p className="text-sm text-gray-500">Нет доступных дат для выбранных билетов.</p>
                 )}
