@@ -6,6 +6,7 @@ import UiAlert from "@/components/common/Alert";
 import Loader from "@/components/common/Loader";
 import SeatClient from "@/components/SeatClient";
 import { API } from "@/config";
+import { downloadTicketPdf } from "@/utils/ticketPdf";
 import type {
   BaggageQuote,
   CancelPreview,
@@ -852,12 +853,45 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
   }, [data]);
 
   const handleDownloadTicket = useCallback(
-    (ticketId: string | number) => {
-    void downloadPdf(`/public/tickets/${ticketId}/pdf`, `ticket-${ticketId}.pdf`, (message) =>
-        setBanner({ type: "error", message })
-      );
+    async (ticketId: string | number) => {
+      if (!data) {
+        return;
+      }
+
+      const emailCandidates: Array<string | null | undefined> = [
+        data.customer?.email,
+        ...data.passengers.map((passenger) => passenger.email),
+      ];
+
+      let contactEmail: string | null = null;
+      for (const candidate of emailCandidates) {
+        if (typeof candidate !== "string") {
+          continue;
+        }
+        const trimmed = candidate.trim();
+        if (trimmed) {
+          contactEmail = trimmed;
+          break;
+        }
+      }
+
+      if (!contactEmail) {
+        setBanner({ type: "error", message: "Не указан email для скачивания билета" });
+        return;
+      }
+
+      try {
+        await downloadTicketPdf({
+          ticketId,
+          purchaseId: data.purchase.id,
+          email: contactEmail,
+        });
+      } catch (error) {
+        console.error(error);
+        setBanner({ type: "error", message: "Не удалось скачать PDF. Попробуйте позже" });
+      }
     },
-    []
+    [data]
   );
 
   const validTicketIds = useMemo(() => {

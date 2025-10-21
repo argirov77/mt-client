@@ -742,14 +742,22 @@ export default function SearchResults({
     const targetTicketNumber =
       ticketNumberOverride ??
       ticket?.ticketNumber ??
-      (ticket?.purchaseId != null ? ticket.purchaseId : null);
+      (ticket?.purchaseId != null ? String(ticket.purchaseId) : null);
+    const targetPurchaseId = ticket?.purchaseId ?? purchaseId ?? null;
+    const targetEmail = (ticket?.contact.email ?? email ?? "").trim();
 
-    if (targetTicketNumber == null) {
+    if (targetTicketNumber == null || targetPurchaseId == null || !targetEmail) {
+      setMsg("Не хватает данных для скачивания билета");
+      setMsgType("error");
       return;
     }
 
     try {
-      await downloadTicketPdf(targetTicketNumber);
+      await downloadTicketPdf({
+        ticketId: targetTicketNumber,
+        purchaseId: targetPurchaseId,
+        email: targetEmail,
+      });
       setShowDownloadPrompt(false);
     } catch (error) {
       console.error(error);
