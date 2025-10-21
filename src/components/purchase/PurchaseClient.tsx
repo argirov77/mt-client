@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import UiAlert from "@/components/common/Alert";
 import Loader from "@/components/common/Loader";
 import Calendar from "@/components/Calendar";
-import SeatClient from "@/components/SeatClient";
+import SeatClient, { type SeatSelectionDetail } from "@/components/SeatClient";
 import { API } from "@/config";
 import { downloadTicketPdf } from "@/utils/ticketPdf";
 import type {
@@ -706,6 +706,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
   const [rescheduleTours, setRescheduleTours] = useState<RescheduleTour[]>([]);
   const [rescheduleTourId, setRescheduleTourId] = useState<number | null>(null);
   const [rescheduleSeatNumbers, setRescheduleSeatNumbers] = useState<number[]>([]);
+  const [rescheduleSeatDetails, setRescheduleSeatDetails] = useState<SeatSelectionDetail[]>([]);
   const [rescheduleQuote, setRescheduleQuote] = useState<RescheduleQuote | null>(null);
   const [rescheduleFetchingDates, setRescheduleFetchingDates] = useState(false);
   const [rescheduleFetchingTours, setRescheduleFetchingTours] = useState(false);
@@ -1103,6 +1104,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
       setRescheduleTours([]);
       setRescheduleTourId(null);
       setRescheduleSeatNumbers([]);
+      setRescheduleSeatDetails([]);
       setRescheduleQuote(null);
       return;
     }
@@ -1158,6 +1160,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
         setRescheduleTours([]);
         setRescheduleTourId(null);
         setRescheduleSeatNumbers([]);
+        setRescheduleSeatDetails([]);
         setRescheduleQuote(null);
         setRescheduleError("Не удалось получить доступные даты для переноса");
       } finally {
@@ -1418,6 +1421,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
       setRescheduleTours([]);
       setRescheduleTourId(null);
       setRescheduleSeatNumbers([]);
+      setRescheduleSeatDetails([]);
       setRescheduleQuote(null);
       return;
     }
@@ -1472,6 +1476,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
         setRescheduleTours([]);
         setRescheduleTourId(null);
         setRescheduleSeatNumbers([]);
+        setRescheduleSeatDetails([]);
         setRescheduleQuote(null);
         setRescheduleError("Не удалось получить доступные даты для переноса");
       } finally {
@@ -1495,6 +1500,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
       setRescheduleTours([]);
       setRescheduleTourId(null);
       setRescheduleSeatNumbers([]);
+      setRescheduleSeatDetails([]);
       setRescheduleQuote(null);
       return;
     }
@@ -1503,6 +1509,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
       setRescheduleTours([]);
       setRescheduleTourId(null);
       setRescheduleSeatNumbers([]);
+      setRescheduleSeatDetails([]);
       setRescheduleQuote(null);
       return;
     }
@@ -1585,6 +1592,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
           return null;
         });
         setRescheduleSeatNumbers([]);
+        setRescheduleSeatDetails([]);
         setRescheduleQuote(null);
       } catch (toursError) {
         if (cancelled) {
@@ -1595,6 +1603,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
         setRescheduleTours([]);
         setRescheduleTourId(null);
         setRescheduleSeatNumbers([]);
+        setRescheduleSeatDetails([]);
         setRescheduleQuote(null);
         setRescheduleError("Не удалось получить список доступных рейсов");
       } finally {
@@ -1613,6 +1622,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
     const seatLimit = rescheduleContext?.seatCount ?? seats.length;
     const normalized = seats.slice(0, seatLimit);
     setRescheduleSeatNumbers(normalized);
+    setRescheduleSeatDetails([]);
     setRescheduleQuote(null);
   };
 
@@ -1625,6 +1635,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
       setRescheduleTours([]);
       setRescheduleTourId(null);
       setRescheduleSeatNumbers([]);
+      setRescheduleSeatDetails([]);
       setRescheduleQuote(null);
       setRescheduleError(null);
 
@@ -1638,7 +1649,8 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
     !!rescheduleContext &&
     !!rescheduleTourId &&
     rescheduleSeatRequirement > 0 &&
-    rescheduleSeatNumbers.length === rescheduleSeatRequirement;
+    rescheduleSeatNumbers.length === rescheduleSeatRequirement &&
+    rescheduleSeatDetails.length === rescheduleSeatRequirement;
 
   const reschedulePassengers = useMemo(() => {
     if (!data || !rescheduleContext) {
@@ -1664,6 +1676,11 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
     }
 
     if (rescheduleSeatNumbers.length !== rescheduleContext.seatCount) {
+      setRescheduleError("Выберите места для всех билетов");
+      return;
+    }
+
+    if (rescheduleSeatDetails.length !== rescheduleContext.seatCount) {
       setRescheduleError("Выберите места для всех билетов");
       return;
     }
@@ -1698,12 +1715,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
     } finally {
       setRescheduleQuoteLoading(false);
     }
-  }, [
-    purchaseId,
-    rescheduleContext,
-    rescheduleSeatNumbers,
-    rescheduleTourId,
-  ]);
+  }, [purchaseId, rescheduleContext, rescheduleSeatDetails, rescheduleSeatNumbers, rescheduleTourId]);
 
   const applyReschedule = useCallback(async () => {
     if (!rescheduleContext) {
@@ -1721,39 +1733,68 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
       return;
     }
 
+    if (rescheduleSeatDetails.length !== rescheduleContext.seatCount) {
+      setRescheduleError("Выберите места для всех билетов");
+      return;
+    }
+
     setActionLoading("reschedule");
     setRescheduleError(null);
 
-    const body = {
-      ticket_ids: rescheduleContext.ticketIdentifiers,
-      new_tour_id: rescheduleTourId,
-      new_seat_nums: rescheduleSeatNumbers,
-      departure_stop_id: rescheduleContext.departureStopId,
-      arrival_stop_id: rescheduleContext.arrivalStopId,
-    };
+    const seatDetailsMap = new Map<number, SeatSelectionDetail["seatId"]>();
+    rescheduleSeatDetails.forEach((detail) => {
+      seatDetailsMap.set(detail.seatNumber, detail.seatId ?? null);
+    });
+
+    const assignments = rescheduleContext.ticketIdentifiers.map((ticketIdentifier, index) => ({
+      ticketIdentifier,
+      seatNumber: rescheduleSeatNumbers[index],
+      seatId: seatDetailsMap.get(rescheduleSeatNumbers[index]) ?? null,
+    }));
 
     const currentCurrency = data?.purchase.currency;
 
     try {
-      const response = await fetchWithInclude(`${API}/public/purchase/${purchaseId}/reschedule`, {
-        method: "POST",
-        body: JSON.stringify(body),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-
       let payload: RescheduleApplyResponse | null = null;
-      try {
-        payload = (await response.json()) as RescheduleApplyResponse;
-      } catch {
-        payload = null;
+
+      for (const assignment of assignments) {
+        const ticketIdEncoded = encodeURIComponent(String(assignment.ticketIdentifier));
+        const requestBody: Record<string, unknown> = {
+          tour_id: rescheduleTourId,
+          seat_num: assignment.seatNumber,
+          departure_stop_id: rescheduleContext.departureStopId,
+          arrival_stop_id: rescheduleContext.arrivalStopId,
+        };
+
+        if (assignment.seatId !== null) {
+          requestBody.seat_id = assignment.seatId;
+        }
+
+        const response = await fetchWithInclude(`${API}/public/tickets/${ticketIdEncoded}/reschedule`, {
+          method: "POST",
+          body: JSON.stringify(requestBody),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        try {
+          const currentPayload = (await response.json()) as RescheduleApplyResponse;
+          if (currentPayload?.status === "pending" && typeof currentPayload?.amount_due === "number") {
+            payload = currentPayload;
+          } else if (!payload) {
+            payload = currentPayload;
+          }
+        } catch {
+          // ignore empty body
+        }
       }
 
       await fetchPurchase();
       setRescheduleQuote(null);
       setRescheduleSeatNumbers([]);
+      setRescheduleSeatDetails([]);
       setActivePanel(null);
       setRescheduleSelected([]);
 
@@ -1774,8 +1815,8 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
   }, [
     data?.purchase.currency,
     fetchPurchase,
-    purchaseId,
     rescheduleContext,
+    rescheduleSeatDetails,
     rescheduleSeatNumbers,
     rescheduleTourId,
   ]);
@@ -2337,6 +2378,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
                     selectedSeats={rescheduleSeatNumbers}
                     maxSeats={rescheduleSeatRequirement}
                     onChange={handleRescheduleSeatChange}
+                    onSelectionDetailsChange={setRescheduleSeatDetails}
                   />
                   <p className="text-xs text-gray-500">
                     Выбрано мест: {rescheduleSeatNumbers.length} из {rescheduleSeatRequirement}
