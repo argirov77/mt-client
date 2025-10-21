@@ -1407,20 +1407,6 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
     return null;
   }, [selectedRescheduleTour]);
 
-  const rescheduleMinDate = useMemo(() => {
-    if (rescheduleDates.length === 0) {
-      return undefined;
-    }
-
-    return rescheduleDates.reduce<string | undefined>((earliest, current) => {
-      if (!earliest) {
-        return current;
-      }
-
-      return earliest < current ? earliest : current;
-    }, undefined);
-  }, [rescheduleDates]);
-
   useEffect(() => {
     if (activePanel !== "reschedule") {
       return;
@@ -2290,7 +2276,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
                   <Calendar
                     activeDates={rescheduleDates}
                     selectedDate={rescheduleDate || undefined}
-                    minDate={rescheduleMinDate}
+                    allowAllFutureDates
                     onSelect={handleRescheduleDateSelect}
                     className="max-w-full"
                   />
