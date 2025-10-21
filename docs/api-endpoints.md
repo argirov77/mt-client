@@ -21,8 +21,7 @@
 Для этих запросов клиент всегда добавляет куки и при необходимости заголовок `X-CSRF` с помощью вспомогательной функции `fetchWithInclude`, поэтому они предполагают наличие активной сессии пользователя.【F:src/utils/fetchWithInclude.ts†L1-L28】
 
 - `GET /public/purchase/{purchaseId}` — загружает агрегированную информацию о покупке, её билетах и истории.【F:src/components/purchase/PurchaseClient.tsx†L807-L840】
-- `GET /purchase/{purchaseId}/pdf` — скачивает единый PDF-файл с билетами покупки.【F:src/components/purchase/PurchaseClient.tsx†L847-L858】
-- `GET /public/tickets/{ticketId}/pdf` — скачивает PDF отдельного билета (также используется в отдельном хелпере для загрузки электронного билета).【F:src/components/purchase/PurchaseClient.tsx†L855-L858】【F:src/utils/ticketPdf.ts†L1-L28】
+- `GET /public/tickets/{ticketId}/pdf` — скачивает PDF отдельного билета; при массовой выгрузке в личном кабинете вызывается для каждого билета покупки по очереди.【F:src/components/purchase/PurchaseClient.tsx†L850-L876】【F:src/utils/ticketPdf.ts†L1-L55】
 - `POST /public/purchase/{purchaseId}/cancel/preview` — рассчитывает размер возврата перед отменой отдельных билетов.【F:src/components/purchase/PurchaseClient.tsx†L1133-L1161】
 - `POST /public/purchase/{purchaseId}/cancel` — подтверждает отмену или возврат выбранных билетов покупки.【F:src/components/purchase/PurchaseClient.tsx†L1166-L1208】
 - `POST /public/purchase/{purchaseId}/baggage/quote` — пересчитывает стоимость после изменения количества дополнительного багажа.【F:src/components/purchase/PurchaseClient.tsx†L1220-L1250】
@@ -36,4 +35,4 @@
 ## Примечания
 
 - Все пути строятся на базе константы `API`, определённой в конфигурации клиента.【F:src/config.ts†L1-L1】
-- Запросы на скачивание PDF в личном кабинете используют общий вспомогательный метод `downloadPdf`, который добавляет заголовок `Accept: application/pdf` и выгружает файл напрямую в браузер.【F:src/components/purchase/PurchaseClient.tsx†L128-L154】
+- Скачивание билетов в личном кабинете выполняется через хелпер `downloadTicketPdf`, который строит ссылку на нужный эндпоинт и инициирует загрузку браузером.【F:src/components/purchase/PurchaseClient.tsx†L850-L876】【F:src/utils/ticketPdf.ts†L1-L55】
