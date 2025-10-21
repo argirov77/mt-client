@@ -13,6 +13,7 @@ type Props = {
   lang?: Lang;
   className?: string;
   accentHex?: string;          // кастомный цвет (по умолчанию фирменный синий)
+  allowAllFutureDates?: boolean; // разрешить выбор любых дат от minDate (или от сегодня)
 };
 
 const MONTHS: Record<Lang, string[]> = {
@@ -42,6 +43,7 @@ export default function Calendar({
   lang = "ru",
   className = "",
   accentHex = "#0E63F4", // синий
+  allowAllFutureDates = false,
 }: Props) {
   const initialISO = selectedDate || activeDates[0] || todayISO();
   const init = new Date(initialISO + "T00:00:00Z");
@@ -68,25 +70,34 @@ export default function Calendar({
   const prevM = month===0 ? 11 : month-1;
   const daysPrev = new Date(Date.UTC(prevY,prevM+1,0)).getUTCDate();
 
-  type Cell = { iso:string; day:number; inMonth:boolean; selectable:boolean; selected:boolean; isToday:boolean };
+  type Cell = {
+    iso: string;
+    day: number;
+    inMonth: boolean;
+    selectable: boolean;
+    selected: boolean;
+    isToday: boolean;
+    isActive: boolean;
+  };
   const cells: Cell[] = [];
 
   for (let i=shift-1;i>=0;i--){
     const d = daysPrev - i;
     const iso = toISO(prevY,prevM,d);
-    cells.push({ iso, day:d, inMonth:false, selectable:false, selected:selectedDate===iso, isToday:iso===today });
+    cells.push({ iso, day:d, inMonth:false, selectable:false, selected:selectedDate===iso, isToday:iso===today, isActive:false });
   }
   for (let d=1; d<=daysInThis; d++){
     const iso = toISO(year,month,d);
-    const selectable = activeSet.has(iso) && iso>=minISO;
-    cells.push({ iso, day:d, inMonth:true, selectable, selected:selectedDate===iso, isToday:iso===today });
+    const isActive = activeSet.has(iso);
+    const selectable = (allowAllFutureDates ? iso>=minISO : isActive && iso>=minISO);
+    cells.push({ iso, day:d, inMonth:true, selectable, selected:selectedDate===iso, isToday:iso===today, isActive });
   }
   const nextCount = 42 - cells.length;
   const nextY = month===11 ? year+1 : year;
   const nextM = month===11 ? 0 : month+1;
   for (let d=1; d<=nextCount; d++){
     const iso = toISO(nextY,nextM,d);
-    cells.push({ iso, day:d, inMonth:false, selectable:false, selected:selectedDate===iso, isToday:iso===today });
+    cells.push({ iso, day:d, inMonth:false, selectable:false, selected:selectedDate===iso, isToday:iso===today, isActive:false });
   }
 
   return (
@@ -125,7 +136,7 @@ export default function Calendar({
               aria-pressed={c.selected}
             >
               {c.day}
-              {c.selectable && !c.selected && (
+              {c.isActive && !c.selected && (
                 <span
                   className="absolute bottom-1 h-1.5 w-1.5 rounded-full"
                   style={{ backgroundColor: accentHex }}
