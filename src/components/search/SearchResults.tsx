@@ -330,7 +330,7 @@ export default function SearchResults({
   const returnSectionRef = useRef<HTMLDivElement | null>(null);
   const bookingSectionRef = useRef<HTMLDivElement | null>(null);
 
-  const scrollToSection = useCallback((ref: React.RefObject<HTMLElement>) => {
+  const scrollToSection = useCallback((ref: React.RefObject<HTMLElement | null>) => {
     ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);
 
