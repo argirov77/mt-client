@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 
 import UiAlert from "@/components/common/Alert";
@@ -19,7 +19,7 @@ const PURCHASE_PARAM_KEYS = [
 
 const COOKIE_PATTERN = /(?:^|;\s*)minicab_purchase_(\w+)=/i;
 
-export default function CabinetPage() {
+function CabinetPageContent() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const [purchaseId, setPurchaseId] = useState<string | null>(null);
@@ -83,6 +83,19 @@ export default function CabinetPage() {
       </div>
     );
   }
-
   return <PurchaseClient purchaseId={purchaseId} />;
+}
+
+export default function CabinetPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto max-w-3xl px-4 py-10">
+          <Loader />
+        </div>
+      }
+    >
+      <CabinetPageContent />
+    </Suspense>
+  );
 }

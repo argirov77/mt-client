@@ -242,6 +242,32 @@ const normalizeStopId = (value: unknown): number | null => {
   return null;
 };
 
+const ensureStringOrNumber = (value: unknown, fallback: string | number): string | number => {
+  if (typeof value === "string" || typeof value === "number") {
+    return value;
+  }
+
+  const normalized = normalizeStopId(value);
+  if (normalized !== null) {
+    return normalized;
+  }
+
+  return fallback;
+};
+
+const toOptionalStringOrNumber = (value: unknown): string | number | undefined => {
+  if (value === undefined || value === null) {
+    return undefined;
+  }
+
+  if (typeof value === "string" || typeof value === "number") {
+    return value;
+  }
+
+  const normalized = normalizeStopId(value);
+  return normalized !== null ? normalized : undefined;
+};
+
 type RescheduleContext = {
   ticketIds: string[];
   ticketIdentifiers: PurchaseTicket["id"][];
@@ -293,7 +319,7 @@ const buildSegments = (
     }
 
     return routeStops.map((stop, index) => ({
-      stop_id: stop.id ?? `route-stop-${index}`,
+      stop_id: ensureStringOrNumber(stop.id, `route-stop-${index}`),
       stop_name: String(stop.name ?? ""),
       time: toDateTimeString(tourDate, String(stop.departure_time ?? stop.arrival_time ?? stop.time ?? "")),
       is_departure: index === 0,
@@ -306,7 +332,7 @@ const buildSegments = (
   const departure = segment?.departure as Record<string, unknown> | undefined;
   if (departure) {
     segments.push({
-      stop_id: departure.id ?? departure.stop_id ?? "departure",
+      stop_id: ensureStringOrNumber(departure.id ?? departure.stop_id, "departure"),
       stop_name: String(departure.name ?? departure.stop_name ?? ""),
       time: toDateTimeString(tourDate, String(departure.time ?? "")),
       is_departure: true,
@@ -320,7 +346,7 @@ const buildSegments = (
 
   intermediate.forEach((stop, index) => {
     segments.push({
-      stop_id: stop.id ?? stop.stop_id ?? `stop-${index}`,
+      stop_id: ensureStringOrNumber(stop.id ?? stop.stop_id, `stop-${index}`),
       stop_name: String(stop.name ?? stop.stop_name ?? ""),
       time: toDateTimeString(tourDate, String(stop.departure_time ?? stop.arrival_time ?? "")),
       is_departure: false,
@@ -331,7 +357,7 @@ const buildSegments = (
   const arrival = segment?.arrival as Record<string, unknown> | undefined;
   if (arrival) {
     segments.push({
-      stop_id: arrival.id ?? arrival.stop_id ?? "arrival",
+      stop_id: ensureStringOrNumber(arrival.id ?? arrival.stop_id, "arrival"),
       stop_name: String(arrival.name ?? arrival.stop_name ?? ""),
       time: toDateTimeString(tourDate, String(arrival.time ?? "")),
       is_departure: false,
@@ -342,7 +368,7 @@ const buildSegments = (
   if (segments.length === 0 && routeStops.length > 0) {
     routeStops.forEach((stop, index) => {
       segments.push({
-        stop_id: stop.id ?? `route-stop-${index}`,
+        stop_id: ensureStringOrNumber(stop.id, `route-stop-${index}`),
         stop_name: String(stop.name ?? ""),
         time: toDateTimeString(
           tourDate,
@@ -360,6 +386,9 @@ const buildSegments = (
 const normalizePurchasePayload = (payload: unknown): PurchaseView => {
   const raw = (isObject(payload) ? payload : {}) as Record<string, unknown>;
   const rawPurchase = (isObject(raw.purchase) ? raw.purchase : raw) as Record<string, unknown>;
+  const customerInfo = isObject(rawPurchase?.customer)
+    ? (rawPurchase.customer as Record<string, unknown>)
+    : undefined;
 
   const rawTickets = Array.isArray(raw.tickets)
     ? (raw.tickets as Array<Record<string, unknown>>)
@@ -378,18 +407,24 @@ const normalizePurchasePayload = (payload: unknown): PurchaseView => {
     const pricingInfo = isObject(entry.pricing) ? entry.pricing : undefined;
     const paymentStatus = isObject(entry.payment_status) ? entry.payment_status : undefined;
 
-    const passengerIdRaw = passengerInfo?.id ?? ticketInfo?.passenger_id ?? `passenger-${index}`;
-    const passengerId = String(passengerIdRaw ?? `passenger-${index}`);
-    const passengerName = passengerInfo?.name ?? ticketInfo?.passenger_name ?? rawPurchase?.customer?.name ?? "Пассажир";
+      const passengerIdRaw = passengerInfo?.["id"] ?? ticketInfo?.["passenger_id"] ?? `passenger-${index}`;
+      const passengerId = String(passengerIdRaw ?? `passenger-${index}`);
+      const passengerName =
+        (passengerInfo?.["name"] as string | undefined) ??
+        (ticketInfo?.["passenger_name"] as string | undefined) ??
+        (ticketInfo?.["passengerName"] as string | undefined) ??
+        (ticketInfo?.["name"] as string | undefined) ??
+        (customerInfo?.["name"] as string | undefined) ??
+        "Пассажир";
 
-    if (!passengersMap.has(passengerId)) {
-      passengersMap.set(passengerId, {
-        id: passengerId,
-        name: String(passengerName ?? passengerId),
-        email: (passengerInfo?.email ?? null) as string | null,
-        phone: (passengerInfo?.phone ?? null) as string | null,
-      });
-    }
+      if (!passengersMap.has(passengerId)) {
+        passengersMap.set(passengerId, {
+          id: passengerId,
+          name: String(passengerName ?? passengerId),
+          email: (passengerInfo?.["email"] ?? null) as string | null,
+          phone: (passengerInfo?.["phone"] ?? null) as string | null,
+        });
+      }
 
     const tourDate = (tourInfo?.date as string | undefined) ?? (rawPurchase?.date as string | undefined);
     const routeStops = Array.isArray(routeInfo?.stops)
@@ -399,16 +434,26 @@ const normalizePurchasePayload = (payload: unknown): PurchaseView => {
       ? (segmentInfo?.intermediate_stops as Array<Record<string, unknown>>)
       : [];
 
-    const segments = buildSegments(segmentInfo, tourDate, routeStops);
+      const segments = buildSegments(segmentInfo, tourDate, routeStops);
 
-    const ticketId =
-      ticketInfo?.id ??
-      ticketInfo?.ticket_id ??
-      ticketInfo?.ticketId ??
-      entry.id ??
-      entry.ticket_id ??
-      entry.ticketId ??
-      index;
+      const ticketIdCandidate =
+        ticketInfo?.id ??
+        ticketInfo?.ticket_id ??
+        ticketInfo?.ticketId ??
+        entry.id ??
+        entry.ticket_id ??
+        entry.ticketId;
+      const ticketId = ensureStringOrNumber(ticketIdCandidate, index);
+
+      const tourIdCandidate = tourInfo?.id ?? rawPurchase?.tour_id ?? rawPurchase?.id;
+      const tourId = ensureStringOrNumber(tourIdCandidate, index);
+      const routeId = toOptionalStringOrNumber(routeInfo?.id ?? tourInfo?.route_id);
+      const departureDetails = isObject(segmentInfo?.departure)
+        ? (segmentInfo?.departure as Record<string, unknown>)
+        : undefined;
+      const arrivalDetails = isObject(segmentInfo?.arrival)
+        ? (segmentInfo?.arrival as Record<string, unknown>)
+        : undefined;
 
     return {
       id: ticketId,
@@ -417,57 +462,57 @@ const normalizePurchasePayload = (payload: unknown): PurchaseView => {
       seat_id: (ticketInfo?.seat_id ?? ticketInfo?.seatId ?? null) as number | string | null,
       seat_num: (ticketInfo?.seat_number ?? ticketInfo?.seat_num ?? ticketInfo?.seat ?? null) as number | string | null,
       extra_baggage: toNumberSafe(ticketInfo?.extra_baggage ?? ticketInfo?.extraBaggage, 0),
-      tour: {
-        id: (tourInfo?.id ?? rawPurchase?.tour_id ?? rawPurchase?.id ?? index) as number | string,
-        date: String(tourDate ?? rawPurchase?.created_at ?? ""),
-        route_id: (routeInfo?.id ?? tourInfo?.route_id) as number | string | undefined,
-        route_name: String(routeInfo?.name ?? tourInfo?.route_name ?? rawPurchase?.route_name ?? ""),
-      },
-      segments,
-      route: routeInfo
-        ? {
-            id: routeInfo.id as number | string | undefined,
-            name: routeInfo.name as string | undefined,
-            stops: routeStops.map((stop) => ({
-              id: stop.id as number | string,
-              order: stop.order as number | undefined,
-              name: String(stop.name ?? ""),
-              arrival_time: (stop.arrival_time ?? stop.arrivalTime ?? null) as string | null,
-              departure_time: (stop.departure_time ?? stop.departureTime ?? null) as string | null,
-              description: (stop.description ?? null) as string | null,
-            })),
-          }
-        : undefined,
-      pricing: pricingInfo
+        tour: {
+          id: tourId,
+          date: String(tourDate ?? rawPurchase?.created_at ?? ""),
+          route_id: routeId,
+          route_name: String(routeInfo?.name ?? tourInfo?.route_name ?? rawPurchase?.route_name ?? ""),
+        },
+        segments,
+        route: routeInfo
+          ? {
+              id: toOptionalStringOrNumber(routeInfo.id),
+              name: routeInfo.name as string | undefined,
+              stops: routeStops.map((stop, stopIndex) => ({
+                id: ensureStringOrNumber(stop.id, `route-stop-${stopIndex}`),
+                order: stop.order as number | undefined,
+                name: String(stop.name ?? ""),
+                arrival_time: (stop.arrival_time ?? stop.arrivalTime ?? null) as string | null,
+                departure_time: (stop.departure_time ?? stop.departureTime ?? null) as string | null,
+                description: (stop.description ?? null) as string | null,
+              })),
+            }
+          : undefined,
+        pricing: pricingInfo
         ? {
             price: (pricingInfo.price ?? pricingInfo.total ?? null) as number | null,
             currency: (pricingInfo.currency ?? pricingInfo.currency_code ?? null) as string | null,
           }
         : undefined,
-      segment_details: {
-        departure: segmentInfo?.departure
-          ? {
-              id: (segmentInfo.departure as Record<string, unknown>).id as number | string | undefined,
-              name: (segmentInfo.departure as Record<string, unknown>).name as string | undefined,
-              order: (segmentInfo.departure as Record<string, unknown>).order as number | undefined,
-              time: (segmentInfo.departure as Record<string, unknown>).time as string | undefined,
-            }
-          : null,
-        arrival: segmentInfo?.arrival
-          ? {
-              id: (segmentInfo.arrival as Record<string, unknown>).id as number | string | undefined,
-              name: (segmentInfo.arrival as Record<string, unknown>).name as string | undefined,
-              order: (segmentInfo.arrival as Record<string, unknown>).order as number | undefined,
-              time: (segmentInfo.arrival as Record<string, unknown>).time as string | undefined,
-            }
-          : null,
-        intermediate_stops: intermediateStops.map((stop) => ({
-          id: stop.id as number | string | undefined,
-          name: stop.name as string | undefined,
-          order: stop.order as number | undefined,
-          arrival_time: (stop.arrival_time ?? stop.arrivalTime ?? null) as string | null,
-          departure_time: (stop.departure_time ?? stop.departureTime ?? null) as string | null,
-        })),
+        segment_details: {
+          departure: departureDetails
+            ? {
+                id: toOptionalStringOrNumber(departureDetails.id),
+                name: departureDetails.name as string | undefined,
+                order: departureDetails.order as number | undefined,
+                time: departureDetails.time as string | undefined,
+              }
+            : null,
+          arrival: arrivalDetails
+            ? {
+                id: toOptionalStringOrNumber(arrivalDetails.id),
+                name: arrivalDetails.name as string | undefined,
+                order: arrivalDetails.order as number | undefined,
+                time: arrivalDetails.time as string | undefined,
+              }
+            : null,
+          intermediate_stops: intermediateStops.map((stop) => ({
+            id: toOptionalStringOrNumber(stop.id),
+            name: stop.name as string | undefined,
+            order: stop.order as number | undefined,
+            arrival_time: (stop.arrival_time ?? stop.arrivalTime ?? null) as string | null,
+            departure_time: (stop.departure_time ?? stop.departureTime ?? null) as string | null,
+          })),
         duration_minutes: (segmentInfo?.duration_minutes as number | undefined) ?? null,
         duration_human: (segmentInfo?.duration_human as string | undefined) ?? null,
       },
@@ -517,11 +562,17 @@ const normalizePurchasePayload = (payload: unknown): PurchaseView => {
     (raw.currency as string | undefined) ??
     null;
 
+  const purchaseIdCandidate =
+    rawPurchase?.["id"] ??
+    rawPurchase?.["purchase_id"] ??
+    raw?.["id"] ??
+    raw?.["purchase_id"];
+
   const purchaseSummary = {
-    id: rawPurchase?.id ?? rawPurchase?.purchase_id ?? raw.id ?? raw.purchase_id ?? "",
+    id: ensureStringOrNumber(purchaseIdCandidate, ""),
     status: (rawPurchase?.status ?? raw.status ?? "pending") as string,
     created_at: String(rawPurchase?.created_at ?? raw.created_at ?? ""),
-      amount_due: toNumberSafe(rawPurchase?.amount_due ?? raw.amount_due ?? totals.due, 0),
+    amount_due: toNumberSafe(rawPurchase?.amount_due ?? raw.amount_due ?? totals.due, 0),
     currency: inferredCurrency ?? "",
     deadline: (rawPurchase?.deadline ?? rawPurchase?.payment_deadline ?? null) as string | null,
   } satisfies PurchaseSummary;
@@ -584,8 +635,6 @@ const normalizePurchasePayload = (payload: unknown): PurchaseView => {
     }));
   }
 
-  const customerRaw = isObject(rawPurchase?.customer) ? (rawPurchase.customer as Record<string, unknown>) : null;
-
   return {
     purchase: purchaseSummary,
     passengers,
@@ -593,11 +642,11 @@ const normalizePurchasePayload = (payload: unknown): PurchaseView => {
     trips,
     totals,
     history,
-    customer: customerRaw
+    customer: customerInfo
       ? {
-          name: String(customerRaw.name ?? ""),
-          email: (customerRaw.email ?? null) as string | null,
-          phone: (customerRaw.phone ?? null) as string | null,
+          name: String(customerInfo.name ?? ""),
+          email: (customerInfo.email ?? null) as string | null,
+          phone: (customerInfo.phone ?? null) as string | null,
         }
       : null,
   };
@@ -1453,7 +1502,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
 
         const normalized = rawDates
           .map((value: unknown) => String(value ?? ""))
-          .filter((value) => Boolean(value));
+          .filter((value: string) => Boolean(value));
 
         if (cancelled) {
           return;
@@ -1578,8 +1627,8 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
               price: priceRaw,
               description: noteRaw,
             } as RescheduleTour;
-          })
-          .filter((tour): tour is RescheduleTour => Boolean(tour));
+            })
+            .filter((tour: RescheduleTour | null | undefined): tour is RescheduleTour => Boolean(tour));
 
         if (cancelled) {
           return;
@@ -2541,12 +2590,12 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
             <button
               type="button"
               onClick={confirmBaggage}
-              disabled={
-                isActionDisabled ||
-                actionLoading === "baggage" ||
-                !baggageChanged ||
-                (baggageQuote && !baggageQuote.can_apply)
-              }
+                disabled={
+                  isActionDisabled ||
+                  actionLoading === "baggage" ||
+                  !baggageChanged ||
+                  (baggageQuote !== null && !baggageQuote.can_apply)
+                }
               className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700 disabled:cursor-not-allowed disabled:bg-gray-300"
             >
               Сохранить изменения
