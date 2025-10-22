@@ -54,7 +54,7 @@ src/
 To create an optimised production build run `npm run build` followed by `npm start`.
 
 ## Environment configuration
-The client expects a Maksimov Tours API to be available. The base URL is resolved in `src/config.ts`: by default the app targets `http://172.18.0.4:8000`, but when opened from `localhost` it automatically switches to the local backend at `http://localhost:8000`. You can override the value entirely with the `NEXT_PUBLIC_API_URL` environment variable if needed.【F:src/config.ts†L1-L15】
+The client expects a Maksimov Tours API to be available. The base URL is resolved in `src/config.ts`: by default the app targets `http://38.79.154.248:8000`, but when opened from `localhost` it automatically switches to the local backend at `http://localhost:8000`. You can override the value entirely with the `NEXT_PUBLIC_API_URL` environment variable if needed.【F:src/config.ts†L1-L15】
 
 Endpoints consumed by the UI:
 | Purpose | Method & Path | Used from |
