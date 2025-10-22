@@ -1,6 +1,8 @@
 import { API } from "@/config";
 import { fetchWithInclude } from "@/utils/fetchWithInclude";
 
+const LOCAL_HOSTNAMES = new Set(["localhost", "127.0.0.1"]);
+
 type DownloadTicketPdfParams = {
   ticketId: string | number;
   purchaseId: string | number;
@@ -14,7 +16,9 @@ const buildTicketPdfUrl = ({
 }: DownloadTicketPdfParams): string => {
   const encodedTicketId = encodeURIComponent(String(ticketId));
   const url = new URL(`${API}/public/tickets/${encodedTicketId}/pdf`);
-  url.hostname = "127.0.0.1";
+  if (LOCAL_HOSTNAMES.has(url.hostname)) {
+    url.hostname = "127.0.0.1";
+  }
   url.searchParams.set("purchase_id", String(purchaseId));
   url.searchParams.set("email", email);
   return url.toString();
