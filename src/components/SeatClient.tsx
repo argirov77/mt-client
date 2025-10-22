@@ -222,11 +222,21 @@ export default function SeatClient({
           {departureText && <div>Отправление: {departureText}</div>}
           {arrivalText && <div>Прибытие: {arrivalText}</div>}
           <div className="flex gap-2 flex-wrap">
-            <Wifi size={24} title="Wi-Fi" />
-            <Toilet size={24} title="Туалет" />
-            <Snowflake size={24} title="Климат контроль" />
-            <Plug size={24} title="Розетка" />
-            <Armchair size={24} title="Сиденья откидываются" />
+            <span title="Wi-Fi">
+              <Wifi size={24} aria-label="Wi-Fi" />
+            </span>
+            <span title="Туалет">
+              <Toilet size={24} aria-label="Туалет" />
+            </span>
+            <span title="Климат контроль">
+              <Snowflake size={24} aria-label="Климат контроль" />
+            </span>
+            <span title="Розетка">
+              <Plug size={24} aria-label="Розетка" />
+            </span>
+            <span title="Сиденья откидываются">
+              <Armchair size={24} aria-label="Сиденья откидываются" />
+            </span>
           </div>
           <div>
             В стоимость включены 1 чемодан и 1 ручная кладь.
