@@ -14,6 +14,7 @@ import type {
   PurchaseHistoryEvent,
   PurchaseSummary,
   PurchasePassenger,
+  PurchaseSegment,
   PurchaseTicket,
   PurchaseTrip,
   PurchaseView,
