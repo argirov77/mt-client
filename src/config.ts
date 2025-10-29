@@ -1,4 +1,4 @@
-const REMOTE_API_URL = "http://38.79.154.248:8000";
+const REMOTE_API_URL = "https://api.38-79-154-248.nip.io";
 const LOCAL_API_URL = "http://localhost:8000";
 
 const resolveDefaultApiUrl = (): string => {
