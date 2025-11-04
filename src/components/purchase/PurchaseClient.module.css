@@ -1,0 +1,898 @@
+.page {
+  --purchase-bg: #f6f8fb;
+  --purchase-surface: #ffffff;
+  --purchase-text: #0b1b2b;
+  --purchase-muted: #6b7c93;
+  --purchase-line: #e5eaf1;
+  --purchase-shadow: 0 8px 22px rgba(11, 74, 134, 0.06);
+  --purchase-primary: #0b4a86;
+  --purchase-primary-hover: #073763;
+  --purchase-accent: #ff9800;
+  --purchase-danger: #c62828;
+  --purchase-radius-lg: 16px;
+  --purchase-radius-md: 12px;
+  --purchase-radius-sm: 10px;
+  --purchase-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: var(--purchase-bg);
+  color: var(--purchase-text);
+  font-family: var(--purchase-font);
+  min-height: 100vh;
+  padding: 28px 0 96px;
+}
+
+.container {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0 16px 16px;
+  display: grid;
+  gap: 16px;
+}
+
+.card {
+  background: var(--purchase-surface);
+  border: 1px solid var(--purchase-line);
+  border-radius: var(--purchase-radius-lg);
+  box-shadow: var(--purchase-shadow);
+}
+
+.orderCard {
+  padding: 20px;
+}
+
+.orderHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.orderTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 12px;
+  color: var(--purchase-primary);
+  background: #eaf2ff;
+  border: 1px solid #d7e6fb;
+}
+
+.bulkBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.divider {
+  height: 1px;
+  margin: 16px 0 20px;
+  background: var(--purchase-line);
+}
+
+.contacts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.contactWho b {
+  font-size: 16px;
+}
+
+.contactLine {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.contactPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid #d7e6fb;
+  background: #eef4ff;
+  color: #2d4e70;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.contactPill:hover {
+  background: #e6efff;
+}
+
+.contactPlaceholder {
+  color: var(--purchase-muted);
+  font-size: 14px;
+}
+
+.contactMeta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  color: var(--purchase-muted);
+  font-size: 14px;
+}
+
+.amountBadge {
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #fbfcff;
+  border: 1px solid #e6ecf4;
+  font-weight: 700;
+  color: var(--purchase-primary);
+}
+
+.summaryCard {
+  padding: 20px;
+}
+
+.summaryGrid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.summaryLabel {
+  display: block;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--purchase-muted);
+}
+
+.summaryValue {
+  margin: 6px 0 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.alertWrap {
+  margin-top: 4px;
+}
+
+.ticketSection {
+  padding: 12px 0 0;
+  display: grid;
+  gap: 12px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 4px;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.sectionMeta {
+  color: var(--purchase-muted);
+  font-size: 13px;
+}
+
+.tickets {
+  display: grid;
+  gap: 12px;
+}
+
+.ticketsTwoCols {
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+
+.ticket {
+  position: relative;
+  padding: 18px 18px 16px 56px;
+  background: var(--purchase-surface);
+  border: 1px solid var(--purchase-line);
+  border-radius: var(--purchase-radius-lg);
+  box-shadow: var(--purchase-shadow);
+}
+
+.ticket[data-selected="true"] {
+  border-color: rgba(11, 74, 134, 0.4);
+  box-shadow: 0 8px 20px rgba(11, 74, 134, 0.12);
+}
+
+.select {
+  position: absolute;
+  top: 18px;
+  left: 22px;
+  width: 18px;
+  height: 18px;
+}
+
+.ticketTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.route {
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.sub {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--purchase-muted);
+}
+
+.passenger {
+  margin-top: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #2d4e70;
+}
+
+.menu {
+  position: relative;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 16px;
+  border-radius: var(--purchase-radius-md);
+  border: 1px solid var(--purchase-line);
+  background: #fff;
+  color: var(--purchase-primary);
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+}
+
+.btn:hover {
+  box-shadow: 0 4px 12px rgba(7, 55, 99, 0.12);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.btnGhost {
+  background: #f7f9fe;
+  color: #3a5a7a;
+}
+
+.btnDanger {
+  border-color: #f3c8cc;
+  color: #8b1e2d;
+}
+
+.btnDanger:hover {
+  background: #fff0f1;
+}
+
+.btnIcon {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 999px;
+}
+
+.btnPay {
+  background: var(--purchase-primary);
+  border-color: var(--purchase-primary);
+  color: #fff;
+  font-weight: 800;
+}
+
+.btnPay:hover {
+  background: var(--purchase-primary-hover);
+  border-color: var(--purchase-primary-hover);
+}
+
+.btnOutline {
+  background: #f7f9fe;
+  border-color: #cbd7eb;
+  color: var(--purchase-primary);
+}
+
+.btnPrimary {
+  background: #12375c;
+  border-color: #12375c;
+  color: #fff;
+}
+
+.btnPill,
+.btnPillMuted {
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-size: 13px;
+}
+
+.btnPill {
+  background: #eef4ff;
+  border-color: #d7e6fb;
+  color: var(--purchase-primary);
+}
+
+.btnPill:hover {
+  background: #e1ecff;
+}
+
+.btnPillMuted {
+  background: #fbfcff;
+  border-color: #e6ecf4;
+  color: #5f7ba0;
+}
+
+.btnOutline:hover {
+  background: #eef4ff;
+}
+
+.btnPrimary:hover {
+  background: #0b4a86;
+  border-color: #0b4a86;
+}
+
+.menuList {
+  position: absolute;
+  right: 0;
+  top: 46px;
+  display: none;
+  min-width: 220px;
+  background: #fff;
+  border: 1px solid var(--purchase-line);
+  border-radius: 12px;
+  box-shadow: var(--purchase-shadow);
+  padding: 6px;
+  z-index: 10;
+}
+
+.menu[data-open="true"] .menuList {
+  display: block;
+}
+
+.menuList button {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.menuList button:hover {
+  background: #f7f9fe;
+}
+
+.menuDanger {
+  color: #8b1e2d;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--purchase-line);
+  background: #f7f9fe;
+  color: #3b5e85;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.chipDate {
+  background: #eaf2ff;
+  border-color: #d7e6fb;
+  color: var(--purchase-primary);
+}
+
+.chipSeat {
+  background: #fbfcff;
+  border-color: #edf2f8;
+  color: #5f7ba0;
+  font-weight: 600;
+}
+
+.mono {
+  font-variant-numeric: tabular-nums;
+}
+
+.priceEnd {
+  margin-left: auto;
+  color: var(--purchase-muted);
+}
+
+.ticketActions {
+  margin-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.actionToggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.actionCheckbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: #365273;
+}
+
+.actionControls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+}
+
+.baggageControl {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 160px;
+}
+
+.baggageLabel {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--purchase-muted);
+}
+
+.baggageStepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--purchase-line);
+  background: #f7f9fe;
+}
+
+.baggageStepper button {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid #ccd6e2;
+  background: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  color: #3a5878;
+  cursor: pointer;
+}
+
+.baggageStepper button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.baggageValue {
+  min-width: 24px;
+  text-align: center;
+  font-weight: 700;
+}
+
+.baggageChanged {
+  font-size: 12px;
+  color: var(--purchase-accent);
+  font-weight: 700;
+}
+
+.actionLink {
+  color: var(--purchase-primary);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.actionLink:hover {
+  text-decoration: underline;
+}
+
+.panel {
+  padding: 24px;
+  display: grid;
+  gap: 18px;
+}
+
+.panelHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.panelTitle {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.panelSubtitle {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--purchase-muted);
+}
+
+.panelOptions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.radioLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #3a5878;
+}
+
+.linkButton {
+  background: none;
+  border: none;
+  color: var(--purchase-muted);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.linkButton:hover {
+  color: var(--purchase-primary);
+}
+
+.panelChipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.panelBody {
+  display: grid;
+  gap: 18px;
+}
+
+.panelGrid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  padding: 16px;
+  border-radius: 14px;
+  background: #f8faff;
+  border: 1px solid #e3e9f4;
+}
+
+.panelLabel {
+  margin: 0;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--purchase-muted);
+}
+
+.panelValue {
+  margin: 6px 0 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--purchase-text);
+}
+
+.panelPassengers {
+  border: 1px solid #e3e9f4;
+  border-radius: 14px;
+  padding: 16px;
+  background: #fbfcff;
+}
+
+.passengerList {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+  color: #445b76;
+}
+
+.panelSection {
+  display: grid;
+  gap: 10px;
+}
+
+.panelNote {
+  font-size: 14px;
+  color: var(--purchase-muted);
+}
+
+.calendar {
+  width: 100%;
+  max-width: 100%;
+}
+
+.tourList {
+  display: grid;
+  gap: 12px;
+}
+
+.tourOption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid #dde5f0;
+  background: #f7f9fe;
+  cursor: pointer;
+}
+
+.tourOptionActive {
+  border-color: #91b7ff;
+  background: #e8f0ff;
+}
+
+.tourOption input {
+  width: 18px;
+  height: 18px;
+}
+
+.tourTime {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #12375c;
+}
+
+.panelButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.panelError {
+  color: #c62828;
+  font-size: 14px;
+}
+
+.panelHighlight {
+  border-radius: 14px;
+  padding: 14px 16px;
+  font-size: 14px;
+}
+
+.panelHighlightSuccess {
+  border: 1px solid #c9f0d6;
+  background: #f0fbf4;
+  color: #1b7a46;
+}
+
+.panelHighlightWarning {
+  border: 1px solid #ffe6b0;
+  background: #fff9e6;
+  color: #a16500;
+}
+
+.panelHighlightTitle {
+  margin: 0 0 6px;
+  font-weight: 700;
+}
+
+.panelFooter {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.breakdownList {
+  margin: 8px 0 0;
+  padding-left: 16px;
+  font-size: 13px;
+  color: #445b76;
+}
+
+.historyCard {
+  padding: 22px 24px;
+}
+
+.historyHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.historyToggle {
+  border: none;
+  background: none;
+  color: var(--purchase-primary);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.historyToggle:hover {
+  text-decoration: underline;
+}
+
+.historyEmpty {
+  margin: 0;
+  padding: 24px;
+  border: 1px dashed var(--purchase-line);
+  border-radius: var(--purchase-radius-md);
+  color: var(--purchase-muted);
+  text-align: center;
+}
+
+.historyList {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.historyItem {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: var(--purchase-radius-md);
+  border: 1px solid var(--purchase-line);
+  background: #fbfcff;
+}
+
+.historyTitle {
+  margin: 0;
+  font-weight: 700;
+}
+
+.historyComment {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--purchase-muted);
+}
+
+.historyMeta {
+  text-align: right;
+  font-size: 13px;
+  color: var(--purchase-muted);
+}
+
+.historyAmount {
+  margin: 0;
+  font-weight: 700;
+  color: var(--purchase-text);
+}
+
+.historyMethod {
+  margin: 4px 0 0;
+}
+
+.historyHint {
+  color: var(--purchase-muted);
+  font-size: 14px;
+}
+
+.paybar {
+  position: sticky;
+  bottom: 16px;
+  width: min(940px, calc(100% - 32px));
+  margin: 16px auto 0;
+  padding: 0 16px;
+}
+
+.paybarInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: #fff;
+  border: 1px solid var(--purchase-line);
+  border-radius: 14px;
+  box-shadow: var(--purchase-shadow);
+  padding: 14px 16px;
+}
+
+.paySummary {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.sumInline {
+  font-weight: 900;
+}
+
+.payButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.payDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--purchase-accent);
+  display: inline-block;
+}
+
+.muted {
+  color: var(--purchase-muted);
+}
+
+.priceEnd span {
+  font-weight: 700;
+}
+
+.calendar :global(.calendar-wrapper) {
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .btn {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .paybarInner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .contactMeta {
+    align-items: flex-start;
+  }
+}

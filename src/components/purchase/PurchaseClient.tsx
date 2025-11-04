@@ -21,6 +21,7 @@ import type {
   PurchaseTotals,
 } from "@/types/purchase";
 import { fetchWithInclude } from "@/utils/fetchWithInclude";
+import styles from "./PurchaseClient.module.css";
 
 const STATUS_LABELS: Record<string, string> = {
   pending: "Ожидает оплаты",
@@ -750,6 +751,8 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
   const [banner, setBanner] = useState<ActionBanner | null>(null);
   const [isUnauthorized, setIsUnauthorized] = useState(false);
 
+  const [selectedTicketIds, setSelectedTicketIds] = useState<string[]>([]);
+  const [openMenuTicketId, setOpenMenuTicketId] = useState<string | null>(null);
   const [rescheduleSelected, setRescheduleSelected] = useState<string[]>([]);
   const [rescheduleDates, setRescheduleDates] = useState<string[]>([]);
   const [rescheduleDate, setRescheduleDate] = useState<string>("");
@@ -807,6 +810,8 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
     if (!data) return [] as string[];
     return data.tickets.map((ticket) => String(ticket.id));
   }, [data]);
+
+  const hasTickets = allTicketIds.length > 0;
 
   const outboundTickets = useMemo(() => {
     const outbound = tripsDetailed
@@ -953,12 +958,67 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
     [data, resolveContactEmail]
   );
 
+  const handleBulkDownload = useCallback(() => {
+    if (!data || selectedTicketIds.length === 0) {
+      return;
+    }
+
+    const contactEmail = resolveContactEmail();
+    if (!contactEmail) {
+      setBanner({ type: "error", message: "Не указан email для скачивания билетов" });
+      return;
+    }
+
+    void (async () => {
+      for (const id of selectedTicketIds) {
+        const ticket = data.tickets.find((item) => String(item.id) === id);
+        const originalId = ticket?.id ?? id;
+        try {
+          await downloadTicketPdf({
+            ticketId: originalId,
+            purchaseId: data.purchase.id,
+            email: contactEmail,
+          });
+        } catch (bulkError) {
+          console.error(bulkError);
+          setBanner({ type: "error", message: "Не удалось скачать PDF. Попробуйте позже" });
+          break;
+        }
+      }
+    })();
+  }, [data, resolveContactEmail, selectedTicketIds]);
+
   const validTicketIds = useMemo(() => {
     if (!data) {
       return new Set<string>();
     }
     return new Set(data.tickets.map((ticket) => String(ticket.id)));
   }, [data]);
+
+  useEffect(() => {
+    setSelectedTicketIds((prev) => prev.filter((id) => validTicketIds.has(id)));
+  }, [validTicketIds]);
+
+  useEffect(() => {
+    if (typeof document === "undefined") {
+      return;
+    }
+
+    const closeMenu = () => setOpenMenuTicketId(null);
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpenMenuTicketId(null);
+      }
+    };
+
+    document.addEventListener("click", closeMenu);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("click", closeMenu);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
 
   const rescheduleTickets = useMemo(() => {
     return rescheduleSelected.filter((id) => validTicketIds.has(id));
@@ -970,6 +1030,8 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
 
   const rescheduleSelectionCount = rescheduleScope === "all" ? allTicketIds.length : rescheduleTickets.length;
   const cancelSelectionCount = cancelTickets.length;
+  const selectedTicketSet = useMemo(() => new Set(selectedTicketIds), [selectedTicketIds]);
+  const bulkSelectionCount = selectedTicketIds.length;
 
   const baggageChanged = useMemo(() => {
     if (!data) return false;
@@ -996,6 +1058,49 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
       }
       return [...prev, ticketId];
     });
+  };
+
+  const toggleTicketSelection = (ticketId: string) => {
+    setSelectedTicketIds((prev) => {
+      if (prev.includes(ticketId)) {
+        return prev.filter((id) => id !== ticketId);
+      }
+
+      return [...prev, ticketId];
+    });
+  };
+
+
+  const openReschedulePanel = (ticketIds: string[]) => {
+    if (isActionDisabled || !hasTickets) {
+      return;
+    }
+
+    setRescheduleScope("selected");
+    setRescheduleSelected(ticketIds);
+    setRescheduleError(null);
+    setRescheduleQuote(null);
+    setActivePanel("reschedule");
+  };
+
+  const handleBulkReschedule = () => {
+    openReschedulePanel(selectedTicketIds);
+  };
+
+  const handleTicketReschedule = (ticketId: string) => {
+    openReschedulePanel([ticketId]);
+    setOpenMenuTicketId(null);
+  };
+
+  const handleOpenBaggagePanel = () => {
+    if (isActionDisabled) {
+      return;
+    }
+
+    setBaggageError(null);
+    setBaggageQuote(null);
+    setActivePanel("baggage");
+    setOpenMenuTicketId(null);
   };
 
   const selectAllReschedule = () => {
@@ -1257,6 +1362,30 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
     },
     [purchaseId, toOriginalTicketIds]
   );
+
+  const openCancelPanel = (ticketIds: string[]) => {
+    if (isActionDisabled || !hasTickets) {
+      return;
+    }
+
+    setCancelSelected(ticketIds);
+    setCancelError(null);
+    setActivePanel("cancel");
+    if (ticketIds.length > 0) {
+      void submitCancelPreview(ticketIds);
+    } else {
+      setCancelPreview(null);
+    }
+  };
+
+  const handleBulkCancel = () => {
+    openCancelPanel(selectedTicketIds);
+  };
+
+  const handleTicketCancel = (ticketId: string) => {
+    openCancelPanel([ticketId]);
+    setOpenMenuTicketId(null);
+  };
 
   const confirmCancel = useCallback(async () => {
     if (isActionDisabled || !data) {
@@ -1938,13 +2067,12 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
   const totals = data.totals ? { ...DEFAULT_TOTALS, ...data.totals } : { ...DEFAULT_TOTALS };
   const isPaid = data.purchase.status === "paid";
   const primaryActionLabel = isPaid ? "Оформить возврат" : "Оплатить";
-  const primaryButtonClasses = isPaid ? "bg-red-600 hover:bg-red-500" : "bg-emerald-600 hover:bg-emerald-500";
-  const hasTickets = allTicketIds.length > 0;
-  const primaryActionDisabled = isActionDisabled || (isPaid && cancelSelectionCount === 0);
-  const cancelButtonDisabled = isActionDisabled || cancelSelectionCount === 0;
-  const rescheduleButtonDisabled = isActionDisabled || !hasTickets;
-  const baggageButtonDisabled = isActionDisabled;
   const showReturnTickets = returnTickets.length > 0;
+  const shouldShowDownloadAll = data.tickets.length > 1;
+  const shouldShowBulkActions = bulkSelectionCount > 0;
+  const primaryActionDisabled = isActionDisabled;
+  const dueAmountText = formatCurrency(totals.due, data.purchase.currency);
+  const totalAmountText = formatCurrency(data.purchase.amount_due, data.purchase.currency);
 
   const handlePrimaryAction = () => {
     if (isActionDisabled) {
@@ -1952,44 +2080,11 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
     }
 
     if (isPaid) {
-      setActivePanel("cancel");
-      if (cancelSelectionCount > 0) {
-        void submitCancelPreview(cancelTickets);
-      }
+      openCancelPanel(cancelTickets.length > 0 ? cancelTickets : selectedTicketIds);
       return;
     }
 
     confirmPayment();
-  };
-
-  const handleCancelAction = () => {
-    if (cancelButtonDisabled) {
-      return;
-    }
-
-    setCancelError(null);
-    setActivePanel("cancel");
-    void submitCancelPreview(cancelTickets);
-  };
-
-  const handleRescheduleAction = () => {
-    if (rescheduleButtonDisabled) {
-      return;
-    }
-
-    setRescheduleError(null);
-    setRescheduleQuote(null);
-    setActivePanel("reschedule");
-  };
-
-  const handleBaggageAction = () => {
-    if (baggageButtonDisabled) {
-      return;
-    }
-
-    setBaggageError(null);
-    setBaggageQuote(null);
-    setActivePanel("baggage");
   };
 
   const renderTicketSection = (title: string, tickets: PurchaseTicket[]) => {
@@ -1997,13 +2092,15 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
       return null;
     }
 
+    const listClassName = [styles.tickets, tickets.length > 1 ? styles.ticketsTwoCols : ""].filter(Boolean).join(" ");
+
     return (
-      <section key={title} className="space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
-          <span className="text-sm text-gray-500">Всего билетов: {tickets.length}</span>
+      <section key={title} className={styles.ticketSection} aria-label={title}>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>{title}</h2>
+          <span className={styles.sectionMeta}>Всего билетов: {tickets.length}</span>
         </div>
-        <ul className="space-y-4">
+        <div className={listClassName}>
           {tickets.map((ticket) => {
             const ticketId = String(ticket.id);
             const passenger = passengerMap.get(String(ticket.passenger_id));
@@ -2019,23 +2116,32 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
             const arrivalName =
               ticket.segment_details?.arrival?.name ?? arrivalSegment?.stop_name ?? "—";
             const departureDateTime = ensureDateTimeString(
-              ticket.segment_details?.departure?.time ?? null,
+              ticket.segment_details?.departure?.time,
               ticket.tour.date,
-              departureSegment?.time ?? null
+              null
             );
             const arrivalDateTime = ensureDateTimeString(
-              ticket.segment_details?.arrival?.time ?? null,
+              ticket.segment_details?.arrival?.time,
               ticket.tour.date,
-              arrivalSegment?.time ?? null
+              null
+            );
+            const departureSegmentTime = ensureDateTimeString(
+              departureSegment?.time ?? null,
+              ticket.tour.date,
+              null
+            );
+            const arrivalSegmentTime = ensureDateTimeString(
+              arrivalSegment?.time ?? null,
+              ticket.tour.date,
+              null
             );
             const departureTimeSource =
               departureDateTime || departureSegment?.time || ticket.segment_details?.departure?.time || null;
             const arrivalTimeSource =
               arrivalDateTime || arrivalSegment?.time || ticket.segment_details?.arrival?.time || null;
             const departureDate = formatDate(departureDateTime);
-            const arrivalDate = formatDate(arrivalDateTime);
-            const departureTime = formatTime(departureTimeSource);
-            const arrivalTime = formatTime(arrivalTimeSource);
+            const departureTime = formatTime(departureTimeSource ?? departureSegmentTime);
+            const arrivalTime = formatTime(arrivalTimeSource ?? arrivalSegmentTime);
             const extraBaggage = toNumberSafe(ticket.extra_baggage, 0);
             const baggageValue = baggageDraft[ticketId] ?? extraBaggage;
             const isRescheduleSelected = rescheduleTickets.includes(ticketId);
@@ -2044,642 +2150,653 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
               ticket.pricing?.price ?? null,
               ticket.pricing?.currency ?? data.purchase.currency
             );
-            const routeName = ticket.tour.route_name || "Маршрут не указан";
+            const isSelected = selectedTicketSet.has(ticketId);
+            const isMenuOpen = openMenuTicketId === ticketId;
 
             return (
-              <li
-                key={ticket.id}
-                className="space-y-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div className="space-y-2">
-                    <p className="text-base font-semibold text-gray-900">{passengerName}</p>
-                    <p className="text-sm text-gray-500">
-                      Билет #{ticket.id} • {ticketStatusLabel}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {formatDate(ticket.tour.date)} • {routeName}
-                    </p>
+              <article key={ticket.id} className={styles.ticket} data-selected={isSelected ? "true" : undefined}>
+                <input
+                  className={styles.select}
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={() => toggleTicketSelection(ticketId)}
+                  aria-label={`Выбрать билет #${ticket.id}`}
+                />
+                <div className={styles.ticketTop}>
+                  <div>
+                    <div className={styles.route}>
+                      {departureName} <span aria-hidden="true">→</span> {arrivalName}
+                    </div>
+                    <div className={styles.sub}>
+                      Билет #{ticket.id}
+                      {ticketStatusLabel ? ` • ${ticketStatusLabel}` : ""}
+                    </div>
+                    <div className={styles.passenger}>Пассажир: {passengerName}</div>
                   </div>
-                  <div className="flex flex-col items-end gap-1 text-sm text-gray-600">
-                    <span className="font-semibold text-gray-900">{priceText}</span>
-                    <span>Место: {ticket.seat_num ?? "—"}</span>
-                    <span>Доп. багаж: {baggageValue}</span>
-                    {baggageValue !== extraBaggage ? (
-                      <span className="text-xs font-semibold text-blue-600">изменено</span>
-                    ) : null}
+                  <div
+                    className={styles.menu}
+                    data-open={isMenuOpen ? "true" : undefined}
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <button
+                      type="button"
+                      className={`${styles.btn} ${styles.btnIcon}`}
+                      aria-haspopup="true"
+                      aria-expanded={isMenuOpen}
+                      title="Действия"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setOpenMenuTicketId(isMenuOpen ? null : ticketId);
+                      }}
+                    >
+                      ⋯
+                    </button>
+                    <div className={styles.menuList} role="menu">
+                      <button type="button" role="menuitem" onClick={() => handleTicketReschedule(ticketId)}>
+                        Перенести
+                      </button>
+                      <button type="button" role="menuitem" onClick={handleOpenBaggagePanel}>
+                        Доп. багаж
+                      </button>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setOpenMenuTicketId(null);
+                          void handleDownloadTicket(ticket.id);
+                        }}
+                      >
+                        Скачать PDF
+                      </button>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => handleTicketCancel(ticketId)}
+                        className={styles.menuDanger}
+                      >
+                        Отменить
+                      </button>
+                    </div>
                   </div>
                 </div>
-                <div className="grid gap-4 border-t border-gray-100 pt-4 text-sm text-gray-700 md:grid-cols-2">
-                  <div className="space-y-1">
-                    <p className="text-xs uppercase text-gray-500">Отправление</p>
-                    <p className="text-base font-semibold text-gray-900">{departureName}</p>
-                    <p>
-                      {(departureDate || "—")} • {departureTime}
-                    </p>
-                  </div>
-                  <div className="space-y-1 md:text-right">
-                    <p className="text-xs uppercase text-gray-500">Прибытие</p>
-                    <p className="text-base font-semibold text-gray-900">{arrivalName}</p>
-                    <p>
-                      {(arrivalDate || "—")} • {arrivalTime}
-                    </p>
-                  </div>
+                <div className={styles.chips}>
+                  <span className={`${styles.chip} ${styles.chipDate} ${styles.mono}`}>{departureDate}</span>
+                  <span className={`${styles.chip} ${styles.mono}`}>
+                    {departureTime} → {arrivalTime}
+                  </span>
+                  <span className={`${styles.chip} ${styles.chipSeat}`}>
+                    Место {ticket.seat_num ?? "—"}
+                  </span>
+                  <span className={styles.priceEnd}>
+                    Цена: <span className={styles.mono}>{priceText}</span>
+                  </span>
                 </div>
-                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-4 text-sm">
-                  <div className="flex flex-wrap items-center gap-3 text-gray-700">
-                    <label className="inline-flex items-center gap-2">
+                <div className={styles.ticketActions}>
+                  <div className={styles.actionToggles}>
+                    <label className={styles.actionCheckbox}>
                       <input
                         type="checkbox"
                         checked={isRescheduleSelected}
                         onChange={() => toggleRescheduleTicket(ticketId)}
                         disabled={isActionDisabled || rescheduleScope === "all"}
-                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:cursor-not-allowed"
                       />
-                      Перенести
+                      <span>Перенести</span>
                     </label>
-                    <label className="inline-flex items-center gap-2">
+                    <label className={styles.actionCheckbox}>
                       <input
                         type="checkbox"
                         checked={isCancelSelected}
                         onChange={() => toggleCancelTicket(ticketId)}
                         disabled={isActionDisabled}
-                        className="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500 disabled:cursor-not-allowed"
                       />
-                      {cancelActionLabel}
+                      <span>{cancelActionLabel}</span>
                     </label>
                   </div>
-                  <div className="flex flex-wrap items-center gap-3 text-gray-600">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-gray-900">Доп. багаж</span>
-                      <div className="flex items-center gap-2 rounded-full border border-gray-200 px-3 py-1">
+                  <div className={styles.actionControls}>
+                    <div className={styles.baggageControl}>
+                      <span className={styles.baggageLabel}>Доп. багаж</span>
+                      <div className={styles.baggageStepper}>
                         <button
                           type="button"
                           onClick={() => decrementBaggage(ticketId)}
                           disabled={isActionDisabled || baggageValue <= 0}
-                          className="flex h-7 w-7 items-center justify-center rounded-full border border-gray-300 text-base text-gray-700 transition hover:border-gray-400 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-300"
+                          aria-label="Уменьшить багаж"
                         >
                           −
                         </button>
-                        <span className="min-w-[2rem] text-center text-sm font-semibold text-gray-900">
-                          {baggageValue}
-                        </span>
+                        <span className={styles.baggageValue}>{baggageValue}</span>
                         <button
                           type="button"
                           onClick={() => incrementBaggage(ticketId)}
                           disabled={isActionDisabled}
-                          className="flex h-7 w-7 items-center justify-center rounded-full border border-gray-300 text-base text-gray-700 transition hover:border-gray-400 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-300"
+                          aria-label="Увеличить багаж"
                         >
                           +
                         </button>
                       </div>
+                      {baggageValue !== extraBaggage ? (
+                        <span className={styles.baggageChanged}>изменено</span>
+                      ) : null}
                     </div>
                     <button
                       type="button"
-                      onClick={() => handleDownloadTicket(ticket.id)}
-                      className="text-sm font-semibold text-blue-600 transition hover:text-blue-500"
+                      onClick={() => void handleDownloadTicket(ticket.id)}
+                      className={styles.actionLink}
                     >
                       Скачать PDF
                     </button>
                   </div>
                 </div>
-              </li>
+              </article>
             );
           })}
-        </ul>
+        </div>
       </section>
     );
   };
 
+  const cancelButtonDisabled = isActionDisabled || cancelSelectionCount === 0;
+
+
   return (
-    <div className="mx-auto max-w-5xl space-y-8 px-4 py-10">
-      <section className="space-y-6 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900">Покупка #{data.purchase.id}</h1>
-            <p className="text-sm text-gray-500">Создана {formatDate(data.purchase.created_at)}</p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center rounded-full bg-blue-50 px-4 py-1 text-sm font-medium text-blue-700">
-              {statusLabel}
-            </span>
-            <span className="inline-flex items-center rounded-full bg-emerald-50 px-4 py-1 text-sm font-semibold text-emerald-700">
-              {formatCurrency(data.purchase.amount_due, data.purchase.currency)}
-            </span>
-          </div>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-            <h3 className="text-sm font-semibold text-gray-900">Покупатель</h3>
-            {customer ? (
-              <>
-                <p className="mt-2 text-base font-semibold text-gray-900">{customer.name}</p>
-                {customer.phone ? (
-                  <p className="text-sm text-gray-600">{customer.phone}</p>
-                ) : null}
-                {customer.email ? (
-                  <p className="text-sm text-gray-600">{customer.email}</p>
-                ) : null}
-              </>
-            ) : (
-              <p className="mt-2 text-sm text-gray-500">Информация о покупателе недоступна.</p>
-            )}
-          </div>
-          <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-            <h3 className="text-sm font-semibold text-gray-900">Оплата</h3>
-            <dl className="mt-2 space-y-1 text-sm text-gray-600">
-              <div className="flex items-center justify-between">
-                <dt>К оплате</dt>
-                <dd className="font-semibold text-gray-900">{formatCurrency(totals.due, data.purchase.currency)}</dd>
+    <div className={styles.page}>
+      <div className={styles.container}>
+        <section className={`${styles.card} ${styles.orderCard}`} aria-labelledby="order-title">
+          <div className={styles.orderHead}>
+            <div className={styles.orderTitleRow}>
+              <h1 id="order-title" className={styles.h1}>
+                Покупка #{data.purchase.id}
+              </h1>
+              <span className={styles.badge}>{statusLabel}</span>
+            </div>
+            {shouldShowBulkActions ? (
+              <div className={styles.bulkBar} role="toolbar" aria-label="Групповые действия">
+                <button
+                  type="button"
+                  className={`${styles.btn} ${styles.btnGhost}`}
+                  onClick={handleBulkReschedule}
+                  disabled={isActionDisabled || bulkSelectionCount === 0}
+                >
+                  Перенести
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.btn} ${styles.btnGhost}`}
+                  onClick={handleBulkDownload}
+                  disabled={bulkSelectionCount === 0}
+                >
+                  Скачать PDF
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.btn} ${styles.btnDanger}`}
+                  onClick={handleBulkCancel}
+                  disabled={isActionDisabled || bulkSelectionCount === 0}
+                >
+                  Отменить
+                </button>
               </div>
-              <div className="flex items-center justify-between">
-                <dt>Оплачено</dt>
-                <dd>{formatCurrency(totals.paid, data.purchase.currency)}</dd>
-              </div>
-              <div className="flex items-center justify-between">
-                <dt>Билеты</dt>
-                <dd>{totals.pax_count}</dd>
-              </div>
-              <div className="flex items-center justify-between">
-                <dt>Доп. багаж</dt>
-                <dd>{totals.baggage_count}</dd>
-              </div>
-            </dl>
-            {purchaseDeadline ? (
-              <p className="mt-3 text-xs text-gray-500">Оплатить до {purchaseDeadline}</p>
             ) : null}
           </div>
-        </div>
-        <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-          <h3 className="text-sm font-semibold text-gray-900">Маршрут и документы</h3>
-          {routeNames.length > 0 ? (
-            <p className="mt-2 text-sm text-gray-700">{routeNames.join(", ")}</p>
-          ) : (
-            <p className="mt-2 text-sm text-gray-500">Маршрут не указан</p>
-          )}
-          {tripDates.length > 0 ? (
-            <p className="mt-2 text-xs text-gray-500">
-              Даты поездки: {tripDates.map((date) => formatDate(date)).join(", ")}
-            </p>
-          ) : null}
-          <button
-            type="button"
-            onClick={handleDownloadAll}
-            className="mt-4 inline-flex w-full items-center justify-center rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700"
-          >
-            Скачать все билеты (PDF)
-          </button>
-        </div>
-      </section>
-
-      {banner ? <UiAlert type={banner.type}>{banner.message}</UiAlert> : null}
-
-      {renderTicketSection("Билеты туда", outboundTickets)}
-
-      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200 space-y-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            onClick={handlePrimaryAction}
-            disabled={primaryActionDisabled}
-            className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 ${primaryButtonClasses}`}
-          >
-            {isPaid ? primaryActionLabel : `${primaryActionLabel} ${formatCurrency(totals.due, data.purchase.currency)}`}
-          </button>
-          <button
-            type="button"
-            onClick={handleCancelAction}
-            disabled={cancelButtonDisabled}
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:border-red-300 hover:text-red-600 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-400"
-          >
-            Отменить
-          </button>
-          <button
-            type="button"
-            onClick={handleRescheduleAction}
-            disabled={rescheduleButtonDisabled}
-            className="inline-flex items-center gap-2 rounded-lg border border-blue-200 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:border-blue-400 hover:text-blue-600 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-400"
-          >
-            Перенести поездку
-          </button>
-          <button
-            type="button"
-            onClick={handleBaggageAction}
-            disabled={baggageButtonDisabled}
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:border-gray-400 hover:text-gray-900 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-400"
-          >
-            Доп багаж
-          </button>
-        </div>
-        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
-          <span>К оплате: {formatCurrency(totals.due, data.purchase.currency)}</span>
-          <span>Для переноса выбрано: {rescheduleSelectionCount}</span>
-          <span>
-            {cancelActionLabel}: {cancelSelectionCount}
-          </span>
-          <span>Изменено багажа: {baggageChangedCount}</span>
-        </div>
-      </section>
-
-      {activePanel === "reschedule" ? (
-        <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200 space-y-6">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">Перенос поездки</h3>
-              <p className="text-sm text-gray-500">Выбрано билетов: {rescheduleSelectionCount}</p>
+          <div className={styles.divider} />
+          <div className={styles.contacts} aria-label="Контакты">
+            <div className={styles.contactWho}>
+              <b>{customer?.name ?? "Покупатель не указан"}</b>
+              <div className={styles.contactLine}>
+                {customer?.phone ? (
+                  <a className={styles.contactPill} href={`tel:${customer.phone}`}>
+                    📞 {customer.phone}
+                  </a>
+                ) : null}
+                {customer?.email ? (
+                  <a className={styles.contactPill} href={`mailto:${customer.email}`}>
+                    ✉ {customer.email}
+                  </a>
+                ) : null}
+                {!customer?.phone && !customer?.email ? (
+                  <span className={styles.contactPlaceholder}>Контакты не указаны</span>
+                ) : null}
+              </div>
             </div>
-            <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
-              <label className="inline-flex items-center gap-2">
-                <input
-                  type="radio"
-                  name="reschedule-scope"
-                  value="all"
-                  checked={rescheduleScope === "all"}
-                  onChange={() => setRescheduleScope("all")}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                />
-                Для всех пассажиров
-              </label>
-              <label className="inline-flex items-center gap-2">
-                <input
-                  type="radio"
-                  name="reschedule-scope"
-                  value="selected"
-                  checked={rescheduleScope === "selected"}
-                  onChange={() => setRescheduleScope("selected")}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                />
-                Только выбранные
-              </label>
-              <button
-                type="button"
-                onClick={() => {
-                  setActivePanel(null);
-                  setRescheduleError(null);
-                  setRescheduleQuote(null);
-                }}
-                className="ml-auto text-sm font-semibold text-gray-400 transition hover:text-gray-600"
-              >
-                Скрыть
-              </button>
+            <div className={styles.contactMeta}>
+              <span className={styles.muted}>Создана {formatDate(data.purchase.created_at)}</span>
+              {purchaseDeadline ? (
+                <span className={styles.muted}>Оплатить до {purchaseDeadline}</span>
+              ) : null}
+              <span className={styles.amountBadge}>{totalAmountText}</span>
             </div>
           </div>
-          {rescheduleScope === "selected" ? (
-            <div className="flex flex-wrap items-center gap-2 text-xs">
-              <button
-                type="button"
-                onClick={selectAllReschedule}
-                className="inline-flex items-center rounded-full border border-gray-300 px-3 py-1 font-semibold text-gray-600 transition hover:border-blue-300 hover:text-blue-600"
-              >
-                Выбрать все
-              </button>
-              <button
-                type="button"
-                onClick={clearRescheduleSelection}
-                className="inline-flex items-center rounded-full border border-gray-200 px-3 py-1 font-semibold text-gray-500 transition hover:border-gray-300 hover:text-gray-700"
-              >
-                Сбросить
-              </button>
+        </section>
+
+        <section className={`${styles.card} ${styles.summaryCard}`}>
+          <div className={styles.summaryGrid}>
+            <div>
+              <span className={styles.summaryLabel}>Маршруты</span>
+              <p className={styles.summaryValue}>
+                {routeNames.length > 0 ? routeNames.join(", ") : "Маршрут не указан"}
+              </p>
             </div>
-          ) : null}
-          {rescheduleConsistencyError ? (
-            <UiAlert type="error">{rescheduleConsistencyError}</UiAlert>
-          ) : null}
-          {rescheduleContext ? (
-            <div className="space-y-6">
-              <div className="grid gap-4 rounded-xl border border-gray-100 bg-gray-50 p-4 md:grid-cols-2">
-                <div>
-                  <p className="text-xs uppercase text-gray-500">Маршрут</p>
-                  <p className="text-sm font-semibold text-gray-900">
-                    {rescheduleContext.departureName} → {rescheduleContext.arrivalName}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs uppercase text-gray-500">Количество мест</p>
-                  <p className="text-sm font-semibold text-gray-900">
-                    {rescheduleSeatRequirement}
-                    {rescheduleFreeSeats !== null ? ` • свободно: ${rescheduleFreeSeats}` : ""}
-                  </p>
-                </div>
+            <div>
+              <span className={styles.summaryLabel}>Даты поездки</span>
+              <p className={styles.summaryValue}>
+                {tripDates.length > 0 ? tripDates.map((date) => formatDate(date)).join(", ") : "—"}
+              </p>
+            </div>
+            <div>
+              <span className={styles.summaryLabel}>Билеты</span>
+              <p className={styles.summaryValue}>{totals.pax_count}</p>
+            </div>
+            <div>
+              <span className={styles.summaryLabel}>Доп. багаж</span>
+              <p className={styles.summaryValue}>{totals.baggage_count}</p>
+            </div>
+          </div>
+        </section>
+
+        {banner ? (
+          <div className={styles.alertWrap}>
+            <UiAlert type={banner.type}>{banner.message}</UiAlert>
+          </div>
+        ) : null}
+
+        {renderTicketSection(showReturnTickets ? "Билеты туда" : "Билеты", outboundTickets)}
+
+        {showReturnTickets ? renderTicketSection("Билеты обратно", returnTickets) : null}
+
+        {activePanel === "reschedule" ? (
+          <section className={`${styles.card} ${styles.panel}`}>
+            <div className={styles.panelHeader}>
+              <div>
+                <h3 className={styles.panelTitle}>Перенос поездки</h3>
+                <p className={styles.panelSubtitle}>Выбрано билетов: {rescheduleSelectionCount}</p>
               </div>
-              {reschedulePassengers.length > 0 ? (
-                <div className="rounded-xl border border-gray-100 p-4">
-                  <p className="text-xs uppercase text-gray-500">Пассажиры</p>
-                  <ul className="mt-2 grid gap-1 text-sm text-gray-700 md:grid-cols-2">
-                    {reschedulePassengers.map(({ ticket, passenger }, index) => (
-                      <li key={`${ticket?.id ?? "ticket"}-${index}`}>
-                        {passenger?.name ?? `Пассажир #${ticket?.passenger_id ?? "?"}`} • билет #{ticket?.id ?? "—"} • текущее место: {ticket?.seat_num ?? "—"}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ) : null}
-              <div className="space-y-2">
-                <p className="text-sm font-semibold text-gray-700">Доступные даты</p>
-                {rescheduleFetchingDates ? (
-                  <p className="text-sm text-gray-500">Загружаем даты…</p>
-                ) : rescheduleDates.length > 0 ? (
-                  <Calendar
-                    activeDates={rescheduleDates}
-                    selectedDate={rescheduleDate || undefined}
-                    allowAllFutureDates
-                    onSelect={handleRescheduleDateSelect}
-                    className="max-w-full"
+              <div className={styles.panelOptions}>
+                <label className={styles.radioLabel}>
+                  <input
+                    type="radio"
+                    name="reschedule-scope"
+                    value="all"
+                    checked={rescheduleScope === "all"}
+                    onChange={() => setRescheduleScope("all")}
                   />
-                ) : (
-                  <p className="text-sm text-gray-500">Нет доступных дат для выбранных билетов.</p>
-                )}
-              </div>
-              <div className="space-y-3">
-                <p className="text-sm font-semibold text-gray-700">Доступные рейсы</p>
-                {rescheduleFetchingTours ? (
-                  <p className="text-sm text-gray-500">Подбираем рейсы…</p>
-                ) : rescheduleTours.length > 0 ? (
-                  <div className="space-y-2">
-                    {rescheduleTours.map((tour) => (
-                      <label
-                        key={tour.id}
-                        className={`flex cursor-pointer items-center justify-between gap-4 rounded-xl border px-4 py-3 transition ${
-                          rescheduleTourId === tour.id
-                            ? "border-blue-400 bg-blue-50"
-                            : "border-gray-200 bg-gray-50 hover:border-blue-300"
-                        }`}
-                      >
-                        <div>
-                          <p className="text-base font-semibold text-gray-900">
-                            {formatTime(tour.departure_time)} → {formatTime(tour.arrival_time)}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            Свободных мест: {typeof tour.seats === "number" ? tour.seats : Number((tour.seats as { free?: number }).free ?? 0)}
-                          </p>
-                          {tour.description ? (
-                            <p className="text-xs text-gray-500">{tour.description}</p>
-                          ) : null}
-                        </div>
-                        <input
-                          type="radio"
-                          name="reschedule-tour"
-                          className="h-4 w-4"
-                          checked={rescheduleTourId === tour.id}
-                          onChange={() => handleSelectRescheduleTour(tour.id)}
-                        />
-                      </label>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500">
-                    {rescheduleDate ? "Нет подходящих рейсов на выбранную дату." : "Выберите дату, чтобы увидеть рейсы."}
-                  </p>
-                )}
-              </div>
-              {rescheduleTourId ? (
-                <div className="space-y-2">
-                  <p className="text-sm font-semibold text-gray-700">Выбор мест</p>
-                  <SeatClient
-                    tourId={rescheduleTourId}
-                    departureStopId={rescheduleContext.departureStopId}
-                    arrivalStopId={rescheduleContext.arrivalStopId}
-                    layoutVariant={selectedRescheduleTour?.layout_variant ?? null}
-                    selectedSeats={rescheduleSeatNumbers}
-                    maxSeats={rescheduleSeatRequirement}
-                    onChange={handleRescheduleSeatChange}
-                    onSelectionDetailsChange={setRescheduleSeatDetails}
+                  Для всех пассажиров
+                </label>
+                <label className={styles.radioLabel}>
+                  <input
+                    type="radio"
+                    name="reschedule-scope"
+                    value="selected"
+                    checked={rescheduleScope === "selected"}
+                    onChange={() => setRescheduleScope("selected")}
                   />
-                  <p className="text-xs text-gray-500">
-                    Выбрано мест: {rescheduleSeatNumbers.length} из {rescheduleSeatRequirement}
-                  </p>
-                </div>
-              ) : null}
-              {rescheduleQuote ? (
-                <div
-                  className={`rounded-xl border px-4 py-3 text-sm ${
-                    rescheduleQuote.can_apply
-                      ? "border-emerald-200 bg-emerald-50 text-emerald-900"
-                      : "border-amber-200 bg-amber-50 text-amber-900"
-                  }`}
-                >
-                  <p className="font-semibold">
-                    Разница: {formatCurrency(rescheduleQuote.price_change, rescheduleQuote.currency)}
-                  </p>
-                  {rescheduleQuote.note ? <p>{rescheduleQuote.note}</p> : null}
-                  {!rescheduleQuote.can_apply ? <p>Перенос недоступен: скорректируйте выбор.</p> : null}
-                </div>
-              ) : null}
-              {rescheduleError ? <p className="text-sm text-red-500">{rescheduleError}</p> : null}
-              <div className="flex flex-wrap items-center justify-between gap-3">
+                  Только выбранные
+                </label>
                 <button
                   type="button"
-                  onClick={handleRescheduleQuote}
-                  disabled={!canSubmitRescheduleQuote || rescheduleQuoteLoading}
-                  className="inline-flex items-center gap-2 rounded-lg border border-blue-200 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:border-blue-400 hover:text-blue-600 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-300"
+                  className={styles.linkButton}
+                  onClick={() => {
+                    setActivePanel(null);
+                    setRescheduleError(null);
+                    setRescheduleQuote(null);
+                  }}
                 >
-                  {rescheduleQuoteLoading ? "Считаем…" : "Рассчитать разницу"}
-                </button>
-                <button
-                  type="button"
-                  onClick={applyReschedule}
-                  disabled={
-                    !canSubmitRescheduleQuote ||
-                    actionLoading === "reschedule" ||
-                    rescheduleQuoteLoading ||
-                    rescheduleQuote?.can_apply === false
-                  }
-                  className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700 disabled:cursor-not-allowed disabled:bg-gray-300"
-                >
-                  {actionLoading === "reschedule" ? "Переносим…" : "Подтвердить перенос"}
+                  Скрыть
                 </button>
               </div>
             </div>
-          ) : (
-            <p className="text-sm text-gray-500">Выберите билеты, чтобы продолжить перенос.</p>
-          )}
-        </section>
-      ) : null}
-
-      {activePanel === "cancel" ? (
-        <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200 space-y-4">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">{cancelActionLabel} билетов</h3>
-              <p className="text-sm text-gray-500">Выбрано билетов: {cancelSelectionCount}</p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2 text-xs">
-              <button
-                type="button"
-                onClick={selectAllCancel}
-                className="inline-flex items-center rounded-full border border-gray-300 px-3 py-1 font-semibold text-gray-600 transition hover:border-red-300 hover:text-red-600"
-              >
-                Выбрать все
-              </button>
-              <button
-                type="button"
-                onClick={clearCancelSelection}
-                className="inline-flex items-center rounded-full border border-gray-200 px-3 py-1 font-semibold text-gray-500 transition hover:border-gray-300 hover:text-gray-700"
-              >
-                Сбросить
-              </button>
-              <button
-                type="button"
-                onClick={() => setActivePanel(null)}
-                className="text-sm font-semibold text-gray-400 transition hover:text-gray-600"
-              >
-                Скрыть
-              </button>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <button
-              type="button"
-              className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700 disabled:cursor-not-allowed disabled:bg-gray-300"
-              onClick={() => void submitCancelPreview(cancelTickets)}
-              disabled={cancelButtonDisabled}
-            >
-              Рассчитать {cancelActionLabel.toLowerCase()}
-            </button>
-            {cancelLoading ? <span className="text-sm text-gray-500">Расчёт...</span> : null}
-          </div>
-          {cancelError ? <p className="text-sm text-red-500">{cancelError}</p> : null}
-          {cancelPreview ? (
-            <div className="rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-              К возврату сейчас: {formatCurrency(cancelPreview.total_refund, cancelPreview.currency)}
-            </div>
-          ) : (
-            cancelLoading ? null : (
-              <p className="text-sm text-gray-500">Выберите билеты, чтобы рассчитать {cancelActionLabel.toLowerCase()}.</p>
-            )
-          )}
-          <div className="flex items-center justify-end">
-            <button
-              type="button"
-              onClick={confirmCancel}
-              disabled={cancelButtonDisabled || actionLoading === "cancel"}
-              className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:bg-gray-300"
-            >
-              {cancelConfirmLabel}
-            </button>
-          </div>
-        </section>
-      ) : null}
-
-      {activePanel === "baggage" ? (
-        <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200 space-y-4">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">Дополнительный багаж</h3>
-              <p className="text-sm text-gray-500">
-                Изменено билетов: {baggageChangedCount}. Настраивайте багаж рядом с нужными билетами.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setActivePanel(null)}
-              className="text-sm font-semibold text-gray-400 transition hover:text-gray-600"
-            >
-              Скрыть
-            </button>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-gray-300"
-              onClick={() => void submitBaggageQuote(baggageDraft)}
-              disabled={isActionDisabled}
-            >
-              Рассчитать доплату
-            </button>
-            <button
-              type="button"
-              onClick={confirmBaggage}
-                disabled={
-                  isActionDisabled ||
-                  actionLoading === "baggage" ||
-                  !baggageChanged ||
-                  (baggageQuote !== null && !baggageQuote.can_apply)
-                }
-              className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700 disabled:cursor-not-allowed disabled:bg-gray-300"
-            >
-              Сохранить изменения
-            </button>
-            {baggageLoading ? <span className="text-sm text-gray-500">Рассчитываем стоимость...</span> : null}
-          </div>
-          {baggageError ? <p className="text-sm text-red-500">{baggageError}</p> : null}
-          {baggageQuote ? (
-            <div
-              className={`rounded-xl px-4 py-3 text-sm ${
-                baggageQuote.can_apply
-                  ? "border border-blue-200 bg-blue-50 text-blue-700"
-                  : "border border-amber-200 bg-amber-50 text-amber-900"
-              }`}
-            >
-              <p className="font-semibold">
-                Изменение долга: {formatCurrency(baggageQuote.delta, baggageQuote.currency)}
-              </p>
-              {Array.isArray(baggageQuote.breakdown) && baggageQuote.breakdown.length > 0 ? (
-                <ul className="mt-2 space-y-1 text-xs">
-                  {baggageQuote.breakdown.map((item) => (
-                    <li key={String(item.ticket_id)}>
-                      Билет #{item.ticket_id}: {item.old ?? 0} → {item.new ?? 0} ({formatCurrency(item.delta ?? 0, baggageQuote.currency)})
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-              {!baggageQuote.can_apply ? (
-                <p className="mt-2 text-xs">Изменения недоступны. Проверьте правила перевозчика или попробуйте изменить запрос.</p>
-              ) : null}
-            </div>
-          ) : (
-            baggageLoading ? null : (
-              <p className="text-sm text-gray-500">Укажите нужное количество багажа в карточках билетов.</p>
-            )
-          )}
-        </section>
-      ) : null}
-
-      {showReturnTickets ? renderTicketSection("Билеты обратно", returnTickets) : null}
-      <section className="space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <h2 className="text-xl font-semibold text-gray-900">История действий</h2>
-          <button
-            type="button"
-            onClick={() => setHistoryOpen((prev) => !prev)}
-            className="text-sm font-semibold text-blue-600 transition hover:text-blue-500"
-          >
-            {historyOpen ? "Скрыть" : "Показать"}
-          </button>
-        </div>
-        {historyOpen ? (
-          history.length === 0 ? (
-            <p className="rounded-2xl border border-dashed border-gray-200 px-4 py-6 text-sm text-gray-500">
-              История пока пуста.
-            </p>
-          ) : (
-            <ul className="space-y-3">
-              {history.map((event) => (
-                <li
-                  key={event.id ?? `${event.date}-${event.category}`}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-white px-4 py-3 shadow-sm ring-1 ring-gray-200"
-                >
+            {rescheduleScope === "selected" ? (
+              <div className={styles.panelChipRow}>
+                <button type="button" className={`${styles.btn} ${styles.btnPill}`} onClick={selectAllReschedule}>
+                  Выбрать все
+                </button>
+                <button type="button" className={`${styles.btn} ${styles.btnPillMuted}`} onClick={clearRescheduleSelection}>
+                  Сбросить
+                </button>
+              </div>
+            ) : null}
+            {rescheduleConsistencyError ? (
+              <UiAlert type="error">{rescheduleConsistencyError}</UiAlert>
+            ) : null}
+            {rescheduleContext ? (
+              <div className={styles.panelBody}>
+                <div className={styles.panelGrid}>
                   <div>
-                    <p className="text-sm font-semibold text-gray-900">{formatDate(event.date)} • {event.category}</p>
-                    {event.comment ? <p className="text-xs text-gray-500">{event.comment}</p> : null}
+                    <p className={styles.panelLabel}>Маршрут</p>
+                    <p className={styles.panelValue}>
+                      {rescheduleContext.departureName} → {rescheduleContext.arrivalName}
+                    </p>
                   </div>
-                  <div className="text-right text-sm text-gray-600">
-                    {event.amount !== undefined && event.amount !== null ? (
-                      <p className="font-semibold text-gray-900">
-                        {formatCurrency(event.amount, event.currency ?? data.purchase.currency)}
-                      </p>
-                    ) : null}
-                    {event.method ? <p className="text-xs text-gray-500">{event.method}</p> : null}
+                  <div>
+                    <p className={styles.panelLabel}>Количество мест</p>
+                    <p className={styles.panelValue}>
+                      {rescheduleSeatRequirement}
+                      {rescheduleFreeSeats !== null ? ` • свободно: ${rescheduleFreeSeats}` : ""}
+                    </p>
                   </div>
-                </li>
-              ))}
-            </ul>
-          )
-        ) : (
-          <p className="text-sm text-gray-500">Откройте раздел, чтобы посмотреть историю операций.</p>
-        )}
-      </section>
+                </div>
+                {reschedulePassengers.length > 0 ? (
+                  <div className={styles.panelPassengers}>
+                    <p className={styles.panelLabel}>Пассажиры</p>
+                    <ul className={styles.passengerList}>
+                      {reschedulePassengers.map(({ ticket, passenger }, index) => (
+                        <li key={`${ticket?.id ?? "ticket"}-${index}`}>
+                          {passenger?.name ?? `Пассажир #${ticket?.passenger_id ?? "?"}`} • билет #{ticket?.id ?? "—"} • текущее место: {ticket?.seat_num ?? "—"}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+                <div className={styles.panelSection}>
+                  <p className={styles.panelLabel}>Доступные даты</p>
+                  {rescheduleFetchingDates ? (
+                    <p className={styles.panelNote}>Загружаем даты…</p>
+                  ) : rescheduleDates.length > 0 ? (
+                    <Calendar
+                      activeDates={rescheduleDates}
+                      selectedDate={rescheduleDate || undefined}
+                      allowAllFutureDates
+                      onSelect={handleRescheduleDateSelect}
+                      className={styles.calendar}
+                    />
+                  ) : (
+                    <p className={styles.panelNote}>Нет доступных дат для выбранных билетов.</p>
+                  )}
+                </div>
+                <div className={styles.panelSection}>
+                  <p className={styles.panelLabel}>Доступные рейсы</p>
+                  {rescheduleFetchingTours ? (
+                    <p className={styles.panelNote}>Подбираем рейсы…</p>
+                  ) : rescheduleTours.length > 0 ? (
+                    <div className={styles.tourList}>
+                      {rescheduleTours.map((tour) => (
+                        <label
+                          key={tour.id}
+                          className={`${styles.tourOption} ${rescheduleTourId === tour.id ? styles.tourOptionActive : ""}`}
+                        >
+                          <div>
+                            <p className={styles.tourTime}>
+                              {formatTime(tour.departure_time)} → {formatTime(tour.arrival_time)}
+                            </p>
+                            <p className={styles.panelNote}>
+                              Свободных мест: {typeof tour.seats === "number" ? tour.seats : Number((tour.seats as { free?: number }).free ?? 0)}
+                            </p>
+                            {tour.description ? <p className={styles.panelNote}>{tour.description}</p> : null}
+                          </div>
+                          <input
+                            type="radio"
+                            name="reschedule-tour"
+                            checked={rescheduleTourId === tour.id}
+                            onChange={() => handleSelectRescheduleTour(tour.id)}
+                          />
+                        </label>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className={styles.panelNote}>
+                      {rescheduleDate ? "Нет подходящих рейсов на выбранную дату." : "Выберите дату, чтобы увидеть рейсы."}
+                    </p>
+                  )}
+                </div>
+                {rescheduleTourId ? (
+                  <div className={styles.panelSection}>
+                    <p className={styles.panelLabel}>Выбор мест</p>
+                    <SeatClient
+                      tourId={rescheduleTourId}
+                      departureStopId={rescheduleContext.departureStopId}
+                      arrivalStopId={rescheduleContext.arrivalStopId}
+                      layoutVariant={selectedRescheduleTour?.layout_variant ?? null}
+                      selectedSeats={rescheduleSeatNumbers}
+                      maxSeats={rescheduleSeatRequirement}
+                      onChange={handleRescheduleSeatChange}
+                      onSelectionDetailsChange={setRescheduleSeatDetails}
+                    />
+                    <p className={styles.panelNote}>
+                      Выбрано мест: {rescheduleSeatNumbers.length} из {rescheduleSeatRequirement}
+                    </p>
+                  </div>
+                ) : null}
+                {rescheduleQuote ? (
+                  <div
+                    className={`${styles.panelHighlight} ${rescheduleQuote.can_apply ? styles.panelHighlightSuccess : styles.panelHighlightWarning}`}
+                  >
+                    <p className={styles.panelHighlightTitle}>
+                      Разница: {formatCurrency(rescheduleQuote.price_change, rescheduleQuote.currency)}
+                    </p>
+                    {rescheduleQuote.note ? <p>{rescheduleQuote.note}</p> : null}
+                    {!rescheduleQuote.can_apply ? <p>Перенос недоступен: скорректируйте выбор.</p> : null}
+                  </div>
+                ) : null}
+                {rescheduleError ? <p className={styles.panelError}>{rescheduleError}</p> : null}
+                <div className={styles.panelButtons}>
+                  <button
+                    type="button"
+                    onClick={handleRescheduleQuote}
+                    disabled={!canSubmitRescheduleQuote || rescheduleQuoteLoading}
+                    className={`${styles.btn} ${styles.btnOutline}`}
+                  >
+                    {rescheduleQuoteLoading ? "Считаем…" : "Рассчитать разницу"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={applyReschedule}
+                    disabled={
+                      !canSubmitRescheduleQuote ||
+                      actionLoading === "reschedule" ||
+                      rescheduleQuoteLoading ||
+                      rescheduleQuote?.can_apply === false
+                    }
+                    className={`${styles.btn} ${styles.btnPrimary}`}
+                  >
+                    {actionLoading === "reschedule" ? "Переносим…" : "Подтвердить перенос"}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <p className={styles.panelNote}>Выберите билеты, чтобы продолжить перенос.</p>
+            )}
+          </section>
+        ) : null}
 
+        {activePanel === "cancel" ? (
+          <section className={`${styles.card} ${styles.panel}`}>
+            <div className={styles.panelHeader}>
+              <div>
+                <h3 className={styles.panelTitle}>{cancelActionLabel} билетов</h3>
+                <p className={styles.panelSubtitle}>Выбрано билетов: {cancelSelectionCount}</p>
+              </div>
+              <div className={styles.panelOptions}>
+                <button type="button" className={`${styles.btn} ${styles.btnPill}`} onClick={selectAllCancel}>
+                  Выбрать все
+                </button>
+                <button type="button" className={`${styles.btn} ${styles.btnPillMuted}`} onClick={clearCancelSelection}>
+                  Сбросить
+                </button>
+                <button type="button" className={styles.linkButton} onClick={() => setActivePanel(null)}>
+                  Скрыть
+                </button>
+              </div>
+            </div>
+            <div className={styles.panelBody}>
+              <div className={styles.panelButtons}>
+                <button
+                  type="button"
+                  className={`${styles.btn} ${styles.btnPrimary}`}
+                  onClick={() => void submitCancelPreview(cancelTickets)}
+                  disabled={cancelButtonDisabled}
+                >
+                  Рассчитать {cancelActionLabel.toLowerCase()}
+                </button>
+                {cancelLoading ? <span className={styles.panelNote}>Расчёт...</span> : null}
+              </div>
+              {cancelError ? <p className={styles.panelError}>{cancelError}</p> : null}
+              {cancelPreview ? (
+                <div className={`${styles.panelHighlight} ${styles.panelHighlightSuccess}`}>
+                  К возврату сейчас: {formatCurrency(cancelPreview.total_refund, cancelPreview.currency)}
+                </div>
+              ) : (
+                cancelLoading ? null : (
+                  <p className={styles.panelNote}>
+                    Выберите билеты, чтобы рассчитать {cancelActionLabel.toLowerCase()}.
+                  </p>
+                )
+              )}
+              <div className={styles.panelFooter}>
+                <button
+                  type="button"
+                  onClick={confirmCancel}
+                  disabled={cancelButtonDisabled || actionLoading === "cancel"}
+                  className={`${styles.btn} ${styles.btnDanger}`}
+                >
+                  {cancelConfirmLabel}
+                </button>
+              </div>
+            </div>
+          </section>
+        ) : null}
+
+        {activePanel === "baggage" ? (
+          <section className={`${styles.card} ${styles.panel}`}>
+            <div className={styles.panelHeader}>
+              <div>
+                <h3 className={styles.panelTitle}>Дополнительный багаж</h3>
+                <p className={styles.panelSubtitle}>
+                  Изменено билетов: {baggageChangedCount}. Настраивайте багаж рядом с нужными билетами.
+                </p>
+              </div>
+              <button type="button" className={styles.linkButton} onClick={() => setActivePanel(null)}>
+                Скрыть
+              </button>
+            </div>
+            <div className={styles.panelBody}>
+              <div className={styles.panelButtons}>
+                <button
+                  type="button"
+                  className={`${styles.btn} ${styles.btnPrimary}`}
+                  onClick={() => void submitBaggageQuote(baggageDraft)}
+                  disabled={isActionDisabled}
+                >
+                  Рассчитать доплату
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmBaggage}
+                  disabled={
+                    isActionDisabled ||
+                    actionLoading === "baggage" ||
+                    !baggageChanged ||
+                    (baggageQuote !== null && !baggageQuote.can_apply)
+                  }
+                  className={`${styles.btn} ${styles.btnOutline}`}
+                >
+                  Сохранить изменения
+                </button>
+                {baggageLoading ? <span className={styles.panelNote}>Рассчитываем стоимость...</span> : null}
+              </div>
+              {baggageError ? <p className={styles.panelError}>{baggageError}</p> : null}
+              {baggageQuote ? (
+                <div
+                  className={`${styles.panelHighlight} ${baggageQuote.can_apply ? styles.panelHighlightSuccess : styles.panelHighlightWarning}`}
+                >
+                  <p className={styles.panelHighlightTitle}>
+                    Изменение долга: {formatCurrency(baggageQuote.delta, baggageQuote.currency)}
+                  </p>
+                  {Array.isArray(baggageQuote.breakdown) && baggageQuote.breakdown.length > 0 ? (
+                    <ul className={styles.breakdownList}>
+                      {baggageQuote.breakdown.map((item) => (
+                        <li key={String(item.ticket_id)}>
+                          Билет #{item.ticket_id}: {item.old ?? 0} → {item.new ?? 0} ({formatCurrency(item.delta ?? 0, baggageQuote.currency)})
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                  {!baggageQuote.can_apply ? (
+                    <p>Изменения недоступны. Проверьте правила перевозчика или попробуйте изменить запрос.</p>
+                  ) : null}
+                </div>
+              ) : (
+                baggageLoading ? null : (
+                  <p className={styles.panelNote}>Укажите нужное количество багажа в карточках билетов.</p>
+                )
+              )}
+            </div>
+          </section>
+        ) : null}
+
+        <section className={`${styles.card} ${styles.historyCard}`}>
+          <div className={styles.historyHeader}>
+            <h2 className={styles.sectionTitle}>История действий</h2>
+            <button
+              type="button"
+              onClick={() => setHistoryOpen((prev) => !prev)}
+              className={styles.historyToggle}
+            >
+              {historyOpen ? "Скрыть" : "Показать"}
+            </button>
+          </div>
+          {historyOpen ? (
+            history.length === 0 ? (
+              <p className={styles.historyEmpty}>История пока пуста.</p>
+            ) : (
+              <ul className={styles.historyList}>
+                {history.map((event) => (
+                  <li
+                    key={event.id ?? `${event.date}-${event.category}`}
+                    className={styles.historyItem}
+                  >
+                    <div>
+                      <p className={styles.historyTitle}>
+                        {formatDate(event.date)} • {event.category}
+                      </p>
+                      {event.comment ? <p className={styles.historyComment}>{event.comment}</p> : null}
+                    </div>
+                    <div className={styles.historyMeta}>
+                      {event.amount !== undefined && event.amount !== null ? (
+                        <p className={styles.historyAmount}>
+                          {formatCurrency(event.amount, event.currency ?? data.purchase.currency)}
+                        </p>
+                      ) : null}
+                      {event.method ? <p className={styles.historyMethod}>{event.method}</p> : null}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )
+          ) : (
+            <p className={styles.historyHint}>Откройте раздел, чтобы посмотреть историю операций.</p>
+          )}
+        </section>
+      </div>
+
+      <section className={styles.paybar}>
+        <div className={styles.paybarInner}>
+          <div className={styles.paySummary}>
+            <span className={styles.muted}>К оплате:</span>
+            <span className={`${styles.sumInline} ${styles.mono}`}>{dueAmountText}</span>
+          </div>
+          <div className={styles.payButtons}>
+            {shouldShowDownloadAll ? (
+              <button type="button" className={`${styles.btn} ${styles.btnGhost}`} onClick={handleDownloadAll}>
+                Скачать все PDF
+              </button>
+            ) : null}
+            <button
+              type="button"
+              className={`${styles.btn} ${styles.btnPay}`}
+              onClick={handlePrimaryAction}
+              disabled={primaryActionDisabled}
+            >
+              {isPaid ? (
+                primaryActionLabel
+              ) : (
+                <>
+                  <span className={styles.payDot} aria-hidden="true" />
+                  Оплатить • <span className={styles.mono}>{dueAmountText}</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
