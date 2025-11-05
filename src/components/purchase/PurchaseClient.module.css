@@ -178,31 +178,6 @@
   color: var(--purchase-muted);
 }
 
-.scrollCardActions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.scrollExpand {
-  height: 32px;
-  padding: 0 14px;
-  border-radius: 10px;
-  border: 1px solid var(--purchase-line);
-  background: #fff;
-  color: var(--purchase-primary);
-  font-weight: 700;
-  font-size: 13px;
-  cursor: pointer;
-  transition: box-shadow 0.12s ease, background 0.12s ease, border-color 0.12s ease;
-}
-
-.scrollExpand:hover {
-  background: #eef4ff;
-  border-color: #d7e6fb;
-  box-shadow: 0 3px 10px rgba(7, 55, 99, 0.12);
-}
-
 .scrollArea {
   position: relative;
   max-height: 320px;
@@ -403,6 +378,8 @@
   height: 40px;
   padding: 0;
   border-radius: 999px;
+  font-size: 22px;
+  line-height: 1;
 }
 
 .btnPay {
@@ -463,21 +440,17 @@
 }
 
 .menuList {
-  position: absolute;
-  right: 0;
-  top: 46px;
-  display: none;
   min-width: 220px;
   background: #fff;
   border: 1px solid var(--purchase-line);
   border-radius: 12px;
   box-shadow: var(--purchase-shadow);
   padding: 6px;
-  z-index: 1200;
 }
 
-.menu[data-open="true"] .menuList {
-  display: block;
+.menuListFloating {
+  position: fixed;
+  z-index: 1500;
 }
 
 .menuList button {
@@ -489,6 +462,7 @@
   border-radius: 10px;
   font-weight: 700;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .menuList button:hover {
@@ -892,7 +866,7 @@
   position: sticky;
   bottom: 16px;
   width: min(940px, calc(100% - 32px));
-  margin: 16px auto 0;
+  margin: 32px auto 0;
   padding: 0 16px;
 }
 

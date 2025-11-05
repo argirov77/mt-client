@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 
 import UiAlert from "@/components/common/Alert";
 import Loader from "@/components/common/Loader";
@@ -27,13 +28,6 @@ const SCROLL_STORAGE_KEY = "purchase.scrolls.v1";
 
 type ScrollPositions = Record<string, number>;
 
-type ModalSection = {
-  title: string;
-  scrollKey: string;
-  renderContent: () => ReactNode;
-  initialScrollTop: number;
-};
-
 type ScrollableCardProps = {
   title: string;
   meta?: string;
@@ -42,7 +36,7 @@ type ScrollableCardProps = {
   initialScrollTop: number;
   renderContent: () => ReactNode;
   onScrollChange: (scrollKey: string, value: number) => void;
-  onExpand: (section: ModalSection) => void;
+  onScrollStart?: () => void;
 };
 
 function ScrollableCard({
@@ -53,7 +47,7 @@ function ScrollableCard({
   initialScrollTop,
   renderContent,
   onScrollChange,
-  onExpand,
+  onScrollStart,
 }: ScrollableCardProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const latestInitialRef = useRef(initialScrollTop);
@@ -78,6 +72,9 @@ function ScrollableCard({
 
     const handleScroll = () => {
       const top = Math.round(el.scrollTop);
+      if (top !== scrollTopRef.current) {
+        onScrollStart?.();
+      }
       scrollTopRef.current = top;
       setScrolled(top > 24);
       onScrollChange(scrollKey, top);
@@ -89,7 +86,7 @@ function ScrollableCard({
     return () => {
       el.removeEventListener("scroll", handleScroll);
     };
-  }, [onScrollChange, scrollKey]);
+  }, [onScrollChange, onScrollStart, scrollKey]);
 
   const handleToTop = useCallback(() => {
     const el = containerRef.current;
@@ -104,16 +101,8 @@ function ScrollableCard({
     scrollTopRef.current = 0;
     setScrolled(false);
     onScrollChange(scrollKey, 0);
-  }, [onScrollChange, scrollKey]);
-
-  const handleExpand = useCallback(() => {
-    onExpand({
-      title,
-      scrollKey,
-      renderContent,
-      initialScrollTop: scrollTopRef.current,
-    });
-  }, [onExpand, renderContent, scrollKey, title]);
+    onScrollStart?.();
+  }, [onScrollChange, onScrollStart, scrollKey]);
 
   const areaClassName = [styles.scrollArea, scrolled ? styles.scrollAreaScrolled : ""].filter(Boolean).join(" ");
 
@@ -123,11 +112,6 @@ function ScrollableCard({
         <div>
           <h2 className={styles.scrollCardTitle}>{title}</h2>
           {meta ? <span className={styles.scrollCardMeta}>{meta}</span> : null}
-        </div>
-        <div className={styles.scrollCardActions}>
-          <button type="button" className={styles.scrollExpand} onClick={handleExpand}>
-            Развернуть
-          </button>
         </div>
       </div>
       <div ref={containerRef} className={areaClassName}>
@@ -154,6 +138,9 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const ACTION_DISABLED_STATUSES = new Set(["canceled", "expired"]);
+
+const MENU_HEIGHT_ESTIMATE = 192;
+const MENU_GAP = 8;
 
 type PurchaseAction = "pay" | "reschedule" | "cancel" | "baggage";
 
@@ -916,10 +903,21 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
   const [activePanel, setActivePanel] = useState<"reschedule" | "cancel" | "baggage" | null>(null);
   const [rescheduleScope, setRescheduleScope] = useState<"all" | "selected">("selected");
   const [scrollPositions, setScrollPositions] = useState<ScrollPositions>({});
-  const [modalState, setModalState] = useState<ModalSection | null>(null);
-  const [modalScrolled, setModalScrolled] = useState(false);
-  const modalScrollTopRef = useRef(0);
-  const modalScrollRef = useRef<HTMLDivElement | null>(null);
+  const [menuAnchor, setMenuAnchor] = useState<
+    | {
+        top: number;
+        bottom: number;
+        right: number;
+        viewportHeight: number;
+        placement: "up" | "down";
+      }
+    | null
+  >(null);
+
+  const closeTicketMenu = useCallback(() => {
+    setOpenMenuTicketId(null);
+    setMenuAnchor(null);
+  }, []);
 
   const isActionDisabled = ACTION_DISABLED_STATUSES.has(String(data?.purchase?.status ?? ""));
 
@@ -962,98 +960,6 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
   }, []);
 
   const makeScrollKey = useCallback((section: string) => `purchase-${purchaseId}::${section}`, [purchaseId]);
-
-  const handleExpandSection = useCallback(
-    (section: ModalSection) => {
-      modalScrollTopRef.current = section.initialScrollTop ?? 0;
-      setModalState(section);
-    },
-    []
-  );
-
-  const handleCloseModal = useCallback(() => {
-    setModalState((prev) => {
-      if (!prev) {
-        return null;
-      }
-
-      updateScrollPosition(prev.scrollKey, modalScrollTopRef.current);
-      return null;
-    });
-  }, [updateScrollPosition]);
-
-  useEffect(() => {
-    if (!modalState) {
-      setModalScrolled(false);
-      return;
-    }
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        handleCloseModal();
-      }
-    };
-
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("keydown", onKeyDown);
-    };
-  }, [handleCloseModal, modalState]);
-
-  useEffect(() => {
-    if (!modalState) {
-      return;
-    }
-
-    const el = modalScrollRef.current;
-    if (!el) {
-      return;
-    }
-
-    const initial = modalState.initialScrollTop ?? 0;
-    el.scrollTop = initial;
-    modalScrollTopRef.current = initial;
-    setModalScrolled(initial > 24);
-
-    const handleScroll = () => {
-      const top = Math.round(el.scrollTop);
-      modalScrollTopRef.current = top;
-      setModalScrolled(top > 24);
-    };
-
-    el.addEventListener("scroll", handleScroll);
-    return () => {
-      el.removeEventListener("scroll", handleScroll);
-    };
-  }, [modalState]);
-
-  const handleModalBackdropClick = useCallback(
-    (event: React.MouseEvent<HTMLDivElement>) => {
-      if (event.target === event.currentTarget) {
-        handleCloseModal();
-      }
-    },
-    [handleCloseModal]
-  );
-
-  const handleModalToTop = useCallback(() => {
-    const el = modalScrollRef.current;
-    if (!el) {
-      return;
-    }
-
-    if (typeof el.scrollTo === "function") {
-      el.scrollTo({ top: 0, behavior: "smooth" });
-    } else {
-      el.scrollTop = 0;
-    }
-
-    modalScrollTopRef.current = 0;
-    setModalScrolled(false);
-    if (modalState) {
-      updateScrollPosition(modalState.scrollKey, 0);
-    }
-  }, [modalState, updateScrollPosition]);
 
   const passengerMap = useMemo(() => {
     const map = new Map<string, PurchasePassenger>();
@@ -1281,12 +1187,12 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
       if (target instanceof Element && target.closest("[data-ticket-menu]")) {
         return;
       }
-      setOpenMenuTicketId(null);
+      closeTicketMenu();
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setOpenMenuTicketId(null);
+        closeTicketMenu();
       }
     };
 
@@ -1297,7 +1203,37 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
       document.removeEventListener("click", handleDocumentClick);
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, []);
+  }, [closeTicketMenu]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const handleResize = () => {
+      closeTicketMenu();
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [closeTicketMenu]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const handleWindowScroll = () => {
+      closeTicketMenu();
+    };
+
+    window.addEventListener("scroll", handleWindowScroll);
+    return () => {
+      window.removeEventListener("scroll", handleWindowScroll);
+    };
+  }, [closeTicketMenu]);
 
   const rescheduleTickets = useMemo(() => {
     return rescheduleSelected.filter((id) => validTicketIds.has(id));
@@ -1351,6 +1287,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
     setRescheduleError(null);
     setRescheduleQuote(null);
     setActivePanel("reschedule");
+    closeTicketMenu();
   };
 
   const handleBulkReschedule = () => {
@@ -1359,7 +1296,6 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
 
   const handleTicketReschedule = (ticketId: string) => {
     openReschedulePanel([ticketId]);
-    setOpenMenuTicketId(null);
   };
 
   const handleOpenBaggagePanel = () => {
@@ -1370,7 +1306,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
     setBaggageError(null);
     setBaggageQuote(null);
     setActivePanel("baggage");
-    setOpenMenuTicketId(null);
+    closeTicketMenu();
   };
 
   const selectAllReschedule = () => {
@@ -1632,6 +1568,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
     setCancelSelected(ticketIds);
     setCancelError(null);
     setActivePanel("cancel");
+    closeTicketMenu();
     if (ticketIds.length > 0) {
       void submitCancelPreview(ticketIds);
     } else {
@@ -1645,7 +1582,6 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
 
   const handleTicketCancel = (ticketId: string) => {
     openCancelPanel([ticketId]);
-    setOpenMenuTicketId(null);
   };
 
   const confirmCancel = useCallback(async () => {
@@ -2400,6 +2336,58 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
           );
           const isSelected = selectedTicketSet.has(ticketId);
           const isMenuOpen = openMenuTicketId === ticketId;
+          let ticketMenu: ReactNode | null = null;
+
+          if (isMenuOpen) {
+            const anchor = menuAnchor;
+            const floatingStyle: CSSProperties | undefined = anchor
+              ? {
+                  left: anchor.right,
+                  transform: "translateX(-100%)",
+                  ...(anchor.placement === "down"
+                    ? { top: anchor.bottom + MENU_GAP }
+                    : { bottom: anchor.viewportHeight - anchor.top + MENU_GAP }),
+                }
+              : undefined;
+
+            const content = (
+              <div
+                className={`${styles.menuList} ${styles.menuListFloating}`}
+                role="menu"
+                data-ticket-menu="true"
+                data-placement={anchor?.placement}
+                style={floatingStyle}
+              >
+                <button type="button" role="menuitem" onClick={() => handleTicketReschedule(ticketId)}>
+                  Перенести
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => handleTicketCancel(ticketId)}
+                  className={styles.menuDanger}
+                >
+                  Отмена
+                </button>
+                <button type="button" role="menuitem" onClick={handleOpenBaggagePanel}>
+                  Доп. багаж
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    closeTicketMenu();
+                    void handleDownloadTicket(ticket.id);
+                  }}
+                >
+                  Скачать PDF
+                </button>
+              </div>
+            );
+
+            ticketMenu =
+              anchor && typeof document !== "undefined" ? createPortal(content, document.body) : content;
+          }
 
           return (
             <article key={ticket.id} className={styles.ticket} data-selected={isSelected ? "true" : undefined}>
@@ -2435,37 +2423,36 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
                     title="Действия"
                     onClick={(event) => {
                       event.stopPropagation();
-                      setOpenMenuTicketId(isMenuOpen ? null : ticketId);
+                      if (isMenuOpen) {
+                        closeTicketMenu();
+                        return;
+                      }
+
+                      if (typeof window === "undefined") {
+                        setOpenMenuTicketId(ticketId);
+                        return;
+                      }
+
+                      const rect = event.currentTarget.getBoundingClientRect();
+                      const viewportHeight = window.innerHeight || document.documentElement?.clientHeight || 0;
+                      const spaceBelow = viewportHeight - rect.bottom;
+                      const spaceAbove = rect.top;
+                      const placement: "up" | "down" =
+                        spaceBelow < MENU_HEIGHT_ESTIMATE && spaceAbove > spaceBelow ? "up" : "down";
+
+                      setMenuAnchor({
+                        top: rect.top,
+                        bottom: rect.bottom,
+                        right: rect.right,
+                        viewportHeight,
+                        placement,
+                      });
+                      setOpenMenuTicketId(ticketId);
                     }}
                   >
                     ⋯
                   </button>
-                  <div className={styles.menuList} role="menu">
-                    <button type="button" role="menuitem" onClick={() => handleTicketReschedule(ticketId)}>
-                      Перенести
-                    </button>
-                    <button
-                      type="button"
-                      role="menuitem"
-                      onClick={() => handleTicketCancel(ticketId)}
-                      className={styles.menuDanger}
-                    >
-                      Отмена
-                    </button>
-                    <button type="button" role="menuitem" onClick={handleOpenBaggagePanel}>
-                      Доп. багаж
-                    </button>
-                    <button
-                      type="button"
-                      role="menuitem"
-                      onClick={() => {
-                        setOpenMenuTicketId(null);
-                        void handleDownloadTicket(ticket.id);
-                      }}
-                    >
-                      Скачать PDF
-                    </button>
-                  </div>
+                  {ticketMenu}
                 </div>
               </div>
               <div className={styles.chips}>
@@ -2498,7 +2485,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
         initialScrollTop={scrollPositions[scrollKey] ?? 0}
         renderContent={renderList}
         onScrollChange={updateScrollPosition}
-        onExpand={handleExpandSection}
+        onScrollStart={closeTicketMenu}
       />
     );
   };
@@ -3029,44 +3016,6 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
         </section>
         </div>
       </div>
-
-      {modalState ? (
-        <div className={styles.modal} role="presentation" onClick={handleModalBackdropClick}>
-          <div
-            className={styles.modalSheet}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="purchase-modal-title"
-          >
-            <div className={styles.modalHeader}>
-              <h2 id="purchase-modal-title" className={styles.modalTitle}>
-                {modalState.title}
-              </h2>
-              <button type="button" className={styles.modalClose} onClick={handleCloseModal}>
-                Закрыть
-              </button>
-            </div>
-            <div className={styles.modalBody}>
-              <div
-                ref={modalScrollRef}
-                className={`${styles.scrollArea} ${styles.modalScroll} ${
-                  modalScrolled ? styles.scrollAreaScrolled : ""
-                }`}
-              >
-                {modalState.renderContent()}
-                <button
-                  type="button"
-                  className={`${styles.toTop} ${modalScrolled ? styles.toTopVisible : ""}`}
-                  onClick={handleModalToTop}
-                  title="Прокрутить вверх"
-                >
-                  ↑ <span>Вверх</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : null}
     </>
   );
 }
