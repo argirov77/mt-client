@@ -144,30 +144,6 @@
   color: var(--purchase-primary);
 }
 
-.summaryCard {
-  padding: 20px;
-}
-
-.summaryGrid {
-  display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-}
-
-.summaryLabel {
-  display: block;
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--purchase-muted);
-}
-
-.summaryValue {
-  margin: 6px 0 0;
-  font-size: 16px;
-  font-weight: 600;
-}
-
 .alertWrap {
   margin-top: 4px;
 }
@@ -272,6 +248,36 @@
 
 .toTopVisible {
   display: inline-flex;
+}
+
+.ticketSection {
+  display: grid;
+  gap: 16px;
+}
+
+.bulkBarWrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--purchase-line);
+  border-radius: var(--purchase-radius-md);
+  background: #f8fbff;
+}
+
+.bulkSummary {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-weight: 600;
+  color: var(--purchase-text);
+}
+
+.bulkSummary span:last-child {
+  color: var(--purchase-primary);
+  font-weight: 700;
 }
 
 .tickets {
@@ -520,50 +526,6 @@
   color: var(--purchase-muted);
 }
 
-.ticketActions {
-  margin-top: 14px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.actionToggles {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.actionCheckbox {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 600;
-  color: #365273;
-}
-
-.actionControls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  align-items: center;
-}
-
-.baggageControl {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 160px;
-}
-
-.baggageLabel {
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--purchase-muted);
-}
-
 .baggageStepper {
   display: inline-flex;
   align-items: center;
@@ -601,16 +563,6 @@
   font-size: 12px;
   color: var(--purchase-accent);
   font-weight: 700;
-}
-
-.actionLink {
-  color: var(--purchase-primary);
-  font-weight: 700;
-  text-decoration: none;
-}
-
-.actionLink:hover {
-  text-decoration: underline;
 }
 
 .panel {
@@ -799,6 +751,49 @@
   color: #a16500;
 }
 
+.baggageList {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.baggageRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border: 1px solid #e3e9f4;
+  border-radius: 14px;
+  background: #fbfcff;
+}
+
+.baggageInfo {
+  flex: 1 1 220px;
+  min-width: 200px;
+}
+
+.baggageTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--purchase-text);
+}
+
+.baggageMeta {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--purchase-muted);
+}
+
+.baggageControls {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
 .panelHighlightTitle {
   margin: 0 0 6px;
   font-weight: 700;
@@ -814,61 +809,6 @@
   padding-left: 16px;
   font-size: 13px;
   color: #445b76;
-}
-
-.historyEmpty {
-  margin: 0;
-  padding: 24px;
-  border: 1px dashed var(--purchase-line);
-  border-radius: var(--purchase-radius-md);
-  color: var(--purchase-muted);
-  text-align: center;
-}
-
-.historyList {
-  display: grid;
-  gap: 12px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.historyItem {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 14px 16px;
-  border-radius: var(--purchase-radius-md);
-  border: 1px solid var(--purchase-line);
-  background: #fbfcff;
-}
-
-.historyTitle {
-  margin: 0;
-  font-weight: 700;
-}
-
-.historyComment {
-  margin: 4px 0 0;
-  font-size: 13px;
-  color: var(--purchase-muted);
-}
-
-.historyMeta {
-  text-align: right;
-  font-size: 13px;
-  color: var(--purchase-muted);
-}
-
-.historyAmount {
-  margin: 0;
-  font-weight: 700;
-  color: var(--purchase-text);
-}
-
-.historyMethod {
-  margin: 4px 0 0;
 }
 
 .modal {
