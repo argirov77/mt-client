@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import UiAlert from "@/components/common/Alert";
 import Loader from "@/components/common/Loader";
@@ -22,128 +22,6 @@ import type {
 } from "@/types/purchase";
 import { fetchWithInclude } from "@/utils/fetchWithInclude";
 import styles from "./PurchaseClient.module.css";
-
-const SCROLL_STORAGE_KEY = "purchase.scrolls.v1";
-
-type ScrollPositions = Record<string, number>;
-
-type ModalSection = {
-  title: string;
-  scrollKey: string;
-  renderContent: () => ReactNode;
-  initialScrollTop: number;
-};
-
-type ScrollableCardProps = {
-  title: string;
-  meta?: string;
-  scrollKey: string;
-  ariaLabel?: string;
-  initialScrollTop: number;
-  renderContent: () => ReactNode;
-  onScrollChange: (scrollKey: string, value: number) => void;
-  onExpand: (section: ModalSection) => void;
-};
-
-function ScrollableCard({
-  title,
-  meta,
-  scrollKey,
-  ariaLabel,
-  initialScrollTop,
-  renderContent,
-  onScrollChange,
-  onExpand,
-}: ScrollableCardProps) {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const latestInitialRef = useRef(initialScrollTop);
-  const scrollTopRef = useRef(initialScrollTop ?? 0);
-  const [scrolled, setScrolled] = useState((initialScrollTop ?? 0) > 24);
-
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-
-    if (initialScrollTop !== latestInitialRef.current) {
-      el.scrollTop = initialScrollTop ?? 0;
-      latestInitialRef.current = initialScrollTop;
-      scrollTopRef.current = initialScrollTop ?? 0;
-      setScrolled((initialScrollTop ?? 0) > 24);
-    }
-  }, [initialScrollTop]);
-
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-
-    const handleScroll = () => {
-      const top = Math.round(el.scrollTop);
-      scrollTopRef.current = top;
-      setScrolled(top > 24);
-      onScrollChange(scrollKey, top);
-    };
-
-    el.addEventListener("scroll", handleScroll);
-    handleScroll();
-
-    return () => {
-      el.removeEventListener("scroll", handleScroll);
-    };
-  }, [onScrollChange, scrollKey]);
-
-  const handleToTop = useCallback(() => {
-    const el = containerRef.current;
-    if (!el) return;
-
-    if (typeof el.scrollTo === "function") {
-      el.scrollTo({ top: 0, behavior: "smooth" });
-    } else {
-      el.scrollTop = 0;
-    }
-
-    scrollTopRef.current = 0;
-    setScrolled(false);
-    onScrollChange(scrollKey, 0);
-  }, [onScrollChange, scrollKey]);
-
-  const handleExpand = useCallback(() => {
-    onExpand({
-      title,
-      scrollKey,
-      renderContent,
-      initialScrollTop: scrollTopRef.current,
-    });
-  }, [onExpand, renderContent, scrollKey, title]);
-
-  const areaClassName = [styles.scrollArea, scrolled ? styles.scrollAreaScrolled : ""].filter(Boolean).join(" ");
-
-  return (
-    <section className={`${styles.card} ${styles.scrollCard}`} aria-label={ariaLabel ?? title}>
-      <div className={styles.scrollCardHeader}>
-        <div>
-          <h2 className={styles.scrollCardTitle}>{title}</h2>
-          {meta ? <span className={styles.scrollCardMeta}>{meta}</span> : null}
-        </div>
-        <div className={styles.scrollCardActions}>
-          <button type="button" className={styles.scrollExpand} onClick={handleExpand}>
-            Развернуть
-          </button>
-        </div>
-      </div>
-      <div ref={containerRef} className={areaClassName}>
-        {renderContent()}
-        <button
-          type="button"
-          className={`${styles.toTop} ${scrolled ? styles.toTopVisible : ""}`}
-          onClick={handleToTop}
-          title="Прокрутить вверх"
-        >
-          ↑ <span>Вверх</span>
-        </button>
-      </div>
-    </section>
-  );
-}
 
 const STATUS_LABELS: Record<string, string> = {
   pending: "Ожидает оплаты",
@@ -899,147 +777,11 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
   const [baggageError, setBaggageError] = useState<string | null>(null);
 
   const [actionLoading, setActionLoading] = useState<PurchaseAction | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [activePanel, setActivePanel] = useState<"reschedule" | "cancel" | "baggage" | null>(null);
   const [rescheduleScope, setRescheduleScope] = useState<"all" | "selected">("selected");
-  const [scrollPositions, setScrollPositions] = useState<ScrollPositions>({});
-  const [modalState, setModalState] = useState<ModalSection | null>(null);
-  const [modalScrolled, setModalScrolled] = useState(false);
-  const modalScrollTopRef = useRef(0);
-  const modalScrollRef = useRef<HTMLDivElement | null>(null);
 
   const isActionDisabled = ACTION_DISABLED_STATUSES.has(String(data?.purchase?.status ?? ""));
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    try {
-      const raw = window.localStorage.getItem(SCROLL_STORAGE_KEY);
-      if (!raw) {
-        return;
-      }
-
-      const parsed = JSON.parse(raw) as unknown;
-      if (parsed && typeof parsed === "object") {
-        setScrollPositions(parsed as ScrollPositions);
-      }
-    } catch {
-      // ignore storage errors
-    }
-  }, []);
-
-  const updateScrollPosition = useCallback((key: string, value: number) => {
-    setScrollPositions((prev) => {
-      if (prev[key] === value) {
-        return prev;
-      }
-
-      const next = { ...prev, [key]: value };
-      if (typeof window !== "undefined") {
-        try {
-          window.localStorage.setItem(SCROLL_STORAGE_KEY, JSON.stringify(next));
-        } catch {
-          // ignore storage quota errors
-        }
-      }
-      return next;
-    });
-  }, []);
-
-  const makeScrollKey = useCallback((section: string) => `purchase-${purchaseId}::${section}`, [purchaseId]);
-
-  const handleExpandSection = useCallback(
-    (section: ModalSection) => {
-      modalScrollTopRef.current = section.initialScrollTop ?? 0;
-      setModalState(section);
-    },
-    []
-  );
-
-  const handleCloseModal = useCallback(() => {
-    setModalState((prev) => {
-      if (!prev) {
-        return null;
-      }
-
-      updateScrollPosition(prev.scrollKey, modalScrollTopRef.current);
-      return null;
-    });
-  }, [updateScrollPosition]);
-
-  useEffect(() => {
-    if (!modalState) {
-      setModalScrolled(false);
-      return;
-    }
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        handleCloseModal();
-      }
-    };
-
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("keydown", onKeyDown);
-    };
-  }, [handleCloseModal, modalState]);
-
-  useEffect(() => {
-    if (!modalState) {
-      return;
-    }
-
-    const el = modalScrollRef.current;
-    if (!el) {
-      return;
-    }
-
-    const initial = modalState.initialScrollTop ?? 0;
-    el.scrollTop = initial;
-    modalScrollTopRef.current = initial;
-    setModalScrolled(initial > 24);
-
-    const handleScroll = () => {
-      const top = Math.round(el.scrollTop);
-      modalScrollTopRef.current = top;
-      setModalScrolled(top > 24);
-    };
-
-    el.addEventListener("scroll", handleScroll);
-    return () => {
-      el.removeEventListener("scroll", handleScroll);
-    };
-  }, [modalState]);
-
-  const handleModalBackdropClick = useCallback(
-    (event: React.MouseEvent<HTMLDivElement>) => {
-      if (event.target === event.currentTarget) {
-        handleCloseModal();
-      }
-    },
-    [handleCloseModal]
-  );
-
-  const handleModalToTop = useCallback(() => {
-    const el = modalScrollRef.current;
-    if (!el) {
-      return;
-    }
-
-    if (typeof el.scrollTo === "function") {
-      el.scrollTo({ top: 0, behavior: "smooth" });
-    } else {
-      el.scrollTop = 0;
-    }
-
-    modalScrollTopRef.current = 0;
-    setModalScrolled(false);
-    if (modalState) {
-      updateScrollPosition(modalState.scrollKey, 0);
-    }
-  }, [modalState, updateScrollPosition]);
 
   const passengerMap = useMemo(() => {
     const map = new Map<string, PurchasePassenger>();
@@ -2345,220 +2087,211 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
     confirmPayment();
   };
 
-  const renderTicketSection = (title: string, tickets: PurchaseTicket[], sectionKey: string) => {
+  const renderTicketSection = (title: string, tickets: PurchaseTicket[]) => {
     if (tickets.length === 0) {
       return null;
     }
 
-    const scrollKey = makeScrollKey(sectionKey);
     const listClassName = [styles.tickets, tickets.length > 1 ? styles.ticketsTwoCols : ""].filter(Boolean).join(" ");
 
-    const renderList = () => (
-      <div className={listClassName}>
-        {tickets.map((ticket) => {
-          const ticketId = String(ticket.id);
-          const passenger = passengerMap.get(String(ticket.passenger_id));
-          const passengerName = passenger?.name ?? `Пассажир #${ticket.passenger_id}`;
-          const ticketStatusLabel = STATUS_LABELS[ticket.status] ?? ticket.status;
-          const departureSegment =
-            ticket.segments.find((segment) => segment.is_departure) ?? ticket.segments[0];
-          const arrivalSegment =
-            [...ticket.segments].reverse().find((segment) => segment.is_arrival) ??
-            ticket.segments[ticket.segments.length - 1];
-          const departureName =
-            ticket.segment_details?.departure?.name ?? departureSegment?.stop_name ?? "—";
-          const arrivalName =
-            ticket.segment_details?.arrival?.name ?? arrivalSegment?.stop_name ?? "—";
-          const departureDateTime = ensureDateTimeString(
-            ticket.segment_details?.departure?.time,
-            ticket.tour.date,
-            null
-          );
-          const arrivalDateTime = ensureDateTimeString(
-            ticket.segment_details?.arrival?.time,
-            ticket.tour.date,
-            null
-          );
-          const departureSegmentTime = ensureDateTimeString(
-            departureSegment?.time ?? null,
-            ticket.tour.date,
-            null
-          );
-          const arrivalSegmentTime = ensureDateTimeString(
-            arrivalSegment?.time ?? null,
-            ticket.tour.date,
-            null
-          );
-          const departureTimeSource =
-            departureDateTime || departureSegment?.time || ticket.segment_details?.departure?.time || null;
-          const arrivalTimeSource =
-            arrivalDateTime || arrivalSegment?.time || ticket.segment_details?.arrival?.time || null;
-          const departureDate = formatDate(departureDateTime);
-          const departureTime = formatTime(departureTimeSource ?? departureSegmentTime);
-          const arrivalTime = formatTime(arrivalTimeSource ?? arrivalSegmentTime);
-          const extraBaggage = toNumberSafe(ticket.extra_baggage, 0);
-          const baggageValue = baggageDraft[ticketId] ?? extraBaggage;
-          const isRescheduleSelected = rescheduleTickets.includes(ticketId);
-          const isCancelSelected = cancelTickets.includes(ticketId);
-          const priceText = formatCurrency(
-            ticket.pricing?.price ?? null,
-            ticket.pricing?.currency ?? data.purchase.currency
-          );
-          const isSelected = selectedTicketSet.has(ticketId);
-          const isMenuOpen = openMenuTicketId === ticketId;
+    return (
+      <section key={title} className={styles.ticketSection} aria-label={title}>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>{title}</h2>
+          <span className={styles.sectionMeta}>Всего билетов: {tickets.length}</span>
+        </div>
+        <div className={listClassName}>
+          {tickets.map((ticket) => {
+            const ticketId = String(ticket.id);
+            const passenger = passengerMap.get(String(ticket.passenger_id));
+            const passengerName = passenger?.name ?? `Пассажир #${ticket.passenger_id}`;
+            const ticketStatusLabel = STATUS_LABELS[ticket.status] ?? ticket.status;
+            const departureSegment =
+              ticket.segments.find((segment) => segment.is_departure) ?? ticket.segments[0];
+            const arrivalSegment =
+              [...ticket.segments].reverse().find((segment) => segment.is_arrival) ??
+              ticket.segments[ticket.segments.length - 1];
+            const departureName =
+              ticket.segment_details?.departure?.name ?? departureSegment?.stop_name ?? "—";
+            const arrivalName =
+              ticket.segment_details?.arrival?.name ?? arrivalSegment?.stop_name ?? "—";
+            const departureDateTime = ensureDateTimeString(
+              ticket.segment_details?.departure?.time,
+              ticket.tour.date,
+              null
+            );
+            const arrivalDateTime = ensureDateTimeString(
+              ticket.segment_details?.arrival?.time,
+              ticket.tour.date,
+              null
+            );
+            const departureSegmentTime = ensureDateTimeString(
+              departureSegment?.time ?? null,
+              ticket.tour.date,
+              null
+            );
+            const arrivalSegmentTime = ensureDateTimeString(
+              arrivalSegment?.time ?? null,
+              ticket.tour.date,
+              null
+            );
+            const departureTimeSource =
+              departureDateTime || departureSegment?.time || ticket.segment_details?.departure?.time || null;
+            const arrivalTimeSource =
+              arrivalDateTime || arrivalSegment?.time || ticket.segment_details?.arrival?.time || null;
+            const departureDate = formatDate(departureDateTime);
+            const departureTime = formatTime(departureTimeSource ?? departureSegmentTime);
+            const arrivalTime = formatTime(arrivalTimeSource ?? arrivalSegmentTime);
+            const extraBaggage = toNumberSafe(ticket.extra_baggage, 0);
+            const baggageValue = baggageDraft[ticketId] ?? extraBaggage;
+            const isRescheduleSelected = rescheduleTickets.includes(ticketId);
+            const isCancelSelected = cancelTickets.includes(ticketId);
+            const priceText = formatCurrency(
+              ticket.pricing?.price ?? null,
+              ticket.pricing?.currency ?? data.purchase.currency
+            );
+            const isSelected = selectedTicketSet.has(ticketId);
+            const isMenuOpen = openMenuTicketId === ticketId;
 
-          return (
-            <article key={ticket.id} className={styles.ticket} data-selected={isSelected ? "true" : undefined}>
-              <input
-                className={styles.select}
-                type="checkbox"
-                checked={isSelected}
-                onChange={() => toggleTicketSelection(ticketId)}
-                aria-label={`Выбрать билет #${ticket.id}`}
-              />
-              <div className={styles.ticketTop}>
-                <div>
-                  <div className={styles.route}>
-                    {departureName} <span aria-hidden="true">→</span> {arrivalName}
+            return (
+              <article key={ticket.id} className={styles.ticket} data-selected={isSelected ? "true" : undefined}>
+                <input
+                  className={styles.select}
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={() => toggleTicketSelection(ticketId)}
+                  aria-label={`Выбрать билет #${ticket.id}`}
+                />
+                <div className={styles.ticketTop}>
+                  <div>
+                    <div className={styles.route}>
+                      {departureName} <span aria-hidden="true">→</span> {arrivalName}
+                    </div>
+                    <div className={styles.sub}>
+                      Билет #{ticket.id}
+                      {ticketStatusLabel ? ` • ${ticketStatusLabel}` : ""}
+                    </div>
+                    <div className={styles.passenger}>Пассажир: {passengerName}</div>
                   </div>
-                  <div className={styles.sub}>
-                    Билет #{ticket.id}
-                    {ticketStatusLabel ? ` • ${ticketStatusLabel}` : ""}
-                  </div>
-                  <div className={styles.passenger}>Пассажир: {passengerName}</div>
-                </div>
-                <div
-                  className={styles.menu}
-                  data-open={isMenuOpen ? "true" : undefined}
-                  onClick={(event) => event.stopPropagation()}
-                >
-                  <button
-                    type="button"
-                    className={`${styles.btn} ${styles.btnIcon}`}
-                    aria-haspopup="true"
-                    aria-expanded={isMenuOpen}
-                    title="Действия"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      setOpenMenuTicketId(isMenuOpen ? null : ticketId);
-                    }}
+                  <div
+                    className={styles.menu}
+                    data-open={isMenuOpen ? "true" : undefined}
+                    onClick={(event) => event.stopPropagation()}
                   >
-                    ⋯
-                  </button>
-                  <div className={styles.menuList} role="menu">
-                    <button type="button" role="menuitem" onClick={() => handleTicketReschedule(ticketId)}>
-                      Перенести
-                    </button>
-                    <button type="button" role="menuitem" onClick={handleOpenBaggagePanel}>
-                      Доп. багаж
-                    </button>
                     <button
                       type="button"
-                      role="menuitem"
-                      onClick={() => {
-                        setOpenMenuTicketId(null);
-                        void handleDownloadTicket(ticket.id);
+                      className={`${styles.btn} ${styles.btnIcon}`}
+                      aria-haspopup="true"
+                      aria-expanded={isMenuOpen}
+                      title="Действия"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setOpenMenuTicketId(isMenuOpen ? null : ticketId);
                       }}
+                    >
+                      ⋯
+                    </button>
+                    <div className={styles.menuList} role="menu">
+                      <button type="button" role="menuitem" onClick={() => handleTicketReschedule(ticketId)}>
+                        Перенести
+                      </button>
+                      <button type="button" role="menuitem" onClick={handleOpenBaggagePanel}>
+                        Доп. багаж
+                      </button>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setOpenMenuTicketId(null);
+                          void handleDownloadTicket(ticket.id);
+                        }}
+                      >
+                        Скачать PDF
+                      </button>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => handleTicketCancel(ticketId)}
+                        className={styles.menuDanger}
+                      >
+                        Отменить
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div className={styles.chips}>
+                  <span className={`${styles.chip} ${styles.chipDate} ${styles.mono}`}>{departureDate}</span>
+                  <span className={`${styles.chip} ${styles.mono}`}>
+                    {departureTime} → {arrivalTime}
+                  </span>
+                  <span className={`${styles.chip} ${styles.chipSeat}`}>
+                    Место {ticket.seat_num ?? "—"}
+                  </span>
+                  <span className={styles.priceEnd}>
+                    Цена: <span className={styles.mono}>{priceText}</span>
+                  </span>
+                </div>
+                <div className={styles.ticketActions}>
+                  <div className={styles.actionToggles}>
+                    <label className={styles.actionCheckbox}>
+                      <input
+                        type="checkbox"
+                        checked={isRescheduleSelected}
+                        onChange={() => toggleRescheduleTicket(ticketId)}
+                        disabled={isActionDisabled || rescheduleScope === "all"}
+                      />
+                      <span>Перенести</span>
+                    </label>
+                    <label className={styles.actionCheckbox}>
+                      <input
+                        type="checkbox"
+                        checked={isCancelSelected}
+                        onChange={() => toggleCancelTicket(ticketId)}
+                        disabled={isActionDisabled}
+                      />
+                      <span>{cancelActionLabel}</span>
+                    </label>
+                  </div>
+                  <div className={styles.actionControls}>
+                    <div className={styles.baggageControl}>
+                      <span className={styles.baggageLabel}>Доп. багаж</span>
+                      <div className={styles.baggageStepper}>
+                        <button
+                          type="button"
+                          onClick={() => decrementBaggage(ticketId)}
+                          disabled={isActionDisabled || baggageValue <= 0}
+                          aria-label="Уменьшить багаж"
+                        >
+                          −
+                        </button>
+                        <span className={styles.baggageValue}>{baggageValue}</span>
+                        <button
+                          type="button"
+                          onClick={() => incrementBaggage(ticketId)}
+                          disabled={isActionDisabled}
+                          aria-label="Увеличить багаж"
+                        >
+                          +
+                        </button>
+                      </div>
+                      {baggageValue !== extraBaggage ? (
+                        <span className={styles.baggageChanged}>изменено</span>
+                      ) : null}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => void handleDownloadTicket(ticket.id)}
+                      className={styles.actionLink}
                     >
                       Скачать PDF
                     </button>
-                    <button
-                      type="button"
-                      role="menuitem"
-                      onClick={() => handleTicketCancel(ticketId)}
-                      className={styles.menuDanger}
-                    >
-                      Отменить
-                    </button>
                   </div>
                 </div>
-              </div>
-              <div className={styles.chips}>
-                <span className={`${styles.chip} ${styles.chipDate} ${styles.mono}`}>{departureDate}</span>
-                <span className={`${styles.chip} ${styles.mono}`}>
-                  {departureTime} → {arrivalTime}
-                </span>
-                <span className={`${styles.chip} ${styles.chipSeat}`}>
-                  Место {ticket.seat_num ?? "—"}
-                </span>
-                <span className={styles.priceEnd}>
-                  Цена: <span className={styles.mono}>{priceText}</span>
-                </span>
-              </div>
-              <div className={styles.ticketActions}>
-                <div className={styles.actionToggles}>
-                  <label className={styles.actionCheckbox}>
-                    <input
-                      type="checkbox"
-                      checked={isRescheduleSelected}
-                      onChange={() => toggleRescheduleTicket(ticketId)}
-                      disabled={isActionDisabled || rescheduleScope === "all"}
-                    />
-                    <span>Перенести</span>
-                  </label>
-                  <label className={styles.actionCheckbox}>
-                    <input
-                      type="checkbox"
-                      checked={isCancelSelected}
-                      onChange={() => toggleCancelTicket(ticketId)}
-                      disabled={isActionDisabled}
-                    />
-                    <span>{cancelActionLabel}</span>
-                  </label>
-                </div>
-                <div className={styles.actionControls}>
-                  <div className={styles.baggageControl}>
-                    <span className={styles.baggageLabel}>Доп. багаж</span>
-                    <div className={styles.baggageStepper}>
-                      <button
-                        type="button"
-                        onClick={() => decrementBaggage(ticketId)}
-                        disabled={isActionDisabled || baggageValue <= 0}
-                        aria-label="Уменьшить багаж"
-                      >
-                        −
-                      </button>
-                      <span className={styles.baggageValue}>{baggageValue}</span>
-                      <button
-                        type="button"
-                        onClick={() => incrementBaggage(ticketId)}
-                        disabled={isActionDisabled}
-                        aria-label="Увеличить багаж"
-                      >
-                        +
-                      </button>
-                    </div>
-                    {baggageValue !== extraBaggage ? (
-                      <span className={styles.baggageChanged}>изменено</span>
-                    ) : null}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => void handleDownloadTicket(ticket.id)}
-                    className={styles.actionLink}
-                  >
-                    Скачать PDF
-                  </button>
-                </div>
-              </div>
-            </article>
-          );
-        })}
-      </div>
-    );
-
-    return (
-      <ScrollableCard
-        key={sectionKey}
-        title={title}
-        meta={`Всего билетов: ${tickets.length}`}
-        scrollKey={scrollKey}
-        ariaLabel={`${title} (прокручиваемая зона)`}
-        initialScrollTop={scrollPositions[scrollKey] ?? 0}
-        renderContent={renderList}
-        onScrollChange={updateScrollPosition}
-        onExpand={handleExpandSection}
-      />
+              </article>
+            );
+          })}
+        </div>
+      </section>
     );
   };
 
@@ -2566,9 +2299,8 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
 
 
   return (
-    <>
-      <div className={styles.page}>
-        <div className={styles.container}>
+    <div className={styles.page}>
+      <div className={styles.container}>
         <section className={`${styles.card} ${styles.orderCard}`} aria-labelledby="order-title">
           <div className={styles.orderHead}>
             <div className={styles.orderTitleRow}>
@@ -2667,15 +2399,9 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
           </div>
         ) : null}
 
-        {renderTicketSection(
-          showReturnTickets ? "Билеты туда" : "Билеты",
-          outboundTickets,
-          "tickets:outbound"
-        )}
+        {renderTicketSection(showReturnTickets ? "Билеты туда" : "Билеты", outboundTickets)}
 
-        {showReturnTickets
-          ? renderTicketSection("Билеты обратно", returnTickets, "tickets:return")
-          : null}
+        {showReturnTickets ? renderTicketSection("Билеты обратно", returnTickets) : null}
 
         {activePanel === "reschedule" ? (
           <section className={`${styles.card} ${styles.panel}`}>
@@ -2996,13 +2722,18 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
           </section>
         ) : null}
 
-        <ScrollableCard
-          title="История действий"
-          meta={`Записей: ${history.length}`}
-          scrollKey={makeScrollKey("history")}
-          ariaLabel="История действий (прокручиваемая зона)"
-          initialScrollTop={scrollPositions[makeScrollKey("history")] ?? 0}
-          renderContent={() =>
+        <section className={`${styles.card} ${styles.historyCard}`}>
+          <div className={styles.historyHeader}>
+            <h2 className={styles.sectionTitle}>История действий</h2>
+            <button
+              type="button"
+              onClick={() => setHistoryOpen((prev) => !prev)}
+              className={styles.historyToggle}
+            >
+              {historyOpen ? "Скрыть" : "Показать"}
+            </button>
+          </div>
+          {historyOpen ? (
             history.length === 0 ? (
               <p className={styles.historyEmpty}>История пока пуста.</p>
             ) : (
@@ -3030,81 +2761,42 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
                 ))}
               </ul>
             )
-          }
-          onScrollChange={updateScrollPosition}
-          onExpand={handleExpandSection}
-        />
-      </div>
-
-        <section className={styles.paybar}>
-          <div className={styles.paybarInner}>
-            <div className={styles.paySummary}>
-              <span className={styles.muted}>К оплате:</span>
-              <span className={`${styles.sumInline} ${styles.mono}`}>{dueAmountText}</span>
-            </div>
-            <div className={styles.payButtons}>
-              {shouldShowDownloadAll ? (
-                <button type="button" className={`${styles.btn} ${styles.btnGhost}`} onClick={handleDownloadAll}>
-                  Скачать все PDF
-                </button>
-              ) : null}
-              <button
-                type="button"
-                className={`${styles.btn} ${styles.btnPay}`}
-                onClick={handlePrimaryAction}
-                disabled={primaryActionDisabled}
-              >
-                {isPaid ? (
-                  primaryActionLabel
-                ) : (
-                  <>
-                    <span className={styles.payDot} aria-hidden="true" />
-                    Оплатить • <span className={styles.mono}>{dueAmountText}</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
+          ) : (
+            <p className={styles.historyHint}>Откройте раздел, чтобы посмотреть историю операций.</p>
+          )}
         </section>
       </div>
 
-      {modalState ? (
-        <div className={styles.modal} role="presentation" onClick={handleModalBackdropClick}>
-          <div
-            className={styles.modalSheet}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="purchase-modal-title"
-          >
-            <div className={styles.modalHeader}>
-              <h2 id="purchase-modal-title" className={styles.modalTitle}>
-                {modalState.title}
-              </h2>
-              <button type="button" className={styles.modalClose} onClick={handleCloseModal}>
-                Закрыть
+      <section className={styles.paybar}>
+        <div className={styles.paybarInner}>
+          <div className={styles.paySummary}>
+            <span className={styles.muted}>К оплате:</span>
+            <span className={`${styles.sumInline} ${styles.mono}`}>{dueAmountText}</span>
+          </div>
+          <div className={styles.payButtons}>
+            {shouldShowDownloadAll ? (
+              <button type="button" className={`${styles.btn} ${styles.btnGhost}`} onClick={handleDownloadAll}>
+                Скачать все PDF
               </button>
-            </div>
-            <div className={styles.modalBody}>
-              <div
-                ref={modalScrollRef}
-                className={`${styles.scrollArea} ${styles.modalScroll} ${
-                  modalScrolled ? styles.scrollAreaScrolled : ""
-                }`}
-              >
-                {modalState.renderContent()}
-                <button
-                  type="button"
-                  className={`${styles.toTop} ${modalScrolled ? styles.toTopVisible : ""}`}
-                  onClick={handleModalToTop}
-                  title="Прокрутить вверх"
-                >
-                  ↑ <span>Вверх</span>
-                </button>
-              </div>
-            </div>
+            ) : null}
+            <button
+              type="button"
+              className={`${styles.btn} ${styles.btnPay}`}
+              onClick={handlePrimaryAction}
+              disabled={primaryActionDisabled}
+            >
+              {isPaid ? (
+                primaryActionLabel
+              ) : (
+                <>
+                  <span className={styles.payDot} aria-hidden="true" />
+                  Оплатить • <span className={styles.mono}>{dueAmountText}</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
-      ) : null}
-    </>
+      </section>
+    </div>
   );
 }
