@@ -172,106 +172,29 @@
   margin-top: 4px;
 }
 
-.scrollCard {
-  display: flex;
-  flex-direction: column;
-  padding: 0;
+.ticketSection {
+  padding: 12px 0 0;
+  display: grid;
+  gap: 12px;
 }
 
-.scrollCardHeader {
+.sectionHeader {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
   gap: 12px;
-  padding: 16px 18px 14px;
-  border-bottom: 1px solid var(--purchase-line);
-  background: #f8fbff;
+  padding: 0 4px;
 }
 
-.scrollCardTitle {
+.sectionTitle {
   margin: 0;
   font-size: 18px;
   font-weight: 800;
-  color: var(--purchase-text);
 }
 
-.scrollCardMeta {
-  display: block;
-  margin-top: 2px;
-  font-size: 13px;
+.sectionMeta {
   color: var(--purchase-muted);
-}
-
-.scrollCardActions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.scrollExpand {
-  height: 32px;
-  padding: 0 14px;
-  border-radius: 10px;
-  border: 1px solid var(--purchase-line);
-  background: #fff;
-  color: var(--purchase-primary);
-  font-weight: 700;
   font-size: 13px;
-  cursor: pointer;
-  transition: box-shadow 0.12s ease, background 0.12s ease, border-color 0.12s ease;
-}
-
-.scrollExpand:hover {
-  background: #eef4ff;
-  border-color: #d7e6fb;
-  box-shadow: 0 3px 10px rgba(7, 55, 99, 0.12);
-}
-
-.scrollArea {
-  position: relative;
-  max-height: 320px;
-  overflow: auto;
-  overscroll-behavior: contain;
-  padding: 18px;
-  background: #fbfcff;
-}
-
-.scrollAreaScrolled {
-  box-shadow: inset 0 12px 18px rgba(7, 55, 99, 0.06);
-}
-
-@media (max-width: 1100px) {
-  .scrollArea {
-    max-height: 55vh;
-  }
-}
-
-.toTop {
-  position: sticky;
-  bottom: 8px;
-  left: calc(100% - 72px);
-  margin-top: 8px;
-  display: none;
-  align-items: center;
-  gap: 6px;
-  height: 30px;
-  padding: 0 12px;
-  border-radius: 999px;
-  border: 1px solid var(--purchase-line);
-  background: #fff;
-  color: #385c83;
-  font-weight: 800;
-  font-size: 13px;
-  box-shadow: 0 3px 10px rgba(7, 55, 99, 0.12);
-  cursor: pointer;
-}
-
-.toTop span {
-  font-size: 12px;
-}
-
-.toTopVisible {
-  display: inline-flex;
 }
 
 .tickets {
@@ -816,6 +739,29 @@
   color: #445b76;
 }
 
+.historyCard {
+  padding: 22px 24px;
+}
+
+.historyHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.historyToggle {
+  border: none;
+  background: none;
+  color: var(--purchase-primary);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.historyToggle:hover {
+  text-decoration: underline;
+}
+
 .historyEmpty {
   margin: 0;
   padding: 24px;
@@ -871,67 +817,9 @@
   margin: 4px 0 0;
 }
 
-.modal {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  background: rgba(11, 27, 43, 0.55);
-  z-index: 1000;
-}
-
-.modalSheet {
-  background: #fff;
-  border-radius: 16px;
-  border: 1px solid var(--purchase-line);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
-  width: min(100%, 1100px);
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.modalHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 14px 18px;
-  border-bottom: 1px solid var(--purchase-line);
-}
-
-.modalTitle {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 800;
-  color: var(--purchase-text);
-}
-
-.modalClose {
-  height: 34px;
-  padding: 0 16px;
-  border-radius: 10px;
-  border: 1px solid var(--purchase-line);
-  background: #fff;
-  color: var(--purchase-text);
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.modalClose:hover {
-  background: #f6f8fb;
-}
-
-.modalBody {
-  padding: 0 18px 18px;
-}
-
-.modalScroll {
-  max-height: 76vh;
-  background: #fff;
+.historyHint {
+  color: var(--purchase-muted);
+  font-size: 14px;
 }
 
 .paybar {
@@ -1006,14 +894,5 @@
 
   .contactMeta {
     align-items: flex-start;
-  }
-
-  .modal {
-    padding: 12px;
-  }
-
-  .modalSheet {
-    border-radius: 12px;
-    max-height: 92vh;
   }
 }
