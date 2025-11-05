@@ -1276,18 +1276,25 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
       return;
     }
 
-    const closeMenu = () => setOpenMenuTicketId(null);
+    const handleDocumentClick = (event: MouseEvent) => {
+      const target = event.target;
+      if (target instanceof Element && target.closest("[data-ticket-menu]")) {
+        return;
+      }
+      setOpenMenuTicketId(null);
+    };
+
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setOpenMenuTicketId(null);
       }
     };
 
-    document.addEventListener("click", closeMenu);
+    document.addEventListener("click", handleDocumentClick);
     document.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      document.removeEventListener("click", closeMenu);
+      document.removeEventListener("click", handleDocumentClick);
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
@@ -2470,6 +2477,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
                 <div
                   className={styles.menu}
                   data-open={isMenuOpen ? "true" : undefined}
+                  data-ticket-menu="true"
                   onClick={(event) => event.stopPropagation()}
                 >
                   <button
