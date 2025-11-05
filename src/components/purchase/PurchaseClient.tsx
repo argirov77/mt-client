@@ -2328,8 +2328,6 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
   const baggageHighlightClass = baggageQuote?.can_apply
     ? styles.panelHighlightSuccess
     : styles.panelHighlightWarning;
-  let bulkActionsPlaced = false;
-
   const handlePrimaryAction = () => {
     if (isActionDisabled) {
       return;
@@ -2352,59 +2350,8 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
     const listClassName = [styles.tickets, tickets.length > 1 ? styles.ticketsTwoCols : ""].filter(Boolean).join(" ");
 
     const renderList = () => {
-      const sectionHasSelection = tickets.some((ticket) => selectedTicketSet.has(String(ticket.id)));
-      const showBulkActionsHere = shouldShowBulkActions && sectionHasSelection && !bulkActionsPlaced;
-
-      if (showBulkActionsHere) {
-        bulkActionsPlaced = true;
-      }
-
       return (
         <div className={styles.ticketSection}>
-          {showBulkActionsHere ? (
-            <div className={styles.bulkBarWrap}>
-              <div className={styles.bulkSummary}>
-                <span>Выбрано билетов: {bulkSelectionCount}</span>
-                <span>
-                  Сумма: <span className={styles.mono}>{selectedTicketsTotalText}</span>
-                </span>
-              </div>
-              <div className={styles.bulkBar} role="toolbar" aria-label="Групповые действия">
-                <button
-                  type="button"
-                  className={`${styles.btn} ${styles.btnGhost}`}
-                  onClick={handleBulkReschedule}
-                  disabled={isActionDisabled || bulkSelectionCount === 0}
-                >
-                  Перенести
-                </button>
-                <button
-                  type="button"
-                  className={`${styles.btn} ${styles.btnDanger}`}
-                  onClick={handleBulkCancel}
-                  disabled={isActionDisabled || bulkSelectionCount === 0}
-                >
-                  {cancelActionLabel}
-                </button>
-                <button
-                  type="button"
-                  className={`${styles.btn} ${styles.btnGhost}`}
-                  onClick={handleOpenBaggagePanel}
-                  disabled={isActionDisabled}
-                >
-                  Доп. багаж
-                </button>
-                <button
-                  type="button"
-                  className={`${styles.btn} ${styles.btnGhost}`}
-                  onClick={handleBulkDownload}
-                  disabled={bulkSelectionCount === 0}
-                >
-                  Скачать PDF
-                </button>
-              </div>
-            </div>
-          ) : null}
           <div className={listClassName}>
             {tickets.map((ticket) => {
           const ticketId = String(ticket.id);
@@ -2996,6 +2943,58 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
               )}
             </div>
           </section>
+        ) : null}
+
+        {shouldShowBulkActions ? (
+          <div
+            className={styles.bulkBarDock}
+            role="region"
+            aria-live="polite"
+            aria-label="Групповые действия по выбранным билетам"
+          >
+            <div className={styles.bulkBarWrap}>
+              <div className={styles.bulkSummary}>
+                <span>Выбрано билетов: {bulkSelectionCount}</span>
+                <span>
+                  Сумма: <span className={styles.mono}>{selectedTicketsTotalText}</span>
+                </span>
+              </div>
+              <div className={styles.bulkBar} role="toolbar" aria-label="Групповые действия">
+                <button
+                  type="button"
+                  className={`${styles.btn} ${styles.btnGhost}`}
+                  onClick={handleBulkReschedule}
+                  disabled={isActionDisabled || bulkSelectionCount === 0}
+                >
+                  Перенести
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.btn} ${styles.btnDanger}`}
+                  onClick={handleBulkCancel}
+                  disabled={isActionDisabled || bulkSelectionCount === 0}
+                >
+                  {cancelActionLabel}
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.btn} ${styles.btnGhost}`}
+                  onClick={handleOpenBaggagePanel}
+                  disabled={isActionDisabled}
+                >
+                  Доп. багаж
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.btn} ${styles.btnGhost}`}
+                  onClick={handleBulkDownload}
+                  disabled={bulkSelectionCount === 0}
+                >
+                  Скачать PDF
+                </button>
+              </div>
+            </div>
+          </div>
         ) : null}
 
         <section className={styles.paybar}>
