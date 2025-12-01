@@ -1,11 +1,34 @@
 // src/components/hero/HeroSection.tsx
 "use client";
 
+import { useEffect, useRef, useState } from "react";
+import SearchForm from "./SearchForm";
+import SearchResults from "@/components/search/SearchResults";
 import { translations as heroTranslations } from "@/i18n";
 
 type Lang = "ru" | "bg" | "en" | "ua";
 
 export default function HeroSection({ lang = "ru" }: { lang?: Lang }) {
+  const [criteria, setCriteria] = useState<null | {
+    from: string;
+    to: string;
+    fromName: string;
+    toName: string;
+    date: string;
+    returnDate?: string;
+    seatCount: number;
+    discountCount: number;
+  }>(null);
+
+  const resultsRef = useRef<HTMLDivElement | null>(null);
+  const expanded = !!criteria;
+
+  useEffect(() => {
+    if (criteria && resultsRef.current) {
+      resultsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [criteria]);
+
   return (
     <section
       id="hero"
@@ -19,17 +42,50 @@ export default function HeroSection({ lang = "ru" }: { lang?: Lang }) {
           {heroTranslations[lang].subtitle}
         </p>
 
-        <div className="mt-8 flex justify-center">
-          <a
-            href="#booking"
-            className="rounded-full bg-white/90 px-6 py-3 text-sky-700 shadow-lg ring-1 ring-white/50 transition hover:bg-white"
+        {/* ЕДИНАЯ КАПСУЛА: форма + (скрываемый) блок результатов */}
+        <div className="mx-auto mt-8 max-w-5xl rounded-3xl bg-white/20 backdrop-blur shadow-lg ring-1 ring-white/30 overflow-visible relative z-30">
+
+          {/* ВСТАВЛЯЕМ ФОРМУ БЕЗ ЕЕ СОБСТВЕННОГО ВНЕШНЕГО КОНТЕЙНЕРА  */}
+          <div className="p-5">
+            <SearchForm
+              lang={lang}
+              embedded
+              onSearch={(cr) => setCriteria(cr)}
+            />
+          </div>
+
+          {/* Плавно раскрываемый блок с результатами ПОИСКА */}
+          <div
+            className={[
+              'grid transition-all duration-300 ease-in-out',
+              expanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0',
+            ].join(' ')}
           >
-            Перейти к покупке билета
-          </a>
+            {expanded && (
+              <div ref={resultsRef} className="px-5 pb-5 pt-0">
+                <div className="rounded-2xl bg-white/80 p-4 text-slate-900 shadow ring-1 ring-black/5">
+                  <SearchResults
+                    lang={lang}
+                    from={criteria!.from}
+                    to={criteria!.to}
+                    fromName={criteria!.fromName}
+                    toName={criteria!.toName}
+                    date={criteria!.date}
+                    returnDate={criteria!.returnDate}
+                    seatCount={criteria!.seatCount}
+                    discountCount={criteria!.discountCount}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
-        <p className="mt-6 text-center text-sm text-white/80">{heroTranslations[lang].note}</p>
+        <p className="mt-6 text-center text-sm text-white/80">
+          {heroTranslations[lang].note}
+        </p>
       </div>
     </section>
   );
 }
+

@@ -1,7 +1,6 @@
 "use client";
 
 import HeroSection from "@/components/hero/HeroSection";
-import BookingFlow from "@/components/booking/BookingFlow";
 import Routes from "@/components/Routes";
 import Schedule from "@/components/Schedule";
 import About from "@/components/About";
@@ -14,10 +13,6 @@ export default function Page() {
     <main className="min-h-screen">
       <section id="hero">
         <HeroSection lang={lang} />
-      </section>
-
-      <section id="booking" className="bg-white">
-        <BookingFlow />
       </section>
 
       <section id="routes" className="relative z-10 bg-white/60">
