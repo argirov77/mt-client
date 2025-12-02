@@ -17,6 +17,7 @@ import TripList from "./TripList";
 import BookingPanel from "./BookingPanel";
 import ElectronicTicket from "./ElectronicTicket";
 import TicketDownloadPrompt from "./TicketDownloadPrompt";
+import ContactsAndPaymentStep from "./ContactsAndPaymentStep";
 
 import { downloadTicketPdf } from "@/utils/ticketPdf";
 import type { ElectronicTicketData } from "@/types/ticket";
@@ -93,6 +94,22 @@ type Dict = {
   ticketOpenOnline: string;
   ticketDownloadReady: string;
   ticketDownloadDismiss: string;
+  contactsDescription: string;
+  contactsAndPayment: string;
+  contactsPhone: string;
+  contactsEmail: string;
+  step1Title: string;
+  step2Title: string;
+  step3Title: string;
+  step1SummaryChoose: string;
+  step2SummaryChooseSeats: string;
+  step2SummaryFillNames: string;
+  step2SummaryReady: string;
+  step3SummaryEmpty: string;
+  step3SummaryPending: string;
+  step3SummaryPaid: string;
+  step3SummaryCanceled: string;
+  next: string;
 };
 
 const dict: Record<NonNullable<Props["lang"]>, Dict> = {
@@ -146,6 +163,23 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     ticketOpenOnline: "Открыть онлайн",
     ticketDownloadReady: "Ваш билет готов к скачиванию",
     ticketDownloadDismiss: "Скрыть",
+    contactsDescription:
+      "В стоимость входит 1 ручная кладь и 1 чемодан. Дополнительный багаж можно докупить на каждого пассажира отдельно.",
+    contactsAndPayment: "Контакты и оплата",
+    contactsPhone: "Телефон",
+    contactsEmail: "Email",
+    step1Title: "Выбор рейса",
+    step2Title: "Места и пассажиры",
+    step3Title: "Контакты и оплата",
+    step1SummaryChoose: "Выберите рейс",
+    step2SummaryChooseSeats: "Выберите места",
+    step2SummaryFillNames: "Заполните имена пассажиров",
+    step2SummaryReady: "Готово к контактам",
+    step3SummaryEmpty: "Укажите контакты и завершите бронирование",
+    step3SummaryPending: "Есть бронирование, ожидает оплаты",
+    step3SummaryPaid: "Билет оплачен",
+    step3SummaryCanceled: "Бронирование отменено",
+    next: "Далее",
   },
   en: {
     noResults: "No trips found",
@@ -196,6 +230,23 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     ticketOpenOnline: "Open online",
     ticketDownloadReady: "Your ticket is ready to download",
     ticketDownloadDismiss: "Dismiss",
+    contactsDescription:
+      "The price includes 1 cabin bag and 1 checked bag. Extra baggage can be purchased for each passenger individually.",
+    contactsAndPayment: "Contacts & payment",
+    contactsPhone: "Phone",
+    contactsEmail: "Email",
+    step1Title: "Select trip",
+    step2Title: "Seats & passengers",
+    step3Title: "Contacts & payment",
+    step1SummaryChoose: "Choose a trip",
+    step2SummaryChooseSeats: "Pick seats",
+    step2SummaryFillNames: "Fill passenger names",
+    step2SummaryReady: "Ready for contacts",
+    step3SummaryEmpty: "Add contacts to finish booking",
+    step3SummaryPending: "Booking pending payment",
+    step3SummaryPaid: "Ticket paid",
+    step3SummaryCanceled: "Booking canceled",
+    next: "Next",
   },
   bg: {
     noResults: "Няма намерени курсове",
@@ -246,6 +297,23 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     ticketOpenOnline: "Отвори онлайн",
     ticketDownloadReady: "Вашият билет е готов за изтегляне",
     ticketDownloadDismiss: "Скрий",
+    contactsDescription:
+      "В цената са включени 1 ръчен багаж и 1 куфар. Допълнителен багаж може да се добави за всеки пътник отделно.",
+    contactsAndPayment: "Контакти и плащане",
+    contactsPhone: "Телефон",
+    contactsEmail: "Email",
+    step1Title: "Избор на курс",
+    step2Title: "Места и пътници",
+    step3Title: "Контакти и плащане",
+    step1SummaryChoose: "Изберете курс",
+    step2SummaryChooseSeats: "Изберете места",
+    step2SummaryFillNames: "Въведете имената на пътниците",
+    step2SummaryReady: "Готово за контакти",
+    step3SummaryEmpty: "Добавете контакти, за да завършите",
+    step3SummaryPending: "Резервация в очакване на плащане",
+    step3SummaryPaid: "Билетът е платен",
+    step3SummaryCanceled: "Резервацията е отменена",
+    next: "Напред",
   },
   ua: {
     noResults: "Рейси не знайдено",
@@ -296,6 +364,23 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     ticketOpenOnline: "Відкрити онлайн",
     ticketDownloadReady: "Ваш квиток готовий до завантаження",
     ticketDownloadDismiss: "Приховати",
+    contactsDescription:
+      "У вартість входить 1 одиниця ручної поклажі та 1 валіза. Додатковий багаж можна докупити окремо на кожного пасажира.",
+    contactsAndPayment: "Контакти та оплата",
+    contactsPhone: "Телефон",
+    contactsEmail: "Email",
+    step1Title: "Вибір рейсу",
+    step2Title: "Місця та пасажири",
+    step3Title: "Контакти та оплата",
+    step1SummaryChoose: "Оберіть рейс",
+    step2SummaryChooseSeats: "Оберіть місця",
+    step2SummaryFillNames: "Заповніть імена пасажирів",
+    step2SummaryReady: "Готово до контактів",
+    step3SummaryEmpty: "Додайте контакти, щоб завершити бронювання",
+    step3SummaryPending: "Є бронювання, очікує оплату",
+    step3SummaryPaid: "Квиток оплачено",
+    step3SummaryCanceled: "Бронювання скасовано",
+    next: "Далі",
   },
 };
 
@@ -726,6 +811,7 @@ export default function SearchResults({
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleCancel = async () => {
     if (!purchaseId) {
       setMsg("Нет бронирования для отмены");
@@ -799,81 +885,56 @@ export default function SearchResults({
     typeof s === "number" ? s : s?.free ?? 0;
 
   // ====== РЕЗЮМЕ ДЛЯ ХЕДЕРОВ ШАГОВ ======
-  const step1Summary = useMemo(() => {
-    if (!outboundTours.length && !returnTours.length) return t.noResults;
-    if (!selectedOutboundTour && !selectedReturnTour)
-      return lang === "en" ? "No trip selected" : "Рейсы не выбраны";
 
-    const parts: string[] = [];
-    if (selectedOutboundTour) {
-      parts.push(
-        `${t.outboundShort.toLowerCase()}: ${
-          selectedOutboundTour.departure_time
-        }`
-      );
+  const returnRequired = Boolean(returnDate && hasReturnSection);
+  const seatsDone =
+    selectedOutboundSeats.length === safeSeatCount &&
+    (!returnRequired || selectedReturnSeats.length === safeSeatCount);
+  const namesDone = passengerNames.filter((n) => !!n).length === safeSeatCount;
+  const step2Complete =
+    !!selectedOutboundTour && (!returnRequired || !!selectedReturnTour) && seatsDone && namesDone;
+
+  const step1Summary = useMemo(() => {
+    if (!selectedOutboundTour) {
+      return t.step1SummaryChoose;
     }
     if (selectedReturnTour) {
-      parts.push(
-        `${t.inboundShort.toLowerCase()}: ${
-          selectedReturnTour.departure_time
-        }`
-      );
+      return `${t.outboundShort} ${selectedOutboundTour.departure_time} · ${t.inboundShort} ${selectedReturnTour.departure_time}`;
     }
-    return parts.join(" · ");
-  }, [selectedOutboundTour, selectedReturnTour, outboundTours.length, returnTours.length, lang, t]);
+    return `${t.outboundShort} ${selectedOutboundTour.departure_time}`;
+  }, [selectedOutboundTour, selectedReturnTour, t]);
 
   const step2Summary = useMemo(() => {
-    if (!selectedOutboundTour) {
-      return lang === "en" ? "Select a trip first" : "Сначала выберите рейс";
-    }
-    const seatsDone =
-      selectedOutboundSeats.length === safeSeatCount &&
-      (!returnDate ||
-        !selectedReturnTour ||
-        selectedReturnSeats.length === safeSeatCount);
-    const passengersDone =
-      passengerNames.filter((n) => !!n).length === safeSeatCount;
-
-    if (seatsDone && passengersDone) {
-      return lang === "en"
-        ? "Seats and passengers filled"
-        : "Места и пассажиры заполнены";
-    }
-    if (!seatsDone) {
-      return lang === "en"
-        ? "Choose seats"
-        : "Выберите места для всех пассажиров";
-    }
-    return lang === "en"
-      ? "Fill passenger names"
-      : "Заполните имена пассажиров";
-  }, [
-    selectedOutboundTour,
-    selectedReturnTour,
-    selectedOutboundSeats.length,
-    selectedReturnSeats.length,
-    safeSeatCount,
-    passengerNames,
-    returnDate,
-    lang,
-  ]);
+    if (!selectedOutboundTour) return t.step1SummaryChoose;
+    if (!seatsDone) return t.step2SummaryChooseSeats;
+    if (!namesDone) return t.step2SummaryFillNames;
+    return t.step2SummaryReady;
+  }, [namesDone, seatsDone, selectedOutboundTour, t]);
 
   const step3Summary = useMemo(() => {
-    if (!ticket && !purchaseId) {
-      return lang === "en"
-        ? "No ticket yet"
-        : "Билет ещё не оформлен / не оплачен";
+    if (ticket?.status === "paid") return t.step3SummaryPaid;
+    if (ticket?.status === "canceled") return t.step3SummaryCanceled;
+    if (ticket || purchaseId) return t.step3SummaryPending;
+    return t.step3SummaryEmpty;
+  }, [purchaseId, ticket, t]);
+
+  const handleStepOpen = (
+    step: Step,
+    ref: React.RefObject<HTMLDivElement>
+  ) => {
+    if (step === 2 && (!selectedOutboundTour || (returnRequired && !selectedReturnTour))) {
+      setActiveStep(1);
+      scrollToRef(step1Ref);
+      return;
     }
-    if (ticket?.status === "paid") {
-      return lang === "en" ? "Ticket paid" : "Билет оплачен";
+    if (step === 3 && !step2Complete) {
+      setActiveStep(2);
+      scrollToRef(step2Ref);
+      return;
     }
-    if (ticket?.status === "canceled") {
-      return lang === "en" ? "Ticket canceled" : "Бронирование отменено";
-    }
-    return lang === "en"
-      ? "Pending payment"
-      : "Есть бронирование, ожидает оплаты";
-  }, [ticket, purchaseId, lang]);
+    setActiveStep(step);
+    scrollToRef(ref);
+  };
 
   const renderStepHeader = (
     step: Step,
@@ -890,17 +951,12 @@ export default function SearchResults({
             ? "border-sky-400 bg-sky-50 text-sky-900 shadow-sm"
             : "border-slate-200 bg-white text-slate-800 hover:border-sky-200"
         }`}
-        onClick={() => {
-          setActiveStep(step);
-          scrollToRef(ref);
-        }}
+        onClick={() => handleStepOpen(step, ref)}
       >
         <div className="flex items-center gap-3">
           <span
             className={`grid h-8 w-8 place-items-center rounded-full text-xs font-semibold ${
-              isActive
-                ? "bg-sky-600 text-white"
-                : "bg-slate-100 text-slate-600"
+              isActive ? "bg-sky-600 text-white" : "bg-slate-100 text-slate-600"
             }`}
           >
             {step}
@@ -919,13 +975,81 @@ export default function SearchResults({
     );
   };
 
-  const showStep2Body =
-    activeStep === 2 &&
-    selectedOutboundTour &&
-    (!returnDate || !hasReturnSection || selectedReturnTour);
+  useEffect(() => {
+    if (!selectedOutboundTour) return;
+    if (returnRequired && !selectedReturnTour) return;
+    setActiveStep((prev) => (prev < 2 ? 2 : prev));
+    scrollToRef(step2Ref);
+  }, [returnRequired, scrollToRef, selectedOutboundTour, selectedReturnTour]);
 
   const showStep1Body = activeStep === 1;
-  const showStep3Body = activeStep === 3 && ticket;
+  const showStep2Body =
+    activeStep === 2 && selectedOutboundTour && (!returnRequired || selectedReturnTour);
+  const showStep3Body = activeStep === 3 && !ticket;
+
+  const outboundListVisible = !selectedOutboundTour && outboundTours.length > 0;
+  const returnListVisible =
+    !!selectedOutboundTour && returnRequired && !selectedReturnTour && returnTours.length > 0;
+
+  const resetOutbound = () => {
+    setSelectedOutboundTour(null);
+    setSelectedReturnTour(null);
+    setSelectedOutboundSeats([]);
+    setSelectedReturnSeats([]);
+    setActiveStep(1);
+  };
+
+  const resetReturn = () => {
+    setSelectedReturnTour(null);
+    setSelectedReturnSeats([]);
+    setActiveStep(1);
+  };
+
+  const handleReadyForContacts = () => {
+    setActiveStep(3);
+    scrollToRef(step3Ref);
+  };
+
+  if (ticket) {
+    return (
+      <div className="w-full max-w-5xl mx-auto space-y-4">
+        {loading && <Loader />}
+        {msg && <Alert type={msgType}>{msg}</Alert>}
+
+        <ElectronicTicket
+          ticket={ticket}
+          t={t}
+          onDownload={() => handleTicketDownloadClick()}
+        />
+
+        <div className="flex flex-wrap gap-3">
+          {purchaseId && (
+            <button
+              type="button"
+              onClick={handlePay}
+              className="rounded-xl bg-emerald-600 px-6 py-3 text-white shadow hover:bg-emerald-700"
+            >
+              {t.pay}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => handleTicketDownloadClick()}
+            className="rounded-xl border border-slate-300 px-6 py-3 text-slate-700 shadow hover:bg-slate-100"
+          >
+            {t.ticketDownload}
+          </button>
+        </div>
+
+        <TicketDownloadPrompt
+          visible={showDownloadPrompt && !!ticket}
+          t={t}
+          onDownload={() => handleTicketDownloadClick()}
+          onClose={handlePromptClose}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-5xl mx-auto space-y-4">
@@ -933,18 +1057,12 @@ export default function SearchResults({
 
       {msg && <Alert type={msgType}>{msg}</Alert>}
 
-      {/* ШАГ 1: выбор рейсов */}
       <div ref={step1Ref} className="space-y-3">
-        {renderStepHeader(
-          1,
-          lang === "en" ? "Select trip" : "Выбор рейса",
-          step1Summary,
-          step1Ref
-        )}
+        {renderStepHeader(1, t.step1Title, step1Summary, step1Ref)}
 
         {showStep1Body && (
           <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-100 space-y-4">
-            {outboundTours.length > 0 && (
+            {outboundListVisible && (
               <TripList
                 title={t.outbound}
                 tours={outboundTours}
@@ -960,7 +1078,7 @@ export default function SearchResults({
               />
             )}
 
-            {returnDate && returnTours.length > 0 && (
+            {returnListVisible && (
               <TripList
                 title={t.inbound}
                 tours={returnTours}
@@ -976,6 +1094,37 @@ export default function SearchResults({
               />
             )}
 
+            {!outboundListVisible && !returnListVisible && selectedOutboundTour && (
+              <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+                <p>
+                  {t.outboundShort}: {selectedOutboundTour.departure_time} · {fromName} → {toName}
+                </p>
+                {returnRequired && selectedReturnTour && (
+                  <p>
+                    {t.inboundShort}: {selectedReturnTour.departure_time} · {toName} → {fromName}
+                  </p>
+                )}
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    className="rounded-lg border border-slate-300 px-3 py-2 text-xs text-slate-700 hover:bg-slate-100"
+                    onClick={resetOutbound}
+                  >
+                    {lang === "en" ? "Change outbound" : "Изменить рейсы"}
+                  </button>
+                  {returnRequired && selectedReturnTour && (
+                    <button
+                      type="button"
+                      className="rounded-lg border border-slate-300 px-3 py-2 text-xs text-slate-700 hover:bg-slate-100"
+                      onClick={resetReturn}
+                    >
+                      {lang === "en" ? "Change return" : "Изменить обратно"}
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
             {!outboundTours.length && !returnTours.length && (
               <p className="text-sm text-slate-500">{t.noResults}</p>
             )}
@@ -983,16 +1132,8 @@ export default function SearchResults({
         )}
       </div>
 
-      {/* ШАГ 2: места + пассажиры + контакты + покупка/бронь */}
       <div ref={step2Ref} className="space-y-3">
-        {renderStepHeader(
-          2,
-          lang === "en"
-            ? "Passengers, seats & booking"
-            : "Пассажиры, места и бронь",
-          step2Summary,
-          step2Ref
-        )}
+        {renderStepHeader(2, t.step2Title, step2Summary, step2Ref)}
 
         {showStep2Body && (
           <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-100">
@@ -1011,40 +1152,32 @@ export default function SearchResults({
               setSelectedReturnSeats={setSelectedReturnSeats}
               passengerNames={passengerNames}
               setPassengerNames={setPassengerNames}
-              phone={phone}
-              setPhone={setPhone}
-              email={email}
-              setEmail={setEmail}
               extraBaggageOutbound={extraBaggageOutbound}
               setExtraBaggageOutbound={setExtraBaggageOutbound}
               extraBaggageReturn={extraBaggageReturn}
               setExtraBaggageReturn={setExtraBaggageReturn}
-              handleAction={handleAction}
-              handlePay={handlePay}
-              handleCancel={handleCancel}
-              purchaseId={purchaseId}
-              ticketNumber={ticket?.ticketNumber ?? null}
-              onDownloadTicket={handleTicketDownloadClick}
+              onReadyForContacts={handleReadyForContacts}
             />
           </div>
         )}
       </div>
 
-      {/* ШАГ 3: билет / статус */}
       <div ref={step3Ref} className="space-y-3">
-        {renderStepHeader(
-          3,
-          lang === "en" ? "Ticket & status" : "Билет и статус",
-          step3Summary,
-          step3Ref
-        )}
+        {renderStepHeader(3, t.contactsAndPayment, step3Summary, step3Ref)}
 
-        {showStep3Body && ticket && (
-          <div className="space-y-4 rounded-2xl bg-white p-4 shadow-sm border border-slate-100">
-            <ElectronicTicket
-              ticket={ticket}
+        {showStep3Body && (
+          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-100">
+            <ContactsAndPaymentStep
               t={t}
-              onDownload={() => handleTicketDownloadClick()}
+              phone={phone}
+              setPhone={setPhone}
+              email={email}
+              setEmail={setEmail}
+              purchaseId={purchaseId}
+              ticket={ticket}
+              handleAction={handleAction}
+              handlePay={handlePay}
+              onDownloadTicket={handleTicketDownloadClick}
             />
             <TicketDownloadPrompt
               visible={showDownloadPrompt && !!ticket}

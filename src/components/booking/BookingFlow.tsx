@@ -30,14 +30,15 @@ export default function BookingFlow() {
 
   return (
     <div className="w-full space-y-6">
-      {/* Блок поиска — просто красивая карточка с формой */}
-      <div className="mx-auto w-full max-w-5xl rounded-3xl bg-white/80 p-5 shadow-lg ring-1 ring-slate-200">
-        <SearchForm
-          lang={lang}
-          embedded
-          onSearch={(params) => setCriteria(params)}
-        />
-      </div>
+      {!criteria && (
+        <div className="mx-auto w-full max-w-5xl rounded-3xl bg-white/80 p-5 shadow-lg ring-1 ring-slate-200">
+          <SearchForm
+            lang={lang}
+            embedded
+            onSearch={(params) => setCriteria(params)}
+          />
+        </div>
+      )}
 
       {/* Блок результатов: появляется только после поиска */}
       {criteria && (
@@ -45,6 +46,15 @@ export default function BookingFlow() {
           ref={resultsRef}
           className="mx-auto w-full max-w-5xl rounded-3xl bg-white/90 p-5 shadow-lg ring-1 ring-slate-200"
         >
+          <div className="mb-4 flex justify-end">
+            <button
+              type="button"
+              className="text-sm text-sky-700 underline decoration-sky-300 decoration-2 underline-offset-4 hover:text-sky-900"
+              onClick={() => setCriteria(null)}
+            >
+              {lang === "en" ? "New search" : "Новый поиск"}
+            </button>
+          </div>
           <SearchResults lang={lang} {...criteria} />
         </div>
       )}
