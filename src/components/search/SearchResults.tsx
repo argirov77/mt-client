@@ -101,6 +101,9 @@ type Dict = {
   step1Title: string;
   step2Title: string;
   step3Title: string;
+  step1ShortLabel: string;
+  step2ShortLabel: string;
+  step3ShortLabel: string;
   step1SummaryChoose: string;
   step2SummaryChooseSeats: string;
   step2SummaryFillNames: string;
@@ -171,6 +174,9 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     step1Title: "Выбор рейса",
     step2Title: "Места и пассажиры",
     step3Title: "Контакты и оплата",
+    step1ShortLabel: "Выбор рейса",
+    step2ShortLabel: "Места и пассажиры",
+    step3ShortLabel: "Контакты и оплата",
     step1SummaryChoose: "Выберите рейс",
     step2SummaryChooseSeats: "Выберите места",
     step2SummaryFillNames: "Заполните имена пассажиров",
@@ -238,6 +244,9 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     step1Title: "Select trip",
     step2Title: "Seats & passengers",
     step3Title: "Contacts & payment",
+    step1ShortLabel: "Select trip",
+    step2ShortLabel: "Seats & passengers",
+    step3ShortLabel: "Contacts & payment",
     step1SummaryChoose: "Choose a trip",
     step2SummaryChooseSeats: "Pick seats",
     step2SummaryFillNames: "Fill passenger names",
@@ -305,6 +314,9 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     step1Title: "Избор на курс",
     step2Title: "Места и пътници",
     step3Title: "Контакти и плащане",
+    step1ShortLabel: "Избор на курс",
+    step2ShortLabel: "Места и пътници",
+    step3ShortLabel: "Контакти и плащане",
     step1SummaryChoose: "Изберете курс",
     step2SummaryChooseSeats: "Изберете места",
     step2SummaryFillNames: "Въведете имената на пътниците",
@@ -372,6 +384,9 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     step1Title: "Вибір рейсу",
     step2Title: "Місця та пасажири",
     step3Title: "Контакти та оплата",
+    step1ShortLabel: "Вибір рейсу",
+    step2ShortLabel: "Місця та пасажири",
+    step3ShortLabel: "Контакти та оплата",
     step1SummaryChoose: "Оберіть рейс",
     step2SummaryChooseSeats: "Оберіть місця",
     step2SummaryFillNames: "Заповніть імена пасажирів",
@@ -894,6 +909,12 @@ export default function SearchResults({
   const step2Complete =
     !!selectedOutboundTour && (!returnRequired || !!selectedReturnTour) && seatsDone && namesDone;
 
+  const isStep1Done = Boolean(
+    selectedOutboundTour && (!returnRequired || !!selectedReturnTour)
+  );
+  const isStep2Done = step2Complete;
+  const isStep3Done = Boolean(ticket || purchaseId);
+
   const step1Summary = useMemo(() => {
     if (!selectedOutboundTour) {
       return t.step1SummaryChoose;
@@ -934,6 +955,84 @@ export default function SearchResults({
     }
     setActiveStep(step);
     scrollToRef(ref);
+  };
+
+  const handleStepNavigation = (step: Step) => {
+    const targetRef = step === 1 ? step1Ref : step === 2 ? step2Ref : step3Ref;
+    handleStepOpen(step, targetRef);
+  };
+
+  const collapsibleBodyClass = (isOpen: boolean) =>
+    `transition-all duration-300 ease-in-out ${
+      isOpen
+        ? "max-h-[5000px] opacity-100 translate-y-0"
+        : "max-h-0 opacity-0 -translate-y-2 overflow-hidden pointer-events-none"
+    }`;
+
+  const renderProgressBar = () => {
+    const steps: { id: Step; label: string; state: "active" | "done" | "future" }[] = [
+      {
+        id: 1,
+        label: t.step1ShortLabel,
+        state: activeStep === 1 ? "active" : isStep1Done ? "done" : "future",
+      },
+      {
+        id: 2,
+        label: t.step2ShortLabel,
+        state:
+          activeStep === 2
+            ? "active"
+            : activeStep > 2 || isStep2Done
+              ? "done"
+              : "future",
+      },
+      {
+        id: 3,
+        label: t.step3ShortLabel,
+        state: activeStep === 3 ? "active" : isStep3Done ? "done" : "future",
+      },
+    ];
+
+    return (
+      <div className="relative mt-2 mb-4">
+        <div className="absolute left-6 right-6 top-1/2 h-0.5 -translate-y-1/2 bg-slate-200" />
+        <div className="relative flex items-center justify-between gap-3">
+          {steps.map((step) => {
+            const isActive = step.state === "active";
+            const isDone = step.state === "done";
+            return (
+              <button
+                key={step.id}
+                type="button"
+                onClick={() => handleStepNavigation(step.id)}
+                className="group relative flex min-w-0 flex-1 flex-col items-center gap-2 text-xs font-semibold text-slate-600 transition-colors duration-300 hover:text-sky-700"
+              >
+                <span
+                  className={`grid h-10 w-10 place-items-center rounded-full border text-sm transition-all duration-300 ${
+                    isActive
+                      ? "border-sky-600 bg-sky-600 text-white shadow"
+                      : isDone
+                        ? "border-sky-100 bg-sky-100 text-sky-700"
+                        : "border-slate-300 bg-white text-slate-500"
+                  }`}
+                >
+                  {isDone && !isActive ? "✓" : step.id}
+                </span>
+                <span
+                  className={`transition-all duration-300 ${
+                    isActive
+                      ? "translate-y-0 opacity-100 text-slate-900"
+                      : "-translate-y-1 opacity-0"
+                  }`}
+                >
+                  {step.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
   };
 
   const renderStepHeader = (
@@ -1057,10 +1156,12 @@ export default function SearchResults({
 
       {msg && <Alert type={msgType}>{msg}</Alert>}
 
+      {renderProgressBar()}
+
       <div ref={step1Ref} className="space-y-3">
         {renderStepHeader(1, t.step1Title, step1Summary, step1Ref)}
 
-        {showStep1Body && (
+        <div className={collapsibleBodyClass(showStep1Body)} aria-hidden={!showStep1Body}>
           <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-100 space-y-4">
             {outboundListVisible && (
               <TripList
@@ -1129,13 +1230,13 @@ export default function SearchResults({
               <p className="text-sm text-slate-500">{t.noResults}</p>
             )}
           </div>
-        )}
+        </div>
       </div>
 
       <div ref={step2Ref} className="space-y-3">
         {renderStepHeader(2, t.step2Title, step2Summary, step2Ref)}
 
-        {showStep2Body && (
+        <div className={collapsibleBodyClass(showStep2Body)} aria-hidden={!showStep2Body}>
           <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-100">
             <BookingPanel
               t={t}
@@ -1159,13 +1260,13 @@ export default function SearchResults({
               onReadyForContacts={handleReadyForContacts}
             />
           </div>
-        )}
+        </div>
       </div>
 
       <div ref={step3Ref} className="space-y-3">
         {renderStepHeader(3, t.contactsAndPayment, step3Summary, step3Ref)}
 
-        {showStep3Body && (
+        <div className={collapsibleBodyClass(showStep3Body)} aria-hidden={!showStep3Body}>
           <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-100">
             <ContactsAndPaymentStep
               t={t}
@@ -1186,7 +1287,7 @@ export default function SearchResults({
               onClose={handlePromptClose}
             />
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
