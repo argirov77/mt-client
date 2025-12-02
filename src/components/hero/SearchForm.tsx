@@ -1,7 +1,7 @@
 // src/components/hero/SearchForm.tsx
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import axios from 'axios';
 
 import Calendar from '../Calendar';
@@ -19,7 +19,7 @@ type Props = {
   initialDate?: string;       // YYYY-MM-DD
   initialReturnDate?: string; // YYYY-MM-DD
   initialSeats?: number;
-  embedded?: boolean;         // <--- НОВОЕ!
+  embedded?: boolean;
   onSearch: (params: {
     from: string;
     to: string;
@@ -41,9 +41,30 @@ const L = {
     search: 'Поиск',
     swapTitle: 'Поменять местами',
   },
-  en: { from: 'From', to: 'To', date: 'Date', back: 'Return', search: 'Search', swapTitle: 'Swap' },
-  bg: { from: 'Откъде', to: 'Накъде', date: 'Дата', back: 'Обратно', search: 'Търсене', swapTitle: 'Размени' },
-  ua: { from: 'Звідки', to: 'Куди', date: 'Дата', back: 'Назад', search: 'Пошук', swapTitle: 'Поміняти місцями' },
+  en: {
+    from: 'From',
+    to: 'To',
+    date: 'Date',
+    back: 'Return',
+    search: 'Search',
+    swapTitle: 'Swap',
+  },
+  bg: {
+    from: 'Откъде',
+    to: 'Накъде',
+    date: 'Дата',
+    back: 'Обратно',
+    search: 'Търсене',
+    swapTitle: 'Размени',
+  },
+  ua: {
+    from: 'Звідки',
+    to: 'Куди',
+    date: 'Дата',
+    back: 'Назад',
+    search: 'Пошук',
+    swapTitle: 'Поміняти місцями',
+  },
 };
 
 export default function SearchForm({
@@ -58,11 +79,20 @@ export default function SearchForm({
 }: Props) {
   const t = L[lang];
 
-  const [from, setFrom] = useState<string>(initialFromId ? String(initialFromId) : '');
-  const [to, setTo] = useState<string>(initialToId ? String(initialToId) : '');
+  const [from, setFrom] = useState<string>(
+    initialFromId ? String(initialFromId) : '',
+  );
+  const [to, setTo] = useState<string>(
+    initialToId ? String(initialToId) : '',
+  );
   const [departDate, setDepartDate] = useState<string>(initialDate ?? '');
-  const [returnDate, setReturnDate] = useState<string>(initialReturnDate ?? '');
-  const [passengers, setPassengers] = useState({ adults: Math.max(1, initialSeats), discount: 0 });
+  const [returnDate, setReturnDate] = useState<string>(
+    initialReturnDate ?? '',
+  );
+  const [passengers, setPassengers] = useState({
+    adults: Math.max(1, initialSeats),
+    discount: 0,
+  });
   const seatCount = passengers.adults + passengers.discount;
 
   const [departureStops, setDepartureStops] = useState<Stop[]>([]);
@@ -74,13 +104,17 @@ export default function SearchForm({
   const [showReturn, setShowReturn] = useState(false);
 
   const fromId = useMemo(() => Number(from) || 0, [from]);
-  const toId   = useMemo(() => Number(to)   || 0, [to]);
+  const toId = useMemo(() => Number(to) || 0, [to]);
+
+  // refs для авто-переходов внутри формы
+  const fromSelectRef = useRef<HTMLSelectElement | null>(null);
+  const toSelectRef = useRef<HTMLSelectElement | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     axios
       .post<Stop[]>(`${API}/search/departures`, { seats: seatCount, lang })
-      .then(res => !cancelled && setDepartureStops(res.data || []))
+      .then((res) => !cancelled && setDepartureStops(res.data || []))
       .catch(() => !cancelled && setDepartureStops([]));
     return () => {
       cancelled = true;
@@ -90,9 +124,12 @@ export default function SearchForm({
   useEffect(() => {
     let cancelled = false;
     if (!fromId) {
-      setArrivalStops([]); setTo('');
-      setDepartActive([]); setReturnActive([]);
-      setDepartDate('');   setReturnDate('');
+      setArrivalStops([]);
+      setTo('');
+      setDepartActive([]);
+      setReturnActive([]);
+      setDepartDate('');
+      setReturnDate('');
       return;
     }
     axios
@@ -101,30 +138,52 @@ export default function SearchForm({
         seats: seatCount,
         lang,
       })
-      .then(res => !cancelled && setArrivalStops(res.data || []))
+      .then((res) => !cancelled && setArrivalStops(res.data || []))
       .catch(() => !cancelled && setArrivalStops([]));
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [fromId, seatCount, lang]);
 
   useEffect(() => {
     let cancelled = false;
     if (!fromId || !toId) {
-      setDepartActive([]); setReturnActive([]);
-      setDepartDate('');   setReturnDate('');
+      setDepartActive([]);
+      setReturnActive([]);
+      setDepartDate('');
+      setReturnDate('');
       return;
     }
-    axios.get<string[]>(`${API}/search/dates`, { params: { departure_stop_id: fromId, arrival_stop_id: toId, seats: seatCount } })
-      .then(res => !cancelled && setDepartActive(res.data || []))
+    axios
+      .get<string[]>(`${API}/search/dates`, {
+        params: {
+          departure_stop_id: fromId,
+          arrival_stop_id: toId,
+          seats: seatCount,
+        },
+      })
+      .then((res) => !cancelled && setDepartActive(res.data || []))
       .catch(() => !cancelled && setDepartActive([]));
-    axios.get<string[]>(`${API}/search/dates`, { params: { departure_stop_id: toId, arrival_stop_id: fromId, seats: seatCount } })
-      .then(res => !cancelled && setReturnActive(res.data || []))
+    axios
+      .get<string[]>(`${API}/search/dates`, {
+        params: {
+          departure_stop_id: toId,
+          arrival_stop_id: fromId,
+          seats: seatCount,
+        },
+      })
+      .then((res) => !cancelled && setReturnActive(res.data || []))
       .catch(() => !cancelled && setReturnActive([]));
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [fromId, toId, seatCount]);
 
   const handleSwap = () => {
-    setFrom(to); setTo(from);
-    setDepartDate(''); setReturnDate('');
+    setFrom(to);
+    setTo(from);
+    setDepartDate('');
+    setReturnDate('');
   };
 
   const handleDepartOpen = () => setShowDepart(true);
@@ -133,8 +192,10 @@ export default function SearchForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!fromId || !toId || !departDate) return;
-    const fromName = departureStops.find((s) => s.id === fromId)?.stop_name || '';
-    const toName = arrivalStops.find((s) => s.id === toId)?.stop_name || '';
+    const fromName =
+      departureStops.find((s) => s.id === fromId)?.stop_name || '';
+    const toName =
+      arrivalStops.find((s) => s.id === toId)?.stop_name || '';
     onSearch({
       from: String(fromId),
       to: String(toId),
@@ -152,10 +213,22 @@ export default function SearchForm({
     <div className="flex flex-wrap md:flex-nowrap items-center gap-3">
       <div className="relative flex w-full md:w-1/2">
         <select
+          ref={fromSelectRef}
           aria-label={t.from}
           className="h-14 w-1/2 pr-10 rounded-2xl rounded-r-none bg-white/90 hover:bg-white text-slate-800 shadow ring-1 ring-black/5 px-4"
           value={from}
-          onChange={(e) => setFrom(e.target.value)}
+          onChange={(e) => {
+            const val = e.target.value;
+            setFrom(val);
+
+            // после выбора "Откуда" — автоматически фокус на "Куда"
+            if (val && toSelectRef.current) {
+              // небольшой timeout чтобы не конфликтовать с ре-рендером
+              setTimeout(() => {
+                toSelectRef.current && toSelectRef.current.focus();
+              }, 0);
+            }
+          }}
         >
           <option value="">{t.from}</option>
           {departureStops.map((s) => (
@@ -166,10 +239,19 @@ export default function SearchForm({
         </select>
 
         <select
+          ref={toSelectRef}
           aria-label={t.to}
           className="h-14 w-1/2 pl-10 rounded-2xl rounded-l-none bg-white/90 hover:bg-white text-slate-800 shadow ring-1 ring-black/5 px-4"
           value={to}
-          onChange={(e) => setTo(e.target.value)}
+          onChange={(e) => {
+            const val = e.target.value;
+            setTo(val);
+
+            // после выбора "Куда" — автоматически открываем календарь даты туда
+            if (val && fromId) {
+              handleDepartOpen();
+            }
+          }}
           disabled={!fromId}
         >
           <option value="">{t.to}</option>
@@ -256,6 +338,7 @@ export default function SearchForm({
               onSelect={(iso) => {
                 setDepartDate(iso);
                 setShowDepart(false);
+                // после выбора даты НИЧЕГО автоматически не открываем
               }}
               lang={lang}
             />
@@ -283,4 +366,3 @@ export default function SearchForm({
     </>
   );
 }
-

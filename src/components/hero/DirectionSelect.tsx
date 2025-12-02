@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { API } from '@/config';
 
 type Lang = 'ru' | 'bg' | 'en' | 'ua';
@@ -64,6 +64,10 @@ export default function DirectionSelect({
   const [departures, setDepartures] = useState<Stop[]>([]);
   const [arrivals, setArrivals] = useState<Stop[]>([]);
 
+  // refs для авто-перехода фокуса from → to
+  const fromRef = useRef<HTMLSelectElement | null>(null);
+  const toRef = useRef<HTMLSelectElement | null>(null);
+
   // Загрузка отправных остановок
   useEffect(() => {
     let aborted = false;
@@ -81,7 +85,7 @@ export default function DirectionSelect({
         if (!aborted) {
           setDepartures(Array.isArray(data) ? data : []);
           // если текущего from нет в списке — сбросить
-          if (from && !data.some(s => String(s.id) === String(from))) {
+          if (from && !data.some((s) => String(s.id) === String(from))) {
             setFrom('');
           }
         }
@@ -126,7 +130,7 @@ export default function DirectionSelect({
         const data: Stop[] = await res.json();
         if (!aborted) {
           setArrivals(Array.isArray(data) ? data : []);
-          if (to && !data.some(s => String(s.id) === String(to))) {
+          if (to && !data.some((s) => String(s.id) === String(to))) {
             setTo('');
           }
         }
@@ -146,10 +150,7 @@ export default function DirectionSelect({
     };
   }, [from, seatCount, lang]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const canSwap = useMemo(
-    () => Boolean(from && to),
-    [from, to]
-  );
+  const canSwap = useMemo(() => Boolean(from && to), [from, to]);
 
   const handleSwap = () => {
     if (!canSwap) return;
@@ -169,9 +170,20 @@ export default function DirectionSelect({
         </label>
         <div className="relative">
           <select
+            ref={fromRef}
             className="w-full h-11 px-4 pr-9 bg-white rounded-xl border border-transparent hover:border-blue-300 transition appearance-none text-gray-900"
             value={from}
-            onChange={(e) => setFrom(e.target.value)}
+            onChange={(e) => {
+              const val = e.target.value;
+              setFrom(val);
+
+              // после выбора from — автоматически фокусируем to
+              if (val && toRef.current) {
+                setTimeout(() => {
+                  toRef.current && toRef.current.focus();
+                }, 0);
+              }
+            }}
           >
             <option value="">{depLoading ? t.loading : t.from}</option>
             {departures.map((s) => (
@@ -183,7 +195,13 @@ export default function DirectionSelect({
           {/* caret */}
           <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path d="M6 9l6 6 6-6" stroke="#6b7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path
+                d="M6 9l6 6 6-6"
+                stroke="#6b7280"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </span>
         </div>
@@ -196,11 +214,21 @@ export default function DirectionSelect({
         onClick={handleSwap}
         disabled={!canSwap}
         className={`shrink-0 w-10 h-10 rounded-xl border transition flex items-center justify-center
-          ${canSwap ? 'bg-white text-blue-600 hover:border-blue-300' : 'bg-white/60 text-gray-400 cursor-not-allowed'}`}
+          ${
+            canSwap
+              ? 'bg-white text-blue-600 hover:border-blue-300'
+              : 'bg-white/60 text-gray-400 cursor-not-allowed'
+          }`}
       >
         {/* иконка реверса с хорошим контрастом */}
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-          <path d="M7 7h10m0 0-3-3m3 3-3 3M17 17H7m0 0 3-3m-3 3 3 3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+          <path
+            d="M7 7h10m0 0-3-3m3 3-3 3M17 17H7m0 0 3-3m-3 3 3 3"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </svg>
       </button>
 
@@ -211,6 +239,7 @@ export default function DirectionSelect({
         </label>
         <div className="relative">
           <select
+            ref={toRef}
             className="w-full h-11 px-4 pr-9 bg-white rounded-xl border border-transparent hover:border-blue-300 transition appearance-none text-gray-900 disabled:opacity-60"
             value={to}
             onChange={(e) => setTo(e.target.value)}
@@ -225,7 +254,13 @@ export default function DirectionSelect({
           </select>
           <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path d="M6 9l6 6 6-6" stroke="#6b7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path
+                d="M6 9l6 6 6-6"
+                stroke="#6b7280"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </span>
         </div>
