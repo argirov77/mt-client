@@ -1238,27 +1238,31 @@ export default function SearchResults({
 
         <div className={collapsibleBodyClass(showStep2Body)} aria-hidden={!showStep2Body}>
           <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-100">
-            <BookingPanel
-              t={t}
-              seatCount={safeSeatCount}
-              fromId={fromId}
-              toId={toId}
-              fromName={fromName}
-              toName={toName}
-              selectedOutboundTour={selectedOutboundTour}
-              selectedReturnTour={selectedReturnTour}
-              selectedOutboundSeats={selectedOutboundSeats}
-              setSelectedOutboundSeats={setSelectedOutboundSeats}
-              selectedReturnSeats={selectedReturnSeats}
-              setSelectedReturnSeats={setSelectedReturnSeats}
-              passengerNames={passengerNames}
-              setPassengerNames={setPassengerNames}
-              extraBaggageOutbound={extraBaggageOutbound}
-              setExtraBaggageOutbound={setExtraBaggageOutbound}
-              extraBaggageReturn={extraBaggageReturn}
-              setExtraBaggageReturn={setExtraBaggageReturn}
-              onReadyForContacts={handleReadyForContacts}
-            />
+            {selectedOutboundTour ? (
+              <BookingPanel
+                t={t}
+                seatCount={safeSeatCount}
+                fromId={fromId}
+                toId={toId}
+                fromName={fromName}
+                toName={toName}
+                selectedOutboundTour={selectedOutboundTour}
+                selectedReturnTour={selectedReturnTour}
+                selectedOutboundSeats={selectedOutboundSeats}
+                setSelectedOutboundSeats={setSelectedOutboundSeats}
+                selectedReturnSeats={selectedReturnSeats}
+                setSelectedReturnSeats={setSelectedReturnSeats}
+                passengerNames={passengerNames}
+                setPassengerNames={setPassengerNames}
+                extraBaggageOutbound={extraBaggageOutbound}
+                setExtraBaggageOutbound={setExtraBaggageOutbound}
+                extraBaggageReturn={extraBaggageReturn}
+                setExtraBaggageReturn={setExtraBaggageReturn}
+                onReadyForContacts={handleReadyForContacts}
+              />
+            ) : (
+              <p className="text-sm text-slate-600">{t.outboundShort} {lang === "en" ? "not selected" : "не выбран"}</p>
+            )}
           </div>
         </div>
       </div>
