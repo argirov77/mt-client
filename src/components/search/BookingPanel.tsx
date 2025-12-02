@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import SeatClient from "../SeatClient";
 import type { Tour } from "./SearchResults";
 import FormInput from "../common/FormInput";
@@ -6,15 +6,9 @@ import { formatDate } from "@/utils/date";
 
 type Dict = {
   freeSeats: (n: number) => string;
-  book: string;
-  buy: string;
-  paid: string;
-  canceled: string;
-  pay: string;
-  cancel: string;
   outboundShort: string;
   inboundShort: string;
-  ticketDownload: string;
+  next: string;
 };
 
 type Props = {
@@ -37,26 +31,13 @@ type Props = {
   passengerNames: string[];
   setPassengerNames: (v: string[]) => void;
 
-  phone: string;
-  setPhone: (v: string) => void;
-
-  email: string;
-  setEmail: (v: string) => void;
-
   extraBaggageOutbound: boolean[];
   setExtraBaggageOutbound: (v: boolean[]) => void;
 
   extraBaggageReturn: boolean[];
   setExtraBaggageReturn: (v: boolean[]) => void;
 
-  handleAction: (action: "book" | "purchase") => void;
-  handlePay: () => void;
-  handleCancel: () => void;
-  purchaseId: number | null;
-  ticketNumber: string | null;
-  onDownloadTicket: (ticketNumber: string) => void;
-
-  /** вызвать, когда шаг «места + пассажиры» полностью заполнен */
+  /** вызываем при готовности перейти к контактам */
   onReadyForContacts?: () => void;
 };
 
@@ -85,21 +66,31 @@ export default function BookingPanel({
   extraBaggageReturn,
   setExtraBaggageReturn,
 
-  ticketNumber,
-  onDownloadTicket,
   onReadyForContacts,
 }: Props) {
   const [activeLeg, setActiveLeg] = useState<"outbound" | "return">("outbound");
   const formRef = useRef<HTMLFormElement | null>(null);
   const seatsScrollTriggered = useRef(false);
-  const [stepReady, setStepReady] = useState(false);
+
+  const outboundComplete = useMemo(
+    () => selectedOutboundSeats.length === seatCount,
+    [seatCount, selectedOutboundSeats.length]
+  );
+  const returnComplete = useMemo(
+    () => !selectedReturnTour || selectedReturnSeats.length === seatCount,
+    [seatCount, selectedReturnSeats.length, selectedReturnTour]
+  );
+  const namesFilled = useMemo(
+    () =>
+      passengerNames.length === seatCount &&
+      passengerNames.every((n) => n.trim().length > 0),
+    [passengerNames, seatCount]
+  );
+
+  const readyForNext = seatCount > 0 && outboundComplete && returnComplete && namesFilled;
 
   // скролл к форме, когда выбраны все места
   useEffect(() => {
-    const outboundComplete = selectedOutboundSeats.length === seatCount;
-    const returnComplete =
-      !selectedReturnTour || selectedReturnSeats.length === seatCount;
-
     if (seatCount > 0 && outboundComplete && returnComplete) {
       if (!seatsScrollTriggered.current) {
         seatsScrollTriggered.current = true;
@@ -108,76 +99,54 @@ export default function BookingPanel({
     } else {
       seatsScrollTriggered.current = false;
     }
-  }, [seatCount, selectedOutboundSeats, selectedReturnSeats, selectedReturnTour]);
+  }, [seatCount, outboundComplete, returnComplete]);
 
-  // авто-переход на 3-й шаг, когда:
-  // 1) выбраны все места (туда / обратно)
-  // 2) у всех пассажиров заполнены имена
+  // гарантируем, что массивы багажа не пустые
   useEffect(() => {
-    const outboundComplete = selectedOutboundSeats.length === seatCount;
-    const returnComplete =
-      !selectedReturnTour || selectedReturnSeats.length === seatCount;
-    const namesFilled =
-      passengerNames.length === seatCount &&
-      passengerNames.every((n) => n.trim().length > 0);
+    setExtraBaggageOutbound((prev) => {
+      if (prev.length === seatCount) return prev;
+      return Array(seatCount).fill(false);
+    });
+    setExtraBaggageReturn((prev) => {
+      if (prev.length === seatCount) return prev;
+      return Array(seatCount).fill(false);
+    });
+  }, [seatCount, setExtraBaggageOutbound, setExtraBaggageReturn]);
 
-    const ready =
-      seatCount > 0 && outboundComplete && returnComplete && namesFilled;
-
-    if (ready && !stepReady) {
-      setStepReady(true);
-      onReadyForContacts?.();
-    } else if (!ready && stepReady) {
-      setStepReady(false);
-    }
-  }, [
-    seatCount,
-    selectedOutboundSeats,
-    selectedReturnSeats,
-    selectedReturnTour,
-    passengerNames,
-    stepReady,
-    onReadyForContacts,
-  ]);
+  const legTabs = selectedReturnTour ? (
+    <div className="mt-5 inline-flex overflow-hidden rounded-lg border">
+      <button
+        type="button"
+        onClick={() => setActiveLeg("outbound")}
+        className={`px-4 py-2 ${
+          activeLeg === "outbound" ? "bg-sky-600 text-white" : "bg-white text-sky-600"
+        }`}
+      >
+        {t.outboundShort}
+      </button>
+      <button
+        type="button"
+        onClick={() => setActiveLeg("return")}
+        className={`px-4 py-2 ${
+          activeLeg === "return" ? "bg-sky-600 text-white" : "bg-white text-sky-600"
+        }`}
+      >
+        {t.inboundShort}
+      </button>
+    </div>
+  ) : null;
 
   return (
-    <>
-      {selectedReturnTour && (
-        <div className="mt-5 inline-flex overflow-hidden rounded-lg border">
-          <button
-            type="button"
-            onClick={() => setActiveLeg("outbound")}
-            className={`px-4 py-2 ${
-              activeLeg === "outbound"
-                ? "bg-sky-600 text-white"
-                : "bg-white text-sky-600"
-            }`}
-          >
-            {t.outboundShort}
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveLeg("return")}
-            className={`px-4 py-2 ${
-              activeLeg === "return"
-                ? "bg-sky-600 text-white"
-                : "bg-white text-sky-600"
-            }`}
-          >
-            {t.inboundShort}
-          </button>
-        </div>
-      )}
+    <div className="space-y-4">
+      {legTabs}
 
-      {/* места туда */}
       {(!selectedReturnTour || activeLeg === "outbound") && (
-        <>
-          <h3 className="mt-5">
-            Рейс туда #{selectedOutboundTour.id}, дата:{" "}
-            {formatDate(selectedOutboundTour.date)}
+        <section className="space-y-2">
+          <h3 className="mt-2 text-lg font-semibold">
+            Рейс туда #{selectedOutboundTour.id}, дата: {formatDate(selectedOutboundTour.date)}
           </h3>
-          <p>{t.freeSeats(free(selectedOutboundTour.seats))}</p>
-          <p>Выберите места:</p>
+          <p className="text-sm text-slate-600">{t.freeSeats(free(selectedOutboundTour.seats))}</p>
+          <p className="text-sm text-slate-700">Выберите места:</p>
 
           <SeatClient
             tourId={selectedOutboundTour.id}
@@ -195,19 +164,18 @@ export default function BookingPanel({
               arr[0] = v;
               setExtraBaggageOutbound(arr);
             }}
+            showExtraBaggage={false}
           />
-        </>
+        </section>
       )}
 
-      {/* места обратно */}
       {selectedReturnTour && activeLeg === "return" && (
-        <>
-          <h3 className="mt-5">
-            Рейс обратно #{selectedReturnTour.id}, дата:{" "}
-            {formatDate(selectedReturnTour.date)}
+        <section className="space-y-2">
+          <h3 className="mt-2 text-lg font-semibold">
+            Рейс обратно #{selectedReturnTour.id}, дата: {formatDate(selectedReturnTour.date)}
           </h3>
-          <p>{t.freeSeats(free(selectedReturnTour.seats))}</p>
-          <p>Выберите места:</p>
+          <p className="text-sm text-slate-600">{t.freeSeats(free(selectedReturnTour.seats))}</p>
+          <p className="text-sm text-slate-700">Выберите места:</p>
 
           <SeatClient
             tourId={selectedReturnTour.id}
@@ -225,43 +193,44 @@ export default function BookingPanel({
               arr[0] = v;
               setExtraBaggageReturn(arr);
             }}
+            showExtraBaggage={false}
           />
-        </>
+        </section>
       )}
 
-      {/* пассажиры (без багажа и без контактов) */}
       <form
         ref={formRef}
         onSubmit={(e) => e.preventDefault()}
-        className="mt-5 flex w-full max-w-[440px] flex-col gap-2"
+        className="mt-2 flex w-full max-w-[520px] flex-col gap-2"
       >
         {passengerNames.map((name, idx) => (
-          <div key={idx} className="flex items-center gap-2">
-            <FormInput
-              type="text"
-              placeholder={`Имя пассажира ${idx + 1}`}
-              required
-              value={name}
-              onChange={(e) => {
-                const arr = [...passengerNames];
-                arr[idx] = e.target.value;
-                setPassengerNames(arr);
-              }}
-              className="flex-1"
-            />
-
-            {ticketNumber && (
-              <button
-                type="button"
-                onClick={() => onDownloadTicket(ticketNumber)}
-                className="whitespace-nowrap rounded border px-2 py-1 text-sm hover:bg-slate-100"
-              >
-                {t.ticketDownload}
-              </button>
-            )}
-          </div>
+          <FormInput
+            key={idx}
+            type="text"
+            placeholder={`Имя пассажира ${idx + 1}`}
+            required
+            value={name}
+            onChange={(e) => {
+              const arr = [...passengerNames];
+              arr[idx] = e.target.value;
+              setPassengerNames(arr);
+            }}
+            className="flex-1"
+          />
         ))}
       </form>
-    </>
+
+      {readyForNext && (
+        <div className="flex justify-start">
+          <button
+            type="button"
+            onClick={() => onReadyForContacts?.()}
+            className="rounded-xl bg-sky-600 px-6 py-3 text-white shadow hover:bg-sky-700"
+          >
+            {t.next}
+          </button>
+        </div>
+      )}
+    </div>
   );
 }

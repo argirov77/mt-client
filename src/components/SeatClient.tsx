@@ -30,6 +30,7 @@ type Props = {
   onExtraBaggageChange?: (v: boolean) => void;
   onSeatMapLoad?: (seats: SeatMapSeat[]) => void;
   onSelectionDetailsChange?: (selection: SeatSelectionDetail[]) => void;
+  showExtraBaggage?: boolean;
 };
 
 const tiny = {
@@ -51,6 +52,7 @@ export default function SeatClient({
   onExtraBaggageChange,
   onSeatMapLoad,
   onSelectionDetailsChange,
+  showExtraBaggage = true,
 }: Props) {
   const [seats, setSeats] = useState<SeatMapSeat[]>([]);
   const [loading, setLoading] = useState(false);
@@ -238,18 +240,22 @@ export default function SeatClient({
               <Armchair size={24} aria-label="Сиденья откидываются" />
             </span>
           </div>
-          <div>
-            В стоимость включены 1 чемодан и 1 ручная кладь.
-            {extraBaggage && " Добавлен дополнительный чемодан."}
-          </div>
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={extraBaggage}
-              onChange={(e) => onExtraBaggageChange?.(e.target.checked)}
-            />
-            Добавить еще один чемодан
-          </label>
+          {showExtraBaggage && (
+            <div className="space-y-2 rounded-lg border border-slate-200 bg-white/70 p-3">
+              <div>
+                В стоимость включены 1 чемодан и 1 ручная кладь.
+                {extraBaggage && " Добавлен дополнительный чемодан."}
+              </div>
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={extraBaggage}
+                  onChange={(e) => onExtraBaggageChange?.(e.target.checked)}
+                />
+                Добавить еще один чемодан
+              </label>
+            </div>
+          )}
         </div>
       </div>
 
