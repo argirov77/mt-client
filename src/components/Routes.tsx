@@ -1,16 +1,10 @@
 // src/components/routes/Routes.tsx
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
-import {
-  Clock,
-  LogOut,
-  MapPin,
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react";
+import React, { useEffect, useState } from "react";
 import { API } from "@/config";
 import { useLanguage, type Lang } from "@/components/common/LanguageProvider";
+import styles from "./Routes.module.css";
 
 /* ===================== Types ===================== */
 
@@ -38,6 +32,7 @@ type ApiResponse = Partial<{
 
 const T = {
   ru: {
+    eyebrow: "Маршруты автобусов",
     title: "Наши маршруты",
     forward: "Направление 1",
     backward: "Направление 2",
@@ -51,11 +46,12 @@ const T = {
         : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)
           ? "и"
           : ""}`,
-    duration: "в пути",
+    duration: "В пути",
     showAll: "Показать все",
     showLess: "Свернуть",
   },
   en: {
+    eyebrow: "Bus routes",
     title: "Our routes",
     forward: "Direction 1",
     backward: "Direction 2",
@@ -64,11 +60,12 @@ const T = {
     departure: "Departure",
     map: "Open in map",
     stopsCount: (n: number) => `${n} stops`,
-    duration: "duration",
+    duration: "Duration",
     showAll: "Show all",
     showLess: "Show less",
   },
   bg: {
+    eyebrow: "Автобусни маршрути",
     title: "Нашите маршрути",
     forward: "Посока 1",
     backward: "Посока 2",
@@ -77,11 +74,12 @@ const T = {
     departure: "Заминава",
     map: "Отвори на картата",
     stopsCount: (n: number) => `${n} спирк${n === 1 ? "а" : "и"}`,
-    duration: "престой",
+    duration: "Пътуване",
     showAll: "Покажи всички",
     showLess: "Скрий",
   },
   ua: {
+    eyebrow: "Автобусні маршрути",
     title: "Наші маршрути",
     forward: "Напрям 1",
     backward: "Напрям 2",
@@ -91,7 +89,7 @@ const T = {
     map: "Відкрити на мапі",
     stopsCount: (n: number) =>
       `${n} зупин${n === 1 ? "ка" : n >= 2 && n <= 4 ? "ки" : "ок"}`,
-    duration: "у дорозі",
+    duration: "У дорозі",
     showAll: "Показати всі",
     showLess: "Згорнути",
   },
@@ -184,50 +182,21 @@ export default function Routes() {
   const hasAny = !!forward || !!backward;
 
   return (
-    <section
-      id="routes"
-      className="relative overflow-hidden rounded-[32px] bg-gradient-to-b from-sky-50 via-white to-white px-2 py-16 shadow-[0_40px_120px_-60px_rgba(14,165,233,0.35)]"
-    >
-      <div className="pointer-events-none absolute inset-x-16 top-6 h-32 rounded-full bg-sky-200/40 blur-3xl" />
-      <div className="pointer-events-none absolute -left-24 bottom-0 h-40 w-40 rounded-full bg-sky-100/60 blur-3xl" />
+    <section id="routes" className={styles.routes}>
+      <div className={styles.routesInner}>
+        <header className={styles.routesHeader}>
+          <p className={styles.routesEyebrow}>{L.eyebrow}</p>
+          <h2 className={styles.routesTitle}>{L.title}</h2>
+        </header>
 
-      <div className="container relative z-10 mx-auto max-w-6xl px-4">
-        <div className="mb-4 flex flex-col items-center gap-2 text-center">
-          <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-sky-600 ring-1 ring-sky-100">
-            Bus routes
-          </span>
-          <h2 className="text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
-            {L.title}
-          </h2>
-          <p className="max-w-2xl text-sm text-slate-600">
-            Плавные карточки, подчёркивающие наш фирменный небесный стиль и делающее чтение расписания проще.
-          </p>
-        </div>
+        {loading && <SkeletonCards />}
 
-        {loading && (
-          <div className="mt-10 grid gap-6 md:grid-cols-2">
-            {[0, 1].map((i) => (
-              <div
-                key={i}
-                className="h-72 rounded-2xl bg-white/70 backdrop-blur shadow-lg ring-1 ring-black/5 animate-pulse"
-              />
-            ))}
-          </div>
-        )}
+        {!loading && err && <p className={styles.error}>{err}</p>}
 
-        {!loading && err && (
-          <p className="mt-8 text-center text-rose-600">{err}</p>
-        )}
-
-        {!loading && !err && !hasAny && (
-          <p className="mt-8 text-center text-slate-500">{L.noData}</p>
-        )}
+        {!loading && !err && !hasAny && <p className={styles.empty}>{L.noData}</p>}
 
         {!loading && !err && hasAny && (
-          <div
-            className={`mt-10 grid gap-8 ${forward && backward ? "md:grid-cols-2" : "grid-cols-1"
-              }`}
-          >
+          <div className={styles.routesCards}>
             {forward && (
               <RoutePanel
                 title={titleFromStops(forward)}
@@ -253,6 +222,23 @@ export default function Routes() {
 
 /* ===================== UI Pieces ===================== */
 
+function SkeletonCards() {
+  return (
+    <div className={styles.routesCards}>
+      {[0, 1].map((i) => (
+        <div key={i} className={`${styles.routeCard} ${styles.skeletonCard}`}>
+          <div className={styles.skeletonSummary} />
+          <div className={styles.skeletonStops}>
+            {[0, 1, 2].map((j) => (
+              <div key={j} className={styles.skeletonStop} />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function RoutePanel({
   title,
   subtitle,
@@ -267,108 +253,51 @@ function RoutePanel({
   const L = T[lang];
   const count = route.stops?.length ?? 0;
 
-  // «протяжённость», если времени нет — не показываем
   const t1 = firstTime(route.stops);
   const t2 = lastTime(route.stops);
-  const duration = t1 && t2 ? `${t1} → ${t2}` : null;
+  const duration = t1 && t2 ? `${t1} — ${t2}` : null;
 
   return (
-    <div className="relative overflow-hidden rounded-[28px] border border-sky-100/80 bg-white/90 shadow-xl shadow-sky-100/60 backdrop-blur">
-      <div className="absolute inset-x-6 top-0 h-1 rounded-full bg-gradient-to-r from-sky-500 via-sky-400 to-sky-600" />
-
-      <div className="p-5 md:p-6">
-        {/* Header */}
-        <div className="mb-6 flex flex-wrap items-start gap-3">
+    <article className={styles.routeCard}>
+      <div className={styles.routeCardSummary}>
+        <div className={styles.routeCardSummaryMain}>
+          <span className={styles.routeCardIcon}>🚌</span>
           <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-sky-600">{subtitle}</p>
-            <h3 className="text-lg md:text-xl font-semibold text-slate-900">{title}</h3>
-          </div>
-
-          <div className="ml-auto flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700 ring-1 ring-sky-100 shadow-sm shadow-sky-100/60">
-              {L.stopsCount(count)}
-            </span>
-            {duration && (
-              <span className="inline-flex items-center rounded-full bg-white/80 px-3 py-1 text-xs text-slate-800 ring-1 ring-slate-200 shadow-sm">
-                <Clock className="mr-1.5 h-3.5 w-3.5 text-sky-500" />
-                {L.duration}: {duration}
-              </span>
-            )}
+            <div className={styles.routeCardDirection}>{title}</div>
+            <div className={styles.routeCardMeta}>
+              {subtitle} • {L.stopsCount(count)}
+            </div>
           </div>
         </div>
-
-        {/* Rail */}
-        <StopsList stops={route.stops} lang={lang} />
+        {duration && (
+          <div className={styles.routeCardSummaryTimes}>
+            <span>
+              {L.duration}: <strong>{duration}</strong>
+            </span>
+          </div>
+        )}
       </div>
-    </div>
+
+      <StopsList stops={route.stops || []} lang={lang} />
+    </article>
   );
 }
 
-/* ===== Список остановок с компактным режимом для мобильных ===== */
-
 function StopsList({ stops, lang = "ru" }: { stops: Stop[]; lang?: Lang }) {
-  const [expanded, setExpanded] = useState(false);
-  const L = T[lang];
-
-  // Мобильный: показываем первую, последнюю и одну из середины (если есть)
-  const compactStops = useMemo(() => {
-    if (stops.length <= 3) return stops;
-    const mid = Math.floor(stops.length / 2);
-    return [stops[0], stops[mid], stops[stops.length - 1]];
-  }, [stops]);
-
-  const renderStops = (list: Stop[]) => (
-    <ol className="relative pl-9">
-      {/* вертикальная линия */}
-      <div className="absolute left-[18px] top-2 bottom-6 w-[3px] rounded-full bg-gradient-to-b from-sky-400 via-sky-200 to-slate-200" />
-      {list.map((s, i) => (
+  return (
+    <div className={styles.routeCardStops}>
+      {stops.map((stop, i) => (
         <StopRow
-          key={`${s.id}-${i}`}
-          stop={s}
+          key={`${stop.id}-${i}`}
+          stop={stop}
           index={i + 1}
-          isLast={i === list.length - 1}
+          isLast={i === stops.length - 1}
           lang={lang}
         />
       ))}
-    </ol>
-  );
-
-  return (
-    <>
-      {/* Desktop / Tablet: всегда все */}
-      <div className="hidden sm:block">
-        {renderStops(stops)}
-      </div>
-
-      {/* Mobile: компактный вид + «Показать все» */}
-      <div className="sm:hidden">
-        {expanded ? renderStops(stops) : renderStops(compactStops)}
-
-        {stops.length > 3 && (
-          <button
-            type="button"
-            onClick={() => setExpanded((v) => !v)}
-            className="mt-2 inline-flex items-center gap-1 rounded-full bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-700 ring-1 ring-sky-100 shadow-sm hover:bg-sky-100"
-          >
-            {expanded ? (
-              <>
-                <ChevronUp className="h-4 w-4" />
-                {L.showLess}
-              </>
-            ) : (
-              <>
-                <ChevronDown className="h-4 w-4" />
-                {L.showAll}
-              </>
-            )}
-          </button>
-        )}
-      </div>
-    </>
+    </div>
   );
 }
-
-/* ===== Одна остановка ===== */
 
 function StopRow({
   stop,
@@ -382,76 +311,56 @@ function StopRow({
   lang?: Lang;
 }) {
   const L = T[lang];
+  const dotClasses = [styles.routeStopDot];
+
+  if (index === 1) {
+    dotClasses.push(styles.routeStopDotStart);
+  }
+
+  if (isLast) {
+    dotClasses.push(styles.routeStopDotEnd);
+  }
 
   return (
-    <li className="relative">
-      {/* Порядковый бейдж */}
-      <span className="absolute left-[5px] top-5 grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br from-sky-500 to-sky-600 text-[11px] font-semibold text-white ring-2 ring-white shadow-lg shadow-sky-200/80">
-        {index}
-      </span>
-
-      {/* Карточка остановки */}
-      <div className="ml-8 mb-6 rounded-2xl border border-slate-100/80 bg-gradient-to-br from-white via-white to-slate-50/40 shadow-sm shadow-sky-100/50">
-        {/* Заголовок + описание */}
-        <div className="px-4 pt-4">
-          <div className="mb-1.5 text-[15px] font-semibold text-slate-900">{stop.name}</div>
-          {stop.description && (
-            <div className="text-xs text-slate-600">{stop.description}</div>
+    <div className={styles.routeStop}>
+      <div className={styles.routeStopLine}>
+        <div className={dotClasses.join(" ")}>{index}</div>
+        {!isLast && <div className={styles.routeStopLineSeg} />}
+      </div>
+      <div className={styles.routeStopCard}>
+        <div className={styles.routeStopTop}>
+          <div>
+            <div className={styles.routeStopCity}>{stop.name}</div>
+            {stop.description && (
+              <div className={styles.routeStopPlace}>{stop.description}</div>
+            )}
+          </div>
+          {(stop.arrival_time || stop.departure_time) && (
+            <div className={styles.routeStopTimes}>
+              {stop.arrival_time && (
+                <div>
+                  {L.arrival} <span>{stop.arrival_time}</span>
+                </div>
+              )}
+              {stop.departure_time && (
+                <div>
+                  {L.departure} <span>{stop.departure_time}</span>
+                </div>
+              )}
+            </div>
           )}
         </div>
-
-        {/* Время: выравниваем по колонкам + акцентные цифры */}
-        {(stop.arrival_time || stop.departure_time) && (
-          <div className="mt-3 grid grid-cols-2 gap-1 border-t border-slate-100/90 px-4 py-3 sm:grid-cols-[1fr_auto_auto]">
-            {/* Заполнитель для заголовка в мобильной сетке */}
-            <div className="hidden sm:block" />
-
-            {stop.arrival_time && (
-              <div className="flex items-center gap-2 justify-start rounded-lg bg-sky-50/60 px-2 py-1 sm:justify-center">
-                <Clock className="h-4 w-4 text-sky-500" />
-                <div className="flex flex-col leading-tight">
-                  <span className="text-[11px] text-slate-500">{L.arrival}</span>
-                  <span className="tabular-nums font-mono font-semibold text-slate-900">
-                    {stop.arrival_time}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {stop.departure_time && (
-              <div className="flex items-center gap-2 justify-end rounded-lg bg-emerald-50/60 px-2 py-1">
-                <LogOut className="h-4 w-4 text-emerald-500" />
-                <div className="flex flex-col leading-tight text-right">
-                  <span className="text-[11px] text-slate-500">{L.departure}</span>
-                  <span className="tabular-nums font-mono font-semibold text-slate-900">
-                    {stop.departure_time}
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Кнопка карты */}
         {stop.location && (
-          <div className="border-t border-slate-100/90 px-4 py-2.5">
-            <a
-              href={stop.location}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-3 py-1.5 text-[11px] font-semibold text-sky-700 ring-1 ring-sky-100 shadow-sm hover:bg-sky-100"
-            >
-              <MapPin className="h-3.5 w-3.5" />
-              {L.map}
-            </a>
-          </div>
+          <a
+            href={stop.location}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.routeStopMap}
+          >
+            {L.map}
+          </a>
         )}
       </div>
-
-      {/* соединительная линия (не у последней) */}
-      {!isLast && (
-        <div className="absolute left-[18px] -bottom-4 h-5 w-[3px] rounded-full bg-slate-200" />
-      )}
-    </li>
+    </div>
   );
 }

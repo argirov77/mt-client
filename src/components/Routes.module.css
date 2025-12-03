@@ -1,0 +1,277 @@
+.routes {
+  background: #f5f7fb;
+  padding: 48px 16px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.routesInner {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.routesHeader {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.routesEyebrow {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.routesTitle {
+  font-size: 26px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 6px 0 0;
+}
+
+.routesCards {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.routeCard {
+  background: #ffffff;
+  border-radius: 24px;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+  padding: 20px 22px 24px;
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+.routeCardSummary {
+  background: linear-gradient(135deg, #2563eb, #22c55e);
+  border-radius: 18px;
+  padding: 14px 16px;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.routeCardSummaryMain {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.routeCardIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  font-size: 16px;
+}
+
+.routeCardDirection {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.routeCardMeta {
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+.routeCardSummaryTimes {
+  font-size: 13px;
+  text-align: right;
+}
+
+.routeCardSummaryTimes strong {
+  font-weight: 700;
+}
+
+.routeCardStops {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.routeStop {
+  display: flex;
+  gap: 12px;
+}
+
+.routeStopLine {
+  flex: 0 0 26px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.routeStopDot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: #e0edff;
+  color: #2563eb;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.routeStopDotStart,
+.routeStopDotEnd {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.routeStopLineSeg {
+  flex: 1;
+  width: 2px;
+  background: #dbeafe;
+  margin-top: 4px;
+}
+
+.routeStopCard {
+  background: #f8fafc;
+  border-radius: 18px;
+  padding: 10px 12px 12px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+  flex: 1;
+  transition: box-shadow 0.18s ease, background-color 0.18s ease, transform 0.18s ease;
+}
+
+.routeStopCard:hover {
+  background: #ffffff;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.1);
+  transform: translateY(-1px);
+}
+
+.routeStopTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.routeStopCity {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.routeStopPlace {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.routeStopTimes {
+  font-size: 12px;
+  text-align: right;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.routeStopTimes span {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.routeStopMap {
+  margin-top: 8px;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 12px;
+  font-weight: 500;
+  color: #2563eb;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.routeStopMap:hover {
+  text-decoration: underline;
+}
+
+.error {
+  margin-top: 12px;
+  text-align: center;
+  color: #dc2626;
+}
+
+.empty {
+  margin-top: 12px;
+  text-align: center;
+  color: #94a3b8;
+}
+
+.skeletonCard {
+  background: linear-gradient(180deg, #f8fafc, #ffffff);
+  animation: pulse 1.3s ease-in-out infinite;
+}
+
+.skeletonSummary {
+  height: 64px;
+  border-radius: 18px;
+  background: #e2e8f0;
+  opacity: 0.6;
+  margin-bottom: 16px;
+}
+
+.skeletonStops {
+  display: grid;
+  gap: 12px;
+}
+
+.skeletonStop {
+  height: 64px;
+  border-radius: 16px;
+  background: #e5e7eb;
+  opacity: 0.6;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+@media (max-width: 768px) {
+  .routes {
+    padding: 32px 12px;
+  }
+
+  .routeCard {
+    padding: 18px 16px 20px;
+  }
+
+  .routeCardSummary {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .routeCardSummaryTimes {
+    font-size: 12px;
+  }
+
+  .routeStopTop {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .routeStopTimes {
+    text-align: left;
+  }
+}
