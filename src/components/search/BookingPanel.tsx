@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import SeatClient from "../SeatClient";
 import type { Tour } from "./SearchResults";
 import FormInput from "../common/FormInput";
@@ -69,8 +69,6 @@ export default function BookingPanel({
   onReadyForContacts,
 }: Props) {
   const [activeLeg, setActiveLeg] = useState<"outbound" | "return">("outbound");
-  const formRef = useRef<HTMLFormElement | null>(null);
-  const seatsScrollTriggered = useRef(false);
 
   const outboundComplete = useMemo(
     () => selectedOutboundSeats.length === seatCount,
@@ -88,18 +86,6 @@ export default function BookingPanel({
   );
 
   const readyForNext = seatCount > 0 && outboundComplete && returnComplete && namesFilled;
-
-  // скролл к форме, когда выбраны все места
-  useEffect(() => {
-    if (seatCount > 0 && outboundComplete && returnComplete) {
-      if (!seatsScrollTriggered.current) {
-        seatsScrollTriggered.current = true;
-        formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-    } else {
-      seatsScrollTriggered.current = false;
-    }
-  }, [seatCount, outboundComplete, returnComplete]);
 
   // гарантируем, что массивы багажа не пустые
   useEffect(() => {
@@ -198,11 +184,7 @@ export default function BookingPanel({
         </section>
       )}
 
-      <form
-        ref={formRef}
-        onSubmit={(e) => e.preventDefault()}
-        className="mt-2 flex w-full max-w-[520px] flex-col gap-2"
-      >
+      <form onSubmit={(e) => e.preventDefault()} className="mt-2 flex w-full max-w-[520px] flex-col gap-2">
         {passengerNames.map((name, idx) => (
           <FormInput
             key={idx}

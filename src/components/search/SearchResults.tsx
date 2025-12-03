@@ -1,12 +1,6 @@
 "use client";
 
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
 
 import Loader from "../common/Loader";
@@ -114,6 +108,8 @@ type Dict = {
   step3SummaryCanceled: string;
   next: string;
 };
+
+const DISCOUNT_RATE = 0.05;
 
 const dict: Record<NonNullable<Props["lang"]>, Dict> = {
   // ... оставил без изменений, как у тебя ...
@@ -428,14 +424,6 @@ export default function SearchResults({
   // stepper
   const [activeStep, setActiveStep] = useState<Step>(1);
 
-  const step1Ref = useRef<HTMLDivElement | null>(null);
-  const step2Ref = useRef<HTMLDivElement | null>(null);
-  const step3Ref = useRef<HTMLDivElement | null>(null);
-
-  const scrollToRef = useCallback((ref: React.RefObject<HTMLDivElement | null>) => {
-    ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, []);
-
   // Общие сообщения/состояние
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string>("");
@@ -552,8 +540,7 @@ export default function SearchResults({
           setMsg("");
         }
 
-        // после загрузки рейсов — скроллим к шагу 1
-        scrollToRef(step1Ref);
+        setActiveStep(1);
       } catch {
         if (!cancelled) {
           setMsg(t.errSearch);
@@ -568,7 +555,7 @@ export default function SearchResults({
     return () => {
       cancelled = true;
     };
-  }, [fromId, toId, date, returnDate, safeSeatCount, t, scrollToRef]);
+  }, [fromId, toId, date, returnDate, safeSeatCount, t]);
 
   const hasReturnSection = Boolean(returnDate && returnTours.length > 0);
 
@@ -593,8 +580,7 @@ export default function SearchResults({
     if (hasReturnSection && !selectedReturnTour) return;
     // все нужные рейсы выбраны → шаг 2
     setActiveStep((prev) => (prev < 2 ? 2 : prev));
-    scrollToRef(step2Ref);
-  }, [selectedOutboundTour, selectedReturnTour, hasReturnSection, scrollToRef]);
+  }, [selectedOutboundTour, selectedReturnTour, hasReturnSection]);
 
   // ====== ACTIONS: бронь / покупка ======
   const handleAction = async (action: "book" | "purchase") => {
@@ -784,7 +770,6 @@ export default function SearchResults({
 
       // после успешного действия — активируем шаг 3
       setActiveStep(3);
-      scrollToRef(step3Ref);
     } catch {
       setMsg(t.errAction);
       setMsgType("error");
@@ -817,7 +802,6 @@ export default function SearchResults({
       );
       setShowDownloadPrompt(true);
       setActiveStep(3);
-      scrollToRef(step3Ref);
     } catch {
       setMsg(t.errAction);
       setMsgType("error");
@@ -851,7 +835,6 @@ export default function SearchResults({
       );
       setShowDownloadPrompt(false);
       setActiveStep(3);
-      scrollToRef(step3Ref);
     } catch {
       setMsg(t.errAction);
       setMsgType("error");
@@ -939,46 +922,32 @@ export default function SearchResults({
     return t.step3SummaryEmpty;
   }, [purchaseId, ticket, t]);
 
-  const handleStepOpen = (
-    step: Step,
-    ref: React.RefObject<HTMLDivElement>
-  ) => {
+  const handleStepNavigation = (step: Step) => {
     if (step === 2 && (!selectedOutboundTour || (returnRequired && !selectedReturnTour))) {
       setActiveStep(1);
-      scrollToRef(step1Ref);
       return;
     }
+
     if (step === 3 && !step2Complete) {
       setActiveStep(2);
-      scrollToRef(step2Ref);
       return;
     }
+
     setActiveStep(step);
-    scrollToRef(ref);
   };
-
-  const handleStepNavigation = (step: Step) => {
-    const targetRef = step === 1 ? step1Ref : step === 2 ? step2Ref : step3Ref;
-    handleStepOpen(step, targetRef);
-  };
-
-  const collapsibleBodyClass = (isOpen: boolean) =>
-    `transition-all duration-300 ease-in-out ${
-      isOpen
-        ? "max-h-[5000px] opacity-100 translate-y-0"
-        : "max-h-0 opacity-0 -translate-y-2 overflow-hidden pointer-events-none"
-    }`;
 
   const renderProgressBar = () => {
-    const steps: { id: Step; label: string; state: "active" | "done" | "future" }[] = [
+    const steps: { id: Step; label: string; summary: string; state: "active" | "done" | "future" }[] = [
       {
         id: 1,
         label: t.step1ShortLabel,
+        summary: step1Summary,
         state: activeStep === 1 ? "active" : isStep1Done ? "done" : "future",
       },
       {
         id: 2,
         label: t.step2ShortLabel,
+        summary: step2Summary,
         state:
           activeStep === 2
             ? "active"
@@ -989,44 +958,62 @@ export default function SearchResults({
       {
         id: 3,
         label: t.step3ShortLabel,
+        summary: step3Summary,
         state: activeStep === 3 ? "active" : isStep3Done ? "done" : "future",
       },
     ];
 
+    const progressPercent = ((activeStep - 1) / Math.max(steps.length - 1, 1)) * 100;
+
     return (
-      <div className="relative mt-2 mb-4">
-        <div className="absolute left-6 right-6 top-1/2 h-0.5 -translate-y-1/2 bg-slate-200" />
-        <div className="relative flex items-center justify-between gap-3">
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
+            <div
+              className="absolute left-0 top-0 h-full bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 transition-all duration-500"
+              style={{ width: `${Math.max(0, Math.min(100, progressPercent))}%` }}
+            />
+          </div>
+          <span className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+            {lang === "en" ? "Step" : "Шаг"} {activeStep} / {steps.length}
+          </span>
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
           {steps.map((step) => {
             const isActive = step.state === "active";
             const isDone = step.state === "done";
+            const isFuture = step.state === "future";
+
             return (
               <button
                 key={step.id}
                 type="button"
                 onClick={() => handleStepNavigation(step.id)}
-                className="group relative flex min-w-0 flex-1 flex-col items-center gap-2 text-xs font-semibold text-slate-600 transition-colors duration-300 hover:text-sky-700"
+                className={`group flex w-full flex-col items-start gap-2 rounded-xl border p-3 text-left shadow-sm transition hover:border-sky-200 hover:shadow-md ${
+                  isActive
+                    ? "border-sky-400 bg-sky-50"
+                    : isDone
+                      ? "border-emerald-100 bg-emerald-50"
+                      : "border-slate-200 bg-white"
+                } ${isFuture ? "opacity-75" : ""}`}
               >
-                <span
-                  className={`grid h-10 w-10 place-items-center rounded-full border text-sm transition-all duration-300 ${
-                    isActive
-                      ? "border-sky-600 bg-sky-600 text-white shadow"
-                      : isDone
-                        ? "border-sky-100 bg-sky-100 text-sky-700"
-                        : "border-slate-300 bg-white text-slate-500"
-                  }`}
-                >
-                  {isDone && !isActive ? "✓" : step.id}
-                </span>
-                <span
-                  className={`transition-all duration-300 ${
-                    isActive
-                      ? "translate-y-0 opacity-100 text-slate-900"
-                      : "-translate-y-1 opacity-0"
-                  }`}
-                >
-                  {step.label}
-                </span>
+                <div className="flex w-full items-center gap-2">
+                  <span
+                    className={`grid h-8 w-8 place-items-center rounded-full text-xs font-semibold ${
+                      isActive
+                        ? "bg-sky-600 text-white"
+                        : isDone
+                          ? "bg-emerald-100 text-emerald-700"
+                          : "bg-slate-100 text-slate-600"
+                    }`}
+                  >
+                    {isDone && !isActive ? "✓" : step.id}
+                  </span>
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-semibold text-slate-900">{step.label}</div>
+                    <div className="truncate text-xs text-slate-500">{step.summary}</div>
+                  </div>
+                </div>
               </button>
             );
           })}
@@ -1035,56 +1022,11 @@ export default function SearchResults({
     );
   };
 
-  const renderStepHeader = (
-    step: Step,
-    title: string,
-    summary: string,
-    ref: React.RefObject<HTMLDivElement>
-  ) => {
-    const isActive = activeStep === step;
-    return (
-      <button
-        type="button"
-        className={`w-full flex items-center justify-between rounded-2xl border px-4 py-3 text-left transition ${
-          isActive
-            ? "border-sky-400 bg-sky-50 text-sky-900 shadow-sm"
-            : "border-slate-200 bg-white text-slate-800 hover:border-sky-200"
-        }`}
-        onClick={() => handleStepOpen(step, ref)}
-      >
-        <div className="flex items-center gap-3">
-          <span
-            className={`grid h-8 w-8 place-items-center rounded-full text-xs font-semibold ${
-              isActive ? "bg-sky-600 text-white" : "bg-slate-100 text-slate-600"
-            }`}
-          >
-            {step}
-          </span>
-          <div>
-            <div className="text-sm font-semibold">{title}</div>
-            <div className="text-xs text-slate-500">{summary}</div>
-          </div>
-        </div>
-        {!isActive && (
-          <span className="text-xs text-sky-600">
-            {lang === "en" ? "Open" : "Открыть"}
-          </span>
-        )}
-      </button>
-    );
-  };
-
   useEffect(() => {
     if (!selectedOutboundTour) return;
     if (returnRequired && !selectedReturnTour) return;
     setActiveStep((prev) => (prev < 2 ? 2 : prev));
-    scrollToRef(step2Ref);
-  }, [returnRequired, scrollToRef, selectedOutboundTour, selectedReturnTour]);
-
-  const showStep1Body = activeStep === 1;
-  const showStep2Body =
-    activeStep === 2 && selectedOutboundTour && (!returnRequired || selectedReturnTour);
-  const showStep3Body = activeStep === 3 && !ticket;
+  }, [returnRequired, selectedOutboundTour, selectedReturnTour]);
 
   const outboundListVisible = !selectedOutboundTour && outboundTours.length > 0;
   const returnListVisible =
@@ -1106,7 +1048,351 @@ export default function SearchResults({
 
   const handleReadyForContacts = () => {
     setActiveStep(3);
-    scrollToRef(step3Ref);
+  };
+
+  const locale = useMemo(() => {
+    if (lang === "en") return "en-US";
+    if (lang === "bg") return "bg-BG";
+    if (lang === "ua") return "uk-UA";
+    return "ru-RU";
+  }, [lang]);
+
+  const formatDateLabel = useCallback(
+    (value: string) => {
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return value;
+      return date.toLocaleDateString(locale, { day: "2-digit", month: "short", year: "numeric" });
+    },
+    [locale]
+  );
+
+  const formatTimeLabel = useCallback(
+    (value: string) => {
+      const date = new Date(`1970-01-01T${value}`);
+      if (Number.isNaN(date.getTime())) return value;
+      return date.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
+    },
+    [locale]
+  );
+
+  const calculateTotal = useCallback(
+    (tour: Tour | null) => {
+      if (!tour) return 0;
+      const adults = Math.max(0, safeSeatCount - safeDiscountCount);
+      const adultSum = adults * tour.price;
+      const discSum = safeDiscountCount * tour.price * (1 - DISCOUNT_RATE);
+      return adultSum + discSum;
+    },
+    [safeDiscountCount, safeSeatCount]
+  );
+
+  const outboundTotal = useMemo(() => calculateTotal(selectedOutboundTour), [calculateTotal, selectedOutboundTour]);
+  const returnTotal = useMemo(() => calculateTotal(selectedReturnTour), [calculateTotal, selectedReturnTour]);
+  const overallTotal = useMemo(() => outboundTotal + returnTotal, [outboundTotal, returnTotal]);
+
+  const passengerList = useMemo(
+    () => passengerNames.map((name) => name.trim()).filter(Boolean),
+    [passengerNames]
+  );
+
+  const extraBaggageOutboundCount = useMemo(
+    () => extraBaggageOutbound.filter(Boolean).length,
+    [extraBaggageOutbound]
+  );
+  const extraBaggageReturnCount = useMemo(
+    () => extraBaggageReturn.filter(Boolean).length,
+    [extraBaggageReturn]
+  );
+
+  const formatPrice = useCallback((value: number) => `${value.toFixed(2)} ₴`, []);
+  const showStepNavigation = Boolean(selectedOutboundTour);
+
+  const renderStepHeader = (stepNumber: Step, title: string, summary: string) => (
+    <div className="flex items-start justify-between gap-3">
+      <div>
+        <p className="text-xs uppercase tracking-wide text-slate-500">
+          {lang === "en" ? "Step" : "Шаг"} {stepNumber}
+        </p>
+        <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
+        <p className="text-sm text-slate-500">{summary}</p>
+      </div>
+    </div>
+  );
+
+  const renderStepContent = () => {
+    const stepToRender: Step =
+      activeStep === 2 && (!selectedOutboundTour || (returnRequired && !selectedReturnTour))
+        ? 1
+        : activeStep === 3 && !step2Complete
+          ? 2
+          : activeStep;
+
+    if (stepToRender === 1) {
+      return (
+        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-4">
+          {renderStepHeader(1, t.step1Title, step1Summary)}
+
+          {outboundListVisible && (
+            <TripList
+              title={t.outbound}
+              tours={outboundTours}
+              selectedId={selectedOutboundTour?.id}
+              onSelect={onSelectOutbound}
+              freeSeatsValue={freeSeatsValue}
+              fromName={fromName}
+              toName={toName}
+              lang={lang}
+              seatCount={safeSeatCount}
+              discountCount={safeDiscountCount}
+              t={t}
+            />
+          )}
+
+          {returnListVisible && (
+            <TripList
+              title={t.inbound}
+              tours={returnTours}
+              selectedId={selectedReturnTour?.id}
+              onSelect={onSelectReturn}
+              freeSeatsValue={freeSeatsValue}
+              fromName={toName}
+              toName={fromName}
+              lang={lang}
+              seatCount={safeSeatCount}
+              discountCount={safeDiscountCount}
+              t={t}
+            />
+          )}
+
+          {!outboundListVisible && !returnListVisible && selectedOutboundTour && (
+            <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+              <p>
+                {t.outboundShort}: {selectedOutboundTour.departure_time} · {fromName} → {toName}
+              </p>
+              {returnRequired && selectedReturnTour && (
+                <p>
+                  {t.inboundShort}: {selectedReturnTour.departure_time} · {toName} → {fromName}
+                </p>
+              )}
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  className="rounded-lg border border-slate-300 px-3 py-2 text-xs text-slate-700 hover:bg-slate-100"
+                  onClick={resetOutbound}
+                >
+                  {lang === "en" ? "Change outbound" : "Изменить рейсы"}
+                </button>
+                {returnRequired && selectedReturnTour && (
+                  <button
+                    type="button"
+                    className="rounded-lg border border-slate-300 px-3 py-2 text-xs text-slate-700 hover:bg-slate-100"
+                    onClick={resetReturn}
+                  >
+                    {lang === "en" ? "Change return" : "Изменить обратно"}
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {!outboundTours.length && !returnTours.length && (
+            <p className="text-sm text-slate-500">{t.noResults}</p>
+          )}
+        </section>
+      );
+    }
+
+    if (stepToRender === 2) {
+      return (
+        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-3">
+          {renderStepHeader(2, t.step2Title, step2Summary)}
+          <div className="rounded-xl border border-slate-100 bg-white p-3">
+            {selectedOutboundTour ? (
+              <BookingPanel
+                t={t}
+                seatCount={safeSeatCount}
+                fromId={fromId}
+                toId={toId}
+                fromName={fromName}
+                toName={toName}
+                selectedOutboundTour={selectedOutboundTour}
+                selectedReturnTour={selectedReturnTour}
+                selectedOutboundSeats={selectedOutboundSeats}
+                setSelectedOutboundSeats={setSelectedOutboundSeats}
+                selectedReturnSeats={selectedReturnSeats}
+                setSelectedReturnSeats={setSelectedReturnSeats}
+                passengerNames={passengerNames}
+                setPassengerNames={setPassengerNames}
+                extraBaggageOutbound={extraBaggageOutbound}
+                setExtraBaggageOutbound={setExtraBaggageOutbound}
+                extraBaggageReturn={extraBaggageReturn}
+                setExtraBaggageReturn={setExtraBaggageReturn}
+                onReadyForContacts={handleReadyForContacts}
+              />
+            ) : (
+              <p className="text-sm text-slate-600">{t.outboundShort} {lang === "en" ? "not selected" : "не выбран"}</p>
+            )}
+          </div>
+        </section>
+      );
+    }
+
+    return (
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-3">
+        {renderStepHeader(3, t.contactsAndPayment, step3Summary)}
+        <div className="rounded-xl border border-slate-100 bg-white p-3 space-y-3">
+          <ContactsAndPaymentStep
+            t={t}
+            phone={phone}
+            setPhone={setPhone}
+            email={email}
+            setEmail={setEmail}
+            purchaseId={purchaseId}
+            ticket={ticket}
+            handleAction={handleAction}
+            handlePay={handlePay}
+            onDownloadTicket={handleTicketDownloadClick}
+          />
+          <TicketDownloadPrompt
+            visible={showDownloadPrompt && !!ticket}
+            t={t}
+            onDownload={() => handleTicketDownloadClick()}
+            onClose={handlePromptClose}
+          />
+        </div>
+      </section>
+    );
+  };
+
+  const renderOrderSummary = () => {
+    if (!selectedOutboundTour) return null;
+
+    const contactsProvided = Boolean(phone || email);
+    const baggageBadges = [
+      extraBaggageOutboundCount > 0
+        ? `${lang === "en" ? "Outbound" : "Туда"}: ${extraBaggageOutboundCount}`
+        : null,
+      extraBaggageReturnCount > 0
+        ? `${lang === "en" ? "Return" : "Обратно"}: ${extraBaggageReturnCount}`
+        : null,
+    ].filter(Boolean);
+
+    return (
+      <aside className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:sticky lg:top-6">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <div className="text-sm font-semibold text-slate-900">
+              {lang === "en" ? "Order summary" : "Сводка заказа"}
+            </div>
+            <p className="text-xs text-slate-500">
+              {lang === "en" ? "Updates as you fill the form" : "Обновляется по мере заполнения"}
+            </p>
+          </div>
+          <span className="rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">Live</span>
+        </div>
+
+        <div className="mt-4 space-y-4">
+          <div className="space-y-2">
+            <div className="text-xs uppercase tracking-wide text-slate-500">{t.outboundShort}</div>
+            <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+              <div className="flex items-center justify-between text-sm font-semibold text-slate-900">
+                <span>
+                  {fromName} → {toName}
+                </span>
+                <span className="text-xs text-slate-500">{formatDateLabel(selectedOutboundTour.date)}</span>
+              </div>
+              <div className="mt-1 text-sm text-slate-600">
+                {formatTimeLabel(selectedOutboundTour.departure_time)} → {formatTimeLabel(selectedOutboundTour.arrival_time)}
+              </div>
+              <div className="mt-2 flex items-center justify-between text-xs text-slate-600">
+                <span>{lang === "en" ? "Seats" : "Места"}: {selectedOutboundSeats.length ? selectedOutboundSeats.join(", ") : lang === "en" ? "Pending" : "Не выбраны"}</span>
+                <span className="font-semibold text-slate-900">{formatPrice(outboundTotal)}</span>
+              </div>
+            </div>
+          </div>
+
+          {selectedReturnTour ? (
+            <div className="space-y-2">
+              <div className="text-xs uppercase tracking-wide text-slate-500">{t.inboundShort}</div>
+              <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                <div className="flex items-center justify-between text-sm font-semibold text-slate-900">
+                  <span>
+                    {toName} → {fromName}
+                  </span>
+                  <span className="text-xs text-slate-500">{formatDateLabel(selectedReturnTour.date)}</span>
+                </div>
+                <div className="mt-1 text-sm text-slate-600">
+                  {formatTimeLabel(selectedReturnTour.departure_time)} → {formatTimeLabel(selectedReturnTour.arrival_time)}
+                </div>
+                <div className="mt-2 flex items-center justify-between text-xs text-slate-600">
+                  <span>{lang === "en" ? "Seats" : "Места"}: {selectedReturnSeats.length ? selectedReturnSeats.join(", ") : lang === "en" ? "Pending" : "Не выбраны"}</span>
+                  <span className="font-semibold text-slate-900">{formatPrice(returnTotal)}</span>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          <div className="space-y-2">
+            <div className="text-xs uppercase tracking-wide text-slate-500">{t.ticketPassengers}</div>
+            <div className="rounded-xl border border-slate-100 bg-white p-3 text-sm text-slate-700">
+              {passengerList.length ? (
+                <ul className="space-y-1">
+                  {passengerList.map((name, index) => (
+                    <li key={`${name}-${index}`} className="flex items-center justify-between gap-3">
+                      <span className="truncate">{name}</span>
+                      <span className="text-xs text-slate-500">{lang === "en" ? "Passenger" : "Пассажир"} {index + 1}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-slate-500">{t.step2SummaryFillNames}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="text-xs uppercase tracking-wide text-slate-500">{t.ticketContacts}</div>
+            <div className="rounded-xl border border-slate-100 bg-white p-3 text-sm text-slate-700 space-y-1">
+              {contactsProvided ? (
+                <>
+                  {phone ? <div>{phone}</div> : null}
+                  {email ? <div className="text-slate-600">{email}</div> : null}
+                </>
+              ) : (
+                <p className="text-sm text-slate-500">{step3Summary}</p>
+              )}
+            </div>
+          </div>
+
+          {baggageBadges.length > 0 ? (
+            <div className="space-y-2">
+              <div className="text-xs uppercase tracking-wide text-slate-500">{lang === "en" ? "Extra baggage" : "Дополнительный багаж"}</div>
+              <div className="flex flex-wrap gap-2">
+                {baggageBadges.map((label) => (
+                  <span
+                    key={label}
+                    className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800"
+                  >
+                    {label}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          <div className="rounded-xl border border-slate-200 bg-gradient-to-r from-slate-50 to-sky-50 p-3 shadow-inner">
+            <div className="flex items-center justify-between text-sm text-slate-600">
+              <span>{lang === "en" ? "Subtotal" : "Промежуточно"}</span>
+              <span className="font-semibold text-slate-900">{formatPrice(outboundTotal + returnTotal)}</span>
+            </div>
+            <div className="mt-2 flex items-center justify-between text-base font-semibold text-slate-900">
+              <span>{t.total}</span>
+              <span className="text-sky-700">{formatPrice(overallTotal)}</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+    );
   };
 
   if (ticket) {
@@ -1151,147 +1437,16 @@ export default function SearchResults({
   }
 
   return (
-    <div className="w-full max-w-5xl mx-auto space-y-4">
+    <div className="w-full max-w-6xl mx-auto space-y-4">
       {loading && <Loader />}
 
       {msg && <Alert type={msgType}>{msg}</Alert>}
 
-      {renderProgressBar()}
+      {showStepNavigation ? renderProgressBar() : null}
 
-      <div ref={step1Ref} className="space-y-3">
-        {renderStepHeader(1, t.step1Title, step1Summary, step1Ref)}
-
-        <div className={collapsibleBodyClass(showStep1Body)} aria-hidden={!showStep1Body}>
-          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-100 space-y-4">
-            {outboundListVisible && (
-              <TripList
-                title={t.outbound}
-                tours={outboundTours}
-                selectedId={selectedOutboundTour?.id}
-                onSelect={onSelectOutbound}
-                freeSeatsValue={freeSeatsValue}
-                fromName={fromName}
-                toName={toName}
-                lang={lang}
-                seatCount={safeSeatCount}
-                discountCount={safeDiscountCount}
-                t={t}
-              />
-            )}
-
-            {returnListVisible && (
-              <TripList
-                title={t.inbound}
-                tours={returnTours}
-                selectedId={selectedReturnTour?.id}
-                onSelect={onSelectReturn}
-                freeSeatsValue={freeSeatsValue}
-                fromName={toName}
-                toName={fromName}
-                lang={lang}
-                seatCount={safeSeatCount}
-                discountCount={safeDiscountCount}
-                t={t}
-              />
-            )}
-
-            {!outboundListVisible && !returnListVisible && selectedOutboundTour && (
-              <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
-                <p>
-                  {t.outboundShort}: {selectedOutboundTour.departure_time} · {fromName} → {toName}
-                </p>
-                {returnRequired && selectedReturnTour && (
-                  <p>
-                    {t.inboundShort}: {selectedReturnTour.departure_time} · {toName} → {fromName}
-                  </p>
-                )}
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    className="rounded-lg border border-slate-300 px-3 py-2 text-xs text-slate-700 hover:bg-slate-100"
-                    onClick={resetOutbound}
-                  >
-                    {lang === "en" ? "Change outbound" : "Изменить рейсы"}
-                  </button>
-                  {returnRequired && selectedReturnTour && (
-                    <button
-                      type="button"
-                      className="rounded-lg border border-slate-300 px-3 py-2 text-xs text-slate-700 hover:bg-slate-100"
-                      onClick={resetReturn}
-                    >
-                      {lang === "en" ? "Change return" : "Изменить обратно"}
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {!outboundTours.length && !returnTours.length && (
-              <p className="text-sm text-slate-500">{t.noResults}</p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div ref={step2Ref} className="space-y-3">
-        {renderStepHeader(2, t.step2Title, step2Summary, step2Ref)}
-
-        <div className={collapsibleBodyClass(showStep2Body)} aria-hidden={!showStep2Body}>
-          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-100">
-            {selectedOutboundTour ? (
-              <BookingPanel
-                t={t}
-                seatCount={safeSeatCount}
-                fromId={fromId}
-                toId={toId}
-                fromName={fromName}
-                toName={toName}
-                selectedOutboundTour={selectedOutboundTour}
-                selectedReturnTour={selectedReturnTour}
-                selectedOutboundSeats={selectedOutboundSeats}
-                setSelectedOutboundSeats={setSelectedOutboundSeats}
-                selectedReturnSeats={selectedReturnSeats}
-                setSelectedReturnSeats={setSelectedReturnSeats}
-                passengerNames={passengerNames}
-                setPassengerNames={setPassengerNames}
-                extraBaggageOutbound={extraBaggageOutbound}
-                setExtraBaggageOutbound={setExtraBaggageOutbound}
-                extraBaggageReturn={extraBaggageReturn}
-                setExtraBaggageReturn={setExtraBaggageReturn}
-                onReadyForContacts={handleReadyForContacts}
-              />
-            ) : (
-              <p className="text-sm text-slate-600">{t.outboundShort} {lang === "en" ? "not selected" : "не выбран"}</p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div ref={step3Ref} className="space-y-3">
-        {renderStepHeader(3, t.contactsAndPayment, step3Summary, step3Ref)}
-
-        <div className={collapsibleBodyClass(showStep3Body)} aria-hidden={!showStep3Body}>
-          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-100">
-            <ContactsAndPaymentStep
-              t={t}
-              phone={phone}
-              setPhone={setPhone}
-              email={email}
-              setEmail={setEmail}
-              purchaseId={purchaseId}
-              ticket={ticket}
-              handleAction={handleAction}
-              handlePay={handlePay}
-              onDownloadTicket={handleTicketDownloadClick}
-            />
-            <TicketDownloadPrompt
-              visible={showDownloadPrompt && !!ticket}
-              t={t}
-              onDownload={() => handleTicketDownloadClick()}
-              onClose={handlePromptClose}
-            />
-          </div>
-        </div>
+      <div className={`grid gap-4 ${showStepNavigation ? "lg:grid-cols-[1.6fr_1fr]" : ""}`}>
+        <div className="order-1 space-y-4">{renderStepContent()}</div>
+        {showStepNavigation && <div className="order-2 lg:order-none">{renderOrderSummary()}</div>}
       </div>
     </div>
   );
