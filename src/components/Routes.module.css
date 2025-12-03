@@ -1,0 +1,303 @@
+.routes {
+  --routes-bg: #f6f8fb;
+  --routes-surface: #ffffff;
+  --routes-surface-muted: #f8fbff;
+  --routes-text: #0b1b2b;
+  --routes-muted: #6b7c93;
+  --routes-line: #e5eaf1;
+  --routes-accent: #0b4a86;
+  --routes-accent-soft: #eaf2ff;
+  --routes-radius-lg: 18px;
+  --routes-radius-md: 14px;
+  background: var(--routes-bg);
+  padding: 48px 0 52px;
+  font-family: var(--purchase-font, Arial, Helvetica, sans-serif);
+  color: var(--routes-text);
+}
+
+.routesInner {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.routesHeader {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.routesEyebrow {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--routes-muted);
+  margin: 0;
+}
+
+.routesTitle {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--routes-text);
+  margin: 6px 0 0;
+}
+
+.routesCards {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.routeCard {
+  background: var(--routes-surface);
+  border: 1px solid var(--routes-line);
+  border-radius: var(--routes-radius-lg);
+  box-shadow: 0 12px 30px rgba(11, 74, 134, 0.06);
+  padding: 0;
+  flex: 1 1 320px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.routeCardSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+  background: linear-gradient(90deg, rgba(11, 74, 134, 0.08), rgba(11, 74, 134, 0.02));
+  border-bottom: 1px solid var(--routes-line);
+}
+
+.routeCardSummaryMain {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.routeCardIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--routes-accent-soft);
+  border: 1px solid var(--routes-line);
+  color: var(--routes-accent);
+  font-size: 16px;
+}
+
+.routeCardDirection {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.routeCardMeta {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--routes-muted);
+  margin-top: 2px;
+}
+
+.routeCardSummaryTimes {
+  font-size: 13px;
+  text-align: right;
+  color: var(--routes-text);
+  min-width: 140px;
+}
+
+.routeCardSummaryTimes strong {
+  font-weight: 800;
+}
+
+.routeCardStops {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px 18px;
+}
+
+.routeStop {
+  display: flex;
+  gap: 12px;
+}
+
+.routeStopLine {
+  flex: 0 0 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 2px;
+}
+
+.routeStopDot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  background: var(--routes-accent-soft);
+  color: var(--routes-accent);
+  border: 1px solid var(--routes-line);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.routeStopDotStart,
+.routeStopDotEnd {
+  background: var(--routes-accent);
+  color: #ffffff;
+  border-color: transparent;
+}
+
+.routeStopLineSeg {
+  flex: 1;
+  width: 2px;
+  background: var(--routes-line);
+  margin-top: 6px;
+}
+
+.routeStopCard {
+  background: var(--routes-surface-muted);
+  border: 1px solid var(--routes-line);
+  border-radius: var(--routes-radius-md);
+  padding: 12px 14px;
+  flex: 1;
+  transition: border-color 0.15s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+}
+
+.routeStopCard:hover {
+  background: #ffffff;
+  border-color: rgba(11, 74, 134, 0.25);
+  box-shadow: 0 10px 24px rgba(11, 74, 134, 0.08);
+}
+
+.routeStopTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.routeStopCity {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.routeStopPlace {
+  font-size: 12px;
+  color: var(--routes-muted);
+  margin-top: 2px;
+}
+
+.routeStopTimes {
+  font-size: 12px;
+  text-align: right;
+  color: var(--routes-muted);
+  white-space: nowrap;
+  min-width: 120px;
+}
+
+.routeStopTimes span {
+  font-weight: 800;
+  color: var(--routes-text);
+}
+
+.routeStopMap {
+  margin-top: 8px;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--routes-accent);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.routeStopMap:hover {
+  text-decoration: underline;
+}
+
+.error {
+  margin-top: 12px;
+  text-align: center;
+  color: #c62828;
+}
+
+.empty {
+  margin-top: 12px;
+  text-align: center;
+  color: var(--routes-muted);
+}
+
+.skeletonCard {
+  border-radius: var(--routes-radius-lg);
+  border: 1px solid var(--routes-line);
+  background: linear-gradient(180deg, #f1f5fb, #ffffff);
+  animation: pulse 1.3s ease-in-out infinite;
+  padding: 0;
+}
+
+.skeletonSummary {
+  height: 72px;
+  border-bottom: 1px solid var(--routes-line);
+  background: #e7eef7;
+  opacity: 0.7;
+}
+
+.skeletonStops {
+  display: grid;
+  gap: 12px;
+  padding: 14px 16px 16px;
+}
+
+.skeletonStop {
+  height: 64px;
+  border-radius: var(--routes-radius-md);
+  background: #e5e7eb;
+  opacity: 0.6;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+@media (max-width: 900px) {
+  .routeCardSummary {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .routes {
+    padding: 32px 0 40px;
+  }
+
+  .routeCardStops {
+    padding: 12px 12px 14px;
+  }
+
+  .routeStopTop {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .routeStopTimes {
+    text-align: left;
+  }
+}
