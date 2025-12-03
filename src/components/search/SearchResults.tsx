@@ -1014,7 +1014,7 @@ export default function SearchResults({
     const underlineWidth = `${100 / Math.max(steps.length, 1)}%`;
 
     return (
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="sticky top-4 z-30 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:top-6">
         <div className="flex items-center gap-3">
           <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
             <div
