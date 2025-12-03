@@ -29,9 +29,9 @@ export default function BookingFlow() {
   }, [criteria]);
 
   return (
-    <div className="w-full space-y-6">
+    <div className="w-full space-y-8">
       {!criteria && (
-        <div className="mx-auto w-full max-w-5xl rounded-3xl bg-white/80 p-5 shadow-lg ring-1 ring-slate-200">
+        <div className="mx-auto w-full max-w-6xl rounded-3xl border border-slate-200 bg-white p-6 shadow-md">
           <SearchForm
             lang={lang}
             embedded
@@ -44,7 +44,7 @@ export default function BookingFlow() {
       {criteria && (
         <div
           ref={resultsRef}
-          className="mx-auto w-full max-w-5xl rounded-3xl bg-white/90 p-5 shadow-lg ring-1 ring-slate-200"
+          className="mx-auto w-full max-w-6xl rounded-3xl border border-slate-200 bg-white p-6 shadow-md"
         >
           <div className="mb-4 flex justify-end">
             <button
