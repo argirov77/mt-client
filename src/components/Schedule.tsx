@@ -4,6 +4,15 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { API } from '@/config';
 import { ArrowRight, Bus } from 'lucide-react';
+import {
+  accentPillClass,
+  bodyTextClass,
+  cardBaseClass,
+  headingH2Class,
+  iconCircleClass,
+  sectionBgMuted,
+  secondaryEyebrowClass,
+} from './common/designGuide';
 
 type Lang = 'ru' | 'bg' | 'en' | 'ua';
 
@@ -83,43 +92,56 @@ export default function PriceListCompact({ lang = 'ru' }: { lang?: Lang }) {
   }, [lang]);
 
   return (
-    <section id="prices" className="bg-gray-50 py-14">
-      <div className="container mx-auto px-4">
-        <h2 className="text-xl md:text-2xl font-semibold text-center mb-6">
-          {t.title}
-        </h2>
+    <section id="prices" className={`${sectionBgMuted} py-16`}>
+      <div className="mx-auto w-full max-w-6xl px-4">
+        <div className="mb-8 text-center">
+          <p className={secondaryEyebrowClass}>{t.title}</p>
+          <h2 className={`${headingH2Class} mt-2`}>{t.title}</h2>
+          <p className={`${bodyTextClass} mt-3 text-slate-600`}>
+            {lang === 'en'
+              ? 'Actual fares for popular directions. Same card style as booking steps.'
+              : 'Актуальные тарифы по популярным направлениям — в едином стиле бронирования.'}
+          </p>
+        </div>
 
-        {loading && <p className="text-center text-slate-500">{t.loading}</p>}
-        {!loading && err && <p className="text-center text-red-500">{t.error}</p>}
+        {loading && (
+          <p className="text-center text-slate-500">{t.loading}</p>
+        )}
+        {!loading && err && (
+          <p className="text-center text-red-500">{t.error}</p>
+        )}
         {!loading && !err && list.length === 0 && (
           <p className="text-center text-slate-500">{t.noData}</p>
         )}
 
         {!loading && !err && list.length > 0 && (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {list.map((r, i) => (
               <article
                 key={`${r.departure_stop_id}-${r.arrival_stop_id}-${i}`}
-                className="group flex items-center justify-between rounded-xl bg-white px-4 py-3 ring-1 ring-slate-200 hover:ring-sky-300 hover:shadow-sm transition"
+                className={`${cardBaseClass} group flex items-center justify-between gap-4 p-5 transition hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(15,23,42,0.08)]`}
               >
-                <div className="flex items-center gap-3 min-w-0">
-                  <span className="h-8 w-8 grid place-items-center rounded-lg bg-sky-100 text-sky-700">
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className={`${iconCircleClass} h-10 w-10`}> 
                     <Bus className="h-4 w-4" />
                   </span>
 
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 text-[15px] font-medium text-slate-800 truncate">
+                  <div className="min-w-0 space-y-1">
+                    <div className="flex items-center gap-2 text-base font-semibold text-slate-900 truncate">
                       <span className="truncate">{r.departure_name.trim()}</span>
                       <ArrowRight className="h-4 w-4 text-slate-400" />
                       <span className="truncate">{r.arrival_name.trim()}</span>
                     </div>
+                    <p className={`${bodyTextClass} m-0 text-slate-600`}>
+                      {lang === 'en'
+                        ? 'Direct coach service'
+                        : 'Прямой автобусный рейс'}
+                    </p>
                   </div>
                 </div>
 
                 <div className="shrink-0">
-                  <span className="inline-flex items-center rounded-full bg-orange-500/10 text-orange-600 px-3 py-1 text-sm font-semibold">
-                    {formatPrice(r.price, t.currency)}
-                  </span>
+                  <span className={accentPillClass}>{formatPrice(r.price, t.currency)}</span>
                 </div>
               </article>
             ))}

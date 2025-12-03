@@ -1,6 +1,13 @@
 "use client";
 
 import React from "react";
+import {
+  bodyTextClass,
+  cardBaseClass,
+  headingH2Class,
+  iconCircleClass,
+  sectionBgMuted,
+} from "../common/designGuide";
 import { aboutContent, type Lang } from "./content";
 
 type Props = {
@@ -17,10 +24,9 @@ export default function AboutSection({
   const blocks = aboutContent[lang] ?? aboutContent.ru;
 
   return (
-    <section id={id} className={`py-16 bg-slate-50 ${className}`}>
-      <div className="container mx-auto max-w-5xl px-4">
-        {/* Заголовок секции (можно локализовать отдельно, если нужно) */}
-        <h2 className="text-center text-3xl font-semibold tracking-tight text-slate-900">
+    <section id={id} className={`${sectionBgMuted} py-16 ${className}`}>
+      <div className="mx-auto w-full max-w-6xl px-4">
+        <h2 className={`${headingH2Class} text-center`}>
           {lang === "en"
             ? "About company"
             : lang === "bg"
@@ -30,31 +36,24 @@ export default function AboutSection({
             : "О компании"}
         </h2>
 
-        {/* Список блоков «О нас» */}
-        <ol className="mt-8 space-y-6">
+        <ol className="mt-10 grid gap-5 md:grid-cols-2">
           {blocks.map((block, idx) => (
             <li
               key={`${block.title}-${idx}`}
-              className="rounded-2xl bg-white p-6 shadow ring-1 ring-slate-200"
+              className={`${cardBaseClass} flex items-start gap-4 p-6`}
             >
-              <div className="flex items-start gap-4">
-                {/* Номер блока как визуальный маркер/бейдж */}
-                <span className="mt-1 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-sky-600 text-[11px] font-semibold text-white ring-2 ring-white shadow">
-                  {idx + 1}
-                </span>
+              <span className={`${iconCircleClass} h-9 w-9 text-sm font-semibold`}>{idx + 1}</span>
 
-                {/* Контент блока */}
-                <div className="min-w-0">
-                  <h3 className="text-lg font-semibold text-slate-900">
-                    {block.title}
-                  </h3>
+              <div className="min-w-0 space-y-2">
+                <h3 className="text-lg font-semibold text-slate-900">
+                  {block.title}
+                </h3>
 
-                  {block.text.map((p, i) => (
-                    <p key={i} className="mt-3 text-slate-700">
-                      {p}
-                    </p>
-                  ))}
-                </div>
+                {block.text.map((p, i) => (
+                  <p key={i} className={`${bodyTextClass} text-slate-700`}>
+                    {p}
+                  </p>
+                ))}
               </div>
             </li>
           ))}
