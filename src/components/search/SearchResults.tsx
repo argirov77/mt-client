@@ -1337,7 +1337,7 @@ export default function SearchResults({
     );
   };
 
-  const renderOrderSummary = () => {
+      const renderOrderSummary = () => {
     if (!selectedOutboundTour) return null;
 
     const contactsProvided = Boolean(phone || email);
@@ -1351,85 +1351,130 @@ export default function SearchResults({
     ].filter(Boolean);
 
     return (
-      <aside className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:sticky lg:top-6">
+      <aside className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="flex items-center justify-between gap-3">
           <div>
             <div className="text-sm font-semibold text-slate-900">
               {lang === "en" ? "Order summary" : "Сводка заказа"}
             </div>
             <p className="text-xs text-slate-500">
-              {lang === "en" ? "Updates as you fill the form" : "Обновляется по мере заполнения"}
+              {lang === "en"
+                ? "Updates as you fill the form"
+                : "Обновляется по мере заполнения"}
             </p>
           </div>
-          <span className="rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">Live</span>
+          <span className="rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">
+            Live
+          </span>
         </div>
 
         <div className="mt-4 space-y-4">
           <div className="space-y-2">
-            <div className="text-xs uppercase tracking-wide text-slate-500">{t.outboundShort}</div>
+            <div className="text-xs uppercase tracking-wide text-slate-500">
+              {t.outboundShort}
+            </div>
             <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
               <div className="flex items-center justify-between text-sm font-semibold text-slate-900">
                 <span>
                   {fromName} → {toName}
                 </span>
-                <span className="text-xs text-slate-500">{formatDateLabel(selectedOutboundTour.date)}</span>
+                <span className="text-xs text-slate-500">
+                  {formatDateLabel(selectedOutboundTour.date)}
+                </span>
               </div>
               <div className="mt-1 text-sm text-slate-600">
-                {formatTimeLabel(selectedOutboundTour.departure_time)} → {formatTimeLabel(selectedOutboundTour.arrival_time)}
+                {formatTimeLabel(selectedOutboundTour.departure_time)} →{" "}
+                {formatTimeLabel(selectedOutboundTour.arrival_time)}
               </div>
               <div className="mt-2 flex items-center justify-between text-xs text-slate-600">
-                <span>{lang === "en" ? "Seats" : "Места"}: {selectedOutboundSeats.length ? selectedOutboundSeats.join(", ") : lang === "en" ? "Pending" : "Не выбраны"}</span>
-                <span className="font-semibold text-slate-900">{formatPrice(outboundTotal)}</span>
+                <span>
+                  {lang === "en" ? "Seats" : "Места"}:{" "}
+                  {selectedOutboundSeats.length
+                    ? selectedOutboundSeats.join(", ")
+                    : lang === "en"
+                      ? "Pending"
+                      : "Не выбраны"}
+                </span>
+                <span className="font-semibold text-slate-900">
+                  {formatPrice(outboundTotal)}
+                </span>
               </div>
             </div>
           </div>
 
           {selectedReturnTour ? (
             <div className="space-y-2">
-              <div className="text-xs uppercase tracking-wide text-slate-500">{t.inboundShort}</div>
+              <div className="text-xs uppercase tracking-wide text-slate-500">
+                {t.inboundShort}
+              </div>
               <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
                 <div className="flex items-center justify-between text-sm font-semibold text-slate-900">
                   <span>
                     {toName} → {fromName}
                   </span>
-                  <span className="text-xs text-slate-500">{formatDateLabel(selectedReturnTour.date)}</span>
+                  <span className="text-xs text-slate-500">
+                    {formatDateLabel(selectedReturnTour.date)}
+                  </span>
                 </div>
                 <div className="mt-1 text-sm text-slate-600">
-                  {formatTimeLabel(selectedReturnTour.departure_time)} → {formatTimeLabel(selectedReturnTour.arrival_time)}
+                  {formatTimeLabel(selectedReturnTour.departure_time)} →{" "}
+                  {formatTimeLabel(selectedReturnTour.arrival_time)}
                 </div>
                 <div className="mt-2 flex items-center justify-between text-xs text-slate-600">
-                  <span>{lang === "en" ? "Seats" : "Места"}: {selectedReturnSeats.length ? selectedReturnSeats.join(", ") : lang === "en" ? "Pending" : "Не выбраны"}</span>
-                  <span className="font-semibold text-slate-900">{formatPrice(returnTotal)}</span>
+                  <span>
+                    {lang === "en" ? "Seats" : "Места"}:{" "}
+                    {selectedReturnSeats.length
+                      ? selectedReturnSeats.join(", ")
+                      : lang === "en"
+                        ? "Pending"
+                        : "Не выбраны"}
+                  </span>
+                  <span className="font-semibold text-slate-900">
+                    {formatPrice(returnTotal)}
+                  </span>
                 </div>
               </div>
             </div>
           ) : null}
 
           <div className="space-y-2">
-            <div className="text-xs uppercase tracking-wide text-slate-500">{t.ticketPassengers}</div>
+            <div className="text-xs uppercase tracking-wide text-slate-500">
+              {t.ticketPassengers}
+            </div>
             <div className="rounded-xl border border-slate-100 bg-white p-3 text-sm text-slate-700">
               {passengerList.length ? (
                 <ul className="space-y-1">
                   {passengerList.map((name, index) => (
-                    <li key={`${name}-${index}`} className="flex items-center justify-between gap-3">
+                    <li
+                      key={`${name}-${index}`}
+                      className="flex items-center justify-between gap-3"
+                    >
                       <span className="truncate">{name}</span>
-                      <span className="text-xs text-slate-500">{lang === "en" ? "Passenger" : "Пассажир"} {index + 1}</span>
+                      <span className="text-xs text-slate-500">
+                        {lang === "en" ? "Passenger" : "Пассажир"} {index + 1}
+                      </span>
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-slate-500">{t.step2SummaryFillNames}</p>
+                <p className="text-sm text-slate-500">
+                  {t.step2SummaryFillNames}
+                </p>
               )}
             </div>
           </div>
 
           <div className="space-y-2">
-            <div className="text-xs uppercase tracking-wide text-slate-500">{t.ticketContacts}</div>
+            <div className="text-xs uppercase tracking-wide text-slate-500">
+              {t.ticketContacts}
+            </div>
             <div className="rounded-xl border border-slate-100 bg-white p-3 text-sm text-slate-700 space-y-1">
               {contactsProvided ? (
                 <>
                   {phone ? <div>{phone}</div> : null}
-                  {email ? <div className="text-slate-600">{email}</div> : null}
+                  {email ? (
+                    <div className="text-slate-600">{email}</div>
+                  ) : null}
                 </>
               ) : (
                 <p className="text-sm text-slate-500">{step3Summary}</p>
@@ -1439,7 +1484,9 @@ export default function SearchResults({
 
           {baggageBadges.length > 0 ? (
             <div className="space-y-2">
-              <div className="text-xs uppercase tracking-wide text-slate-500">{lang === "en" ? "Extra baggage" : "Дополнительный багаж"}</div>
+              <div className="text-xs uppercase tracking-wide text-slate-500">
+                {lang === "en" ? "Extra baggage" : "Дополнительный багаж"}
+              </div>
               <div className="flex flex-wrap gap-2">
                 {baggageBadges.map((label) => (
                   <span
@@ -1456,11 +1503,15 @@ export default function SearchResults({
           <div className="rounded-xl border border-slate-200 bg-gradient-to-r from-slate-50 to-sky-50 p-3 shadow-inner">
             <div className="flex items-center justify-between text-sm text-slate-600">
               <span>{lang === "en" ? "Subtotal" : "Промежуточно"}</span>
-              <span className="font-semibold text-slate-900">{formatPrice(outboundTotal + returnTotal)}</span>
+              <span className="font-semibold text-slate-900">
+                {formatPrice(outboundTotal + returnTotal)}
+              </span>
             </div>
             <div className="mt-2 flex items-center justify-between text-base font-semibold text-slate-900">
               <span>{t.total}</span>
-              <span className="text-sky-700">{formatPrice(overallTotal)}</span>
+              <span className="text-sky-700">
+                {formatPrice(overallTotal)}
+              </span>
             </div>
           </div>
         </div>
@@ -1512,23 +1563,33 @@ export default function SearchResults({
   const stepToRender = resolveStepToRender();
 
   return (
-    <div className="w-full max-w-6xl mx-auto flex flex-col gap-2 sm:gap-3">
+    <div className="w-full max-w-6xl mx-auto">
       {loading && <Loader />}
-
       {msg && <Alert type={msgType}>{msg}</Alert>}
 
-      {showStepNavigation ? <div className="sm:-mb-1">{renderProgressBar()}</div> : null}
+      {/* Общая сетка: слева прогресс + шаги, справа сводка.
+          На десктопе 2 строки: 
+          row 1 — прогресс + сводка, row 2 — шаги + продолжение сводки. */}
+      <div className="grid gap-2 sm:gap-3 lg:grid-cols-[minmax(0,1.65fr)_minmax(320px,1fr)] lg:auto-rows-min">
+        {/* Прогресс-бар: слева, верхняя строка */}
+        {showStepNavigation && (
+          <div className="lg:col-start-1 lg:row-start-1 mb-2 sm:mb-3">
+            {renderProgressBar()}
+          </div>
+        )}
 
-      <div className="grid gap-2 sm:gap-3 lg:grid-cols-[minmax(0,1.65fr)_minmax(320px,1fr)]">
-        <div className="order-1 space-y-3 lg:col-start-1">
+        {/* Текущий шаг: слева, под прогресс-баром */}
+        <div className="lg:col-start-1 lg:row-start-2">
           <div key={stepToRender} className="animate-step-fade">
             {renderStepContent(stepToRender)}
           </div>
         </div>
+
+        {/* Сводка: справа, тянется по двум строкам и липнет к верху */}
         {showStepNavigation && (
           <div
             key={`summary-${activeStep}`}
-            className="order-2 lg:order-none animate-summary-slide lg:col-start-2 lg:max-w-[520px] lg:ml-auto lg:sticky lg:top-20"
+            className="animate-summary-slide lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:max-w-[520px] lg:ml-auto lg:sticky lg:top-20"
           >
             {renderOrderSummary()}
           </div>
@@ -1536,4 +1597,6 @@ export default function SearchResults({
       </div>
     </div>
   );
+
+
 }
