@@ -98,6 +98,12 @@ type Dict = {
   contactsAndPayment: string;
   contactsPhone: string;
   contactsEmail: string;
+  bookingSummaryTitle: string;
+  bookingSummaryPassengers: string;
+  bookingSummarySeatsSelected: string;
+  progressActive: string;
+  progressUpcoming: string;
+  progressDone: string;
   step1Title: string;
   step2Title: string;
   step3Title: string;
@@ -171,6 +177,12 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     contactsAndPayment: "Контакты и оплата",
     contactsPhone: "Телефон",
     contactsEmail: "Email",
+    bookingSummaryTitle: "Сводка бронирования",
+    bookingSummaryPassengers: "Пассажиров",
+    bookingSummarySeatsSelected: "Места выбраны",
+    progressActive: "Текущий шаг",
+    progressUpcoming: "Впереди",
+    progressDone: "Готово",
     step1Title: "Выбор рейса",
     step2Title: "Места и пассажиры",
     step3Title: "Контакты и оплата",
@@ -241,6 +253,12 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     contactsAndPayment: "Contacts & payment",
     contactsPhone: "Phone",
     contactsEmail: "Email",
+    bookingSummaryTitle: "Booking summary",
+    bookingSummaryPassengers: "Passengers",
+    bookingSummarySeatsSelected: "Seats selected",
+    progressActive: "In progress",
+    progressUpcoming: "Upcoming",
+    progressDone: "Done",
     step1Title: "Select trip",
     step2Title: "Seats & passengers",
     step3Title: "Contacts & payment",
@@ -311,6 +329,12 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     contactsAndPayment: "Контакти и плащане",
     contactsPhone: "Телефон",
     contactsEmail: "Email",
+    bookingSummaryTitle: "Сводка на резервацията",
+    bookingSummaryPassengers: "Пътници",
+    bookingSummarySeatsSelected: "Местата са избрани",
+    progressActive: "В процес",
+    progressUpcoming: "Предстои",
+    progressDone: "Готово",
     step1Title: "Избор на курс",
     step2Title: "Места и пътници",
     step3Title: "Контакти и плащане",
@@ -381,6 +405,12 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     contactsAndPayment: "Контакти та оплата",
     contactsPhone: "Телефон",
     contactsEmail: "Email",
+    bookingSummaryTitle: "Зведення бронювання",
+    bookingSummaryPassengers: "Пасажирів",
+    bookingSummarySeatsSelected: "Місця обрано",
+    progressActive: "У процесі",
+    progressUpcoming: "Попереду",
+    progressDone: "Готово",
     step1Title: "Вибір рейсу",
     step2Title: "Місця та пасажири",
     step3Title: "Контакти та оплата",
@@ -432,9 +462,20 @@ export default function SearchResults({
   const step2Ref = useRef<HTMLDivElement | null>(null);
   const step3Ref = useRef<HTMLDivElement | null>(null);
 
-  const scrollToRef = useCallback((ref: React.RefObject<HTMLDivElement | null>) => {
-    ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, []);
+  const scrollToStep = useCallback(
+    (ref: React.RefObject<HTMLDivElement | null>) => {
+      ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    },
+    []
+  );
+
+  const goToStep = useCallback(
+    (step: Step, ref: React.RefObject<HTMLDivElement | null>) => {
+      setActiveStep(step);
+      scrollToStep(ref);
+    },
+    [scrollToStep]
+  );
 
   // Общие сообщения/состояние
   const [loading, setLoading] = useState(false);
@@ -553,7 +594,7 @@ export default function SearchResults({
         }
 
         // после загрузки рейсов — скроллим к шагу 1
-        scrollToRef(step1Ref);
+        scrollToStep(step1Ref);
       } catch {
         if (!cancelled) {
           setMsg(t.errSearch);
@@ -568,7 +609,7 @@ export default function SearchResults({
     return () => {
       cancelled = true;
     };
-  }, [fromId, toId, date, returnDate, safeSeatCount, t, scrollToRef]);
+  }, [fromId, toId, date, returnDate, safeSeatCount, t, scrollToStep]);
 
   const hasReturnSection = Boolean(returnDate && returnTours.length > 0);
 
@@ -591,10 +632,19 @@ export default function SearchResults({
   useEffect(() => {
     if (!selectedOutboundTour) return;
     if (hasReturnSection && !selectedReturnTour) return;
-    // все нужные рейсы выбраны → шаг 2
-    setActiveStep((prev) => (prev < 2 ? 2 : prev));
-    scrollToRef(step2Ref);
-  }, [selectedOutboundTour, selectedReturnTour, hasReturnSection, scrollToRef]);
+    if (activeStep < 2) {
+      goToStep(2, step2Ref);
+      return;
+    }
+    scrollToStep(step2Ref);
+  }, [
+    activeStep,
+    goToStep,
+    hasReturnSection,
+    scrollToStep,
+    selectedOutboundTour,
+    selectedReturnTour,
+  ]);
 
   // ====== ACTIONS: бронь / покупка ======
   const handleAction = async (action: "book" | "purchase") => {
@@ -783,8 +833,7 @@ export default function SearchResults({
       setExtraBaggageReturn(Array(safeSeatCount).fill(false));
 
       // после успешного действия — активируем шаг 3
-      setActiveStep(3);
-      scrollToRef(step3Ref);
+      goToStep(3, step3Ref);
     } catch {
       setMsg(t.errAction);
       setMsgType("error");
@@ -816,8 +865,7 @@ export default function SearchResults({
           : prev
       );
       setShowDownloadPrompt(true);
-      setActiveStep(3);
-      scrollToRef(step3Ref);
+      goToStep(3, step3Ref);
     } catch {
       setMsg(t.errAction);
       setMsgType("error");
@@ -850,8 +898,7 @@ export default function SearchResults({
           : prev
       );
       setShowDownloadPrompt(false);
-      setActiveStep(3);
-      scrollToRef(step3Ref);
+      goToStep(3, step3Ref);
     } catch {
       setMsg(t.errAction);
       setMsgType("error");
@@ -902,12 +949,29 @@ export default function SearchResults({
   // ====== РЕЗЮМЕ ДЛЯ ХЕДЕРОВ ШАГОВ ======
 
   const returnRequired = Boolean(returnDate && hasReturnSection);
+  const outboundSeatNumbers = useMemo(() => {
+    if (ticket?.outbound?.seatNumbers?.length) {
+      return ticket.outbound.seatNumbers;
+    }
+    return selectedOutboundSeats;
+  }, [selectedOutboundSeats, ticket]);
+
+  const returnSeatNumbers = useMemo(() => {
+    if (ticket?.inbound?.seatNumbers?.length) {
+      return ticket.inbound.seatNumbers;
+    }
+    return selectedReturnSeats;
+  }, [selectedReturnSeats, ticket]);
+
   const seatsDone =
-    selectedOutboundSeats.length === safeSeatCount &&
-    (!returnRequired || selectedReturnSeats.length === safeSeatCount);
-  const namesDone = passengerNames.filter((n) => !!n).length === safeSeatCount;
-  const step2Complete =
-    !!selectedOutboundTour && (!returnRequired || !!selectedReturnTour) && seatsDone && namesDone;
+    outboundSeatNumbers.length === safeSeatCount &&
+    (!returnRequired || returnSeatNumbers.length === safeSeatCount);
+  const namesDone =
+    passengerNames.filter((n) => !!n).length === safeSeatCount || Boolean(ticket);
+  const step2Complete = Boolean(
+    ticket ||
+      (!!selectedOutboundTour && (!returnRequired || !!selectedReturnTour) && seatsDone && namesDone)
+  );
 
   const isStep1Done = Boolean(
     selectedOutboundTour && (!returnRequired || !!selectedReturnTour)
@@ -939,22 +1003,76 @@ export default function SearchResults({
     return t.step3SummaryEmpty;
   }, [purchaseId, ticket, t]);
 
+  const outboundTripSummary = useMemo(() => {
+    if (!selectedOutboundTour) return null;
+    return {
+      route: `${fromName} → ${toName}`,
+      schedule: `${selectedOutboundTour.date} · ${selectedOutboundTour.departure_time} – ${selectedOutboundTour.arrival_time}`,
+    };
+  }, [fromName, selectedOutboundTour, toName]);
+
+  const returnTripSummary = useMemo(() => {
+    if (!selectedReturnTour) return null;
+    return {
+      route: `${toName} → ${fromName}`,
+      schedule: `${selectedReturnTour.date} · ${selectedReturnTour.departure_time} – ${selectedReturnTour.arrival_time}`,
+    };
+  }, [fromName, selectedReturnTour, toName]);
+
+  const passengerSummary = useMemo(
+    () => `${safeSeatCount} ${t.bookingSummaryPassengers}`,
+    [safeSeatCount, t]
+  );
+
+  const seatsStatusLabel = seatsDone ? t.bookingSummarySeatsSelected : t.step2SummaryChooseSeats;
+  const outboundSeatsText = seatsDone
+    ? outboundSeatNumbers.length
+      ? outboundSeatNumbers.join(", ")
+      : "—"
+    : "—";
+
+  const returnSeatsText = seatsDone
+    ? returnRequired
+      ? returnSeatNumbers.length
+        ? returnSeatNumbers.join(", ")
+        : "—"
+      : null
+    : returnRequired
+      ? "—"
+      : null;
+
+  const paymentActionLabel = ticket
+    ? ticket.action === "purchase"
+      ? t.ticketActionPurchase
+      : t.ticketActionBook
+    : "—";
+
+  const paymentStatusLabel = ticket?.status
+    ? ticket.status === "paid"
+      ? t.ticketStatusPaid
+      : ticket.status === "canceled"
+        ? t.ticketStatusCanceled
+        : t.ticketStatusPending
+    : purchaseId
+      ? t.ticketStatusPending
+      : "—";
+
+  const paymentTotalLabel =
+    ticket?.total != null ? `${Number(ticket.total).toFixed(2)}` : "—";
+
   const handleStepOpen = (
     step: Step,
     ref: React.RefObject<HTMLDivElement>
   ) => {
     if (step === 2 && (!selectedOutboundTour || (returnRequired && !selectedReturnTour))) {
-      setActiveStep(1);
-      scrollToRef(step1Ref);
+      goToStep(1, step1Ref);
       return;
     }
     if (step === 3 && !step2Complete) {
-      setActiveStep(2);
-      scrollToRef(step2Ref);
+      goToStep(2, step2Ref);
       return;
     }
-    setActiveStep(step);
-    scrollToRef(ref);
+    goToStep(step, ref);
   };
 
   const handleStepNavigation = (step: Step) => {
@@ -994,40 +1112,57 @@ export default function SearchResults({
     ];
 
     return (
-      <div className="relative mt-2 mb-4">
-        <div className="absolute left-6 right-6 top-1/2 h-0.5 -translate-y-1/2 bg-slate-200" />
-        <div className="relative flex items-center justify-between gap-3">
-          {steps.map((step) => {
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-md">
+        <div className="flex items-center gap-3">
+          {steps.map((step, idx) => {
             const isActive = step.state === "active";
             const isDone = step.state === "done";
+            const circleClasses = isDone
+              ? "bg-emerald-500 text-white border-emerald-500"
+              : isActive
+                ? "bg-sky-600 text-white border-sky-600"
+                : "bg-slate-200 text-slate-600 border-slate-300";
+
+            const connectorState = isDone
+              ? "bg-emerald-400"
+              : isActive
+                ? "bg-sky-300"
+                : "bg-slate-200";
+
+            const statusLabel =
+              step.state === "future"
+                ? t.progressUpcoming
+                : step.state === "done"
+                  ? t.progressDone
+                  : t.progressActive;
+
             return (
-              <button
-                key={step.id}
-                type="button"
-                onClick={() => handleStepNavigation(step.id)}
-                className="group relative flex min-w-0 flex-1 flex-col items-center gap-2 text-xs font-semibold text-slate-600 transition-colors duration-300 hover:text-sky-700"
-              >
-                <span
-                  className={`grid h-10 w-10 place-items-center rounded-full border text-sm transition-all duration-300 ${
-                    isActive
-                      ? "border-sky-600 bg-sky-600 text-white shadow"
-                      : isDone
-                        ? "border-sky-100 bg-sky-100 text-sky-700"
-                        : "border-slate-300 bg-white text-slate-500"
-                  }`}
+              <React.Fragment key={step.id}>
+                <button
+                  type="button"
+                  onClick={() => handleStepNavigation(step.id)}
+                  className="flex min-w-0 flex-1 items-center gap-3 rounded-xl px-2 py-1 text-left transition hover:bg-slate-50"
                 >
-                  {isDone && !isActive ? "✓" : step.id}
-                </span>
-                <span
-                  className={`transition-all duration-300 ${
-                    isActive
-                      ? "translate-y-0 opacity-100 text-slate-900"
-                      : "-translate-y-1 opacity-0"
-                  }`}
-                >
-                  {step.label}
-                </span>
-              </button>
+                  <span
+                    className={`flex h-10 w-10 items-center justify-center rounded-full border text-sm font-semibold shadow-sm transition ${circleClasses}`}
+                  >
+                    {isDone && !isActive ? "✓" : step.id}
+                  </span>
+                  <div className="min-w-0">
+                    <div
+                      className={`text-sm font-semibold ${
+                        isActive ? "text-slate-900" : "text-slate-700"
+                      }`}
+                    >
+                      {step.label}
+                    </div>
+                    <p className="text-xs text-slate-500">{statusLabel}</p>
+                  </div>
+                </button>
+                {idx < steps.length - 1 && (
+                  <div className={`hidden h-0.5 flex-1 md:block ${connectorState}`} />
+                )}
+              </React.Fragment>
             );
           })}
         </div>
@@ -1074,47 +1209,101 @@ export default function SearchResults({
     );
   };
 
-  useEffect(() => {
-    if (!selectedOutboundTour) return;
-    if (returnRequired && !selectedReturnTour) return;
-    setActiveStep((prev) => (prev < 2 ? 2 : prev));
-    scrollToRef(step2Ref);
-  }, [returnRequired, scrollToRef, selectedOutboundTour, selectedReturnTour]);
-
-  const showStep1Body = activeStep === 1;
-  const showStep2Body =
-    activeStep === 2 && selectedOutboundTour && (!returnRequired || selectedReturnTour);
-  const showStep3Body = activeStep === 3 && !ticket;
-
-  const outboundListVisible = !selectedOutboundTour && outboundTours.length > 0;
-  const returnListVisible =
-    !!selectedOutboundTour && returnRequired && !selectedReturnTour && returnTours.length > 0;
-
-  const resetOutbound = () => {
-    setSelectedOutboundTour(null);
-    setSelectedReturnTour(null);
-    setSelectedOutboundSeats([]);
-    setSelectedReturnSeats([]);
-    setActiveStep(1);
-  };
-
-  const resetReturn = () => {
-    setSelectedReturnTour(null);
-    setSelectedReturnSeats([]);
-    setActiveStep(1);
-  };
-
-  const handleReadyForContacts = () => {
-    setActiveStep(3);
-    scrollToRef(step3Ref);
-  };
-
-  if (ticket) {
+  const renderBookingSummary = () => {
     return (
-      <div className="w-full max-w-5xl mx-auto space-y-4">
-        {loading && <Loader />}
-        {msg && <Alert type={msgType}>{msg}</Alert>}
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-md">
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="text-lg font-semibold text-slate-900">
+            {t.bookingSummaryTitle}
+          </h3>
+          {ticket?.ticketNumber && (
+            <span className="rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+              {t.ticketNumber}: {ticket.ticketNumber}
+            </span>
+          )}
+        </div>
 
+        <div className="mt-3 space-y-4 text-sm text-slate-800">
+          <div className="space-y-2">
+            <p className="text-xs uppercase tracking-wide text-slate-500">{t.step1ShortLabel}</p>
+            {outboundTripSummary ? (
+              <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                <div className="font-semibold text-slate-900">{outboundTripSummary.route}</div>
+                <div className="text-xs text-slate-600">{outboundTripSummary.schedule}</div>
+              </div>
+            ) : (
+              <p className="text-slate-500">{t.step1SummaryChoose}</p>
+            )}
+
+            {returnRequired && (
+              <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                <div className="font-semibold text-slate-900">
+                  {returnTripSummary?.route || t.inboundShort}
+                </div>
+                <div className="text-xs text-slate-600">
+                  {returnTripSummary?.schedule || t.step1SummaryChoose}
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between rounded-lg bg-white px-1 py-1 text-sm">
+              <span className="text-slate-600">{t.bookingSummaryPassengers}</span>
+              <span className="font-semibold text-slate-900">{passengerSummary}</span>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-xs uppercase tracking-wide text-slate-500">{t.step2ShortLabel}</p>
+            <div className="space-y-2 rounded-xl border border-slate-100 bg-slate-50 p-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-slate-600">{t.outboundShort}</span>
+                <span className="font-semibold text-slate-900">{outboundSeatsText}</span>
+              </div>
+              {returnRequired && (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-slate-600">{t.inboundShort}</span>
+                  <span className="font-semibold text-slate-900">{returnSeatsText ?? "—"}</span>
+                </div>
+              )}
+              <div className="text-xs font-semibold text-emerald-700">{seatsStatusLabel}</div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-xs uppercase tracking-wide text-slate-500">{t.contactsAndPayment}</p>
+            <div className="space-y-2 rounded-xl border border-slate-100 bg-slate-50 p-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-slate-600">{t.ticketStatus}</span>
+                <span className="font-semibold text-slate-900">{paymentStatusLabel}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-slate-600">{t.ticketActionPurchase}</span>
+                <span className="font-semibold text-slate-900">{paymentActionLabel}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-slate-600">{t.total}</span>
+                <span className="font-semibold text-slate-900">{paymentTotalLabel}</span>
+              </div>
+            </div>
+            {ticket?.ticketNumber && (
+              <button
+                type="button"
+                onClick={() => handleTicketDownloadClick(ticket.ticketNumber)}
+                className="w-full rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-sky-700"
+              >
+                {t.ticketDownload}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderTicketSection = () => {
+    if (!ticket) return null;
+    return (
+      <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-md">
         <ElectronicTicket
           ticket={ticket}
           t={t}
@@ -1148,150 +1337,208 @@ export default function SearchResults({
         />
       </div>
     );
-  }
+  };
+
+
+  useEffect(() => {
+    if (!selectedOutboundTour) return;
+    if (returnRequired && !selectedReturnTour) return;
+    if (activeStep < 2) {
+      goToStep(2, step2Ref);
+    }
+  }, [activeStep, goToStep, returnRequired, selectedOutboundTour, selectedReturnTour]);
+
+  const showStep1Body = activeStep === 1;
+  const showStep2Body =
+    activeStep === 2 && selectedOutboundTour && (!returnRequired || selectedReturnTour);
+  const showStep3Body = activeStep === 3 && !ticket;
+
+  const outboundListVisible = !selectedOutboundTour && outboundTours.length > 0;
+  const returnListVisible =
+    !!selectedOutboundTour && returnRequired && !selectedReturnTour && returnTours.length > 0;
+
+  const resetOutbound = () => {
+    setSelectedOutboundTour(null);
+    setSelectedReturnTour(null);
+    setSelectedOutboundSeats([]);
+    setSelectedReturnSeats([]);
+    goToStep(1, step1Ref);
+  };
+
+  const resetReturn = () => {
+    setSelectedReturnTour(null);
+    setSelectedReturnSeats([]);
+    goToStep(1, step1Ref);
+  };
+
+  const handleReadyForContacts = () => {
+    goToStep(3, step3Ref);
+  };
 
   return (
-    <div className="w-full max-w-5xl mx-auto space-y-4">
+    <div className="mx-auto w-full max-w-6xl space-y-5">
       {loading && <Loader />}
-
       {msg && <Alert type={msgType}>{msg}</Alert>}
 
-      {renderProgressBar()}
+      <div className="grid grid-cols-1 items-start gap-4 md:gap-6 md:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
+        <div className="space-y-4">
+          {renderProgressBar()}
 
-      <div ref={step1Ref} className="space-y-3">
-        {renderStepHeader(1, t.step1Title, step1Summary, step1Ref)}
+          {ticket ? (
+            renderTicketSection()
+          ) : (
+            <div className="space-y-5">
+              <div ref={step1Ref} className="space-y-3">
+                {renderStepHeader(1, t.step1Title, step1Summary, step1Ref)}
 
-        <div className={collapsibleBodyClass(showStep1Body)} aria-hidden={!showStep1Body}>
-          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-100 space-y-4">
-            {outboundListVisible && (
-              <TripList
-                title={t.outbound}
-                tours={outboundTours}
-                selectedId={selectedOutboundTour?.id}
-                onSelect={onSelectOutbound}
-                freeSeatsValue={freeSeatsValue}
-                fromName={fromName}
-                toName={toName}
-                lang={lang}
-                seatCount={safeSeatCount}
-                discountCount={safeDiscountCount}
-                t={t}
-              />
-            )}
+                <div
+                  className={collapsibleBodyClass(showStep1Body)}
+                  aria-hidden={!showStep1Body}
+                >
+                  <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 text-slate-800 shadow-md">
+                    {outboundListVisible && (
+                      <TripList
+                        title={t.outbound}
+                        tours={outboundTours}
+                        selectedId={selectedOutboundTour?.id}
+                        onSelect={onSelectOutbound}
+                        freeSeatsValue={freeSeatsValue}
+                        fromName={fromName}
+                        toName={toName}
+                        lang={lang}
+                        seatCount={safeSeatCount}
+                        discountCount={safeDiscountCount}
+                        t={t}
+                      />
+                    )}
 
-            {returnListVisible && (
-              <TripList
-                title={t.inbound}
-                tours={returnTours}
-                selectedId={selectedReturnTour?.id}
-                onSelect={onSelectReturn}
-                freeSeatsValue={freeSeatsValue}
-                fromName={toName}
-                toName={fromName}
-                lang={lang}
-                seatCount={safeSeatCount}
-                discountCount={safeDiscountCount}
-                t={t}
-              />
-            )}
+                    {returnListVisible && (
+                      <TripList
+                        title={t.inbound}
+                        tours={returnTours}
+                        selectedId={selectedReturnTour?.id}
+                        onSelect={onSelectReturn}
+                        freeSeatsValue={freeSeatsValue}
+                        fromName={toName}
+                        toName={fromName}
+                        lang={lang}
+                        seatCount={safeSeatCount}
+                        discountCount={safeDiscountCount}
+                        t={t}
+                      />
+                    )}
 
-            {!outboundListVisible && !returnListVisible && selectedOutboundTour && (
-              <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
-                <p>
-                  {t.outboundShort}: {selectedOutboundTour.departure_time} · {fromName} → {toName}
-                </p>
-                {returnRequired && selectedReturnTour && (
-                  <p>
-                    {t.inboundShort}: {selectedReturnTour.departure_time} · {toName} → {fromName}
-                  </p>
-                )}
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    className="rounded-lg border border-slate-300 px-3 py-2 text-xs text-slate-700 hover:bg-slate-100"
-                    onClick={resetOutbound}
-                  >
-                    {lang === "en" ? "Change outbound" : "Изменить рейсы"}
-                  </button>
-                  {returnRequired && selectedReturnTour && (
-                    <button
-                      type="button"
-                      className="rounded-lg border border-slate-300 px-3 py-2 text-xs text-slate-700 hover:bg-slate-100"
-                      onClick={resetReturn}
-                    >
-                      {lang === "en" ? "Change return" : "Изменить обратно"}
-                    </button>
-                  )}
+                    {!outboundListVisible && !returnListVisible && selectedOutboundTour && (
+                      <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+                        <p>
+                          {t.outboundShort}: {selectedOutboundTour.departure_time} · {fromName} → {toName}
+                        </p>
+                        {returnRequired && selectedReturnTour && (
+                          <p>
+                            {t.inboundShort}: {selectedReturnTour.departure_time} · {toName} → {fromName}
+                          </p>
+                        )}
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            className="rounded-lg border border-slate-300 px-3 py-2 text-xs text-slate-700 hover:bg-slate-100"
+                            onClick={resetOutbound}
+                          >
+                            {lang === "en" ? "Change outbound" : "Изменить рейсы"}
+                          </button>
+                          {returnRequired && selectedReturnTour && (
+                            <button
+                              type="button"
+                              className="rounded-lg border border-slate-300 px-3 py-2 text-xs text-slate-700 hover:bg-slate-100"
+                              onClick={resetReturn}
+                            >
+                              {lang === "en" ? "Change return" : "Изменить обратно"}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {!outboundTours.length && !returnTours.length && (
+                      <p className="text-sm text-slate-500">{t.noResults}</p>
+                    )}
+                  </div>
                 </div>
               </div>
-            )}
 
-            {!outboundTours.length && !returnTours.length && (
-              <p className="text-sm text-slate-500">{t.noResults}</p>
-            )}
-          </div>
+              <div ref={step2Ref} className="space-y-3">
+                {renderStepHeader(2, t.step2Title, step2Summary, step2Ref)}
+
+                <div
+                  className={collapsibleBodyClass(showStep2Body)}
+                  aria-hidden={!showStep2Body}
+                >
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4 text-slate-800 shadow-md">
+                    {selectedOutboundTour ? (
+                      <BookingPanel
+                        t={t}
+                        seatCount={safeSeatCount}
+                        fromId={fromId}
+                        toId={toId}
+                        fromName={fromName}
+                        toName={toName}
+                        selectedOutboundTour={selectedOutboundTour}
+                        selectedReturnTour={selectedReturnTour}
+                        selectedOutboundSeats={selectedOutboundSeats}
+                        setSelectedOutboundSeats={setSelectedOutboundSeats}
+                        selectedReturnSeats={selectedReturnSeats}
+                        setSelectedReturnSeats={setSelectedReturnSeats}
+                        passengerNames={passengerNames}
+                        setPassengerNames={setPassengerNames}
+                        extraBaggageOutbound={extraBaggageOutbound}
+                        setExtraBaggageOutbound={setExtraBaggageOutbound}
+                        extraBaggageReturn={extraBaggageReturn}
+                        setExtraBaggageReturn={setExtraBaggageReturn}
+                        onReadyForContacts={handleReadyForContacts}
+                      />
+                    ) : (
+                      <p className="text-sm text-slate-600">
+                        {t.outboundShort} {lang === "en" ? "not selected" : "не выбран"}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div ref={step3Ref} className="space-y-3">
+                {renderStepHeader(3, t.contactsAndPayment, step3Summary, step3Ref)}
+
+                <div
+                  className={collapsibleBodyClass(showStep3Body)}
+                  aria-hidden={!showStep3Body}
+                >
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4 text-slate-800 shadow-md">
+                    <ContactsAndPaymentStep
+                      t={t}
+                      phone={phone}
+                      setPhone={setPhone}
+                      email={email}
+                      setEmail={setEmail}
+                      purchaseId={purchaseId}
+                      ticket={ticket}
+                      handleAction={handleAction}
+                      handlePay={handlePay}
+                      onDownloadTicket={handleTicketDownloadClick}
+                    />
+                    <TicketDownloadPrompt
+                      visible={showDownloadPrompt && !!ticket}
+                      t={t}
+                      onDownload={() => handleTicketDownloadClick()}
+                      onClose={handlePromptClose}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-      </div>
 
-      <div ref={step2Ref} className="space-y-3">
-        {renderStepHeader(2, t.step2Title, step2Summary, step2Ref)}
-
-        <div className={collapsibleBodyClass(showStep2Body)} aria-hidden={!showStep2Body}>
-          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-100">
-            {selectedOutboundTour ? (
-              <BookingPanel
-                t={t}
-                seatCount={safeSeatCount}
-                fromId={fromId}
-                toId={toId}
-                fromName={fromName}
-                toName={toName}
-                selectedOutboundTour={selectedOutboundTour}
-                selectedReturnTour={selectedReturnTour}
-                selectedOutboundSeats={selectedOutboundSeats}
-                setSelectedOutboundSeats={setSelectedOutboundSeats}
-                selectedReturnSeats={selectedReturnSeats}
-                setSelectedReturnSeats={setSelectedReturnSeats}
-                passengerNames={passengerNames}
-                setPassengerNames={setPassengerNames}
-                extraBaggageOutbound={extraBaggageOutbound}
-                setExtraBaggageOutbound={setExtraBaggageOutbound}
-                extraBaggageReturn={extraBaggageReturn}
-                setExtraBaggageReturn={setExtraBaggageReturn}
-                onReadyForContacts={handleReadyForContacts}
-              />
-            ) : (
-              <p className="text-sm text-slate-600">{t.outboundShort} {lang === "en" ? "not selected" : "не выбран"}</p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div ref={step3Ref} className="space-y-3">
-        {renderStepHeader(3, t.contactsAndPayment, step3Summary, step3Ref)}
-
-        <div className={collapsibleBodyClass(showStep3Body)} aria-hidden={!showStep3Body}>
-          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-100">
-            <ContactsAndPaymentStep
-              t={t}
-              phone={phone}
-              setPhone={setPhone}
-              email={email}
-              setEmail={setEmail}
-              purchaseId={purchaseId}
-              ticket={ticket}
-              handleAction={handleAction}
-              handlePay={handlePay}
-              onDownloadTicket={handleTicketDownloadClick}
-            />
-            <TicketDownloadPrompt
-              visible={showDownloadPrompt && !!ticket}
-              t={t}
-              onDownload={() => handleTicketDownloadClick()}
-              onClose={handlePromptClose}
-            />
-          </div>
-        </div>
+        <div className="space-y-4">{renderBookingSummary()}</div>
       </div>
     </div>
   );
