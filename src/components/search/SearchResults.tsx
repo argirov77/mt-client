@@ -1014,7 +1014,7 @@ export default function SearchResults({
     const underlineWidth = `${100 / Math.max(steps.length, 1)}%`;
 
     return (
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="sticky top-4 z-30 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:top-6">
         <div className="flex items-center gap-3">
           <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
             <div
@@ -1351,7 +1351,7 @@ export default function SearchResults({
     ].filter(Boolean);
 
     return (
-      <aside className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:sticky lg:top-6">
+      <aside className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="flex items-center justify-between gap-3">
           <div>
             <div className="text-sm font-semibold text-slate-900">
@@ -1512,23 +1512,20 @@ export default function SearchResults({
   const stepToRender = resolveStepToRender();
 
   return (
-    <div className="w-full max-w-6xl mx-auto space-y-4">
+    <div className="w-full max-w-6xl mx-auto space-y-6">
       {loading && <Loader />}
 
       {msg && <Alert type={msgType}>{msg}</Alert>}
 
-      {showStepNavigation ? renderProgressBar() : null}
-
-      <div
-        className={`grid gap-4 ${showStepNavigation ? "lg:grid-cols-[minmax(0,1.65fr)_minmax(320px,1fr)]" : ""}`}
-      >
-        <div className="order-1 space-y-4">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[2fr,1fr] items-start">
+        <div className="space-y-4">
+          {showStepNavigation ? renderProgressBar() : null}
           <div key={stepToRender} className="animate-step-fade">
             {renderStepContent(stepToRender)}
           </div>
         </div>
         {showStepNavigation && (
-          <div key={`summary-${activeStep}`} className="order-2 lg:order-none animate-summary-slide lg:col-start-2 lg:max-w-[520px] lg:ml-auto">
+          <div key={`summary-${activeStep}`} className="sticky top-20 animate-summary-slide lg:max-w-[520px] lg:ml-auto">
             {renderOrderSummary()}
           </div>
         )}
