@@ -964,13 +964,18 @@ export default function SearchResults({
     ];
 
     const progressPercent = ((activeStep - 1) / Math.max(steps.length - 1, 1)) * 100;
+    const activeIndex = Math.max(
+      0,
+      steps.findIndex((step) => step.state === "active")
+    );
+    const underlineWidth = `${100 / Math.max(steps.length, 1)}%`;
 
     return (
       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
             <div
-              className="absolute left-0 top-0 h-full bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 transition-all duration-500"
+              className="absolute left-0 top-0 h-full bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 transition-all duration-200 ease-out"
               style={{ width: `${Math.max(0, Math.min(100, progressPercent))}%` }}
             />
           </div>
@@ -978,45 +983,56 @@ export default function SearchResults({
             {lang === "en" ? "Step" : "Шаг"} {activeStep} / {steps.length}
           </span>
         </div>
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          {steps.map((step) => {
-            const isActive = step.state === "active";
-            const isDone = step.state === "done";
-            const isFuture = step.state === "future";
+        <div className="relative mt-4">
+          <div className="grid gap-3 pb-4 sm:grid-cols-3">
+            {steps.map((step) => {
+              const isActive = step.state === "active";
+              const isDone = step.state === "done";
+              const isFuture = step.state === "future";
 
-            return (
-              <button
-                key={step.id}
-                type="button"
-                onClick={() => handleStepNavigation(step.id)}
-                className={`group flex w-full flex-col items-start gap-2 rounded-xl border p-3 text-left shadow-sm transition hover:border-sky-200 hover:shadow-md ${
-                  isActive
-                    ? "border-sky-400 bg-sky-50"
-                    : isDone
-                      ? "border-emerald-100 bg-emerald-50"
-                      : "border-slate-200 bg-white"
-                } ${isFuture ? "opacity-75" : ""}`}
-              >
-                <div className="flex w-full items-center gap-2">
-                  <span
-                    className={`grid h-8 w-8 place-items-center rounded-full text-xs font-semibold ${
-                      isActive
-                        ? "bg-sky-600 text-white"
-                        : isDone
-                          ? "bg-emerald-100 text-emerald-700"
-                          : "bg-slate-100 text-slate-600"
-                    }`}
-                  >
-                    {isDone && !isActive ? "✓" : step.id}
-                  </span>
-                  <div className="min-w-0">
-                    <div className="truncate text-sm font-semibold text-slate-900">{step.label}</div>
-                    <div className="truncate text-xs text-slate-500">{step.summary}</div>
+              return (
+                <button
+                  key={step.id}
+                  type="button"
+                  onClick={() => handleStepNavigation(step.id)}
+                  className={`group flex w-full transform flex-col items-start gap-2 rounded-xl border p-3 text-left shadow-sm transition hover:border-sky-200 hover:shadow-md duration-200 ease-out ${
+                    isActive
+                      ? "scale-[1.04] border-sky-400 bg-sky-50"
+                      : isDone
+                        ? "hover:scale-[1.01] border-emerald-100 bg-emerald-50"
+                        : "hover:scale-[1.01] border-slate-200 bg-white"
+                  } ${isFuture ? "opacity-75" : ""}`}
+                >
+                  <div className="flex w-full items-center gap-2">
+                    <span
+                      className={`grid h-8 w-8 place-items-center rounded-full text-xs font-semibold ${
+                        isActive
+                          ? "bg-sky-600 text-white"
+                          : isDone
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-slate-100 text-slate-600"
+                      }`}
+                    >
+                      {isDone && !isActive ? "✓" : step.id}
+                    </span>
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-semibold text-slate-900">{step.label}</div>
+                      <div className="truncate text-xs text-slate-500">{step.summary}</div>
+                    </div>
                   </div>
-                </div>
-              </button>
-            );
-          })}
+                </button>
+              );
+            })}
+          </div>
+          <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-[3px] overflow-hidden rounded-full bg-slate-100">
+            <div
+              className="absolute bottom-0 left-0 h-[3px] rounded-full bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 transition-transform duration-200 ease-out"
+              style={{
+                width: underlineWidth,
+                transform: `translateX(${activeIndex * 100}%)`,
+              }}
+            />
+          </div>
         </div>
       </div>
     );
@@ -1107,6 +1123,18 @@ export default function SearchResults({
   const formatPrice = useCallback((value: number) => `${value.toFixed(2)} ₴`, []);
   const showStepNavigation = Boolean(selectedOutboundTour);
 
+  const resolveStepToRender = (): Step => {
+    if (activeStep === 2 && (!selectedOutboundTour || (returnRequired && !selectedReturnTour))) {
+      return 1;
+    }
+
+    if (activeStep === 3 && !step2Complete) {
+      return 2;
+    }
+
+    return activeStep;
+  };
+
   const renderStepHeader = (stepNumber: Step, title: string, summary: string) => (
     <div className="flex items-start justify-between gap-3">
       <div>
@@ -1119,14 +1147,7 @@ export default function SearchResults({
     </div>
   );
 
-  const renderStepContent = () => {
-    const stepToRender: Step =
-      activeStep === 2 && (!selectedOutboundTour || (returnRequired && !selectedReturnTour))
-        ? 1
-        : activeStep === 3 && !step2Complete
-          ? 2
-          : activeStep;
-
+  const renderStepContent = (stepToRender: Step) => {
     if (stepToRender === 1) {
       return (
         <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-4">
@@ -1243,10 +1264,17 @@ export default function SearchResults({
         <div className="rounded-xl border border-slate-100 bg-white p-3 space-y-3">
           <ContactsAndPaymentStep
             t={t}
+            lang={lang}
+            passengerNames={passengerNames}
             phone={phone}
             setPhone={setPhone}
             email={email}
             setEmail={setEmail}
+            hasReturnSection={returnRequired}
+            extraBaggageOutbound={extraBaggageOutbound}
+            setExtraBaggageOutbound={setExtraBaggageOutbound}
+            extraBaggageReturn={extraBaggageReturn}
+            setExtraBaggageReturn={setExtraBaggageReturn}
             purchaseId={purchaseId}
             ticket={ticket}
             handleAction={handleAction}
@@ -1436,6 +1464,8 @@ export default function SearchResults({
     );
   }
 
+  const stepToRender = resolveStepToRender();
+
   return (
     <div className="w-full max-w-6xl mx-auto space-y-4">
       {loading && <Loader />}
@@ -1444,9 +1474,19 @@ export default function SearchResults({
 
       {showStepNavigation ? renderProgressBar() : null}
 
-      <div className={`grid gap-4 ${showStepNavigation ? "lg:grid-cols-[1.6fr_1fr]" : ""}`}>
-        <div className="order-1 space-y-4">{renderStepContent()}</div>
-        {showStepNavigation && <div className="order-2 lg:order-none">{renderOrderSummary()}</div>}
+      <div
+        className={`grid gap-4 ${showStepNavigation ? "lg:grid-cols-[minmax(0,1.65fr)_minmax(320px,1fr)]" : ""}`}
+      >
+        <div className="order-1 space-y-4">
+          <div key={stepToRender} className="animate-step-fade">
+            {renderStepContent(stepToRender)}
+          </div>
+        </div>
+        {showStepNavigation && (
+          <div key={`summary-${activeStep}`} className="order-2 lg:order-none animate-summary-slide lg:col-start-2 lg:max-w-[520px] lg:ml-auto">
+            {renderOrderSummary()}
+          </div>
+        )}
       </div>
     </div>
   );
