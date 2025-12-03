@@ -1014,7 +1014,7 @@ export default function SearchResults({
     const underlineWidth = `${100 / Math.max(steps.length, 1)}%`;
 
     return (
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="sticky top-4 z-30 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:top-6">
         <div className="flex items-center gap-3">
           <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
             <div
@@ -1512,15 +1512,15 @@ export default function SearchResults({
   const stepToRender = resolveStepToRender();
 
   return (
-    <div className="w-full max-w-6xl mx-auto space-y-3">
+    <div className="w-full max-w-6xl mx-auto space-y-4">
       {loading && <Loader />}
 
       {msg && <Alert type={msgType}>{msg}</Alert>}
 
       {showStepNavigation ? renderProgressBar() : null}
 
-      <div className="grid gap-3 lg:grid-cols-[minmax(0,1.65fr)_minmax(320px,1fr)]">
-        <div className="order-1 space-y-3 lg:col-start-1">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.65fr)_minmax(320px,1fr)]">
+        <div className="order-1 space-y-4 lg:col-start-1">
           <div key={stepToRender} className="animate-step-fade">
             {renderStepContent(stepToRender)}
           </div>
