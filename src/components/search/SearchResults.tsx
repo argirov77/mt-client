@@ -1519,16 +1519,17 @@ export default function SearchResults({
 
       {showStepNavigation ? renderProgressBar() : null}
 
-      <div
-        className={`grid gap-4 ${showStepNavigation ? "lg:grid-cols-[minmax(0,1.65fr)_minmax(320px,1fr)]" : ""}`}
-      >
-        <div className="order-1 space-y-4">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.65fr)_minmax(320px,1fr)]">
+        <div className="order-1 space-y-4 lg:col-start-1">
           <div key={stepToRender} className="animate-step-fade">
             {renderStepContent(stepToRender)}
           </div>
         </div>
         {showStepNavigation && (
-          <div key={`summary-${activeStep}`} className="order-2 lg:order-none animate-summary-slide lg:col-start-2 lg:max-w-[520px] lg:ml-auto">
+          <div
+            key={`summary-${activeStep}`}
+            className="order-2 lg:order-none animate-summary-slide lg:col-start-2 lg:max-w-[520px] lg:ml-auto lg:sticky lg:top-20"
+          >
             {renderOrderSummary()}
           </div>
         )}
