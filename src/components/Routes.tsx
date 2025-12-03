@@ -261,12 +261,10 @@ function RoutePanel({
     <article className={styles.routeCard}>
       <div className={styles.routeCardSummary}>
         <div className={styles.routeCardSummaryMain}>
-          <span className={styles.routeCardIcon}>🚌</span>
-          <div>
+          <span className={styles.routeCardBadge}>{subtitle}</span>
+          <div className={styles.routeCardText}>
             <div className={styles.routeCardDirection}>{title}</div>
-            <div className={styles.routeCardMeta}>
-              {subtitle} • {L.stopsCount(count)}
-            </div>
+            <div className={styles.routeCardMeta}>{L.stopsCount(count)}</div>
           </div>
         </div>
         {duration && (
