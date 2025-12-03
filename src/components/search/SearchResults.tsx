@@ -92,6 +92,14 @@ type Dict = {
   contactsAndPayment: string;
   contactsPhone: string;
   contactsEmail: string;
+  baggageIncludedTitle: string;
+  baggageIncludedCabin: string;
+  baggageIncludedChecked: string;
+  baggageIncludedNote: string;
+  extraBaggagePrice: string;
+  addExtraBaggage: string;
+  addedExtraBaggage: string;
+  removeExtraBaggage: string;
   step1Title: string;
   step2Title: string;
   step3Title: string;
@@ -167,6 +175,15 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     contactsAndPayment: "Контакты и оплата",
     contactsPhone: "Телефон",
     contactsEmail: "Email",
+    baggageIncludedTitle: "Входит в билет",
+    baggageIncludedCabin: "1 ручная кладь (7 кг) включена",
+    baggageIncludedChecked: "1 чемодан (10–20 кг) включен",
+    baggageIncludedNote:
+      "Дополнительный багаж можно добавить отдельно для каждого пассажира.",
+    extraBaggagePrice: "+€10",
+    addExtraBaggage: "Добавить багаж",
+    addedExtraBaggage: "Багаж добавлен",
+    removeExtraBaggage: "Убрать багаж",
     step1Title: "Выбор рейса",
     step2Title: "Места и пассажиры",
     step3Title: "Контакты и оплата",
@@ -237,6 +254,14 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     contactsAndPayment: "Contacts & payment",
     contactsPhone: "Phone",
     contactsEmail: "Email",
+    baggageIncludedTitle: "Included with your ticket",
+    baggageIncludedCabin: "1 cabin bag (7 kg) included",
+    baggageIncludedChecked: "1 checked bag (10–20 kg) included",
+    baggageIncludedNote: "Extra baggage can be added per passenger.",
+    extraBaggagePrice: "+€10",
+    addExtraBaggage: "Add extra baggage",
+    addedExtraBaggage: "Added",
+    removeExtraBaggage: "Remove",
     step1Title: "Select trip",
     step2Title: "Seats & passengers",
     step3Title: "Contacts & payment",
@@ -307,6 +332,15 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     contactsAndPayment: "Контакти и плащане",
     contactsPhone: "Телефон",
     contactsEmail: "Email",
+    baggageIncludedTitle: "Включено в билета",
+    baggageIncludedCabin: "1 ръчна чанта (7 кг) включена",
+    baggageIncludedChecked: "1 куфар (10–20 кг) включен",
+    baggageIncludedNote:
+      "Допълнителен багаж може да се добави за всеки пътник отделно.",
+    extraBaggagePrice: "+€10",
+    addExtraBaggage: "Добави багаж",
+    addedExtraBaggage: "Добавено",
+    removeExtraBaggage: "Премахни",
     step1Title: "Избор на курс",
     step2Title: "Места и пътници",
     step3Title: "Контакти и плащане",
@@ -377,6 +411,15 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     contactsAndPayment: "Контакти та оплата",
     contactsPhone: "Телефон",
     contactsEmail: "Email",
+    baggageIncludedTitle: "Входить у квиток",
+    baggageIncludedCabin: "1 ручна поклажа (7 кг) включена",
+    baggageIncludedChecked: "1 валіза (10–20 кг) включена",
+    baggageIncludedNote:
+      "Додатковий багаж можна додати окремо для кожного пасажира.",
+    extraBaggagePrice: "+€10",
+    addExtraBaggage: "Додати багаж",
+    addedExtraBaggage: "Додано",
+    removeExtraBaggage: "Прибрати",
     step1Title: "Вибір рейсу",
     step2Title: "Місця та пасажири",
     step3Title: "Контакти та оплата",
@@ -1270,6 +1313,8 @@ export default function SearchResults({
             setPhone={setPhone}
             email={email}
             setEmail={setEmail}
+            fromName={fromName}
+            toName={toName}
             hasReturnSection={returnRequired}
             extraBaggageOutbound={extraBaggageOutbound}
             setExtraBaggageOutbound={setExtraBaggageOutbound}

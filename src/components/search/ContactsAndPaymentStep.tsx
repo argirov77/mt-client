@@ -6,6 +6,8 @@ type Dict = {
   book: string;
   buy: string;
   pay: string;
+  outboundShort: string;
+  inboundShort: string;
   ticketDownload: string;
   contactsDescription: string;
   contactsAndPayment: string;
@@ -13,6 +15,14 @@ type Dict = {
   contactsEmail: string;
   ticketPassengerBaggage: string;
   ticketPassengerBaggageReturn: string;
+  baggageIncludedTitle: string;
+  baggageIncludedCabin: string;
+  baggageIncludedChecked: string;
+  baggageIncludedNote: string;
+  extraBaggagePrice: string;
+  addExtraBaggage: string;
+  addedExtraBaggage: string;
+  removeExtraBaggage: string;
 };
 
 type Props = {
@@ -23,6 +33,8 @@ type Props = {
   setPhone: (value: string) => void;
   email: string;
   setEmail: (value: string) => void;
+  fromName: string;
+  toName: string;
   hasReturnSection: boolean;
   extraBaggageOutbound: boolean[];
   setExtraBaggageOutbound: (value: boolean[]) => void;
@@ -43,6 +55,8 @@ export default function ContactsAndPaymentStep({
   setPhone,
   email,
   setEmail,
+  fromName,
+  toName,
   hasReturnSection,
   extraBaggageOutbound,
   setExtraBaggageOutbound,
@@ -70,51 +84,118 @@ export default function ContactsAndPaymentStep({
   const passengerLabel = (idx: number) =>
     lang === "en" ? `Passenger ${idx + 1}` : `Пассажир ${idx + 1}`;
 
-  return (
-    <div className="space-y-4">
-      <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <div className="text-sm font-semibold text-slate-900">
-              {lang === "en" ? "Extra baggage" : "Дополнительный багаж"}
-            </div>
-            <p className="text-xs text-slate-500">
-              {lang === "en"
-                ? "Set baggage separately for each ticket"
-                : "Отметьте багаж отдельно для каждого билета"}
-            </p>
+  const renderDirection = (
+    direction: "outbound" | "return",
+    idx: number,
+  ) => {
+    const isReturn = direction === "return";
+    const isAdded = isReturn
+      ? extraBaggageReturn[idx] ?? false
+      : extraBaggageOutbound[idx] ?? false;
+    const arrow = isReturn ? "⬅️" : "➡️";
+    const directionLabel = isReturn ? t.inboundShort : t.outboundShort;
+    const routeLabel = isReturn
+      ? `${toName} → ${fromName}`
+      : `${fromName} → ${toName}`;
+
+    return (
+      <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 shadow-inner">
+        <div className="flex items-center justify-between gap-3 text-xs font-medium text-slate-600">
+          <div className="flex items-center gap-2">
+            <span className="text-base">{arrow}</span>
+            <span className="uppercase tracking-wide">{directionLabel}</span>
           </div>
+          <span className="truncate text-right text-xs text-slate-500">{routeLabel}</span>
         </div>
 
-        <div className="mt-3 space-y-2">
+        <button
+          type="button"
+          onClick={() => toggleBaggage(idx, direction)}
+          className={`mt-3 flex w-full items-center justify-between gap-3 rounded-lg border px-3 py-3 text-left transition-colors ${
+            isAdded
+              ? "border-emerald-200 bg-white text-emerald-700 hover:border-emerald-300"
+              : "border-slate-200 bg-white text-slate-900 hover:border-sky-200"
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <div
+              className={`flex h-9 w-9 items-center justify-center rounded-lg text-lg ${
+                isAdded
+                  ? "bg-emerald-50 text-emerald-600"
+                  : "bg-sky-50 text-sky-600"
+              }`}
+            >
+              {isAdded ? "✓" : "+"}
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm font-semibold leading-5">
+                {isAdded ? t.addedExtraBaggage : t.addExtraBaggage}
+              </span>
+              <span className="text-xs text-slate-500">
+                {isAdded ? t.removeExtraBaggage : t.baggageIncludedNote}
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+            <span>{t.extraBaggagePrice}</span>
+            {isAdded ? <span className="text-emerald-600">✓</span> : null}
+          </div>
+        </button>
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-2xl border border-sky-100 bg-sky-50/80 p-4">
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-lg">🎒</div>
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-lg">🧳</div>
+          <div className="space-y-2">
+            <div className="text-sm font-semibold text-slate-900">{t.baggageIncludedTitle}</div>
+            <ul className="space-y-1 text-sm text-slate-700">
+              <li className="flex items-center gap-2">
+                <span className="text-emerald-600">✔</span>
+                <span>{t.baggageIncludedCabin}</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="text-emerald-600">✔</span>
+                <span>{t.baggageIncludedChecked}</span>
+              </li>
+            </ul>
+            <p className="text-xs text-slate-600">{t.baggageIncludedNote}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <div className="text-sm font-semibold text-slate-900">
+          {lang === "en" ? "Extra baggage" : "Дополнительный багаж"}
+        </div>
+        <div className="grid gap-3">
           {passengerNames.map((name, idx) => (
             <div
               key={`baggage-${idx}`}
-              className="flex flex-col gap-2 rounded-xl bg-white p-3 shadow-sm ring-1 ring-slate-100"
+              className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
             >
-              <div className="flex items-center justify-between text-sm font-semibold text-slate-900">
-                <span className="truncate">{name || passengerLabel(idx)}</span>
-                <span className="text-xs font-medium text-slate-500">#{idx + 1}</span>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-lg">👤</div>
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                      {lang === "en" ? `Passenger #${idx + 1}` : `Пассажир #${idx + 1}`}
+                    </p>
+                    <p className="text-base font-semibold text-slate-900">
+                      {name || passengerLabel(idx)}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-xs font-semibold text-slate-500">#{idx + 1}</div>
               </div>
-              <div className="flex flex-wrap gap-3 text-sm text-slate-700">
-                <label className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 shadow-sm transition-colors hover:border-sky-200">
-                  <input
-                    type="checkbox"
-                    checked={extraBaggageOutbound[idx] ?? false}
-                    onChange={() => toggleBaggage(idx, "outbound")}
-                  />
-                  <span>{t.ticketPassengerBaggage}</span>
-                </label>
-                {hasReturnSection ? (
-                  <label className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 shadow-sm transition-colors hover:border-sky-200">
-                    <input
-                      type="checkbox"
-                      checked={extraBaggageReturn[idx] ?? false}
-                      onChange={() => toggleBaggage(idx, "return")}
-                    />
-                    <span>{t.ticketPassengerBaggageReturn}</span>
-                  </label>
-                ) : null}
+
+              <div className="mt-3 grid gap-3 md:grid-cols-2">
+                {renderDirection("outbound", idx)}
+                {hasReturnSection ? renderDirection("return", idx) : null}
               </div>
             </div>
           ))}
