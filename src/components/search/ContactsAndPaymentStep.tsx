@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import FormInput from "../common/FormInput";
 
 import type { ElectronicTicketData } from "@/types/ticket";
@@ -85,6 +87,13 @@ export default function ContactsAndPaymentStep({
 
   const passengerLabel = (idx: number) =>
     lang === "en" ? `Passenger ${idx + 1}` : `Пассажир ${idx + 1}`;
+
+  const [isBaggageExpanded, setIsBaggageExpanded] = useState(false);
+  const baggageToggleLabel = isBaggageExpanded
+    ? lang === "en"
+      ? "Hide"
+      : "Свернуть"
+    : t.addExtraBaggage;
 
   const renderDirection = (
     direction: "outbound" | "return",
@@ -193,45 +202,63 @@ export default function ContactsAndPaymentStep({
                 : "Добавьте места багажа для каждого пассажира"}
             </p>
           </div>
-          <span className={`${badgeTone} bg-amber-50 text-amber-800 border border-amber-100`}>
-            {lang === "en" ? "€ per bag" : "Цена за место"}: {t.extraBaggagePrice}
-          </span>
+          <div className="flex flex-wrap items-center gap-3">
+            <span className={`${badgeTone} bg-amber-50 text-amber-800 border border-amber-100`}>
+              {lang === "en" ? "€ per bag" : "Цена за место"}: {t.extraBaggagePrice}
+            </span>
+            <button
+              type="button"
+              onClick={() => setIsBaggageExpanded((prev) => !prev)}
+              aria-expanded={isBaggageExpanded}
+              className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-white px-3 py-2 text-sm font-semibold text-sky-700 shadow-sm transition hover:border-sky-300 hover:bg-sky-50"
+            >
+              {baggageToggleLabel}
+            </button>
+          </div>
         </div>
 
-        <div className="mt-4 grid gap-3">
-          {passengerNames.map((name, idx) => {
-            const displayName = name || passengerLabel(idx);
+        {isBaggageExpanded ? (
+          <div className="mt-4 grid gap-3">
+            {passengerNames.map((name, idx) => {
+              const displayName = name || passengerLabel(idx);
 
-            return (
-              <div
-                key={`baggage-${idx}`}
-                className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 shadow-inner"
-              >
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-100 text-sm font-semibold text-sky-800">
-                      {idx + 1}
+              return (
+                <div
+                  key={`baggage-${idx}`}
+                  className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 shadow-inner"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-100 text-sm font-semibold text-sky-800">
+                        {idx + 1}
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xs uppercase tracking-wide text-slate-500">
+                          {lang === "en" ? "Passenger" : "Пассажир"}
+                        </p>
+                        <p className="text-base font-semibold text-slate-900">{displayName}</p>
+                      </div>
                     </div>
-                    <div className="space-y-1">
-                      <p className="text-xs uppercase tracking-wide text-slate-500">
-                        {lang === "en" ? "Passenger" : "Пассажир"}
-                      </p>
-                      <p className="text-base font-semibold text-slate-900">{displayName}</p>
-                    </div>
+                    <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-500 shadow">
+                      #{idx + 1}
+                    </span>
                   </div>
-                  <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-500 shadow">
-                    #{idx + 1}
-                  </span>
-                </div>
 
-                <div className="mt-3 grid gap-3 md:grid-cols-2">
-                  {renderDirection("outbound", idx)}
-                  {hasReturnSection ? renderDirection("return", idx) : null}
+                  <div className="mt-3 grid gap-3 md:grid-cols-2">
+                    {renderDirection("outbound", idx)}
+                    {hasReturnSection ? renderDirection("return", idx) : null}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/70 p-4 text-sm text-slate-600">
+            {lang === "en"
+              ? "Click \"Add baggage\" to configure checked bags for your passengers."
+              : "Нажмите «Добавить багаж», чтобы настроить багаж для пассажиров."}
+          </div>
+        )}
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
