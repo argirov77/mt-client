@@ -62,8 +62,11 @@ export default function PassengersInput({
   const [open, setOpen] = useState(false);
   const [local, setLocal] = useState<PassengerValue>(value);
 
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
   const popRef = useRef<HTMLDivElement>(null);
+  const [popoverLeft, setPopoverLeft] = useState(0);
+  const [popoverTop, setPopoverTop] = useState(0);
 
   // синхронизация внешнего/внутреннего
   useEffect(() => setLocal(value), [value]);
@@ -96,6 +99,42 @@ export default function PassengersInput({
     };
   }, [open, local, onChange]);
 
+  useEffect(() => {
+    if (!open || !btnRef.current || !popRef.current || !wrapperRef.current) {
+      return;
+    }
+
+    const updatePosition = () => {
+      const buttonRect = btnRef.current?.getBoundingClientRect();
+      const popRect = popRef.current?.getBoundingClientRect();
+      const wrapperRect = wrapperRef.current?.getBoundingClientRect();
+
+      if (!buttonRect || !popRect || !wrapperRect) return;
+
+      const centeredLeft =
+        buttonRect.left -
+        wrapperRect.left +
+        buttonRect.width / 2 -
+        popRect.width / 2;
+
+      const minLeft = 8;
+      const maxLeft = Math.max(wrapperRect.width - popRect.width - 8, minLeft);
+      const clampedLeft = Math.min(Math.max(centeredLeft, minLeft), maxLeft);
+
+      setPopoverLeft(clampedLeft);
+      setPopoverTop(buttonRect.height + 8);
+    };
+
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [open]);
+
   const total = useMemo(
     () => local.adults + local.discount,
     [local.adults, local.discount]
@@ -118,7 +157,7 @@ export default function PassengersInput({
   };
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative ${className}`} ref={wrapperRef}>
       {/* Триггер */}
       <button
         ref={btnRef}
@@ -138,7 +177,8 @@ export default function PassengersInput({
         <div
           ref={popRef}
           role="dialog"
-          className="absolute z-[60] mt-2 w-[280px] rounded-2xl bg-white shadow-xl ring-1 ring-black/10 p-3"
+          className="absolute z-[60] w-[280px] rounded-2xl bg-white shadow-xl ring-1 ring-black/10 p-3"
+          style={{ left: popoverLeft, top: popoverTop }}
         >
           <div className="space-y-3">
             {/* Взрослый */}

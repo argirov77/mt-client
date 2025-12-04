@@ -43,7 +43,9 @@ export default function TripList({
 
   return (
     <>
-      <h3 className="mt-3 mb-2">{title}:</h3>
+      <h3 className="sticky top-0 z-10 -mx-3 -mt-1 mb-2 bg-white/95 px-3 py-2 text-base font-semibold text-slate-900 shadow-[0_1px_0_rgba(0,0,0,0.05)]">
+        {title}
+      </h3>
       <div className="flex flex-col gap-3">
         {tours.map((tour) => {
           const isChosen = selectedId === tour.id;

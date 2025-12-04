@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { ArrowLeft, Search } from "lucide-react";
 import SearchForm from "@/components/hero/SearchForm";
 import SearchResults from "@/components/search/SearchResults";
 import { useLanguage } from "@/components/common/LanguageProvider";
@@ -21,17 +22,18 @@ export default function BookingFlow() {
   const [criteria, setCriteria] = useState<Criteria | null>(null);
   const resultsRef = useRef<HTMLDivElement | null>(null);
 
-  // после нового поиска скроллим к блоку с результатами, но без резкого скачка
+  // после нового поиска скроллим к заголовку результатов с небольшим отступом
   useEffect(() => {
     if (criteria && resultsRef.current) {
-      const elementTop =
-        resultsRef.current.getBoundingClientRect().top + window.scrollY;
+      const rect = resultsRef.current.getBoundingClientRect();
+      const elementTop = rect.top + window.scrollY;
       const currentTop = window.scrollY;
       const distance = Math.abs(elementTop - currentTop);
+      const alreadyVisible = rect.top >= 0 && rect.top < window.innerHeight;
 
-      if (distance > 120) {
+      if (!alreadyVisible && distance > 40) {
         window.scrollTo({
-          top: Math.max(elementTop - 16, 0),
+          top: Math.max(elementTop - 80, 0),
           behavior: "smooth",
         });
       }
@@ -59,10 +61,12 @@ export default function BookingFlow() {
           <div className="mb-4 flex justify-end">
             <button
               type="button"
-              className="text-sm text-sky-700 underline decoration-sky-300 decoration-2 underline-offset-4 hover:text-sky-900"
+              className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium text-sky-700 ring-1 ring-sky-100 transition hover:bg-sky-50 hover:text-sky-900"
               onClick={() => setCriteria(null)}
             >
-              {lang === "en" ? "New search" : "Новый поиск"}
+              <ArrowLeft className="h-4 w-4" aria-hidden />
+              <Search className="h-4 w-4" aria-hidden />
+              {lang === "en" ? "Back to search" : "Назад к поиску"}
             </button>
           </div>
           <SearchResults lang={lang} {...criteria} />
