@@ -1180,14 +1180,12 @@ export default function SearchResults({
 
   const renderStepHeader = (stepNumber: Step, title: string, summary: string) => {
     const showInlineSummary = !showStepNavigation;
+    const stepLabel = `${lang === "en" ? "Step" : "Шаг"} ${stepNumber}`;
 
     return (
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-wide text-slate-500">
-            {lang === "en" ? "Step" : "Шаг"} {stepNumber}
-          </p>
-          <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
+          <h2 className="text-lg font-semibold text-slate-900">{`${stepLabel} — ${title}`}</h2>
           {showInlineSummary ? (
             <p className="text-sm text-slate-500">{summary}</p>
           ) : null}
@@ -1198,13 +1196,21 @@ export default function SearchResults({
 
   const renderStepContent = (stepToRender: Step) => {
     if (stepToRender === 1) {
+      const outboundDirectionTitle = `${fromName} → ${toName} (${t.outboundShort.toLowerCase()})`;
+      const returnDirectionTitle = `${toName} → ${fromName} (${t.inboundShort.toLowerCase()})`;
+      const stickyDirectionTitle = returnListVisible ? returnDirectionTitle : outboundDirectionTitle;
+
       return (
         <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-4">
           {renderStepHeader(1, t.step1Title, step1Summary)}
 
+          <div className="sticky top-0 z-20 -mx-4 flex flex-wrap items-center gap-2 border-b border-slate-100 bg-white/95 px-4 py-2 text-sm font-semibold text-slate-900 shadow-[0_1px_0_rgba(0,0,0,0.04)]">
+            <span>{stickyDirectionTitle}</span>
+          </div>
+
           {outboundListVisible && (
             <TripList
-              title={t.outbound}
+              title={outboundDirectionTitle}
               tours={outboundTours}
               selectedId={selectedOutboundTour?.id}
               onSelect={onSelectOutbound}
@@ -1220,7 +1226,7 @@ export default function SearchResults({
 
           {returnListVisible && (
             <TripList
-              title={t.inbound}
+              title={returnDirectionTitle}
               tours={returnTours}
               selectedId={selectedReturnTour?.id}
               onSelect={onSelectReturn}
