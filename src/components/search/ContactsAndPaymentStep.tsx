@@ -68,16 +68,18 @@ export default function ContactsAndPaymentStep({
   handlePay,
   onDownloadTicket,
 }: Props) {
-  const toggleBaggage = (idx: number, direction: "outbound" | "return") => {
+  const badgeTone = "inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold";
+
+  const setBaggageValue = (idx: number, direction: "outbound" | "return", value: boolean) => {
     if (direction === "outbound") {
       const next = [...extraBaggageOutbound];
-      next[idx] = !next[idx];
+      next[idx] = value;
       setExtraBaggageOutbound(next);
       return;
     }
 
     const next = [...extraBaggageReturn];
-    next[idx] = !next[idx];
+    next[idx] = value;
     setExtraBaggageReturn(next);
   };
 
@@ -92,149 +94,188 @@ export default function ContactsAndPaymentStep({
     const isAdded = isReturn
       ? extraBaggageReturn[idx] ?? false
       : extraBaggageOutbound[idx] ?? false;
-    const arrow = isReturn ? "⬅️" : "➡️";
     const directionLabel = isReturn ? t.inboundShort : t.outboundShort;
     const routeLabel = isReturn
       ? `${toName} → ${fromName}`
       : `${fromName} → ${toName}`;
 
+    const handleDec = () => {
+      setBaggageValue(idx, direction, false);
+    };
+
+    const handleInc = () => {
+      setBaggageValue(idx, direction, true);
+    };
+
     return (
-      <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 shadow-inner">
-        <div className="flex items-center justify-between gap-3 text-xs font-medium text-slate-600">
-          <div className="flex items-center gap-2">
-            <span className="text-base">{arrow}</span>
-            <span className="uppercase tracking-wide">{directionLabel}</span>
-          </div>
-          <span className="truncate text-right text-xs text-slate-500">{routeLabel}</span>
+      <div className="rounded-xl border border-slate-200 bg-white/90 p-3 shadow-sm">
+        <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-600">
+          <span className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1">
+            {directionLabel}
+          </span>
+          <span className="text-slate-500">{routeLabel}</span>
         </div>
 
-        <button
-          type="button"
-          onClick={() => toggleBaggage(idx, direction)}
-          className={`mt-3 flex w-full items-center justify-between gap-3 rounded-lg border px-3 py-3 text-left transition-colors ${
-            isAdded
-              ? "border-emerald-200 bg-white text-emerald-700 hover:border-emerald-300"
-              : "border-slate-200 bg-white text-slate-900 hover:border-sky-200"
-          }`}
-        >
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+          <div className="space-y-1">
+            <div className="text-sm font-semibold text-slate-900">
+              {lang === "en" ? "Extra baggage" : "Дополнительный багаж"}
+            </div>
+            <p className="text-xs text-slate-500">
+              {isAdded ? t.removeExtraBaggage : t.baggageIncludedNote}
+            </p>
+          </div>
           <div className="flex items-center gap-3">
-            <div
-              className={`flex h-9 w-9 items-center justify-center rounded-lg text-lg ${
-                isAdded
-                  ? "bg-emerald-50 text-emerald-600"
-                  : "bg-sky-50 text-sky-600"
-              }`}
-            >
-              {isAdded ? "✓" : "+"}
-            </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-semibold leading-5">
-                {isAdded ? t.addedExtraBaggage : t.addExtraBaggage}
-              </span>
-              <span className="text-xs text-slate-500">
-                {isAdded ? t.removeExtraBaggage : t.baggageIncludedNote}
-              </span>
+            <span className="text-sm font-semibold text-slate-700">{t.extraBaggagePrice}</span>
+            <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-sm font-semibold text-slate-900">
+              <button
+                type="button"
+                onClick={handleDec}
+                className="flex h-7 w-7 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-200"
+                aria-label={lang === "en" ? "Remove bag" : "Убрать багаж"}
+              >
+                −
+              </button>
+              <div className="w-6 text-center tabular-nums">{isAdded ? 1 : 0}</div>
+              <button
+                type="button"
+                onClick={handleInc}
+                className="flex h-7 w-7 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-200"
+                aria-label={lang === "en" ? "Add bag" : "Добавить багаж"}
+              >
+                +
+              </button>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-            <span>{t.extraBaggagePrice}</span>
-            {isAdded ? <span className="text-emerald-600">✓</span> : null}
-          </div>
-        </button>
+        </div>
       </div>
     );
   };
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-2xl border border-sky-100 bg-sky-50/80 p-4">
-        <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-lg">🎒</div>
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-lg">🧳</div>
+    <div className="space-y-5">
+      <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-sky-50 via-white to-blue-50 p-4 shadow-sm">
+        <div className="flex items-start justify-between gap-3">
           <div className="space-y-2">
-            <div className="text-sm font-semibold text-slate-900">{t.baggageIncludedTitle}</div>
+            <div className="flex items-center gap-2">
+              <div className={`${badgeTone} bg-sky-100 text-sky-800`}>{t.baggageIncludedTitle}</div>
+            </div>
             <ul className="space-y-1 text-sm text-slate-700">
               <li className="flex items-center gap-2">
-                <span className="text-emerald-600">✔</span>
+                <span className="text-emerald-600">●</span>
                 <span>{t.baggageIncludedCabin}</span>
               </li>
               <li className="flex items-center gap-2">
-                <span className="text-emerald-600">✔</span>
+                <span className="text-emerald-600">●</span>
                 <span>{t.baggageIncludedChecked}</span>
               </li>
             </ul>
-            <p className="text-xs text-slate-600">{t.baggageIncludedNote}</p>
+            <p className="text-xs text-slate-500">{t.baggageIncludedNote}</p>
+          </div>
+          <div className="hidden sm:flex flex-col items-end gap-2 text-right text-xs text-slate-500">
+            <span className={`${badgeTone} bg-white text-slate-700 shadow-sm`}>{t.contactsAndPayment}</span>
+            <span className="rounded-full bg-emerald-50 px-3 py-1 font-semibold text-emerald-700 shadow-sm">
+              {lang === "en" ? "Bags included" : "Багаж включён"}
+            </span>
           </div>
         </div>
       </div>
 
-      <div className="space-y-3">
-        <div className="text-sm font-semibold text-slate-900">
-          {lang === "en" ? "Extra baggage" : "Дополнительный багаж"}
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="text-base font-semibold text-slate-900">
+              {lang === "en" ? "Extra baggage" : "Дополнительный багаж"}
+            </h3>
+            <p className="text-sm text-slate-600">
+              {lang === "en"
+                ? "Configure baggage for each passenger"
+                : "Добавьте места багажа для каждого пассажира"}
+            </p>
+          </div>
+          <span className={`${badgeTone} bg-amber-50 text-amber-800 border border-amber-100`}>
+            {lang === "en" ? "€ per bag" : "Цена за место"}: {t.extraBaggagePrice}
+          </span>
         </div>
-        <div className="grid gap-3">
-          {passengerNames.map((name, idx) => (
-            <div
-              key={`baggage-${idx}`}
-              className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
-            >
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-lg">👤</div>
-                  <div className="space-y-1">
-                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                      {lang === "en" ? `Passenger #${idx + 1}` : `Пассажир #${idx + 1}`}
-                    </p>
-                    <p className="text-base font-semibold text-slate-900">
-                      {name || passengerLabel(idx)}
-                    </p>
+
+        <div className="mt-4 grid gap-3">
+          {passengerNames.map((name, idx) => {
+            const displayName = name || passengerLabel(idx);
+
+            return (
+              <div
+                key={`baggage-${idx}`}
+                className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 shadow-inner"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-100 text-sm font-semibold text-sky-800">
+                      {idx + 1}
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs uppercase tracking-wide text-slate-500">
+                        {lang === "en" ? "Passenger" : "Пассажир"}
+                      </p>
+                      <p className="text-base font-semibold text-slate-900">{displayName}</p>
+                    </div>
                   </div>
+                  <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-500 shadow">
+                    #{idx + 1}
+                  </span>
                 </div>
-                <div className="text-xs font-semibold text-slate-500">#{idx + 1}</div>
-              </div>
 
-              <div className="mt-3 grid gap-3 md:grid-cols-2">
-                {renderDirection("outbound", idx)}
-                {hasReturnSection ? renderDirection("return", idx) : null}
+                <div className="mt-3 grid gap-3 md:grid-cols-2">
+                  {renderDirection("outbound", idx)}
+                  {hasReturnSection ? renderDirection("return", idx) : null}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
-      <div className="grid max-w-xl gap-3">
-        <FormInput
-          type="tel"
-          placeholder={t.contactsPhone}
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          required
-        />
-        <FormInput
-          type="email"
-          placeholder={t.contactsEmail}
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-      </div>
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <h3 className="text-base font-semibold text-slate-900">{t.contactsAndPayment}</h3>
+        <p className="text-sm text-slate-600">{t.contactsDescription}</p>
 
-      <div className="rounded-2xl bg-sky-50/70 p-4 text-sm text-slate-700">
-        {t.contactsDescription}
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
+          <label className="space-y-1 text-sm font-medium text-slate-700">
+            <span className="text-slate-600">{t.contactsPhone}</span>
+            <FormInput
+              type="tel"
+              placeholder={t.contactsPhone}
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              required
+              className="w-full rounded-xl border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-900 shadow-inner focus:bg-white"
+            />
+          </label>
+          <label className="space-y-1 text-sm font-medium text-slate-700">
+            <span className="text-slate-600">{t.contactsEmail}</span>
+            <FormInput
+              type="email"
+              placeholder={t.contactsEmail}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full rounded-xl border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-900 shadow-inner focus:bg-white"
+            />
+          </label>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-3">
         <button
           type="button"
           onClick={() => handleAction("book")}
-          className="rounded-xl bg-sky-600 px-6 py-3 text-white shadow hover:bg-sky-700"
+          className="rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-800 shadow-sm transition hover:-translate-y-px hover:border-slate-300 hover:shadow"
         >
           {t.book}
         </button>
         <button
           type="button"
           onClick={() => handleAction("purchase")}
-          className="rounded-xl border border-emerald-600 px-6 py-3 text-emerald-700 shadow hover:bg-emerald-600 hover:text-white"
+          className="rounded-full bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow hover:bg-emerald-700"
         >
           {t.buy}
         </button>
@@ -242,7 +283,7 @@ export default function ContactsAndPaymentStep({
           <button
             type="button"
             onClick={handlePay}
-            className="rounded-xl border border-emerald-600 px-6 py-3 text-emerald-700 shadow hover:bg-emerald-600 hover:text-white"
+            className="rounded-full border border-emerald-200 bg-emerald-50 px-6 py-3 text-sm font-semibold text-emerald-700 shadow-sm transition hover:-translate-y-px hover:border-emerald-300 hover:bg-emerald-100"
           >
             {t.pay}
           </button>
@@ -251,7 +292,7 @@ export default function ContactsAndPaymentStep({
           <button
             type="button"
             onClick={() => onDownloadTicket(ticket.ticketNumber)}
-            className="rounded-xl border border-slate-300 px-6 py-3 text-slate-700 shadow hover:bg-slate-100"
+            className="rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-800 shadow-sm transition hover:-translate-y-px hover:border-slate-300 hover:shadow"
           >
             {t.ticketDownload}
           </button>
