@@ -364,6 +364,8 @@ export default function BusLayout({
           height: 100%;
           display: block;
           pointer-events: none;
+          position: relative;
+          z-index: 1;
         }
 
         .seat-number {
@@ -377,6 +379,7 @@ export default function BusLayout({
           color: #ffffff;
           text-shadow: 0 1px 2px rgba(0,0,0,.35), 0 0 2px rgba(0,0,0,.4);
           pointer-events: none;
+          z-index: 2;
         }
 
         .seat-wrapper:hover {
@@ -389,7 +392,7 @@ export default function BusLayout({
           position: absolute;
           inset: -3px;
           border-radius: 10px;
-          box-shadow: 0 0 0 2px #34d399, 0 0 8px rgba(52,211,153,0.7);
+          box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.75);
         }
 
         .seat-disabled {
