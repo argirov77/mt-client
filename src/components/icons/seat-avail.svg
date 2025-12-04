@@ -1,0 +1,27 @@
+<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <!-- тень под сиденьем -->
+  <ellipse cx="16" cy="25" rx="10" ry="4" fill="#6EB600" opacity="0.45"/>
+
+  <!-- основной корпус -->
+  <rect x="5" y="4" width="22" height="22" rx="6" fill="#8EE000"/>
+
+  <!-- лёгкий верхний блик -->
+  <rect x="5" y="4" width="22" height="10" rx="6" fill="url(#topGradient)" />
+
+  <!-- нижняя “подушка” -->
+  <rect x="6" y="17" width="20" height="7" rx="4" fill="url(#bottomGradient)"/>
+
+  <!-- номер / текст можно рисовать поверх как <text> в HTML/CSS -->
+
+  <defs>
+    <linearGradient id="topGradient" x1="16" y1="4" x2="16" y2="14" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#CFFF6A"/>
+      <stop offset="1" stop-color="#8EE000" stop-opacity="0"/>
+    </linearGradient>
+
+    <linearGradient id="bottomGradient" x1="16" y1="17" x2="16" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#CFFF6A"/>
+      <stop offset="1" stop-color="#7AC700"/>
+    </linearGradient>
+  </defs>
+</svg>

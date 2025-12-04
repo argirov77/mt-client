@@ -1,0 +1,21 @@
+<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <ellipse cx="16" cy="25" rx="10" ry="4" fill="#1D4ED8" opacity="0.45"/>
+
+  <rect x="5" y="4" width="22" height="22" rx="6" fill="#2563EB"/>
+
+  <rect x="5" y="4" width="22" height="10" rx="6" fill="url(#topGradientSel)" />
+
+  <rect x="6" y="17" width="20" height="7" rx="4" fill="url(#bottomGradientSel)"/>
+
+  <defs>
+    <linearGradient id="topGradientSel" x1="16" y1="4" x2="16" y2="14" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#60A5FA"/>
+      <stop offset="1" stop-color="#2563EB" stop-opacity="0"/>
+    </linearGradient>
+
+    <linearGradient id="bottomGradientSel" x1="16" y1="17" x2="16" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#BFDBFE"/>
+      <stop offset="1" stop-color="#1D4ED8"/>
+    </linearGradient>
+  </defs>
+</svg>
