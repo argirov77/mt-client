@@ -39,7 +39,7 @@ body {
 }
 
 .animate-step-fade {
-  animation: fadeStepIn 220ms ease-out;
+  animation: fadeStepIn 360ms ease-in-out;
 }
 
 @keyframes summarySlideFade {
@@ -54,5 +54,5 @@ body {
 }
 
 .animate-summary-slide {
-  animation: summarySlideFade 220ms ease-out;
+  animation: summarySlideFade 360ms ease-in-out;
 }
