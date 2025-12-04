@@ -18,6 +18,7 @@ const NEOPLAN_LAYOUT: string[] = [
   "11011",
   "11011",
   "11011",
+  "11011",
   "---33",
   "11054",
   "---33",
@@ -25,8 +26,7 @@ const NEOPLAN_LAYOUT: string[] = [
   "11011",
   "11011",
   "11011",
-  "11111",
-  "11111",
+  "11011",
 ];
 
 const NEOPLAN_SEAT_NUMBERS = [
