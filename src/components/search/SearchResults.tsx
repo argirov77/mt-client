@@ -1018,7 +1018,7 @@ export default function SearchResults({
         <div className="flex items-center gap-3">
           <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
             <div
-              className="absolute left-0 top-0 h-full bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 transition-all duration-200 ease-out"
+              className="absolute left-0 top-0 h-full bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 transition-all duration-400 ease-in-out"
               style={{ width: `${Math.max(0, Math.min(100, progressPercent))}%` }}
             />
           </div>
@@ -1038,7 +1038,7 @@ export default function SearchResults({
                   key={step.id}
                   type="button"
                   onClick={() => handleStepNavigation(step.id)}
-                  className={`group flex w-full transform flex-col items-start gap-2 rounded-xl border p-3 text-left shadow-sm transition hover:border-sky-200 hover:shadow-md duration-200 ease-out ${
+                  className={`group flex w-full transform flex-col items-start gap-2 rounded-xl border p-3 text-left shadow-sm transition hover:border-sky-200 hover:shadow-md duration-400 ease-in-out ${
                     isActive
                       ? "scale-[1.04] border-sky-400 bg-sky-50"
                       : isDone
@@ -1069,7 +1069,7 @@ export default function SearchResults({
           </div>
           <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-[3px] overflow-hidden rounded-full bg-slate-100">
             <div
-              className="absolute bottom-0 left-0 h-[3px] rounded-full bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 transition-transform duration-200 ease-out"
+              className="absolute bottom-0 left-0 h-[3px] rounded-full bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 transition-transform duration-400 ease-in-out"
               style={{
                 width: underlineWidth,
                 transform: `translateX(${activeIndex * 100}%)`,
@@ -1178,17 +1178,23 @@ export default function SearchResults({
     return activeStep;
   };
 
-  const renderStepHeader = (stepNumber: Step, title: string, summary: string) => (
-    <div className="flex items-start justify-between gap-3">
-      <div>
-        <p className="text-xs uppercase tracking-wide text-slate-500">
-          {lang === "en" ? "Step" : "Шаг"} {stepNumber}
-        </p>
-        <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
-        <p className="text-sm text-slate-500">{summary}</p>
+  const renderStepHeader = (stepNumber: Step, title: string, summary: string) => {
+    const showInlineSummary = !showStepNavigation;
+
+    return (
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs uppercase tracking-wide text-slate-500">
+            {lang === "en" ? "Step" : "Шаг"} {stepNumber}
+          </p>
+          <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
+          {showInlineSummary ? (
+            <p className="text-sm text-slate-500">{summary}</p>
+          ) : null}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderStepContent = (stepToRender: Step) => {
     if (stepToRender === 1) {

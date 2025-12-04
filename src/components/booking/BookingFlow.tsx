@@ -21,10 +21,20 @@ export default function BookingFlow() {
   const [criteria, setCriteria] = useState<Criteria | null>(null);
   const resultsRef = useRef<HTMLDivElement | null>(null);
 
-  // после нового поиска скроллим к блоку с результатами
+  // после нового поиска скроллим к блоку с результатами, но без резкого скачка
   useEffect(() => {
     if (criteria && resultsRef.current) {
-      resultsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+      const elementTop =
+        resultsRef.current.getBoundingClientRect().top + window.scrollY;
+      const currentTop = window.scrollY;
+      const distance = Math.abs(elementTop - currentTop);
+
+      if (distance > 120) {
+        window.scrollTo({
+          top: Math.max(elementTop - 16, 0),
+          behavior: "smooth",
+        });
+      }
     }
   }, [criteria]);
 
