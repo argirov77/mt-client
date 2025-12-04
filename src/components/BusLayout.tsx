@@ -7,7 +7,7 @@ import doorIcon from "./icons/door.png";
 import driverIcon from "./icons/driver.png";
 import seatAvailableIcon from "./icons/seat-avail.svg";
 import seatSelectedIcon from "./icons/seat-selected.svg";
-import seatTakenIcon from "./icons/seat-taken.png";
+import seatTakenIcon from "./icons/seat-taken.svg";
 import wcIcon from "./icons/wc.png";
 
 export type SeatData = { seat_num: number; status: "available" | "occupied" | "blocked" | string };
