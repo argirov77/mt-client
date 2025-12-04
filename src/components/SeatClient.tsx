@@ -1,10 +1,15 @@
 "use client";
 
+import Image from "next/image";
 import React, { useEffect, useMemo, useState } from "react";
 import { API } from "@/config";
 import Neoplan from "@/components/Neoplan";
 import Travego from "@/components/Travego";
 import { Wifi, Toilet, Snowflake, Plug, Armchair } from "lucide-react";
+
+import seatAvailableIcon from "./icons/seat-avail.svg";
+import seatSelectedIcon from "./icons/seat-selected.svg";
+import seatTakenIcon from "./icons/seat-taken.png";
 
 type SeatStatus = "available" | "occupied" | "blocked";
 export type SeatMapSeat = { seat_id: number; seat_num: number; status: SeatStatus };
@@ -134,64 +139,29 @@ export default function SeatClient({
     }
   };
 
-  const renderCell = (num: number) => {
-    const st = statusMap.get(num) || "available";
-    const isSel = selectedSeats.includes(num);
-
-    let bg = "#e5e7eb";
-    let cursor = "default";
-    let opacity = 1;
-    if (st === "available") {
-      bg = isSel ? "#4ade80" : "#a7f3d0";
-      cursor = "pointer";
-    }
-    if (st === "occupied") {
-      bg = "#fecaca";
-      opacity = 0.6;
-    }
-    if (st === "blocked") {
-      bg = "#d1d5db";
-      opacity = 0.6;
-    }
-
-    return (
-      <button
-        key={num}
-        type="button"
-        onClick={() => toggleSeat(num)}
-        style={{
-          width: 40,
-          height: 40,
-          borderRadius: 6,
-          border: "1px solid #94a3b8",
-          background: bg,
-          opacity,
-          cursor,
-        }}
-        title={`Место ${num}`}
-      >
-        {num}
-      </button>
-    );
-  };
-
   return (
     <div className="rounded-lg border p-3 bg-white">
       <div className={tiny.legend}>
         <span className={tiny.badge}>
-          <span style={{ width: 14, height: 14, background: "#a7f3d0", border: "1px solid #94a3b8" }} />
+          <Image src={seatAvailableIcon} alt="Свободно" width={20} height={20} />
           Свободно
         </span>
         <span className={tiny.badge}>
-          <span style={{ width: 14, height: 14, background: "#fecaca", border: "1px solid #94a3b8" }} />
+          <Image src={seatTakenIcon} alt="Занято" width={20} height={20} />
           Занято
         </span>
         <span className={tiny.badge}>
-          <span style={{ width: 14, height: 14, background: "#d1d5db", border: "1px solid #94a3b8" }} />
+          <Image
+            src={seatTakenIcon}
+            alt="Недоступно"
+            width={20}
+            height={20}
+            style={{ opacity: 0.6 }}
+          />
           Недоступно
         </span>
         <span className={tiny.badge}>
-          <span style={{ width: 14, height: 14, background: "#4ade80", border: "1px solid #15803d" }} />
+          <Image src={seatSelectedIcon} alt="Выбрано" width={20} height={20} />
           Выбрано
         </span>
       </div>
@@ -208,7 +178,6 @@ export default function SeatClient({
               selectedSeats={selectedSeats}
               toggleSeat={toggleSeat}
               interactive
-              renderCell={renderCell}
             />
           ) : (
             <Neoplan
@@ -216,7 +185,6 @@ export default function SeatClient({
               selectedSeats={selectedSeats}
               toggleSeat={toggleSeat}
               interactive
-              renderCell={renderCell}
             />
           )}
         </div>
