@@ -898,6 +898,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
   const [baggageQuote, setBaggageQuote] = useState<BaggageQuote | null>(null);
   const [baggageLoading, setBaggageLoading] = useState(false);
   const [baggageError, setBaggageError] = useState<string | null>(null);
+  const [isBaggageCollapsed, setIsBaggageCollapsed] = useState(true);
 
   const [actionLoading, setActionLoading] = useState<PurchaseAction | null>(null);
   const [activePanel, setActivePanel] = useState<"reschedule" | "cancel" | "baggage" | null>(null);
@@ -1305,9 +1306,14 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
 
     setBaggageError(null);
     setBaggageQuote(null);
+    setIsBaggageCollapsed(true);
     setActivePanel("baggage");
     closeTicketMenu();
   };
+
+  const toggleBaggageCollapsed = useCallback(() => {
+    setIsBaggageCollapsed((prev) => !prev);
+  }, []);
 
   const selectAllReschedule = () => {
     if (!data) return;
@@ -2818,65 +2824,90 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
             </div>
             <div className={styles.panelBody}>
               {data.tickets.length > 0 ? (
-                <div className={styles.baggageList} role="group" aria-label="Настройка багажа">
-                  {data.tickets.map((ticket) => {
-                    const ticketId = String(ticket.id);
-                    const passenger = passengerMap.get(String(ticket.passenger_id));
-                    const passengerName = passenger?.name ?? `Пассажир #${ticket.passenger_id}`;
-                    const departureSegment =
-                      ticket.segments.find((segment) => segment.is_departure) ?? ticket.segments[0];
-                    const arrivalSegment =
-                      [...ticket.segments].reverse().find((segment) => segment.is_arrival) ??
-                      ticket.segments[ticket.segments.length - 1];
-                    const departureName =
-                      ticket.segment_details?.departure?.name ?? departureSegment?.stop_name ?? "—";
-                    const arrivalName =
-                      ticket.segment_details?.arrival?.name ?? arrivalSegment?.stop_name ?? "—";
-                    const extraBaggage = toNumberSafe(ticket.extra_baggage, 0);
-                    const baggageValue = baggageDraft[ticketId] ?? extraBaggage;
-                    const ticketDateLabel = ticket.tour.date ? formatDate(ticket.tour.date) : null;
-                    const metaParts = [
-                      `Билет #${ticket.id}`,
-                      `${departureName} → ${arrivalName}`,
-                    ];
-                    if (ticketDateLabel) {
-                      metaParts.push(ticketDateLabel);
-                    }
+                <>
+                  <div className={styles.baggageToggleRow}>
+                    <p className={styles.panelNote}>Билетов в заказе: {data.tickets.length}</p>
+                    <button
+                      type="button"
+                      className={`${styles.btn} ${styles.btnGhost} ${styles.baggageToggleButton}`}
+                      onClick={toggleBaggageCollapsed}
+                      aria-expanded={!isBaggageCollapsed}
+                      aria-controls="purchase-baggage-list"
+                    >
+                      {isBaggageCollapsed ? "Показать билеты" : "Свернуть билеты"}
+                    </button>
+                  </div>
+                  {isBaggageCollapsed ? (
+                    <p className={styles.panelNote}>
+                      Список билетов скрыт. Нажмите, чтобы открыть и изменить доп. багаж.
+                    </p>
+                  ) : (
+                    <div
+                      id="purchase-baggage-list"
+                      className={styles.baggageList}
+                      role="group"
+                      aria-label="Настройка багажа"
+                    >
+                      {data.tickets.map((ticket) => {
+                        const ticketId = String(ticket.id);
+                        const passenger = passengerMap.get(String(ticket.passenger_id));
+                        const passengerName = passenger?.name ?? `Пассажир #${ticket.passenger_id}`;
+                        const departureSegment =
+                          ticket.segments.find((segment) => segment.is_departure) ?? ticket.segments[0];
+                        const arrivalSegment =
+                          [...ticket.segments].reverse().find((segment) => segment.is_arrival) ??
+                          ticket.segments[ticket.segments.length - 1];
+                        const departureName =
+                          ticket.segment_details?.departure?.name ?? departureSegment?.stop_name ?? "—";
+                        const arrivalName =
+                          ticket.segment_details?.arrival?.name ?? arrivalSegment?.stop_name ?? "—";
+                        const extraBaggage = toNumberSafe(ticket.extra_baggage, 0);
+                        const baggageValue = baggageDraft[ticketId] ?? extraBaggage;
+                        const ticketDateLabel = ticket.tour.date ? formatDate(ticket.tour.date) : null;
+                        const metaParts = [
+                          `Билет #${ticket.id}`,
+                          `${departureName} → ${arrivalName}`,
+                        ];
+                        if (ticketDateLabel) {
+                          metaParts.push(ticketDateLabel);
+                        }
 
-                    return (
-                      <div key={ticketId} className={styles.baggageRow}>
-                        <div className={styles.baggageInfo}>
-                          <p className={styles.baggageTitle}>{passengerName}</p>
-                          <p className={styles.baggageMeta}>{metaParts.join(" • ")}</p>
-                        </div>
-                        <div className={styles.baggageControls}>
-                          <div className={styles.baggageStepper}>
-                            <button
-                              type="button"
-                              onClick={() => decrementBaggage(ticketId)}
-                              disabled={isActionDisabled || baggageValue <= 0}
-                              aria-label={`Уменьшить багаж для билета #${ticket.id}`}
-                            >
-                              −
-                            </button>
-                            <span className={styles.baggageValue}>{baggageValue}</span>
-                            <button
-                              type="button"
-                              onClick={() => incrementBaggage(ticketId)}
-                              disabled={isActionDisabled}
-                              aria-label={`Увеличить багаж для билета #${ticket.id}`}
-                            >
-                              +
-                            </button>
+                        return (
+                          <div key={ticketId} className={styles.baggageRow}>
+                            <div className={styles.baggageInfo}>
+                              <p className={styles.baggageTitle}>{passengerName}</p>
+                              <p className={styles.baggageMeta}>{metaParts.join(" • ")}</p>
+                            </div>
+                            <div className={styles.baggageControls}>
+                              <div className={styles.baggageStepper}>
+                                <button
+                                  type="button"
+                                  onClick={() => decrementBaggage(ticketId)}
+                                  disabled={isActionDisabled || baggageValue <= 0}
+                                  aria-label={`Уменьшить багаж для билета #${ticket.id}`}
+                                >
+                                  −
+                                </button>
+                                <span className={styles.baggageValue}>{baggageValue}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => incrementBaggage(ticketId)}
+                                  disabled={isActionDisabled}
+                                  aria-label={`Увеличить багаж для билета #${ticket.id}`}
+                                >
+                                  +
+                                </button>
+                              </div>
+                              {baggageValue !== extraBaggage ? (
+                                <span className={styles.baggageChanged}>изменено</span>
+                              ) : null}
+                            </div>
                           </div>
-                          {baggageValue !== extraBaggage ? (
-                            <span className={styles.baggageChanged}>изменено</span>
-                          ) : null}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
               ) : (
                 <p className={styles.panelNote}>Для покупки нет билетов.</p>
               )}

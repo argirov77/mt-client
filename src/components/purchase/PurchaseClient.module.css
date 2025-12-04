@@ -745,6 +745,20 @@
   margin-bottom: 16px;
 }
 
+.baggageToggleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.baggageToggleButton {
+  padding-inline: 12px;
+  white-space: nowrap;
+}
+
 .baggageRow {
   display: flex;
   flex-wrap: wrap;
