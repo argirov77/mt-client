@@ -23,14 +23,18 @@ type Props = {
   interactive?: boolean;
 };
 
+const NUM_COLS = 5;
+const CORRIDOR_PADDING_X = 12;
+const CORRIDOR_PADDING_Y = 3;
+const WALL_HEIGHT = 4;
+
 type ParsedLayout = {
   seatRows: CellCode[][];
   wallRows: { pattern: CellCode[]; between: number }[];
 };
 
+type Rect = { left: number; right: number; top: number; bottom: number };
 type Block = { left: number; top: number; width: number; height: number };
-
-const NUM_COLS = 5;
 
 /* --- helpers --- */
 
@@ -39,15 +43,11 @@ function parseLayout(flat: CellCode[]): ParsedLayout {
   const wallRows: { pattern: CellCode[]; between: number }[] = [];
 
   const numRows = Math.ceil(flat.length / NUM_COLS);
-  let seatRowIndex = 0;
-
   for (let r = 0; r < numRows; r += 1) {
     const row = flat.slice(r * NUM_COLS, (r + 1) * NUM_COLS);
+    seatRows.push(row);
     if (row.some((c) => c === "w")) {
-      wallRows.push({ pattern: row, between: seatRowIndex });
-    } else {
-      seatRows.push(row);
-      seatRowIndex += 1;
+      wallRows.push({ pattern: row, between: r });
     }
   }
 
@@ -59,6 +59,114 @@ function buildStatusMap(seats?: SeatData[]) {
     map.set(seat.seat_num, seat.status);
     return map;
   }, new Map());
+}
+
+function measureCellRects(
+  container: HTMLDivElement,
+  grid: HTMLDivElement,
+  numSeatRows: number
+): Rect[][] | null {
+  const containerRect = container.getBoundingClientRect();
+  const gridChildren = Array.from(grid.children) as HTMLDivElement[];
+  const expectedCells = numSeatRows * NUM_COLS;
+
+  if (gridChildren.length < expectedCells) return null;
+
+  const cellRects: Rect[][] = [];
+
+  for (let r = 0; r < numSeatRows; r += 1) {
+    cellRects[r] = [];
+    for (let c = 0; c < NUM_COLS; c += 1) {
+      const index = r * NUM_COLS + c;
+      const cell = gridChildren[index];
+      if (!cell) return null;
+      const rect = cell.getBoundingClientRect();
+      cellRects[r][c] = {
+        left: rect.left - containerRect.left,
+        right: rect.right - containerRect.left,
+        top: rect.top - containerRect.top,
+        bottom: rect.bottom - containerRect.top,
+      };
+    }
+  }
+
+  return cellRects;
+}
+
+function buildCorridors(seatRows: CellCode[][], cellRects: Rect[][]): Block[] {
+  const numSeatRows = seatRows.length;
+  const newCorridors: Block[] = [];
+
+  for (let c = 0; c < NUM_COLS; c += 1) {
+    let r = 0;
+    while (r < numSeatRows) {
+      while (r < numSeatRows && seatRows[r][c] !== "0") r += 1;
+      if (r >= numSeatRows) break;
+
+      const start = r;
+      while (r < numSeatRows && seatRows[r][c] === "0") r += 1;
+      const end = r - 1;
+
+      const length = end - start + 1;
+      if (length < 2) continue;
+
+      const topRect = cellRects[start][c];
+      const bottomRect = cellRects[end][c];
+
+      const left = topRect.left + CORRIDOR_PADDING_X;
+      const right = topRect.right - CORRIDOR_PADDING_X;
+      const top = topRect.top + CORRIDOR_PADDING_Y;
+      const bottom = bottomRect.bottom - CORRIDOR_PADDING_Y;
+
+      newCorridors.push({
+        left,
+        top,
+        width: Math.max(8, right - left),
+        height: Math.max(12, bottom - top),
+      });
+    }
+  }
+
+  return newCorridors;
+}
+
+function buildWalls(wallRows: ParsedLayout["wallRows"], cellRects: Rect[][]): Block[] {
+  const newWalls: Block[] = [];
+
+  wallRows.forEach(({ pattern, between }) => {
+    const rowRects = cellRects[between];
+    if (!rowRects) return;
+
+    const rowTop = rowRects[0].top;
+    const rowBottom = rowRects[0].bottom;
+    const wallTop = rowTop + (rowBottom - rowTop - WALL_HEIGHT) / 2;
+
+    let i = 0;
+    while (i < NUM_COLS) {
+      if (pattern[i] === "w") {
+        const start = i;
+        while (i < NUM_COLS && pattern[i] === "w") i += 1;
+        const end = i - 1;
+
+        const leftRect = rowRects[start];
+        const rightRect = rowRects[end];
+
+        const left = leftRect.left + 4;
+        const right = rightRect.right - 4;
+
+        newWalls.push({
+          left,
+          top: wallTop,
+          width: right - left,
+          height: WALL_HEIGHT,
+        });
+      } else {
+        i += 1;
+      }
+    }
+  });
+
+  return newWalls;
 }
 
 /* --- component --- */
@@ -79,137 +187,29 @@ export default function BusLayout({
   const [corridorBlocks, setCorridorBlocks] = useState<Block[]>([]);
   const [wallBlocks, setWallBlocks] = useState<Block[]>([]);
 
-  const computeCellRects = useCallback(() => {
-    if (!containerRef.current || !gridRef.current) return null;
+  const recalcLayout = useCallback(() => {
+    if (!containerRef.current || !gridRef.current) return;
 
-    const containerRect = containerRef.current.getBoundingClientRect();
-    const gridChildren = Array.from(
-      gridRef.current.children
-    ) as HTMLDivElement[];
-    const numSeatRows = seatRows.length;
+    const cellRects = measureCellRects(
+      containerRef.current,
+      gridRef.current,
+      seatRows.length
+    );
 
-    const cellRects: {
-      left: number;
-      right: number;
-      top: number;
-      bottom: number;
-    }[][] = [];
+    if (!cellRects) return;
 
-    for (let r = 0; r < numSeatRows; r += 1) {
-      cellRects[r] = [];
-      for (let c = 0; c < NUM_COLS; c += 1) {
-        const index = r * NUM_COLS + c;
-        const cell = gridChildren[index];
-        if (!cell) return null;
-        const rect = cell.getBoundingClientRect();
-        cellRects[r][c] = {
-          left: rect.left - containerRect.left,
-          right: rect.right - containerRect.left,
-          top: rect.top - containerRect.top,
-          bottom: rect.bottom - containerRect.top,
-        };
-      }
-    }
+    const newCorridors = buildCorridors(seatRows, cellRects);
+    const newWalls = buildWalls(wallRows, cellRects);
 
-    return { cellRects, numSeatRows };
-  }, [seatRows]);
+    setCorridorBlocks(newCorridors);
+    setWallBlocks(newWalls);
+  }, [seatRows, wallRows]);
 
   useEffect(() => {
-    const recalc = () => {
-      const computed = computeCellRects();
-      if (!computed) return;
-
-      const { cellRects, numSeatRows } = computed;
-
-      /* === ПРОХОД ("0") === */
-      const paddingX = 12;
-      const paddingY = 3;
-      const newCorridors: Block[] = [];
-
-      for (let c = 0; c < NUM_COLS; c += 1) {
-        let r = 0;
-        while (r < numSeatRows) {
-          while (r < numSeatRows && seatRows[r][c] !== "0") r += 1;
-          if (r >= numSeatRows) break;
-
-          const start = r;
-          while (r < numSeatRows && seatRows[r][c] === "0") r += 1;
-          const end = r - 1;
-
-          const length = end - start + 1;
-          if (length < 2) continue;
-
-          const topRect = cellRects[start][c];
-          const bottomRect = cellRects[end][c];
-
-          const left = topRect.left + paddingX;
-          const right = topRect.right - paddingX;
-          const top = topRect.top + paddingY;
-          const bottom = bottomRect.bottom - paddingY;
-
-          newCorridors.push({
-            left,
-            top,
-            width: Math.max(8, right - left),
-            height: Math.max(12, bottom - top),
-          });
-        }
-      }
-
-      /* === СТЕНЫ ("w") === */
-      const newWalls: Block[] = [];
-
-      wallRows.forEach((wall) => {
-        const { pattern, between } = wall;
-        const rowBelow = between;
-        const rowAbove = between - 1;
-
-        if (rowAbove < 0 || rowBelow >= numSeatRows) return;
-
-        const aboveRect = cellRects[rowAbove][0];
-        const belowRect = cellRects[rowBelow][0];
-
-        const yTop = aboveRect.bottom;
-        const yBottom = belowRect.top;
-        const gap = yBottom - yTop;
-        if (gap <= 0) return;
-
-        const wallHeight = 4;
-        const wallTop = yTop + (gap - wallHeight) / 2;
-
-        let i = 0;
-        while (i < NUM_COLS) {
-          if (pattern[i] === "w") {
-            const start = i;
-            while (i < NUM_COLS && pattern[i] === "w") i += 1;
-            const end = i - 1;
-
-            const leftRect = cellRects[rowAbove][start];
-            const rightRect = cellRects[rowAbove][end];
-
-            const left = leftRect.left + 4;
-            const right = rightRect.right - 4;
-
-            newWalls.push({
-              left,
-              top: wallTop,
-              width: right - left,
-              height: wallHeight,
-            });
-          } else {
-            i += 1;
-          }
-        }
-      });
-
-      setCorridorBlocks(newCorridors);
-      setWallBlocks(newWalls);
-    };
-
-    recalc();
-    window.addEventListener("resize", recalc);
-    return () => window.removeEventListener("resize", recalc);
-  }, [computeCellRects, seatRows, wallRows]);
+    recalcLayout();
+    window.addEventListener("resize", recalcLayout);
+    return () => window.removeEventListener("resize", recalcLayout);
+  }, [recalcLayout]);
 
   /* === СИДЕНЬЕ: 3 состояния (available / selected / taken) === */
 
