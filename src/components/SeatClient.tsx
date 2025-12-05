@@ -9,7 +9,7 @@ import { Wifi, Toilet, Snowflake, Plug, Armchair } from "lucide-react";
 
 import seatAvailableIcon from "./icons/seat-avail.svg";
 import seatSelectedIcon from "./icons/seat-selected.svg";
-import seatTakenIcon from "./icons/seat-taken.svg";
+import seatTakenIcon from "./icons/seat-blocked.svg";
 
 type SeatStatus = "available" | "occupied" | "blocked";
 export type SeatMapSeat = { seat_id: number; seat_num: number; status: SeatStatus };

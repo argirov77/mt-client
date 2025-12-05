@@ -1,56 +1,55 @@
 "use client";
 
-import Image from "next/image";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
-import doorIcon from "./icons/door.png";
-import driverIcon from "./icons/driver.png";
-import seatAvailableIcon from "./icons/seat-avail.svg";
-import seatSelectedIcon from "./icons/seat-selected.svg";
-import seatTakenIcon from "./icons/seat-taken.svg";
-import wcIcon from "./icons/wc.png";
+export type SeatData = {
+  seat_num: number;
+  status: "available" | "occupied" | "blocked" | string;
+};
 
-export type SeatData = { seat_num: number; status: "available" | "occupied" | "blocked" | string };
+export type CellCode = number | "d" | "0" | "t" | "e" | "w" | "-";
 
 type Props = {
-  layout: string[];
+  layout: CellCode[];
   seats?: SeatData[];
   selectedSeats?: number[];
   toggleSeat?: (seatNum: number) => void;
   interactive?: boolean;
-  seatNumbers?: number[];
 };
 
 type ParsedLayout = {
-  seatRows: string[];
-  wallRows: { pattern: string; between: number }[];
+  seatRows: CellCode[][];
+  wallRows: { pattern: CellCode[]; between: number }[];
 };
 
 type Block = { left: number; top: number; width: number; height: number };
 
-const ICONS = {
-  seatAvailable: seatAvailableIcon,
-  seatSelected: seatSelectedIcon,
-  seatTaken: seatTakenIcon,
-  driver: driverIcon,
-  door: doorIcon,
-  wc: wcIcon,
-};
+const NUM_COLS = 5;
 
-function parseLayout(layout: string[]): ParsedLayout {
-  const seatRows: string[] = [];
-  const wallRows: { pattern: string; between: number }[] = [];
+/* --- helpers --- */
 
+function parseLayout(flat: CellCode[]): ParsedLayout {
+  const seatRows: CellCode[][] = [];
+  const wallRows: { pattern: CellCode[]; between: number }[] = [];
+
+  const numRows = Math.ceil(flat.length / NUM_COLS);
   let seatRowIndex = 0;
-  layout.forEach((rawRow) => {
-    const row = rawRow.padEnd(5, "0");
-    if (row.includes("-")) {
+
+  for (let r = 0; r < numRows; r += 1) {
+    const row = flat.slice(r * NUM_COLS, (r + 1) * NUM_COLS);
+    if (row.some((c) => c === "w")) {
       wallRows.push({ pattern: row, between: seatRowIndex });
     } else {
       seatRows.push(row);
       seatRowIndex += 1;
     }
-  });
+  }
 
   return { seatRows, wallRows };
 }
@@ -62,13 +61,14 @@ function buildStatusMap(seats?: SeatData[]) {
   }, new Map());
 }
 
+/* --- component --- */
+
 export default function BusLayout({
   layout,
   seats = [],
   selectedSeats = [],
   toggleSeat,
   interactive = false,
-  seatNumbers,
 }: Props) {
   const { seatRows, wallRows } = useMemo(() => parseLayout(layout), [layout]);
   const statusMap = useMemo(() => buildStatusMap(seats), [seats]);
@@ -83,15 +83,22 @@ export default function BusLayout({
     if (!containerRef.current || !gridRef.current) return null;
 
     const containerRect = containerRef.current.getBoundingClientRect();
-    const gridChildren = Array.from(gridRef.current.children) as HTMLDivElement[];
+    const gridChildren = Array.from(
+      gridRef.current.children
+    ) as HTMLDivElement[];
     const numSeatRows = seatRows.length;
-    const numCols = 5;
 
-    const cellRects: { left: number; right: number; top: number; bottom: number }[][] = [];
+    const cellRects: {
+      left: number;
+      right: number;
+      top: number;
+      bottom: number;
+    }[][] = [];
+
     for (let r = 0; r < numSeatRows; r += 1) {
       cellRects[r] = [];
-      for (let c = 0; c < numCols; c += 1) {
-        const index = r * numCols + c;
+      for (let c = 0; c < NUM_COLS; c += 1) {
+        const index = r * NUM_COLS + c;
         const cell = gridChildren[index];
         if (!cell) return null;
         const rect = cell.getBoundingClientRect();
@@ -104,7 +111,7 @@ export default function BusLayout({
       }
     }
 
-    return { cellRects, numSeatRows, numCols };
+    return { cellRects, numSeatRows };
   }, [seatRows]);
 
   useEffect(() => {
@@ -112,14 +119,14 @@ export default function BusLayout({
       const computed = computeCellRects();
       if (!computed) return;
 
-      const { cellRects, numSeatRows, numCols } = computed;
+      const { cellRects, numSeatRows } = computed;
 
-      const paddingX = 8;
-      const paddingY = 4;
-
+      /* === ПРОХОД ("0") === */
+      const paddingX = 12;
+      const paddingY = 3;
       const newCorridors: Block[] = [];
 
-      for (let c = 0; c < numCols; c += 1) {
+      for (let c = 0; c < NUM_COLS; c += 1) {
         let r = 0;
         while (r < numSeatRows) {
           while (r < numSeatRows && seatRows[r][c] !== "0") r += 1;
@@ -143,12 +150,13 @@ export default function BusLayout({
           newCorridors.push({
             left,
             top,
-            width: Math.max(4, right - left),
-            height: Math.max(6, bottom - top),
+            width: Math.max(8, right - left),
+            height: Math.max(12, bottom - top),
           });
         }
       }
 
+      /* === СТЕНЫ ("w") === */
       const newWalls: Block[] = [];
 
       wallRows.forEach((wall) => {
@@ -160,26 +168,31 @@ export default function BusLayout({
 
         const aboveRect = cellRects[rowAbove][0];
         const belowRect = cellRects[rowBelow][0];
+
         const yTop = aboveRect.bottom;
         const yBottom = belowRect.top;
-        const wallY = (yTop + yBottom) / 2;
+        const gap = yBottom - yTop;
+        if (gap <= 0) return;
+
         const wallHeight = 4;
+        const wallTop = yTop + (gap - wallHeight) / 2;
 
         let i = 0;
-        while (i < numCols) {
-          if (pattern[i] === "3") {
+        while (i < NUM_COLS) {
+          if (pattern[i] === "w") {
             const start = i;
-            while (i < numCols && pattern[i] === "3") i += 1;
+            while (i < NUM_COLS && pattern[i] === "w") i += 1;
             const end = i - 1;
 
             const leftRect = cellRects[rowAbove][start];
             const rightRect = cellRects[rowAbove][end];
+
             const left = leftRect.left + 4;
             const right = rightRect.right - 4;
 
             newWalls.push({
               left,
-              top: wallY - wallHeight / 2,
+              top: wallTop,
               width: right - left,
               height: wallHeight,
             });
@@ -198,28 +211,44 @@ export default function BusLayout({
     return () => window.removeEventListener("resize", recalc);
   }, [computeCellRects, seatRows, wallRows]);
 
-  let seatIndex = 0;
+  /* === СИДЕНЬЕ: 3 состояния (available / selected / taken) === */
 
-  const renderSeat = () => {
-    const seatNum = seatNumbers?.[seatIndex] ?? seatIndex + 1;
-    seatIndex += 1;
-
+  const renderSeat = (seatNum: number) => {
     const status = statusMap.get(seatNum) || "available";
     const isSelected = selectedSeats.includes(seatNum);
-    const clickable = interactive && status === "available";
+    const isTaken = status === "occupied" || status === "blocked";
+    const clickable = interactive && !isTaken;
 
-    let iconSrc = ICONS.seatAvailable;
-    if (status === "occupied" || status === "blocked") {
-      iconSrc = ICONS.seatTaken;
-    }
-    if (isSelected) {
-      iconSrc = ICONS.seatSelected;
-    }
+    const topGradientId = isTaken
+      ? "topGradientTaken"
+      : isSelected
+      ? "topGradientSel"
+      : "topGradientAvail";
+
+    const bottomGradientId = isTaken
+      ? "bottomGradientTaken"
+      : isSelected
+      ? "bottomGradientSel"
+      : "bottomGradientAvail";
+
+    const shadowFill = isTaken
+      ? "#A5AABB"
+      : isSelected
+      ? "#1D4ED8"
+      : "#5FA514"; // мягкий зелёный
+
+    const bodyFill = isTaken
+      ? "#C8CCD8"
+      : isSelected
+      ? "#2563EB"
+      : "#7AC700"; // зелёный спокойнее, чем #8EE000
+
+    const textFill = isTaken ? "#4B5563" : "#FFFFFF";
 
     const seatClass = [
-      "seat-wrapper",
-      isSelected ? "selected" : "",
-      status !== "available" ? "seat-disabled" : "",
+      "bus-seat-wrapper",
+      isSelected ? "bus-seat-selected" : "",
+      isTaken ? "bus-seat-disabled" : "",
     ]
       .filter(Boolean)
       .join(" ");
@@ -233,213 +262,429 @@ export default function BusLayout({
         aria-label={`Место ${seatNum}`}
         disabled={!clickable}
       >
-        <Image className="seat-icon" src={iconSrc} alt="Место" width={40} height={40} draggable={false} />
-        <span className="seat-number">{seatNum}</span>
+        <svg
+          className="bus-seat-svg"
+          width="45"
+          height="45"
+          viewBox="0 0 32 32"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          {/* тень */}
+          <ellipse
+            cx="16"
+            cy="25"
+            rx="10"
+            ry="4"
+            fill={shadowFill}
+            opacity={isTaken ? 0.35 : 0.45}
+          />
+
+          {/* корпус */}
+          <rect x="5" y="4" width="22" height="22" rx="6" fill={bodyFill} />
+
+          {/* верхний блик */}
+          <rect
+            x="5"
+            y="4"
+            width="22"
+            height="10"
+            rx="6"
+            fill={`url(#${topGradientId})`}
+          />
+
+          {/* нижняя подушка */}
+          <rect
+            x="6"
+            y="17"
+            width="20"
+            height="7"
+            rx="4"
+            fill={`url(#${bottomGradientId})`}
+          />
+
+          {/* номер */}
+          <text
+            x="16"
+            y="19"
+            textAnchor="middle"
+            dominantBaseline="middle"
+            fontSize="12"
+            fontWeight="700"
+            fill={textFill}
+          >
+            {seatNum}
+          </text>
+
+          <defs>
+            {/* ЗАНЯТО (серый SVG) */}
+            <linearGradient
+              id="topGradientTaken"
+              x1="16"
+              y1="4"
+              x2="16"
+              y2="14"
+              gradientUnits="userSpaceOnUse"
+            >
+              <stop offset="0" stopColor="#F4F5F9" />
+              <stop offset="1" stopColor="#C8CCD8" stopOpacity="0" />
+            </linearGradient>
+
+            <linearGradient
+              id="bottomGradientTaken"
+              x1="16"
+              y1="17"
+              x2="16"
+              y2="24"
+              gradientUnits="userSpaceOnUse"
+            >
+              <stop offset="0" stopColor="#ECEEF4" />
+              <stop offset="1" stopColor="#B2B7C7" />
+            </linearGradient>
+
+            {/* ВЫБРАНО (синий SVG) */}
+            <linearGradient
+              id="topGradientSel"
+              x1="16"
+              y1="4"
+              x2="16"
+              y2="14"
+              gradientUnits="userSpaceOnUse"
+            >
+              <stop offset="0" stopColor="#60A5FA" />
+              <stop offset="1" stopColor="#2563EB" stopOpacity="0" />
+            </linearGradient>
+
+            <linearGradient
+              id="bottomGradientSel"
+              x1="16"
+              y1="17"
+              x2="16"
+              y2="24"
+              gradientUnits="userSpaceOnUse"
+            >
+              <stop offset="0" stopColor="#BFDBFE" />
+              <stop offset="1" stopColor="#1D4ED8" />
+            </linearGradient>
+
+            {/* ДОСТУПНО (мягкий зелёный) */}
+            <linearGradient
+              id="topGradientAvail"
+              x1="16"
+              y1="4"
+              x2="16"
+              y2="14"
+              gradientUnits="userSpaceOnUse"
+            >
+              <stop offset="0" stopColor="#E6FFC4" />
+              <stop offset="1" stopColor="#7AC700" stopOpacity="0" />
+            </linearGradient>
+
+            <linearGradient
+              id="bottomGradientAvail"
+              x1="16"
+              y1="17"
+              x2="16"
+              y2="24"
+              gradientUnits="userSpaceOnUse"
+            >
+              <stop offset="0" stopColor="#D3F7A2" />
+              <stop offset="1" stopColor="#6CB800" />
+            </linearGradient>
+          </defs>
+        </svg>
       </button>
     );
   };
 
+  /* === ИКОНКИ driver / door / wc — тоже SVG, но меньше === */
+
   const renderIconCell = (type: "driver" | "door" | "wc") => {
-    const src = type === "driver" ? ICONS.driver : type === "door" ? ICONS.door : ICONS.wc;
-    const alt = type === "driver" ? "Водитель" : type === "door" ? "Вход" : "WC";
     return (
-      <div className="icon-cell">
-        <Image className="icon-cell-img" src={src} alt={alt} width={24} height={24} draggable={false} />
+      <div className="bus-icon-cell">
+        {type === "driver" && (
+          <svg
+            className="bus-icon-svg"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle cx="12" cy="12" r="10" fill="#111827" />
+            <circle cx="12" cy="12" r="7" fill="#F9FAFB" />
+            <path
+              d="M12 6.5a1 1 0 0 1 1 1v1.2l2.3 1.1a1 1 0 0 1 .5 1.3l-.4.9a1 1 0 0 1-1.3.5l-1.8-.8h-1.6l-1.8.8a1 1 0 0 1-1.3-.5l-.4-.9a1 1 0 0 1 .5-1.3L11 8.7V7.5a1 1 0 0 1 1-1Z"
+              fill="#111827"
+            />
+          </svg>
+        )}
+
+        {type === "door" && (
+          <svg
+            className="bus-icon-svg"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <rect
+              x="4"
+              y="4"
+              width="12"
+              height="16"
+              rx="2"
+              fill="#ffffff"
+              stroke="#111827"
+              strokeWidth="1.5"
+            />
+            <circle cx="13" cy="12" r="1" fill="#111827" />
+            <path
+              d="M15 12h4m0 0-1.6-2.2M19 12l-1.6 2.2"
+              stroke="#111827"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        )}
+
+        {type === "wc" && (
+          <svg
+            className="bus-icon-svg"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <rect x="2" y="3" width="20" height="18" rx="3" fill="#1D4ED8" />
+            <rect
+              x="3.5"
+              y="4.5"
+              width="17"
+              height="15"
+              rx="2"
+              fill="#2563EB"
+            />
+            {/* woman */}
+            <circle cx="9" cy="9" r="1.6" fill="#ffffff" />
+            <path
+              d="M7.3 16.5 8 11.5h2l.7 5"
+              stroke="#ffffff"
+              strokeWidth="1.4"
+              strokeLinecap="round"
+            />
+            <path d="M8 11.5h2l-.7-2.5h-1L8 11.5Z" fill="#ffffff" />
+            {/* man */}
+            <circle cx="15" cy="9" r="1.6" fill="#ffffff" />
+            <path
+              d="M13.4 16.5 14 11.5h2l.6 5"
+              stroke="#ffffff"
+              strokeWidth="1.4"
+              strokeLinecap="round"
+            />
+            <rect
+              x="14"
+              y="9.2"
+              width="2"
+              height="2.8"
+              rx="0.6"
+              fill="#ffffff"
+            />
+          </svg>
+        )}
       </div>
     );
   };
 
   return (
     <div className="bus-container" ref={containerRef}>
-      <div className="corridors-layer">
+      <div className="bus-corridors-layer">
         {corridorBlocks.map((b, idx) => (
           <div
             key={`corridor-${idx}`}
-            className="corridor-block"
-            style={{ left: b.left, top: b.top, width: b.width, height: b.height }}
+            className="bus-corridor-block"
+            style={{
+              left: b.left,
+              top: b.top,
+              width: b.width,
+              height: b.height,
+            }}
           />
         ))}
       </div>
 
-      <div className="seat-grid" ref={gridRef}>
+      <div className="bus-seat-grid" ref={gridRef}>
         {seatRows.map((row, rowIndex) =>
-          row.split("").map((cell, colIndex) => {
+          row.map((cell, colIndex) => {
             const key = `${rowIndex}-${colIndex}`;
-            if (cell === "1") {
+
+            if (typeof cell === "number") {
               return (
-                <div className="cell" key={key}>
-                  {renderSeat()}
+                <div className="bus-cell" key={key}>
+                  {renderSeat(cell)}
                 </div>
               );
             }
-            if (cell === "2") {
+
+            if (cell === "d") {
               return (
-                <div className="cell" key={key}>
+                <div className="bus-cell" key={key}>
                   {renderIconCell("driver")}
                 </div>
               );
             }
-            if (cell === "4") {
+            if (cell === "e") {
               return (
-                <div className="cell" key={key}>
+                <div className="bus-cell" key={key}>
                   {renderIconCell("door")}
                 </div>
               );
             }
-            if (cell === "5") {
+            if (cell === "t") {
               return (
-                <div className="cell" key={key}>
+                <div className="bus-cell" key={key}>
                   {renderIconCell("wc")}
                 </div>
               );
             }
-            return <div className="cell cell-empty" key={key} />;
+
+            return <div className="bus-cell bus-cell-empty" key={key} />;
           })
         )}
       </div>
 
-      <div className="walls-layer">
+      <div className="bus-walls-layer">
         {wallBlocks.map((b, idx) => (
           <div
             key={`wall-${idx}`}
-            className="wall-horizontal"
-            style={{ left: b.left, top: b.top, width: b.width, height: b.height }}
+            className="bus-wall-horizontal"
+            style={{
+              left: b.left,
+              top: b.top,
+              width: b.width,
+              height: b.height,
+            }}
           />
         ))}
       </div>
 
       <style jsx>{`
-        * { box-sizing: border-box; }
-
         .bus-container {
           position: relative;
           background: #f7f8fd;
           border-radius: 14px;
-          padding: 4px 4px;
+          padding: 4px;
           border: 1px solid #dde3f3;
           box-shadow: 0 2px 6px rgba(15, 35, 75, 0.08);
         }
 
-        .corridors-layer,
-        .walls-layer {
+        .bus-corridors-layer {
           position: absolute;
           inset: 0;
           pointer-events: none;
+          z-index: 0;
         }
 
-        .corridors-layer { z-index: 0; }
-        .seat-grid       { position: relative; z-index: 1; }
-        .walls-layer     { z-index: 2; }
-
-        .seat-grid {
+        .bus-seat-grid {
+          position: relative;
+          z-index: 1;
           display: grid;
-          grid-template-columns: 40px 40px 30px 40px 40px;
-          grid-auto-rows: 40px;
+          grid-template-columns: 45px 45px 35px 45px 45px;
+          grid-auto-rows: 45px;
           column-gap: 2px;
           row-gap: 1px;
         }
 
-        .cell {
-          width: 40px;
-          height: 40px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          position: relative;
-        }
-
-        .seat-wrapper {
-          position: relative;
-          width: 40px;
-          height: 40px;
-          cursor: pointer;
-          transition: transform 0.1s ease, filter 0.1s ease;
-          border: none;
-          padding: 0;
-          background: transparent;
-        }
-
-        .seat-icon {
-          width: 100%;
-          height: 100%;
-          display: block;
-          pointer-events: none;
-          position: relative;
-          z-index: 1;
-        }
-
-        .seat-number {
+        .bus-walls-layer {
           position: absolute;
           inset: 0;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 13px;
-          font-weight: 700;
-          color: #ffffff;
-          text-shadow: 0 1px 2px rgba(0,0,0,.35), 0 0 2px rgba(0,0,0,.4);
           pointer-events: none;
           z-index: 2;
         }
 
-        .seat-wrapper:hover {
+        .bus-cell {
+          width: 45px;
+          height: 45px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+        }
+
+        .bus-seat-wrapper {
+          position: relative;
+          width: 45px;
+          height: 45px;
+          cursor: pointer;
+          padding: 0;
+          border: none;
+          background: transparent;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: transform 0.1s ease, filter 0.1s ease;
+        }
+
+        .bus-seat-svg {
+          width: 45px;
+          height: 45px;
+        }
+
+        .bus-seat-wrapper:hover {
           transform: translateY(-1px);
           filter: drop-shadow(0 0 3px rgba(148, 163, 184, 0.9));
         }
 
-        .seat-wrapper.selected::after {
+        .bus-seat-wrapper.bus-seat-selected::after {
           content: "";
           position: absolute;
-          inset: -3px;
+          inset: 4px;
           border-radius: 10px;
-          box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.75);
+          box-shadow: 0 0 0 2px #2563eb,
+            0 0 8px rgba(37, 99, 235, 0.7);
         }
 
-        .seat-disabled {
+        .bus-seat-disabled {
           cursor: not-allowed;
-          opacity: 0.65;
-          filter: grayscale(0.2);
+          opacity: 0.85;
         }
 
-        .icon-cell {
-          width: 36px;
-          height: 36px;
-          border-radius: 8px;
+        .bus-icon-cell {
+          width: 24px;
+          height: 24px;
+          border-radius: 6px;
           border: 1px dashed #d1d5db;
           background: #f9fafb;
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 4px;
+          padding: 2px;
         }
 
-        .icon-cell-img {
-          max-width: 24px;
-          max-height: 24px;
+        .bus-icon-svg {
+          width: 16px;
+          height: 16px;
           display: block;
-          pointer-events: none;
         }
 
-        .corridor-block {
+        .bus-corridor-block {
           position: absolute;
           border-radius: 999px;
           background: linear-gradient(180deg, #e5e7eb, #d1d5db);
-          box-shadow: inset 0 1px 1px rgba(255,255,255,0.9), 0 1px 2px rgba(148,163,184,0.6);
+          box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.9),
+            0 1px 2px rgba(148, 163, 184, 0.6);
         }
 
-        .wall-horizontal {
+        .bus-wall-horizontal {
           position: absolute;
           border-radius: 999px;
           background: linear-gradient(90deg, #cbd5f5, #93c5fd);
-          box-shadow: 0 1px 2px rgba(148,163,184,0.7);
+          box-shadow: 0 1px 2px rgba(148, 163, 184, 0.7);
         }
 
-        .wall-horizontal::before {
+        .bus-wall-horizontal::before {
           content: "";
           position: absolute;
           inset: 1px;
           border-radius: 999px;
-          background: linear-gradient(180deg, rgba(255,255,255,0.8), rgba(255,255,255,0.3));
+          background: linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.8),
+            rgba(255, 255, 255, 0.3)
+          );
           opacity: 0.9;
         }
       `}</style>

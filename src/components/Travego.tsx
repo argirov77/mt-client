@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import BusLayout, { SeatData } from "./BusLayout";
+import BusLayout, { SeatData, CellCode } from "./BusLayout";
 
 type Props = {
   seats?: SeatData[];
@@ -10,38 +10,31 @@ type Props = {
   interactive?: boolean;
 };
 
-const TRAVEGO_LAYOUT: string[] = [
-  "20004",
-  "33-33",
-  "11011",
-  "11011",
-  "11011",
-  "11011",
-  "11011",
-  "11011",
-  "---33",
-  "11054",
-  "---33",
-  "11011",
-  "11011",
-  "11011",
-  "11011",
-  "11011",
-];
+/**
+ * Travego: 2+2, один проход, без WC.
+ *
+ * 5 колонок:
+ *  [0,1] — левый блок сидений
+ *  [2]   — коридор (0)
+ *  [3,4] — правый блок сидений
+ */
+const TRAVEGO_LAYOUT: CellCode[] = [
+  //   0    1    2    3    4
+  "d", "0", "0", "0", "e", // водитель + вход
+  "w", "w", "-", "w", "w", // перегородка
 
-const TRAVEGO_SEAT_NUMBERS = [
-  1, 2, 3, 4,
-  5, 6, 7, 8,
-  9, 10, 11, 12,
-  13, 14, 15, 16,
-  17, 18, 19, 20,
-  21, 22, 23, 24,
-  25, 26,
-  29, 30, 31, 32,
-  33, 34, 35, 36,
-  37, 38, 39, 40,
-  41, 42, 43, 44,
-  45, 46, 47, 48,
+  1, 2, "0", 3, 4,
+  5, 6, "0", 7, 8,
+  9, 10, "0", 11, 12,
+  13, 14, "0", 15, 16,
+  17, 18, "0", 19, 20,
+  21, 22, "0", 23, 24,
+  25, 26, "0", 27, 28,
+  29, 30, "0", 31, 32,
+  33, 34, "0", 35, 36,
+  37, 38, "0", 39, 40,
+  41, 42, "0", 43, 44,
+  45, 46, "0", 47, 48,
 ];
 
 export default function Travego({
@@ -57,7 +50,6 @@ export default function Travego({
       selectedSeats={selectedSeats}
       toggleSeat={toggleSeat}
       interactive={interactive}
-      seatNumbers={TRAVEGO_SEAT_NUMBERS}
     />
   );
 }
