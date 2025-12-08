@@ -1,14 +1,13 @@
 import React from "react";
 import type { Tour } from "./SearchResults";
 import { formatDate } from "@/utils/date";
-import TripCard, { PriceRow } from "../TripCard";
+import TripCard from "../TripCard";
 
 type TripListProps = {
   title: string;
   tours: Tour[];
   selectedId?: number;
   onSelect: (tour: Tour) => void;
-  freeSeatsValue: (s: Tour["seats"]) => number;
   fromName: string;
   toName: string;
   lang: "ru" | "bg" | "en" | "ua";
@@ -17,12 +16,11 @@ type TripListProps = {
   t: {
     pick: string;
     chosen: string;
-    freeSeats: (n: number) => string;
     adults: string;
     discounted: string;
     departure: string;
     arrival: string;
-    inRoute: string;
+    price: string;
   };
 };
 
@@ -31,7 +29,6 @@ export default function TripList({
   tours,
   selectedId,
   onSelect,
-  freeSeatsValue,
   fromName,
   toName,
   lang,
@@ -55,6 +52,7 @@ export default function TripList({
           if (arr.getTime() < dep.getTime()) {
             arr.setDate(arr.getDate() + 1);
           }
+
           const dateStr = formatDate(dep);
           const depTime = dep.toLocaleTimeString(lang, {
             hour: "2-digit",
@@ -64,34 +62,11 @@ export default function TripList({
             hour: "2-digit",
             minute: "2-digit",
           });
-          const diffMinutes = Math.max(
-            0,
-            Math.round((arr.getTime() - dep.getTime()) / 60000)
-          );
-          const h = Math.floor(diffMinutes / 60);
-          const m = diffMinutes % 60;
-          const duration =
-            lang === "ru" || lang === "bg" || lang === "ua"
-              ? `${h}ч ${m}м`
-              : `${h}h ${m}m`;
 
           const adults = Math.max(0, seatCount - discountCount);
           const adultSum = adults * tour.price;
           const discSum = discountCount * tour.price * (1 - DISCOUNT);
           const total = adultSum + discSum;
-
-          const rows: PriceRow[] = [];
-          if (adults > 0) {
-            rows.push({ label: t.adults, count: adults, price: tour.price });
-          }
-          if (discountCount > 0) {
-            rows.push({
-              label: t.discounted,
-              count: discountCount,
-              price: tour.price,
-              discount: DISCOUNT * 100,
-            });
-          }
 
           return (
             <TripCard
@@ -101,18 +76,14 @@ export default function TripList({
               toStop={toName}
               departTime={depTime}
               arriveTime={arrTime}
-              duration={duration}
               departureLabel={t.departure}
               arrivalLabel={t.arrival}
-              inRouteLabel={t.inRoute}
-              freeSeats={freeSeatsValue(tour.seats)}
-              rows={rows}
               total={total}
+              priceLabel={t.price}
               onSelect={() => onSelect(tour)}
               selected={isChosen}
               pickLabel={t.pick}
               chosenLabel={t.chosen}
-              freeSeatsText={t.freeSeats}
             />
           );
         })}

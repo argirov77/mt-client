@@ -931,9 +931,6 @@ export default function SearchResults({
     setShowDownloadPrompt(false);
   };
 
-  const freeSeatsValue = (s: Tour["seats"]) =>
-    typeof s === "number" ? s : s?.free ?? 0;
-
   // ====== РЕЗЮМЕ ДЛЯ ХЕДЕРОВ ШАГОВ ======
 
   const returnRequired = Boolean(returnDate && hasReturnSection);
@@ -1223,7 +1220,6 @@ export default function SearchResults({
               tours={outboundTours}
               selectedId={selectedOutboundTour?.id}
               onSelect={onSelectOutbound}
-              freeSeatsValue={freeSeatsValue}
               fromName={fromName}
               toName={toName}
               lang={lang}
@@ -1239,7 +1235,6 @@ export default function SearchResults({
               tours={returnTours}
               selectedId={selectedReturnTour?.id}
               onSelect={onSelectReturn}
-              freeSeatsValue={freeSeatsValue}
               fromName={toName}
               toName={fromName}
               lang={lang}
