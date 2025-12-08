@@ -396,94 +396,32 @@ export default function BusLayout({
     );
   };
 
-  /* === ИКОНКИ driver / door / wc — тоже SVG, но меньше === */
+  /* === ИКОНКИ driver / door / wc — IMG c door2/driver2/wc2 === */
 
   const renderIconCell = (type: "driver" | "door" | "wc") => {
+    let src = "";
+    let alt = "";
+
+    if (type === "driver") {
+      src = "/icons/driver2.svg";
+      alt = "Driver";
+    } else if (type === "door") {
+      src = "/icons/door2.svg";
+      alt = "Door";
+    } else if (type === "wc") {
+      src = "/icons/wc2.svg";
+      alt = "WC";
+    }
+
     return (
       <div className="bus-icon-cell">
-        {type === "driver" && (
-          <svg
+        {src && (
+          <img
+            src={src}
+            alt={alt}
             className="bus-icon-svg"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <circle cx="12" cy="12" r="10" fill="#111827" />
-            <circle cx="12" cy="12" r="7" fill="#F9FAFB" />
-            <path
-              d="M12 6.5a1 1 0 0 1 1 1v1.2l2.3 1.1a1 1 0 0 1 .5 1.3l-.4.9a1 1 0 0 1-1.3.5l-1.8-.8h-1.6l-1.8.8a1 1 0 0 1-1.3-.5l-.4-.9a1 1 0 0 1 .5-1.3L11 8.7V7.5a1 1 0 0 1 1-1Z"
-              fill="#111827"
-            />
-          </svg>
-        )}
-
-        {type === "door" && (
-          <svg
-            className="bus-icon-svg"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <rect
-              x="4"
-              y="4"
-              width="12"
-              height="16"
-              rx="2"
-              fill="#ffffff"
-              stroke="#111827"
-              strokeWidth="1.5"
-            />
-            <circle cx="13" cy="12" r="1" fill="#111827" />
-            <path
-              d="M15 12h4m0 0-1.6-2.2M19 12l-1.6 2.2"
-              stroke="#111827"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        )}
-
-        {type === "wc" && (
-          <svg
-            className="bus-icon-svg"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <rect x="2" y="3" width="20" height="18" rx="3" fill="#1D4ED8" />
-            <rect
-              x="3.5"
-              y="4.5"
-              width="17"
-              height="15"
-              rx="2"
-              fill="#2563EB"
-            />
-            {/* woman */}
-            <circle cx="9" cy="9" r="1.6" fill="#ffffff" />
-            <path
-              d="M7.3 16.5 8 11.5h2l.7 5"
-              stroke="#ffffff"
-              strokeWidth="1.4"
-              strokeLinecap="round"
-            />
-            <path d="M8 11.5h2l-.7-2.5h-1L8 11.5Z" fill="#ffffff" />
-            {/* man */}
-            <circle cx="15" cy="9" r="1.6" fill="#ffffff" />
-            <path
-              d="M13.4 16.5 14 11.5h2l.6 5"
-              stroke="#ffffff"
-              strokeWidth="1.4"
-              strokeLinecap="round"
-            />
-            <rect
-              x="14"
-              y="9.2"
-              width="2"
-              height="2.8"
-              rx="0.6"
-              fill="#ffffff"
-            />
-          </svg>
+            draggable={false}
+          />
         )}
       </div>
     );
@@ -643,21 +581,23 @@ export default function BusLayout({
         }
 
         .bus-icon-cell {
-          width: 24px;
-          height: 24px;
-          border-radius: 6px;
-          border: 1px dashed #d1d5db;
-          background: #f9fafb;
+          width: 45px;
+          height: 45px;
+          border-radius: 10px;
+          border: none;
+          background: #e5e7eb;
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 2px;
+          box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.7),
+            0 1px 2px rgba(148, 163, 184, 0.8);
         }
 
         .bus-icon-svg {
-          width: 16px;
-          height: 16px;
+          width: 28px;
+          height: 28px;
           display: block;
+          object-fit: contain;
         }
 
         .bus-corridor-block {
