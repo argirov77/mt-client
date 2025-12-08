@@ -523,6 +523,12 @@ export default function SearchResults({
   useEffect(() => {
     let cancelled = false;
 
+    const freeSeats = (value: Tour["seats"]) =>
+      typeof value === "number" ? value : value?.free ?? 0;
+
+    const filterBySeats = (tours: Tour[]) =>
+      tours.filter((tour) => freeSeats(tour.seats) >= safeSeatCount);
+
     const search = async () => {
       if (!fromId || !toId || !date) {
         setOutboundTours([]);
@@ -565,16 +571,19 @@ export default function SearchResults({
 
         if (cancelled) return;
 
-        setOutboundTours(outRes.data || []);
-        setReturnTours(retRes.data || []);
+        const filteredOutbound = filterBySeats(outRes.data || []);
+        const filteredReturn = filterBySeats(retRes.data || []);
+
+        setOutboundTours(filteredOutbound);
+        setReturnTours(filteredReturn);
         setSelectedOutboundTour(null);
         setSelectedReturnTour(null);
         setSelectedOutboundSeats([]);
         setSelectedReturnSeats([]);
 
         const bothEmpty =
-          !(outRes.data && outRes.data.length) &&
-          (!(retRes.data && retRes.data.length) || !returnDate);
+          !(filteredOutbound && filteredOutbound.length) &&
+          (!(filteredReturn && filteredReturn.length) || !returnDate);
 
         if (bothEmpty) {
           setMsg(t.noResults);
