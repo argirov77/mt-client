@@ -122,8 +122,8 @@ export default function BusLayout({
       const { cellRects, numSeatRows } = computed;
 
       /* === ПРОХОД ("0") === */
-      const paddingX = 12;
-      const paddingY = 3;
+      const paddingX = 6;
+      const paddingY = 4;
       const newCorridors: Block[] = [];
 
       for (let c = 0; c < NUM_COLS; c += 1) {

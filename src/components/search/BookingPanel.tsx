@@ -9,9 +9,12 @@ type Dict = {
   inboundShort: string;
   next: string;
   seatSelectionTitle: string;
+  seatSelectionSubtitle: string;
   openSeatPicker: string;
-  hideSeatPicker: string;
+  changeSeatPicker: string;
   selectedSeatsLabel: (selected: number, total: number) => string;
+  seatSummarySingle: (seat: number) => string;
+  seatSummaryMultiple: (count: number, seats: number[]) => string;
   passengersTitle: string;
   passengersHint: string;
   passengerPlaceholder: string;
@@ -75,8 +78,9 @@ export default function BookingPanel({
   onReadyForContacts,
 }: Props) {
   const [activeLeg, setActiveLeg] = useState<"outbound" | "return">("outbound");
-  const [outboundSeatsOpen, setOutboundSeatsOpen] = useState(false);
-  const [returnSeatsOpen, setReturnSeatsOpen] = useState(false);
+  const [activeModal, setActiveModal] = useState<null | "outbound" | "return">(null);
+  const [tempSeats, setTempSeats] = useState<number[]>([]);
+  const [tempExtraBaggage, setTempExtraBaggage] = useState(false);
 
   const outboundComplete = useMemo(
     () => selectedOutboundSeats.length === seatCount,
@@ -115,6 +119,46 @@ export default function BookingPanel({
     });
   }, [seatCount, setExtraBaggageOutbound, setExtraBaggageReturn]);
 
+  const openModal = (leg: "outbound" | "return", seats: number[], extraBaggage: boolean) => {
+    setTempSeats(seats);
+    setTempExtraBaggage(extraBaggage);
+    setActiveModal(leg);
+  };
+
+  const closeModal = () => {
+    setActiveModal(null);
+    setTempSeats([]);
+  };
+
+  const confirmSelection = () => {
+    if (tempSeats.length === 0 || tempSeats.length !== seatCount || !activeModal) return;
+
+    if (activeModal === "outbound") {
+      setSelectedOutboundSeats(tempSeats);
+      const arr = [...extraBaggageOutbound];
+      arr[0] = tempExtraBaggage;
+      setExtraBaggageOutbound(arr);
+    } else {
+      setSelectedReturnSeats(tempSeats);
+      const arr = [...extraBaggageReturn];
+      arr[0] = tempExtraBaggage;
+      setExtraBaggageReturn(arr);
+    }
+
+    closeModal();
+  };
+
+  const renderSelectionSummary = (seats: number[]) => {
+    if (!seats.length) return t.selectedSeatsLabel(seats.length, seatCount);
+
+    const sorted = seats.slice().sort((a, b) => a - b);
+    if (seatCount === 1 || sorted.length === 1) {
+      return t.seatSummarySingle(sorted[0]);
+    }
+
+    return t.seatSummaryMultiple(sorted.length, sorted);
+  };
+
   const legTabs = selectedReturnTour ? (
     <div className="mt-5 inline-flex overflow-hidden rounded-lg border">
       <button
@@ -139,103 +183,127 @@ export default function BookingPanel({
   ) : null;
 
   const renderSeatSection = (
-    isOpen: boolean,
-    setIsOpen: (v: boolean) => void,
     selectedSeats: number[],
-    setSelectedSeats: (v: number[]) => void,
-    tour: Tour,
-    departureId: number,
-    arrivalId: number,
-    departureText: string,
-    arrivalText: string,
     extraBaggage: boolean,
-    onExtraBaggageChange: (v: boolean) => void
+    isOutboundLeg: boolean
   ) => (
     <section className="space-y-3 rounded-xl bg-white/70 p-4 shadow-sm ring-1 ring-slate-200">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h3 className="text-lg font-semibold text-slate-900">{t.seatSelectionTitle}</h3>
-          <p className="text-sm text-slate-600">
-            {selectedSeats.length > 0
-              ? selectedSeats.join(", ")
-              : t.selectedSeatsLabel(selectedSeats.length, seatCount)}
-          </p>
+          <p className="text-sm text-slate-600">{renderSelectionSummary(selectedSeats)}</p>
         </div>
 
         <button
           type="button"
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={() => openModal(isOutboundLeg ? "outbound" : "return", selectedSeats, extraBaggage)}
           className="inline-flex items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50"
         >
-          {isOpen ? t.hideSeatPicker : t.openSeatPicker}
+          {selectedSeats.length > 0 ? t.changeSeatPicker : t.openSeatPicker}
         </button>
       </div>
-
-      {isOpen && (
-        <SeatClient
-          tourId={tour.id}
-          departureStopId={departureId}
-          arrivalStopId={arrivalId}
-          layoutVariant={tour.layout_variant || undefined}
-          selectedSeats={selectedSeats}
-          maxSeats={seatCount}
-          onChange={(seats) => {
-            setSelectedSeats(seats);
-            if (seats.length === seatCount) {
-              setIsOpen(false);
-            }
-          }}
-          departureText={departureText}
-          arrivalText={arrivalText}
-          extraBaggage={extraBaggage}
-          onExtraBaggageChange={onExtraBaggageChange}
-          showExtraBaggage={false}
-        />
-      )}
     </section>
   );
 
+  const renderSeatModal = () => {
+    if (!activeModal) return null;
+
+    const isOutboundModal = activeModal === "outbound";
+    const tour = isOutboundModal ? selectedOutboundTour : selectedReturnTour;
+
+    if (!tour) return null;
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 px-3 py-6">
+        <div className="relative flex h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+          <header className="flex items-start justify-between gap-3 border-b px-6 py-4">
+            <div>
+              <h3 className="text-xl font-semibold text-slate-900">{t.seatSelectionTitle}</h3>
+              <p className="text-sm text-slate-600">{t.seatSelectionSubtitle}</p>
+            </div>
+
+            <button
+              type="button"
+              aria-label="Close"
+              onClick={closeModal}
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-lg font-semibold text-slate-600 shadow-sm transition hover:bg-slate-50"
+            >
+              ×
+            </button>
+          </header>
+
+          <div className="flex flex-1 flex-col overflow-hidden">
+            <div className="border-b px-6 py-3 text-sm font-medium text-slate-800">
+              {t.selectedSeatsLabel(tempSeats.length, seatCount)}
+            </div>
+
+            <div className="flex-1 overflow-auto px-6 py-4">
+              <SeatClient
+                tourId={tour.id}
+                departureStopId={isOutboundModal ? fromId : toId}
+                arrivalStopId={isOutboundModal ? toId : fromId}
+                layoutVariant={tour.layout_variant || undefined}
+                selectedSeats={tempSeats}
+                maxSeats={seatCount}
+                onChange={setTempSeats}
+                departureText={
+                  isOutboundModal
+                    ? `${fromName} ${tour.departure_time}`
+                    : `${toName} ${tour.departure_time}`
+                }
+                arrivalText={
+                  isOutboundModal
+                    ? `${toName} ${tour.arrival_time}`
+                    : `${fromName} ${tour.arrival_time}`
+                }
+                extraBaggage={tempExtraBaggage}
+                onExtraBaggageChange={setTempExtraBaggage}
+                showExtraBaggage={false}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2 border-t bg-white px-6 py-4 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={closeModal}
+                className="inline-flex items-center justify-center rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+              >
+                Отмена
+              </button>
+              <button
+                type="button"
+                disabled={tempSeats.length !== seatCount}
+                onClick={confirmSelection}
+                className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+              >
+                Подтвердить выбор
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-4">
+      {renderSeatModal()}
+
       {legTabs}
 
       {(!selectedReturnTour || activeLeg === "outbound") &&
         renderSeatSection(
-          outboundSeatsOpen,
-          setOutboundSeatsOpen,
           selectedOutboundSeats,
-          setSelectedOutboundSeats,
-          selectedOutboundTour,
-          fromId,
-          toId,
-          `${fromName} ${selectedOutboundTour.departure_time}`,
-          `${toName} ${selectedOutboundTour.arrival_time}`,
           extraBaggageOutbound[0] || false,
-          (v) => {
-            const arr = [...extraBaggageOutbound];
-            arr[0] = v;
-            setExtraBaggageOutbound(arr);
-          }
+          true
         )}
 
       {selectedReturnTour &&
         activeLeg === "return" &&
         renderSeatSection(
-          returnSeatsOpen,
-          setReturnSeatsOpen,
           selectedReturnSeats,
-          setSelectedReturnSeats,
-          selectedReturnTour,
-          toId,
-          fromId,
-          `${toName} ${selectedReturnTour.departure_time}`,
-          `${fromName} ${selectedReturnTour.arrival_time}`,
           extraBaggageReturn[0] || false,
-          (v) => {
-            const arr = [...extraBaggageReturn];
-            arr[0] = v;
-            setExtraBaggageReturn(arr);
-          }
+          false
         )}
 
       <form
