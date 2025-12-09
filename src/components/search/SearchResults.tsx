@@ -1641,14 +1641,14 @@ export default function SearchResults({
             </div>
           ) : null}
 
-          <div className="rounded-xl border border-slate-200 bg-slate-900 px-4 py-4 text-white shadow-lg">
-            <div className="flex items-center justify-between text-sm text-slate-200">
+          <div className="rounded-xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
+            <div className="flex items-center justify-between text-sm text-slate-600">
               <span className="font-medium">{t.subtotal}</span>
-              <span className="font-semibold">{formatPrice(outboundTotal + returnTotal)}</span>
+              <span className="font-semibold text-slate-900">{formatPrice(outboundTotal + returnTotal)}</span>
             </div>
-            <div className="mt-3 flex items-center justify-between text-lg font-semibold">
+            <div className="mt-3 flex items-center justify-between text-lg font-semibold text-slate-900">
               <span>{t.total}</span>
-              <span className="text-emerald-300">{formatPrice(overallTotal)}</span>
+              <span className="text-emerald-600">{formatPrice(overallTotal)}</span>
             </div>
           </div>
         </div>
