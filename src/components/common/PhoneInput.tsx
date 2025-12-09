@@ -160,7 +160,7 @@ export default function PhoneInput({
 
   return (
     <div
-      className={`flex h-12 w-full min-w-0 items-center gap-2 rounded-full border border-slate-200 bg-gradient-to-r from-white to-slate-50/80 px-3 py-2 shadow-inner ${className}`}
+      className={`flex h-12 w-full min-w-0 items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-2 shadow-inner sm:gap-2 ${className}`}
     >
       <div className="relative flex items-center">
         <div className="relative">
@@ -170,7 +170,7 @@ export default function PhoneInput({
             onChange={(e) => handleDialCodeChange(e.target.value)}
             onFocus={() => setIsOpen(true)}
             onBlur={() => setTimeout(() => setIsOpen(false), 100)}
-            className="w-28 rounded-full bg-white px-3 py-2.5 pr-8 text-base font-semibold text-slate-900 shadow-sm ring-1 ring-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+            className="w-28 rounded-full bg-slate-50/80 px-3 py-2.5 pr-8 text-base font-semibold text-slate-900 shadow-inner ring-1 ring-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-200"
             aria-expanded={isOpen}
             aria-haspopup="listbox"
           />
@@ -205,7 +205,6 @@ export default function PhoneInput({
           )}
         </div>
       </div>
-      <div className="hidden h-6 w-px bg-slate-200 sm:block" aria-hidden />
       <input
         type="tel"
         id={id}
@@ -215,7 +214,7 @@ export default function PhoneInput({
         placeholder={placeholder}
         inputMode="numeric"
         maxLength={14}
-        className="flex-1 min-w-[12ch] rounded-full bg-transparent px-3 py-2.5 text-base text-slate-900 placeholder:text-slate-400 focus:outline-none"
+        className="flex-1 min-w-[12ch] rounded-full bg-slate-50/80 px-3 py-2.5 text-base text-slate-900 placeholder:text-slate-400 shadow-inner ring-1 ring-transparent focus:outline-none focus:ring-2 focus:ring-emerald-200"
       />
     </div>
   );
