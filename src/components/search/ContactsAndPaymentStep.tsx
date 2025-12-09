@@ -293,7 +293,7 @@ export default function ContactsAndPaymentStep({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full rounded-full border border-slate-200 bg-gradient-to-r from-white to-slate-50/80 px-4 py-3 text-sm text-slate-900 shadow-inner focus:border-emerald-200 focus:bg-white"
+              className="h-12 w-full rounded-full border border-slate-200 bg-gradient-to-r from-white to-slate-50/80 px-4 text-base text-slate-900 shadow-inner focus:border-emerald-200 focus:bg-white"
             />
            
           </div>

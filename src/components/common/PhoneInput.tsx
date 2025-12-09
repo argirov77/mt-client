@@ -160,7 +160,7 @@ export default function PhoneInput({
 
   return (
     <div
-      className={`flex items-center gap-2 rounded-full border border-slate-200 bg-gradient-to-r from-white to-slate-50/80 px-3 py-2 shadow-inner ${className}`}
+      className={`flex h-12 w-full min-w-0 items-center gap-2 rounded-full border border-slate-200 bg-gradient-to-r from-white to-slate-50/80 px-3 py-2 shadow-inner ${className}`}
     >
       <div className="relative flex items-center">
         <div className="relative">
@@ -215,7 +215,7 @@ export default function PhoneInput({
         placeholder={placeholder}
         inputMode="numeric"
         maxLength={14}
-        className="flex-1 rounded-full bg-transparent px-3 py-2.5 text-base text-slate-900 placeholder:text-slate-400 focus:outline-none"
+        className="flex-1 min-w-[12ch] rounded-full bg-transparent px-3 py-2.5 text-base text-slate-900 placeholder:text-slate-400 focus:outline-none"
       />
     </div>
   );
