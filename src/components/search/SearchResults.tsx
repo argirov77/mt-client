@@ -1301,15 +1301,6 @@ export default function SearchResults({
     [passengerNames]
   );
 
-  const extraBaggageOutboundCount = useMemo(
-    () => extraBaggageOutbound.filter(Boolean).length,
-    [extraBaggageOutbound]
-  );
-  const extraBaggageReturnCount = useMemo(
-    () => extraBaggageReturn.filter(Boolean).length,
-    [extraBaggageReturn]
-  );
-
   const formatPrice = useCallback((value: number) => `${value.toFixed(2)} ₴`, []);
   const showStepNavigation = Boolean(selectedOutboundTour);
 
@@ -1492,14 +1483,6 @@ export default function SearchResults({
     if (!selectedOutboundTour) return null;
 
     const contactsProvided = Boolean(phone || email);
-    const baggageBadges = [
-      extraBaggageOutboundCount > 0
-        ? `${t.outboundShort}: ${extraBaggageOutboundCount}`
-        : null,
-      extraBaggageReturnCount > 0
-        ? `${t.inboundShort}: ${extraBaggageReturnCount}`
-        : null,
-    ].filter(Boolean);
 
     const renderRouteBlock = (
       title: string,
@@ -1657,28 +1640,6 @@ export default function SearchResults({
               )}
             </div>
           </div>
-
-          {baggageBadges.length > 0 ? (
-            <div className="rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 shadow-sm">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold uppercase tracking-wide text-amber-800">{t.extraBaggageHeading}</p>
-                <span className="rounded-full bg-white px-2 py-1 text-[11px] font-semibold text-amber-700 ring-1 ring-amber-100">
-                  +
-                </span>
-              </div>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {baggageBadges.map((label) => (
-                  <span
-                    key={label}
-                    className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold text-amber-800 ring-1 ring-amber-100"
-                  >
-                    <span className="h-2 w-2 rounded-full bg-amber-500" aria-hidden />
-                    {label}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ) : null}
 
           <div className="rounded-xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
             <div className="flex items-center justify-between text-sm text-slate-600">
