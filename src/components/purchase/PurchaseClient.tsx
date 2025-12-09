@@ -898,10 +898,10 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
   const [baggageQuote, setBaggageQuote] = useState<BaggageQuote | null>(null);
   const [baggageLoading, setBaggageLoading] = useState(false);
   const [baggageError, setBaggageError] = useState<string | null>(null);
-  const [isBaggageModalOpen, setIsBaggageModalOpen] = useState(false);
+  const [isBaggageCollapsed, setIsBaggageCollapsed] = useState(true);
 
   const [actionLoading, setActionLoading] = useState<PurchaseAction | null>(null);
-  const [activePanel, setActivePanel] = useState<"reschedule" | "cancel" | null>(null);
+  const [activePanel, setActivePanel] = useState<"reschedule" | "cancel" | "baggage" | null>(null);
   const [rescheduleScope, setRescheduleScope] = useState<"all" | "selected">("selected");
   const [scrollPositions, setScrollPositions] = useState<ScrollPositions>({});
   const [menuAnchor, setMenuAnchor] = useState<
@@ -1207,23 +1207,6 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
   }, [closeTicketMenu]);
 
   useEffect(() => {
-    if (!isBaggageModalOpen || typeof document === "undefined") {
-      return;
-    }
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        closeBaggageModal();
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [closeBaggageModal, isBaggageModalOpen]);
-
-  useEffect(() => {
     if (typeof window === "undefined") {
       return;
     }
@@ -1275,10 +1258,14 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
     });
   }, [data, baggageDraft]);
 
-  const totalExtraBaggage = useMemo(() => {
+  const baggageChangedCount = useMemo(() => {
     if (!data) return 0;
-    return data.tickets.reduce((acc, ticket) => acc + toNumberSafe(ticket.extra_baggage, 0), 0);
-  }, [data]);
+    return data.tickets.reduce((count, ticket) => {
+      const initial = Number(ticket.extra_baggage ?? 0);
+      const draftValue = baggageDraft[String(ticket.id)] ?? 0;
+      return initial === draftValue ? count : count + 1;
+    }, 0);
+  }, [data, baggageDraft]);
 
   const toggleTicketSelection = (ticketId: string) => {
     setSelectedTicketIds((prev) => {
@@ -1312,21 +1299,20 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
     openReschedulePanel([ticketId]);
   };
 
-  const handleOpenBaggageModal = () => {
+  const handleOpenBaggagePanel = () => {
     if (isActionDisabled) {
       return;
     }
 
     setBaggageError(null);
     setBaggageQuote(null);
-    setIsBaggageModalOpen(true);
+    setIsBaggageCollapsed(true);
+    setActivePanel("baggage");
     closeTicketMenu();
   };
 
-  const closeBaggageModal = useCallback(() => {
-    setIsBaggageModalOpen(false);
-    setBaggageQuote(null);
-    setBaggageError(null);
+  const toggleBaggageCollapsed = useCallback(() => {
+    setIsBaggageCollapsed((prev) => !prev);
   }, []);
 
   const selectAllReschedule = () => {
@@ -1723,9 +1709,9 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
         payload = null;
       }
 
-        await fetchPurchase();
-        setBaggageQuote(null);
-        setIsBaggageModalOpen(false);
+      await fetchPurchase();
+      setBaggageQuote(null);
+      setActivePanel(null);
 
       if (payload?.status === "pending" && typeof payload?.amount_due === "number") {
         setBanner({
@@ -2389,7 +2375,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
                 >
                   Отмена
                 </button>
-                <button type="button" role="menuitem" onClick={handleOpenBaggageModal}>
+                <button type="button" role="menuitem" onClick={handleOpenBaggagePanel}>
                   Доп. багаж
                 </button>
                 <button
@@ -2512,78 +2498,6 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
 
   const cancelButtonDisabled = isActionDisabled || cancelSelectionCount === 0;
 
-  const renderBaggageList = (tickets: PurchaseTicket[]) => {
-    if (tickets.length === 0) {
-      return <p className={styles.panelNote}>Для этого направления нет билетов.</p>;
-    }
-
-    return (
-      <div className={styles.baggageList} role="group" aria-label="Настройка багажа">
-        {tickets.map((ticket) => {
-          const ticketId = String(ticket.id);
-          const passenger = passengerMap.get(String(ticket.passenger_id));
-          const passengerName = passenger?.name ?? `Пассажир #${ticket.passenger_id}`;
-          const departureSegment = ticket.segments.find((segment) => segment.is_departure) ?? ticket.segments[0];
-          const arrivalSegment =
-            [...ticket.segments].reverse().find((segment) => segment.is_arrival) ??
-            ticket.segments[ticket.segments.length - 1];
-          const departureName = ticket.segment_details?.departure?.name ?? departureSegment?.stop_name ?? "—";
-          const arrivalName = ticket.segment_details?.arrival?.name ?? arrivalSegment?.stop_name ?? "—";
-          const extraBaggage = toNumberSafe(ticket.extra_baggage, 0);
-          const baggageValue = baggageDraft[ticketId] ?? extraBaggage;
-          const ticketDateLabel = ticket.tour.date ? formatDate(ticket.tour.date) : null;
-          const metaParts = [`Билет #${ticket.id}`, `${departureName} → ${arrivalName}`];
-          if (ticketDateLabel) {
-            metaParts.push(ticketDateLabel);
-          }
-
-          return (
-            <div key={ticketId} className={styles.baggageRow}>
-              <div className={styles.baggageInfo}>
-                <p className={styles.baggageTitle}>{passengerName}</p>
-                <p className={styles.baggageMeta}>{metaParts.join(" • ")}</p>
-              </div>
-              <div className={styles.baggageControls}>
-                <div className={styles.baggageStepper}>
-                  <button
-                    type="button"
-                    onClick={() => decrementBaggage(ticketId)}
-                    disabled={isActionDisabled || baggageValue <= 0}
-                    aria-label={`Уменьшить багаж для билета #${ticket.id}`}
-                  >
-                    −
-                  </button>
-                  <span className={styles.baggageValue}>{baggageValue}</span>
-                  <button
-                    type="button"
-                    onClick={() => incrementBaggage(ticketId)}
-                    disabled={isActionDisabled}
-                    aria-label={`Увеличить багаж для билета #${ticket.id}`}
-                  >
-                    +
-                  </button>
-                </div>
-                {baggageValue !== extraBaggage ? <span className={styles.baggageChanged}>изменено</span> : null}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
-
-  const renderBaggageSection = (title: string, tickets: PurchaseTicket[]) => {
-    return (
-      <div className={styles.baggageModalSection}>
-        <div className={styles.baggageModalHeader}>
-          <p className={styles.baggageSectionTitle}>{title}</p>
-          <span className={styles.panelNote}>Билетов: {tickets.length}</span>
-        </div>
-        {renderBaggageList(tickets)}
-      </div>
-    );
-  };
-
 
   return (
     <>
@@ -2624,36 +2538,6 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
                 <span className={styles.muted}>Оплатить до {purchaseDeadline}</span>
               ) : null}
               <span className={styles.amountBadge}>{totalAmountText}</span>
-            </div>
-          </div>
-        </section>
-
-        <section className={`${styles.card} ${styles.baggageSummary}`} aria-label="Багаж включён">
-          <div className={styles.baggageSummaryGrid}>
-            <div>
-              <div className={styles.baggageBadges}>
-                <span className={styles.baggageBadge}>Входит в билет</span>
-                <span className={styles.baggageBadgeAlt}>Багаж включён</span>
-              </div>
-              <ul className={styles.baggageIncludedList}>
-                <li>✔ 1 ручная кладь (7 кг)</li>
-                <li>✔ 1 чемодан (10–20 кг)</li>
-              </ul>
-            </div>
-            <div className={styles.baggageSummaryActions}>
-              {totalExtraBaggage > 0 ? (
-                <p className={styles.baggageStatus}>
-                  Добавлено {totalExtraBaggage} мест багажа для пассажиров
-                </p>
-              ) : null}
-              <button
-                type="button"
-                className={`${styles.btn} ${styles.btnOutline} ${styles.baggageCompactButton}`}
-                onClick={handleOpenBaggageModal}
-                disabled={isActionDisabled}
-              >
-                {totalExtraBaggage > 0 ? "Изменить багаж" : "Добавить дополнительный багаж (+€10)"}
-              </button>
             </div>
           </div>
         </section>
@@ -2925,6 +2809,160 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
           </section>
         ) : null}
 
+        {activePanel === "baggage" ? (
+          <section className={`${styles.card} ${styles.panel}`}>
+            <div className={styles.panelHeader}>
+              <div>
+                <h3 className={styles.panelTitle}>Дополнительный багаж</h3>
+                <p className={styles.panelSubtitle}>
+                  Изменено билетов: {baggageChangedCount}. Настройте багаж ниже.
+                </p>
+              </div>
+              <button type="button" className={styles.linkButton} onClick={() => setActivePanel(null)}>
+                Скрыть
+              </button>
+            </div>
+            <div className={styles.panelBody}>
+              {data.tickets.length > 0 ? (
+                <>
+                  <div className={styles.baggageToggleRow}>
+                    <p className={styles.panelNote}>Билетов в заказе: {data.tickets.length}</p>
+                    <button
+                      type="button"
+                      className={`${styles.btn} ${styles.btnGhost} ${styles.baggageToggleButton}`}
+                      onClick={toggleBaggageCollapsed}
+                      aria-expanded={!isBaggageCollapsed}
+                      aria-controls="purchase-baggage-list"
+                    >
+                      {isBaggageCollapsed ? "Показать билеты" : "Свернуть билеты"}
+                    </button>
+                  </div>
+                  {isBaggageCollapsed ? (
+                    <p className={styles.panelNote}>
+                      Список билетов скрыт. Нажмите, чтобы открыть и изменить доп. багаж.
+                    </p>
+                  ) : (
+                    <div
+                      id="purchase-baggage-list"
+                      className={styles.baggageList}
+                      role="group"
+                      aria-label="Настройка багажа"
+                    >
+                      {data.tickets.map((ticket) => {
+                        const ticketId = String(ticket.id);
+                        const passenger = passengerMap.get(String(ticket.passenger_id));
+                        const passengerName = passenger?.name ?? `Пассажир #${ticket.passenger_id}`;
+                        const departureSegment =
+                          ticket.segments.find((segment) => segment.is_departure) ?? ticket.segments[0];
+                        const arrivalSegment =
+                          [...ticket.segments].reverse().find((segment) => segment.is_arrival) ??
+                          ticket.segments[ticket.segments.length - 1];
+                        const departureName =
+                          ticket.segment_details?.departure?.name ?? departureSegment?.stop_name ?? "—";
+                        const arrivalName =
+                          ticket.segment_details?.arrival?.name ?? arrivalSegment?.stop_name ?? "—";
+                        const extraBaggage = toNumberSafe(ticket.extra_baggage, 0);
+                        const baggageValue = baggageDraft[ticketId] ?? extraBaggage;
+                        const ticketDateLabel = ticket.tour.date ? formatDate(ticket.tour.date) : null;
+                        const metaParts = [
+                          `Билет #${ticket.id}`,
+                          `${departureName} → ${arrivalName}`,
+                        ];
+                        if (ticketDateLabel) {
+                          metaParts.push(ticketDateLabel);
+                        }
+
+                        return (
+                          <div key={ticketId} className={styles.baggageRow}>
+                            <div className={styles.baggageInfo}>
+                              <p className={styles.baggageTitle}>{passengerName}</p>
+                              <p className={styles.baggageMeta}>{metaParts.join(" • ")}</p>
+                            </div>
+                            <div className={styles.baggageControls}>
+                              <div className={styles.baggageStepper}>
+                                <button
+                                  type="button"
+                                  onClick={() => decrementBaggage(ticketId)}
+                                  disabled={isActionDisabled || baggageValue <= 0}
+                                  aria-label={`Уменьшить багаж для билета #${ticket.id}`}
+                                >
+                                  −
+                                </button>
+                                <span className={styles.baggageValue}>{baggageValue}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => incrementBaggage(ticketId)}
+                                  disabled={isActionDisabled}
+                                  aria-label={`Увеличить багаж для билета #${ticket.id}`}
+                                >
+                                  +
+                                </button>
+                              </div>
+                              {baggageValue !== extraBaggage ? (
+                                <span className={styles.baggageChanged}>изменено</span>
+                              ) : null}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p className={styles.panelNote}>Для покупки нет билетов.</p>
+              )}
+              <div className={styles.panelButtons}>
+                <button
+                  type="button"
+                  className={`${styles.btn} ${styles.btnPrimary}`}
+                  onClick={() => void submitBaggageQuote(baggageDraft)}
+                  disabled={isActionDisabled}
+                >
+                  Рассчитать доплату
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmBaggage}
+                  disabled={
+                    isActionDisabled ||
+                    actionLoading === "baggage" ||
+                    !baggageChanged ||
+                    (baggageQuote !== null && !baggageQuote.can_apply)
+                  }
+                  className={`${styles.btn} ${styles.btnOutline}`}
+                >
+                  Сохранить изменения
+                </button>
+                {baggageLoading ? <span className={styles.panelNote}>Рассчитываем стоимость...</span> : null}
+              </div>
+              {baggageError ? <p className={styles.panelError}>{baggageError}</p> : null}
+              {baggageQuote ? (
+                <div className={`${styles.panelHighlight} ${baggageHighlightClass}`}>
+                  <p className={styles.panelHighlightTitle}>
+                    Изменение долга: {formatCurrency(baggageQuote.delta, baggageQuote.currency)}
+                  </p>
+                  {Array.isArray(baggageQuote.breakdown) && baggageQuote.breakdown.length > 0 ? (
+                    <ul className={styles.breakdownList}>
+                      {baggageQuote.breakdown.map((item) => (
+                        <li key={String(item.ticket_id)}>
+                          Билет #{item.ticket_id}: {item.old ?? 0} → {item.new ?? 0} ({formatCurrency(item.delta ?? 0, baggageQuote.currency)})
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                  {!baggageQuote.can_apply ? (
+                    <p>Изменения недоступны. Проверьте правила перевозчика или попробуйте изменить запрос.</p>
+                  ) : null}
+                </div>
+              ) : (
+                baggageLoading ? null : (
+                  <p className={styles.panelNote}>Настройте багаж в списке выше.</p>
+                )
+              )}
+            </div>
+          </section>
+        ) : null}
+
         {shouldShowBulkActions ? (
           <div
             className={styles.bulkBarDock}
@@ -2959,7 +2997,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
                 <button
                   type="button"
                   className={`${styles.btn} ${styles.btnGhost}`}
-                  onClick={handleOpenBaggageModal}
+                  onClick={handleOpenBaggagePanel}
                   disabled={isActionDisabled}
                 >
                   Доп. багаж
@@ -2972,80 +3010,6 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
                 >
                   Скачать PDF
                 </button>
-              </div>
-            </div>
-          </div>
-        ) : null}
-
-        {isBaggageModalOpen ? (
-          <div
-            className={styles.modal}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Дополнительный багаж"
-            onClick={closeBaggageModal}
-          >
-            <div className={styles.modalSheet} role="document" onClick={(event) => event.stopPropagation()}>
-              <div className={styles.modalHeader}>
-                <h3 className={styles.modalTitle}>Дополнительный багаж</h3>
-                <button type="button" className={styles.modalClose} onClick={closeBaggageModal} aria-label="Закрыть">
-                  ×
-                </button>
-              </div>
-              <div className={`${styles.modalBody} ${styles.modalScroll}`}>
-                <p className={styles.panelNote}>
-                  Добавьте места багажа для каждого пассажира. Изменения сохранятся после подтверждения.
-                </p>
-                <div className={styles.baggageModalGrid}>
-                  {renderBaggageSection(showReturnTickets ? "Туда" : "Ваше направление", outboundTickets)}
-                  {returnTickets.length > 0 ? renderBaggageSection("Обратно", returnTickets) : null}
-                </div>
-                {baggageError ? <p className={styles.panelError}>{baggageError}</p> : null}
-                {baggageQuote ? (
-                  <div className={`${styles.panelHighlight} ${baggageHighlightClass}`}>
-                    <p className={styles.panelHighlightTitle}>
-                      Изменение долга: {formatCurrency(baggageQuote.delta, baggageQuote.currency)}
-                    </p>
-                    {Array.isArray(baggageQuote.breakdown) && baggageQuote.breakdown.length > 0 ? (
-                      <ul className={styles.breakdownList}>
-                        {baggageQuote.breakdown.map((item) => (
-                          <li key={String(item.ticket_id)}>
-                            Билет #{item.ticket_id}: {item.old ?? 0} → {item.new ?? 0} ({formatCurrency(item.delta ?? 0, baggageQuote.currency)})
-                          </li>
-                        ))}
-                      </ul>
-                    ) : null}
-                    {!baggageQuote.can_apply ? (
-                      <p>Изменения недоступны. Проверьте правила перевозчика или попробуйте изменить запрос.</p>
-                    ) : null}
-                  </div>
-                ) : (
-                  baggageLoading ? null : <p className={styles.panelNote}>Выберите количество багажных мест.</p>
-                )}
-                <div className={styles.panelButtons}>
-                  <button
-                    type="button"
-                    className={`${styles.btn} ${styles.btnPrimary}`}
-                    onClick={() => void submitBaggageQuote(baggageDraft)}
-                    disabled={isActionDisabled}
-                  >
-                    Рассчитать доплату
-                  </button>
-                  <button
-                    type="button"
-                    onClick={confirmBaggage}
-                    disabled={
-                      isActionDisabled ||
-                      actionLoading === "baggage" ||
-                      !baggageChanged ||
-                      (baggageQuote !== null && !baggageQuote.can_apply)
-                    }
-                    className={`${styles.btn} ${styles.btnOutline}`}
-                  >
-                    Сохранить изменения
-                  </button>
-                  {baggageLoading ? <span className={styles.panelNote}>Рассчитываем стоимость...</span> : null}
-                </div>
               </div>
             </div>
           </div>
