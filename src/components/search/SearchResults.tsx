@@ -1340,15 +1340,10 @@ export default function SearchResults({
     if (stepToRender === 1) {
       const outboundDirectionTitle = `${fromName} → ${toName} (${t.outboundShort.toLowerCase()})`;
       const returnDirectionTitle = `${toName} → ${fromName} (${t.inboundShort.toLowerCase()})`;
-      const stickyDirectionTitle = returnListVisible ? returnDirectionTitle : outboundDirectionTitle;
 
       return (
         <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-4">
           {renderStepHeader(1, t.step1Title, step1Summary)}
-
-          <div className="sticky top-0 z-20 -mx-4 flex flex-wrap items-center gap-2 border-b border-slate-100 bg-white/95 px-4 py-2 text-sm font-semibold text-slate-900 shadow-[0_1px_0_rgba(0,0,0,0.04)]">
-            <span>{stickyDirectionTitle}</span>
-          </div>
 
           {outboundListVisible && (
             <TripList
