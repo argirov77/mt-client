@@ -215,10 +215,10 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     step2SummaryChooseSeats: "Выберите места",
     step2SummaryFillNames: "Заполните имена пассажиров",
     step2SummaryReady: "Готово к контактам",
-    step3SummaryEmpty: "Укажите контакты и завершите бронирование",
-    step3SummaryPending: "Есть бронирование, ожидает оплаты",
+    step3SummaryEmpty: "Укажите контакты, чтобы перейти к оплате",
+    step3SummaryPending: "Ожидает оплаты",
     step3SummaryPaid: "Билет оплачен",
-    step3SummaryCanceled: "Бронирование отменено",
+    step3SummaryCanceled: "Заказ отменён",
     next: "Далее",
     subtotal: "Промежуточно",
     stepLabel: (step) => `Шаг ${step}`,
@@ -323,10 +323,10 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     step2SummaryChooseSeats: "Pick seats",
     step2SummaryFillNames: "Fill passenger names",
     step2SummaryReady: "Ready for contacts",
-    step3SummaryEmpty: "Add contacts to finish booking",
-    step3SummaryPending: "Booking pending payment",
+    step3SummaryEmpty: "Add contacts to continue to payment",
+    step3SummaryPending: "Awaiting payment",
     step3SummaryPaid: "Ticket paid",
-    step3SummaryCanceled: "Booking canceled",
+    step3SummaryCanceled: "Order canceled",
     next: "Next",
     subtotal: "Subtotal",
     stepLabel: (step) => `Step ${step}`,
@@ -432,10 +432,10 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     step2SummaryChooseSeats: "Изберете места",
     step2SummaryFillNames: "Въведете имената на пътниците",
     step2SummaryReady: "Готово за контакти",
-    step3SummaryEmpty: "Добавете контакти, за да завършите",
-    step3SummaryPending: "Резервация в очакване на плащане",
+    step3SummaryEmpty: "Добавете контакти, за да продължите към плащане",
+    step3SummaryPending: "Очаква плащане",
     step3SummaryPaid: "Билетът е платен",
-    step3SummaryCanceled: "Резервацията е отменена",
+    step3SummaryCanceled: "Поръчката е отменена",
     next: "Напред",
     subtotal: "Междинно",
     stepLabel: (step) => `Стъпка ${step}`,
@@ -541,10 +541,10 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     step2SummaryChooseSeats: "Оберіть місця",
     step2SummaryFillNames: "Заповніть імена пасажирів",
     step2SummaryReady: "Готово до контактів",
-    step3SummaryEmpty: "Додайте контакти, щоб завершити бронювання",
-    step3SummaryPending: "Є бронювання, очікує оплату",
+    step3SummaryEmpty: "Додайте контакти, щоб перейти до оплати",
+    step3SummaryPending: "Очікує оплату",
     step3SummaryPaid: "Квиток оплачено",
-    step3SummaryCanceled: "Бронювання скасовано",
+    step3SummaryCanceled: "Замовлення скасовано",
     next: "Далі",
     subtotal: "Проміжно",
     stepLabel: (step) => `Крок ${step}`,
@@ -1507,15 +1507,9 @@ export default function SearchResults({
       date: string,
       departure: string,
       arrival: string,
-      seats: number | { free: number },
-      selectedSeats: number[],
       price: number,
       accent: string,
     ) => {
-      const selectedSeatLabel = selectedSeats.length
-        ? t.seatsSelected([...selectedSeats].sort((a, b) => a - b))
-        : null;
-
       return (
         <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
           <div className="flex items-start justify-between gap-3">
@@ -1534,10 +1528,6 @@ export default function SearchResults({
               </div>
             </div>
             <div className="flex flex-col items-end gap-2 text-right">
-              <span className="rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-100">
-                {selectedSeatLabel ??
-                  (seats && typeof seats === "object" ? t.freeSeats(seats.free) : t.seatsPending)}
-              </span>
               <span className="text-base font-semibold text-slate-900">{formatPrice(price * safeSeatCount)}</span>
             </div>
           </div>
@@ -1565,8 +1555,6 @@ export default function SearchResults({
             selectedOutboundTour.date,
             selectedOutboundTour.departure_time,
             selectedOutboundTour.arrival_time,
-            selectedOutboundTour.seats,
-            selectedOutboundSeats,
             selectedOutboundTour.price,
             "bg-sky-50 text-sky-700 ring-sky-100",
           )}
@@ -1578,8 +1566,6 @@ export default function SearchResults({
                 selectedReturnTour.date,
                 selectedReturnTour.departure_time,
                 selectedReturnTour.arrival_time,
-                selectedReturnTour.seats,
-                selectedReturnSeats,
                 selectedReturnTour.price,
                 "bg-indigo-50 text-indigo-700 ring-indigo-100",
               )
@@ -1595,15 +1581,53 @@ export default function SearchResults({
             <div className="mt-3 space-y-2 text-sm text-slate-700">
               {passengerNames.length ? (
                 <ul className="space-y-2">
-                  {passengerNames.map((name, index) => (
-                    <li
-                      key={`${name}-${index}`}
-                      className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2"
-                    >
-                      <span className="truncate font-semibold text-slate-900">{name}</span>
-                      <span className="text-xs font-medium text-slate-600">{t.passengerLabel(index + 1)}</span>
-                    </li>
-                  ))}
+                  {passengerNames.map((name, index) => {
+                    const seatOutbound = selectedOutboundSeats[index] ?? null;
+                    const seatReturn =
+                      returnRequired && selectedReturnTour
+                        ? selectedReturnSeats[index] ?? null
+                        : null;
+                    const baggageOutbound = extraBaggageOutbound[index] ?? false;
+                    const baggageReturn =
+                      returnRequired && selectedReturnTour
+                        ? extraBaggageReturn[index] ?? false
+                        : false;
+
+                    return (
+                      <li key={`${name}-${index}`} className="rounded-lg bg-slate-50 px-3 py-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="truncate font-semibold text-slate-900">{name}</span>
+                          <span className="text-xs font-medium text-slate-600">{t.passengerLabel(index + 1)}</span>
+                        </div>
+                        <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-slate-600">
+                          {seatOutbound ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-white px-2 py-1 ring-1 ring-slate-200">
+                              <span className="h-2 w-2 rounded-full bg-sky-400" aria-hidden />
+                              {t.ticketPassengerSeat}: {seatOutbound}
+                            </span>
+                          ) : null}
+                          {seatReturn ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-white px-2 py-1 ring-1 ring-slate-200">
+                              <span className="h-2 w-2 rounded-full bg-indigo-400" aria-hidden />
+                              {t.ticketPassengerSeatReturn}: {seatReturn}
+                            </span>
+                          ) : null}
+                          {baggageOutbound ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-1 text-amber-800 ring-1 ring-amber-100">
+                              <span className="h-2 w-2 rounded-full bg-amber-500" aria-hidden />
+                              {t.ticketPassengerBaggage}
+                            </span>
+                          ) : null}
+                          {baggageReturn ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-1 text-amber-800 ring-1 ring-amber-100">
+                              <span className="h-2 w-2 rounded-full bg-amber-500" aria-hidden />
+                              {t.ticketPassengerBaggageReturn}
+                            </span>
+                          ) : null}
+                        </div>
+                      </li>
+                    );
+                  })}
                 </ul>
               ) : (
                 <p className="text-sm text-slate-500">{t.step2SummaryFillNames}</p>
