@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import SeatClient from "../SeatClient";
 import type { Tour } from "./SearchResults";
 import FormInput from "../common/FormInput";
-import { formatDate } from "@/utils/date";
 
 type Dict = {
   freeSeats: (n: number) => string;
@@ -40,8 +39,6 @@ type Props = {
   /** вызываем при готовности перейти к контактам */
   onReadyForContacts?: () => void;
 };
-
-const free = (s: Tour["seats"]) => (typeof s === "number" ? s : s?.free ?? 0);
 
 export default function BookingPanel({
   t,
@@ -127,12 +124,8 @@ export default function BookingPanel({
       {legTabs}
 
       {(!selectedReturnTour || activeLeg === "outbound") && (
-        <section className="space-y-2">
-          <h3 className="mt-2 text-lg font-semibold">
-            Рейс туда #{selectedOutboundTour.id}, дата: {formatDate(selectedOutboundTour.date)}
-          </h3>
-          <p className="text-sm text-slate-600">{t.freeSeats(free(selectedOutboundTour.seats))}</p>
-          <p className="text-sm text-slate-700">Выберите места:</p>
+        <section className="space-y-3 rounded-xl bg-white/70 p-4 shadow-sm ring-1 ring-slate-200">
+          <h3 className="text-lg font-semibold text-slate-900">Выбор места</h3>
 
           <SeatClient
             tourId={selectedOutboundTour.id}
@@ -156,12 +149,8 @@ export default function BookingPanel({
       )}
 
       {selectedReturnTour && activeLeg === "return" && (
-        <section className="space-y-2">
-          <h3 className="mt-2 text-lg font-semibold">
-            Рейс обратно #{selectedReturnTour.id}, дата: {formatDate(selectedReturnTour.date)}
-          </h3>
-          <p className="text-sm text-slate-600">{t.freeSeats(free(selectedReturnTour.seats))}</p>
-          <p className="text-sm text-slate-700">Выберите места:</p>
+        <section className="space-y-3 rounded-xl bg-white/70 p-4 shadow-sm ring-1 ring-slate-200">
+          <h3 className="text-lg font-semibold text-slate-900">Выбор места</h3>
 
           <SeatClient
             tourId={selectedReturnTour.id}
@@ -184,12 +173,18 @@ export default function BookingPanel({
         </section>
       )}
 
-      <form onSubmit={(e) => e.preventDefault()} className="mt-2 flex w-full max-w-[520px] flex-col gap-2">
+      <form
+        onSubmit={(e) => e.preventDefault()}
+        className="mt-2 flex w-full max-w-[640px] flex-col gap-3 rounded-xl bg-white/70 p-4 shadow-sm ring-1 ring-slate-200"
+      >
+        <div className="text-base font-semibold text-slate-900">Данные пассажиров</div>
+        <p className="text-sm text-slate-600">Введите имя и фамилию для каждого пассажира.</p>
+
         {passengerNames.map((name, idx) => (
           <FormInput
             key={idx}
             type="text"
-            placeholder={`Имя пассажира ${idx + 1}`}
+            placeholder="Имя и фамилия пассажира"
             required
             value={name}
             onChange={(e) => {
@@ -197,7 +192,7 @@ export default function BookingPanel({
               arr[idx] = e.target.value;
               setPassengerNames(arr);
             }}
-            className="flex-1"
+            className="flex-1 rounded-lg border border-slate-200 bg-white/90 px-3 py-2 text-base shadow-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
           />
         ))}
       </form>
