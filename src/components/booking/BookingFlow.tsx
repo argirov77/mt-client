@@ -6,6 +6,13 @@ import SearchForm from "@/components/hero/SearchForm";
 import SearchResults from "@/components/search/SearchResults";
 import { useLanguage } from "@/components/common/LanguageProvider";
 
+const backToSearchLabel = {
+  ru: "Назад к поиску",
+  en: "Back to search",
+  bg: "Назад към търсене",
+  ua: "Назад до пошуку",
+};
+
 export type Criteria = {
   from: string;
   to: string;
@@ -66,7 +73,7 @@ export default function BookingFlow() {
             >
               <ArrowLeft className="h-4 w-4" aria-hidden />
               <Search className="h-4 w-4" aria-hidden />
-              {lang === "en" ? "Back to search" : "Назад к поиску"}
+              {backToSearchLabel[lang]}
             </button>
           </div>
           <SearchResults lang={lang} {...criteria} />

@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { translations as heroTranslations } from "@/i18n";
+import { heroTranslations } from "@/translations/home";
 import type { Lang } from "@/components/common/LanguageProvider";
 
 type Props = { lang?: Lang };
@@ -24,7 +24,7 @@ export default function HeroSection({ lang = "ru" }: Props) {
               href="#booking"
               className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-sky-700 shadow-lg transition hover:-translate-y-0.5 hover:bg-white/90"
             >
-              {lang === "en" ? "Start booking" : "Начать бронирование"}
+              {t.startBooking}
             </Link>
             <Link
               href="#routes"

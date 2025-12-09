@@ -4,6 +4,7 @@
 import React, { useEffect, useState } from "react";
 import { API } from "@/config";
 import { useLanguage, type Lang } from "@/components/common/LanguageProvider";
+import { routesTranslations } from "@/translations/home";
 import styles from "./Routes.module.css";
 
 /* ===================== Types ===================== */
@@ -27,73 +28,6 @@ type ApiResponse = Partial<{
   forward: Route;
   backward: Route;
 }>;
-
-/* ===================== i18n ===================== */
-
-const T = {
-  ru: {
-    eyebrow: "Маршруты автобусов",
-    title: "Наши маршруты",
-    forward: "Направление 1",
-    backward: "Направление 2",
-    noData: "Маршруты не найдены",
-    arrival: "Прибытие",
-    departure: "Отправление",
-    map: "Открыть на карте",
-    stopsCount: (n: number) =>
-      `${n} остановк${n % 10 === 1 && n % 100 !== 11
-        ? "а"
-        : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)
-          ? "и"
-          : ""}`,
-    duration: "В пути",
-    showAll: "Показать все",
-    showLess: "Свернуть",
-  },
-  en: {
-    eyebrow: "Bus routes",
-    title: "Our routes",
-    forward: "Direction 1",
-    backward: "Direction 2",
-    noData: "No routes found",
-    arrival: "Arrival",
-    departure: "Departure",
-    map: "Open in map",
-    stopsCount: (n: number) => `${n} stops`,
-    duration: "Duration",
-    showAll: "Show all",
-    showLess: "Show less",
-  },
-  bg: {
-    eyebrow: "Автобусни маршрути",
-    title: "Нашите маршрути",
-    forward: "Посока 1",
-    backward: "Посока 2",
-    noData: "Няма намерени маршрути",
-    arrival: "Пристига",
-    departure: "Заминава",
-    map: "Отвори на картата",
-    stopsCount: (n: number) => `${n} спирк${n === 1 ? "а" : "и"}`,
-    duration: "Пътуване",
-    showAll: "Покажи всички",
-    showLess: "Скрий",
-  },
-  ua: {
-    eyebrow: "Автобусні маршрути",
-    title: "Наші маршрути",
-    forward: "Напрям 1",
-    backward: "Напрям 2",
-    noData: "Маршрути не знайдено",
-    arrival: "Прибуття",
-    departure: "Відправлення",
-    map: "Відкрити на мапі",
-    stopsCount: (n: number) =>
-      `${n} зупин${n === 1 ? "ка" : n >= 2 && n <= 4 ? "ки" : "ок"}`,
-    duration: "У дорозі",
-    showAll: "Показати всі",
-    showLess: "Згорнути",
-  },
-} as const;
 
 /* ===================== helpers ===================== */
 
@@ -143,7 +77,7 @@ const lastTime = (s?: Stop[]) =>
 
 export default function Routes() {
   const { lang } = useLanguage();
-  const L = T[lang];
+  const L = routesTranslations[lang];
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -250,7 +184,7 @@ function RoutePanel({
   route: Route;
   lang?: Lang;
 }) {
-  const L = T[lang];
+  const L = routesTranslations[lang];
   const count = route.stops?.length ?? 0;
 
   const t1 = firstTime(route.stops);
@@ -308,7 +242,7 @@ function StopRow({
   isLast: boolean;
   lang?: Lang;
 }) {
-  const L = T[lang];
+  const L = routesTranslations[lang];
   const dotClasses = [styles.routeStopDot];
 
   if (index === 1) {

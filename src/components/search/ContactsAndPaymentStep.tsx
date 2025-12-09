@@ -26,11 +26,19 @@ type Dict = {
   addExtraBaggage: string;
   addedExtraBaggage: string;
   removeExtraBaggage: string;
+  extraBaggageHeading: string;
+  configureBaggage: string;
+  pricePerBagLabel: string;
+  baggageToggleHide: string;
+  baggageIncludedBadge: string;
+  baggageCollapsedHint: string;
+  passengerLabel: (index: number) => string;
+  addBagAria: string;
+  removeBagAria: string;
 };
 
 type Props = {
   t: Dict;
-  lang?: "ru" | "bg" | "en" | "ua";
   passengerNames: string[];
   phone: string;
   setPhone: (value: string) => void;
@@ -52,7 +60,6 @@ type Props = {
 
 export default function ContactsAndPaymentStep({
   t,
-  lang = "ru",
   passengerNames,
   phone,
   setPhone,
@@ -86,14 +93,11 @@ export default function ContactsAndPaymentStep({
     setExtraBaggageReturn(next);
   };
 
-  const passengerLabel = (idx: number) =>
-    lang === "en" ? `Passenger ${idx + 1}` : `Пассажир ${idx + 1}`;
+  const passengerLabel = (idx: number) => t.passengerLabel(idx + 1);
 
   const [isBaggageExpanded, setIsBaggageExpanded] = useState(false);
   const baggageToggleLabel = isBaggageExpanded
-    ? lang === "en"
-      ? "Hide"
-      : "Свернуть"
+    ? t.baggageToggleHide
     : t.addExtraBaggage;
 
   const renderDirection = (
@@ -129,7 +133,7 @@ export default function ContactsAndPaymentStep({
         <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
           <div className="space-y-1">
             <div className="text-sm font-semibold text-slate-900">
-              {lang === "en" ? "Extra baggage" : "Дополнительный багаж"}
+              {t.extraBaggageHeading}
             </div>
             <p className="text-xs text-slate-500">
               {isAdded ? t.removeExtraBaggage : t.baggageIncludedNote}
@@ -142,7 +146,7 @@ export default function ContactsAndPaymentStep({
                 type="button"
                 onClick={handleDec}
                 className="flex h-7 w-7 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-200"
-                aria-label={lang === "en" ? "Remove bag" : "Убрать багаж"}
+                aria-label={t.removeBagAria}
               >
                 −
               </button>
@@ -151,7 +155,7 @@ export default function ContactsAndPaymentStep({
                 type="button"
                 onClick={handleInc}
                 className="flex h-7 w-7 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-200"
-                aria-label={lang === "en" ? "Add bag" : "Добавить багаж"}
+                aria-label={t.addBagAria}
               >
                 +
               </button>
@@ -185,7 +189,7 @@ export default function ContactsAndPaymentStep({
           <div className="hidden sm:flex flex-col items-end gap-2 text-right text-xs text-slate-500">
             <span className={`${badgeTone} bg-white text-slate-700 shadow-sm`}>{t.contactsAndPayment}</span>
             <span className="rounded-full bg-emerald-50 px-3 py-1 font-semibold text-emerald-700 shadow-sm">
-              {lang === "en" ? "Bags included" : "Багаж включён"}
+              {t.baggageIncludedBadge}
             </span>
           </div>
         </div>
@@ -195,17 +199,15 @@ export default function ContactsAndPaymentStep({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h3 className="text-base font-semibold text-slate-900">
-              {lang === "en" ? "Extra baggage" : "Дополнительный багаж"}
+              {t.extraBaggageHeading}
             </h3>
             <p className="text-sm text-slate-600">
-              {lang === "en"
-                ? "Configure baggage for each passenger"
-                : "Добавьте места багажа для каждого пассажира"}
+              {t.configureBaggage}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <span className={`${badgeTone} bg-amber-50 text-amber-800 border border-amber-100`}>
-              {lang === "en" ? "€ per bag" : "Цена за место"}: {t.extraBaggagePrice}
+              {t.pricePerBagLabel}: {t.extraBaggagePrice}
             </span>
             <button
               type="button"
@@ -235,7 +237,7 @@ export default function ContactsAndPaymentStep({
                       </div>
                       <div className="space-y-1">
                         <p className="text-xs uppercase tracking-wide text-slate-500">
-                          {lang === "en" ? "Passenger" : "Пассажир"}
+                          {t.passengerLabel(idx + 1)}
                         </p>
                         <p className="text-base font-semibold text-slate-900">{displayName}</p>
                       </div>
@@ -255,9 +257,7 @@ export default function ContactsAndPaymentStep({
           </div>
         ) : (
           <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/70 p-4 text-sm text-slate-600">
-            {lang === "en"
-              ? "Click \"Add baggage\" to configure checked bags for your passengers."
-              : "Нажмите «Добавить багаж», чтобы настроить багаж для пассажиров."}
+            {t.baggageCollapsedHint}
           </div>
         )}
       </div>
