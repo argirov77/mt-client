@@ -41,6 +41,16 @@ const PINNED_ORDER = ["UA", "BG", "RO", "MD", "DE"];
 const normalizeLocalNumber = (value: string) =>
   value.replace(/[^\d\s-]/g, "").replace(/\s+/g, " ");
 
+const extractDigits = (value: string) => value.replace(/\D/g, "");
+
+const formatLocalNumber = (value: string) => {
+  const digits = extractDigits(value).slice(0, 10);
+
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return `${digits.slice(0, 3)} ${digits.slice(3)}`.trim();
+  return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`.trim();
+};
+
 const normalizeDialCode = (value: string) => {
   const digitsOnly = value.replace(/[\s]/g, "").replace(/(?!^)\+/g, "");
   if (!digitsOnly) return "+";
@@ -63,7 +73,7 @@ const parsePhoneValue = (value: string) => {
   if (matchingCountry) {
     return {
       dialCode: matchingCountry.dialCode,
-      local: trimmed.slice(matchingCountry.dialCode.length).trimStart(),
+      local: formatLocalNumber(trimmed.slice(matchingCountry.dialCode.length)),
     };
   }
 
@@ -71,11 +81,11 @@ const parsePhoneValue = (value: string) => {
   if (manual) {
     return {
       dialCode: normalizeDialCode(manual[1]),
-      local: manual[2].trimStart(),
+      local: formatLocalNumber(manual[2]),
     };
   }
 
-  return { dialCode: "+", local: trimmed };
+  return { dialCode: "+", local: formatLocalNumber(trimmed) };
 };
 
 type Props = {
@@ -102,7 +112,7 @@ export default function PhoneInput({
 
   useEffect(() => {
     setDialCode(parsed.dialCode);
-    setLocalNumber(parsed.local);
+    setLocalNumber(formatLocalNumber(parsed.local));
   }, [parsed.dialCode, parsed.local]);
 
   const orderedCountries = useMemo(() => {
@@ -117,7 +127,7 @@ export default function PhoneInput({
 
   const emitChange = (nextDial: string, nextLocal: string) => {
     const cleanedDial = normalizeDialCode(nextDial);
-    const cleanedLocal = normalizeLocalNumber(nextLocal).trim();
+    const cleanedLocal = normalizeLocalNumber(formatLocalNumber(nextLocal)).trim();
     const combined = [cleanedDial, cleanedLocal].filter(Boolean).join(" ").trim();
     onChange(combined);
   };
@@ -138,8 +148,9 @@ export default function PhoneInput({
   };
 
   const handleLocalChange = (nextLocal: string) => {
-    setLocalNumber(nextLocal);
-    emitChange(dialCode, nextLocal);
+    const formatted = formatLocalNumber(nextLocal);
+    setLocalNumber(formatted);
+    emitChange(dialCode, formatted);
   };
 
   const filteredCountries = useMemo(() => {
@@ -202,6 +213,8 @@ export default function PhoneInput({
         value={localNumber}
         onChange={(e) => handleLocalChange(e.target.value)}
         placeholder={placeholder}
+        inputMode="numeric"
+        maxLength={14}
         className="flex-1 rounded-full bg-transparent px-3 py-2.5 text-base text-slate-900 placeholder:text-slate-400 focus:outline-none"
       />
     </div>
