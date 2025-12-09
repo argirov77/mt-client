@@ -1514,7 +1514,7 @@ export default function SearchResults({
             <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600">
               <span className={`inline-flex items-center gap-2 rounded-full px-2 py-1 ring-1 ${accent}`}>
                 <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden />
-                {formatDate(date)}
+                {formatDateLabel(date)}
               </span>
               <span className="inline-flex items-center gap-2 rounded-full bg-slate-50 px-2 py-1 ring-1 ring-slate-200">
                 <span className="h-2 w-2 rounded-full bg-sky-400" aria-hidden />
