@@ -79,6 +79,7 @@ const parsePhoneValue = (value: string) => {
 };
 
 type Props = {
+  id?: string;
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
@@ -87,6 +88,7 @@ type Props = {
 };
 
 export default function PhoneInput({
+  id,
   value,
   onChange,
   placeholder,
@@ -143,39 +145,36 @@ export default function PhoneInput({
   };
 
   return (
-    <div className={`flex gap-2 ${className}`}>
-      <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-900 shadow-sm">
-        <span aria-hidden>{matchedCountry?.flag ?? "📞"}</span>
-        <input
-          type="tel"
-          aria-label="Dial code"
-          value={dialCode}
-          onChange={(e) => handleDialCodeChange(e.target.value)}
-          className="w-20 bg-transparent text-slate-700 focus:outline-none"
-        />
-      </div>
-      <div className="flex flex-1 gap-2">
+    <div
+      className={`flex items-center gap-2 rounded-full border border-slate-200 bg-gradient-to-r from-white to-slate-50/80 px-2 py-1 shadow-inner ${className}`}
+    >
+      <div className="relative flex items-center">
         <select
-          className="w-40 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 shadow-inner focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-100"
+          className="appearance-none rounded-full bg-white px-3 py-2 pr-8 text-sm font-semibold text-slate-900 shadow-sm ring-1 ring-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-200"
           value={matchedCountry?.code ?? "__custom"}
           onChange={(e) => handleCountryChange(e.target.value)}
         >
           {orderedCountries.map((country) => (
             <option key={country.code} value={country.code}>
-              {country.flag} {country.name} ({country.dialCode})
+              {country.flag} {country.dialCode}
             </option>
           ))}
-          <option value="__custom">✏️ Другой код</option>
+          <option value="__custom">✏️ {dialCode}</option>
         </select>
-        <input
-          type="tel"
-          required={required}
-          value={localNumber}
-          onChange={(e) => handleLocalChange(e.target.value)}
-          placeholder={placeholder}
-          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-900 shadow-inner focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-100"
-        />
+        <span className="pointer-events-none absolute right-3 text-[10px] text-slate-500" aria-hidden>
+          ▾
+        </span>
       </div>
+      <div className="hidden h-6 w-px bg-slate-200 sm:block" aria-hidden />
+      <input
+        type="tel"
+        id={id}
+        required={required}
+        value={localNumber}
+        onChange={(e) => handleLocalChange(e.target.value)}
+        placeholder={placeholder}
+        className="flex-1 rounded-full bg-transparent px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none"
+      />
     </div>
   );
 }

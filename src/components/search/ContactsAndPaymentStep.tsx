@@ -266,28 +266,37 @@ export default function ContactsAndPaymentStep({
         <h3 className="text-base font-semibold text-slate-900">{t.contactsAndPayment}</h3>
         <p className="text-sm text-slate-600">{t.contactsDescription}</p>
 
-        <div className="mt-4 grid gap-3 md:grid-cols-2">
-          <label className="space-y-1 text-sm font-medium text-slate-700">
-            <span className="text-slate-600">{t.contactsPhone}</span>
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-slate-800" htmlFor="contact-phone">
+              {t.contactsPhone}
+            </label>
             <PhoneInput
+              id="contact-phone"
               placeholder={t.contactsPhone}
               value={phone}
               onChange={setPhone}
               required
               className="w-full"
             />
-          </label>
-          <label className="space-y-1 text-sm font-medium text-slate-700">
-            <span className="text-slate-600">{t.contactsEmail}</span>
+            <p className="text-xs text-slate-500">Номер для SMS-билета и уведомлений</p>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-slate-800" htmlFor="contact-email">
+              {t.contactsEmail}
+            </label>
             <FormInput
+              id="contact-email"
               type="email"
-              placeholder={t.contactsEmail}
+              placeholder="name@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full rounded-xl border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-900 shadow-inner focus:bg-white"
+              className="w-full rounded-full border border-slate-200 bg-gradient-to-r from-white to-slate-50/80 px-4 py-3 text-sm text-slate-900 shadow-inner focus:border-emerald-200 focus:bg-white"
             />
-          </label>
+            <p className="text-xs text-slate-500">Электронный билет придёт на этот адрес</p>
+          </div>
         </div>
       </div>
 
