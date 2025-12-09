@@ -98,16 +98,12 @@ export default function PhoneInput({
   const parsed = useMemo(() => parsePhoneValue(value), [value]);
   const [dialCode, setDialCode] = useState(parsed.dialCode);
   const [localNumber, setLocalNumber] = useState(parsed.local);
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     setDialCode(parsed.dialCode);
     setLocalNumber(parsed.local);
   }, [parsed.dialCode, parsed.local]);
-
-  const matchedCountry = useMemo(
-    () => COUNTRIES.find((country) => dialCode.startsWith(country.dialCode)),
-    [dialCode],
-  );
 
   const orderedCountries = useMemo(() => {
     const pinned = PINNED_ORDER.map((code) => COUNTRIES.find((country) => country.code === code)).filter(
@@ -130,6 +126,7 @@ export default function PhoneInput({
     const cleaned = normalizeDialCode(next);
     setDialCode(cleaned);
     emitChange(cleaned, localNumber);
+    setIsOpen(true);
   };
 
   const handleCountryChange = (code: string) => {
@@ -137,6 +134,7 @@ export default function PhoneInput({
     if (!country) return;
     setDialCode(country.dialCode);
     emitChange(country.dialCode, localNumber);
+    setIsOpen(false);
   };
 
   const handleLocalChange = (nextLocal: string) => {
@@ -144,26 +142,57 @@ export default function PhoneInput({
     emitChange(dialCode, nextLocal);
   };
 
+  const filteredCountries = useMemo(() => {
+    const normalized = normalizeDialCode(dialCode);
+    return orderedCountries.filter((country) => country.dialCode.startsWith(normalized));
+  }, [dialCode, orderedCountries]);
+
   return (
     <div
-      className={`flex items-center gap-2 rounded-full border border-slate-200 bg-gradient-to-r from-white to-slate-50/80 px-2 py-1 shadow-inner ${className}`}
+      className={`flex items-center gap-2 rounded-full border border-slate-200 bg-gradient-to-r from-white to-slate-50/80 px-3 py-2 shadow-inner ${className}`}
     >
       <div className="relative flex items-center">
-        <select
-          className="appearance-none rounded-full bg-white px-3 py-2 pr-8 text-sm font-semibold text-slate-900 shadow-sm ring-1 ring-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-          value={matchedCountry?.code ?? "__custom"}
-          onChange={(e) => handleCountryChange(e.target.value)}
-        >
-          {orderedCountries.map((country) => (
-            <option key={country.code} value={country.code}>
-              {country.flag} {country.dialCode}
-            </option>
-          ))}
-          <option value="__custom">✏️ {dialCode}</option>
-        </select>
-        <span className="pointer-events-none absolute right-3 text-[10px] text-slate-500" aria-hidden>
-          ▾
-        </span>
+        <div className="relative">
+          <input
+            type="text"
+            value={dialCode}
+            onChange={(e) => handleDialCodeChange(e.target.value)}
+            onFocus={() => setIsOpen(true)}
+            onBlur={() => setTimeout(() => setIsOpen(false), 100)}
+            className="w-28 rounded-full bg-white px-3 py-2.5 pr-8 text-base font-semibold text-slate-900 shadow-sm ring-1 ring-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+            aria-expanded={isOpen}
+            aria-haspopup="listbox"
+          />
+          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500" aria-hidden>
+            ▾
+          </span>
+          {isOpen && (
+            <div className="absolute z-10 mt-1 w-full min-w-[10rem] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
+              <div className="max-h-52 overflow-y-auto">
+                {filteredCountries.map((country) => (
+                  <button
+                    type="button"
+                    key={country.code}
+                    className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-base text-slate-900 hover:bg-emerald-50"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => handleCountryChange(country.code)}
+                  >
+                    <span className="text-lg" aria-hidden>
+                      {country.flag}
+                    </span>
+                    <span className="font-semibold">{country.code}</span>
+                    <span className="text-slate-600">{country.dialCode}</span>
+                  </button>
+                ))}
+                {filteredCountries.length === 0 && (
+                  <div className="px-3 py-3 text-sm text-slate-500">
+                    Ничего не найдено, используется введённый код
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
       <div className="hidden h-6 w-px bg-slate-200 sm:block" aria-hidden />
       <input
@@ -173,7 +202,7 @@ export default function PhoneInput({
         value={localNumber}
         onChange={(e) => handleLocalChange(e.target.value)}
         placeholder={placeholder}
-        className="flex-1 rounded-full bg-transparent px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none"
+        className="flex-1 rounded-full bg-transparent px-3 py-2.5 text-base text-slate-900 placeholder:text-slate-400 focus:outline-none"
       />
     </div>
   );
