@@ -95,10 +95,7 @@ export default function ContactsAndPaymentStep({
 
   const passengerLabel = (idx: number) => t.passengerLabel(idx + 1);
 
-  const [isBaggageExpanded, setIsBaggageExpanded] = useState(false);
-  const baggageToggleLabel = isBaggageExpanded
-    ? t.baggageToggleHide
-    : t.addExtraBaggage;
+  const [isBaggageModalOpen, setIsBaggageModalOpen] = useState(false);
 
   const renderDirection = (
     direction: "outbound" | "return",
@@ -185,6 +182,14 @@ export default function ContactsAndPaymentStep({
               </li>
             </ul>
             <p className="text-xs text-slate-500">{t.baggageIncludedNote}</p>
+            <button
+              type="button"
+              onClick={() => setIsBaggageModalOpen(true)}
+              aria-haspopup="dialog"
+              className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-white px-3 py-1 text-xs font-semibold text-sky-700 shadow-sm transition hover:border-sky-300 hover:bg-sky-50"
+            >
+              {t.addExtraBaggage}
+            </button>
           </div>
           <div className="hidden sm:flex flex-col items-end gap-2 text-right text-xs text-slate-500">
             <span className={`${badgeTone} bg-white text-slate-700 shadow-sm`}>{t.contactsAndPayment}</span>
@@ -193,73 +198,6 @@ export default function ContactsAndPaymentStep({
             </span>
           </div>
         </div>
-      </div>
-
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h3 className="text-base font-semibold text-slate-900">
-              {t.extraBaggageHeading}
-            </h3>
-            <p className="text-sm text-slate-600">
-              {t.configureBaggage}
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <span className={`${badgeTone} bg-amber-50 text-amber-800 border border-amber-100`}>
-              {t.pricePerBagLabel}: {t.extraBaggagePrice}
-            </span>
-            <button
-              type="button"
-              onClick={() => setIsBaggageExpanded((prev) => !prev)}
-              aria-expanded={isBaggageExpanded}
-              className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-white px-3 py-2 text-sm font-semibold text-sky-700 shadow-sm transition hover:border-sky-300 hover:bg-sky-50"
-            >
-              {baggageToggleLabel}
-            </button>
-          </div>
-        </div>
-
-        {isBaggageExpanded ? (
-          <div className="mt-4 grid gap-3">
-            {passengerNames.map((name, idx) => {
-              const displayName = name || passengerLabel(idx);
-
-              return (
-                <div
-                  key={`baggage-${idx}`}
-                  className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 shadow-inner"
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-100 text-sm font-semibold text-sky-800">
-                        {idx + 1}
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-xs uppercase tracking-wide text-slate-500">
-                          {t.passengerLabel(idx + 1)}
-                        </p>
-                        <p className="text-base font-semibold text-slate-900">{displayName}</p>
-                      </div>
-                    </div>
-                    <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-500 shadow">
-                      #{idx + 1}
-                    </span>
-                  </div>
-
-                  <div className="mt-3 grid gap-3 md:grid-cols-2">
-                    {renderDirection("outbound", idx)}
-                    {hasReturnSection ? renderDirection("return", idx) : null}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/70 p-4 text-sm text-slate-600">
-            {t.baggageCollapsedHint}
-          </div>
-        )}
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -375,6 +313,77 @@ export default function ContactsAndPaymentStep({
           </button>
         )}
       </div>
+
+      {isBaggageModalOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4 py-6" role="presentation">
+          <div
+            className="absolute inset-0 h-full w-full cursor-default"
+            aria-hidden
+            onClick={() => setIsBaggageModalOpen(false)}
+          />
+
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={t.extraBaggageHeading}
+            className="relative z-10 w-full max-w-4xl overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-slate-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
+              <div className="space-y-1">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.extraBaggageHeading}</p>
+                <p className="text-sm text-slate-700">{t.configureBaggage}</p>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <span className={`${badgeTone} border border-amber-100 bg-amber-50 text-amber-800`}>
+                  {t.pricePerBagLabel}: {t.extraBaggagePrice}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsBaggageModalOpen(false)}
+                  aria-label={t.baggageToggleHide}
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-px hover:border-slate-300 hover:bg-slate-50"
+                >
+                  <span aria-hidden>✕</span>
+                  {t.baggageToggleHide}
+                </button>
+              </div>
+            </div>
+
+            <div className="max-h-[70vh] space-y-3 overflow-y-auto px-5 py-4">
+              {passengerNames.map((name, idx) => {
+                const displayName = name || passengerLabel(idx);
+
+                return (
+                  <div
+                    key={`baggage-${idx}`}
+                    className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 shadow-inner"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-100 text-sm font-semibold text-sky-800">
+                          {idx + 1}
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-xs uppercase tracking-wide text-slate-500">{t.passengerLabel(idx + 1)}</p>
+                          <p className="text-base font-semibold text-slate-900">{displayName}</p>
+                        </div>
+                      </div>
+                      <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-500 shadow">#{idx + 1}</span>
+                    </div>
+
+                    <div className="mt-3 grid gap-3 md:grid-cols-2">
+                      {renderDirection("outbound", idx)}
+                      {hasReturnSection ? renderDirection("return", idx) : null}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+        </div>
+      ) : null}
     </div>
   );
 }
