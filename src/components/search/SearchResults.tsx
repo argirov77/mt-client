@@ -1502,149 +1502,164 @@ export default function SearchResults({
     ].filter(Boolean);
 
     return (
-      <aside className="rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-lg ring-1 ring-slate-100">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <div className="text-sm font-semibold text-slate-900">
-              {t.orderSummaryTitle}
-            </div>
-            <p className="text-xs text-slate-500">
-              {t.orderSummaryNote}
-            </p>
-          </div>
-          <span className="rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700 shadow-sm">
-            {t.liveLabel}
-          </span>
+      <aside className="relative overflow-hidden rounded-3xl border border-slate-200/70 bg-white/90 shadow-2xl ring-1 ring-sky-100">
+        <div className="pointer-events-none absolute inset-0 opacity-60">
+          <div className="absolute -left-10 -top-10 h-36 w-36 rounded-full bg-sky-100 blur-3xl" />
+          <div className="absolute bottom-0 right-0 h-44 w-44 rounded-full bg-indigo-100 blur-3xl" />
         </div>
 
-        <div className="mt-4 space-y-4">
-          <div className="grid gap-3">
-            <div className="flex items-center gap-2 text-xs font-medium text-slate-600">
-              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-[11px] font-semibold text-slate-700">
-                1
-              </span>
-              <span>{t.outboundShort}</span>
+        <div className="relative flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-4">
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              {t.orderSummaryTitle}
             </div>
-            <div className="rounded-xl border border-slate-100 bg-gradient-to-r from-slate-50 via-white to-sky-50 p-4 shadow-sm">
-              <div className="flex items-center justify-between text-sm font-semibold text-slate-900">
+            <p className="mt-1 text-sm text-slate-700">{t.orderSummaryNote}</p>
+          </div>
+          <div className="flex items-center gap-2 rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700 shadow-sm ring-1 ring-sky-100">
+            <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden />
+            {t.liveLabel}
+          </div>
+        </div>
+
+        <div className="relative space-y-5 px-5 pb-5 pt-4">
+          <div className="flex items-center gap-3 text-[13px] font-semibold uppercase tracking-wide text-slate-500">
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-sky-600/10 text-xs font-bold text-sky-700 ring-1 ring-sky-100">
+              1
+            </span>
+            {t.outboundShort}
+            <span className="h-px flex-1 bg-gradient-to-r from-slate-200 via-slate-100 to-transparent" />
+            <span className="rounded-full bg-slate-50 px-2 py-1 text-[11px] font-semibold text-slate-600">
+              {t.step1ShortLabel}
+            </span>
+          </div>
+          <div className="rounded-2xl border border-slate-100 bg-gradient-to-r from-white via-sky-50/60 to-white p-4 shadow-lg ring-1 ring-white/40">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div className="text-base font-semibold text-slate-900">
                 <span className="line-clamp-1">
                   {fromName} → {toName}
                 </span>
-                <span className="text-xs text-slate-500">
+                <div className="text-xs font-normal text-slate-500">
                   {formatDateLabel(selectedOutboundTour.date)}
-                </span>
+                </div>
               </div>
-              <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-600">
-                <span>
-                  {formatTimeLabel(selectedOutboundTour.departure_time)} →{" "}
-                  {formatTimeLabel(selectedOutboundTour.arrival_time)}
-                </span>
-                <span className="rounded-full bg-white/80 px-2 py-0.5 text-xs font-semibold text-slate-700">
+              <div className="flex items-center gap-2 text-xs text-slate-500">
+                <span className="rounded-full bg-white/80 px-2 py-1 font-semibold text-slate-700 ring-1 ring-slate-100">
                   {t.seatsLabel}:{" "}
                   {selectedOutboundSeats.length
                     ? selectedOutboundSeats.join(", ")
                     : t.seatsPending}
                 </span>
-              </div>
-              <div className="mt-3 flex items-center justify-between text-xs text-slate-600">
-                <span className="flex items-center gap-1">
-                  <span className="h-2 w-2 rounded-full bg-emerald-400" aria-hidden />
-                  {t.step1ShortLabel}
-                </span>
-                <span className="text-sm font-semibold text-slate-900">
+                <span className="rounded-full bg-emerald-50 px-2 py-1 font-semibold text-emerald-700 ring-1 ring-emerald-100">
                   {formatPrice(outboundTotal)}
                 </span>
               </div>
             </div>
+            <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-slate-700">
+              <span className="flex items-center gap-2 rounded-full bg-slate-900/5 px-3 py-1 text-xs font-semibold text-slate-800 ring-1 ring-slate-100">
+                <span className="h-2 w-2 rounded-full bg-sky-500" aria-hidden />
+                {formatTimeLabel(selectedOutboundTour.departure_time)} → {formatTimeLabel(selectedOutboundTour.arrival_time)}
+              </span>
+            </div>
           </div>
 
           {selectedReturnTour ? (
-            <div className="grid gap-3">
-              <div className="flex items-center gap-2 text-xs font-medium text-slate-600">
-                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-[11px] font-semibold text-slate-700">
+            <>
+              <div className="flex items-center gap-3 text-[13px] font-semibold uppercase tracking-wide text-slate-500">
+                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-sky-600/10 text-xs font-bold text-sky-700 ring-1 ring-sky-100">
                   2
                 </span>
-                <span>{t.inboundShort}</span>
+                {t.inboundShort}
+                <span className="h-px flex-1 bg-gradient-to-r from-slate-200 via-slate-100 to-transparent" />
+                <span className="rounded-full bg-slate-50 px-2 py-1 text-[11px] font-semibold text-slate-600">
+                  {t.step1ShortLabel}
+                </span>
               </div>
-              <div className="rounded-xl border border-slate-100 bg-gradient-to-r from-slate-50 via-white to-sky-50 p-4 shadow-sm">
-                <div className="flex items-center justify-between text-sm font-semibold text-slate-900">
-                  <span className="line-clamp-1">
-                    {toName} → {fromName}
-                  </span>
-                  <span className="text-xs text-slate-500">
-                    {formatDateLabel(selectedReturnTour.date)}
-                  </span>
+              <div className="rounded-2xl border border-slate-100 bg-gradient-to-r from-white via-indigo-50/50 to-white p-4 shadow-lg ring-1 ring-white/40">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="text-base font-semibold text-slate-900">
+                    <span className="line-clamp-1">
+                      {toName} → {fromName}
+                    </span>
+                    <div className="text-xs font-normal text-slate-500">
+                      {formatDateLabel(selectedReturnTour.date)}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-slate-500">
+                    <span className="rounded-full bg-white/80 px-2 py-1 font-semibold text-slate-700 ring-1 ring-slate-100">
+                      {t.seatsLabel}:{" "}
+                      {selectedReturnSeats.length
+                        ? selectedReturnSeats.join(", ")
+                        : t.seatsPending}
+                    </span>
+                    <span className="rounded-full bg-emerald-50 px-2 py-1 font-semibold text-emerald-700 ring-1 ring-emerald-100">
+                      {formatPrice(returnTotal)}
+                    </span>
+                  </div>
                 </div>
-                <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-600">
-                  <span>
-                    {formatTimeLabel(selectedReturnTour.departure_time)} →{" "}
-                    {formatTimeLabel(selectedReturnTour.arrival_time)}
-                  </span>
-                  <span className="rounded-full bg-white/80 px-2 py-0.5 text-xs font-semibold text-slate-700">
-                    {t.seatsLabel}:{" "}
-                    {selectedReturnSeats.length
-                      ? selectedReturnSeats.join(", ")
-                      : t.seatsPending}
-                  </span>
-                </div>
-                <div className="mt-3 flex items-center justify-between text-xs text-slate-600">
-                  <span className="flex items-center gap-1">
-                    <span className="h-2 w-2 rounded-full bg-emerald-400" aria-hidden />
-                    {t.step1ShortLabel}
-                  </span>
-                  <span className="text-sm font-semibold text-slate-900">
-                    {formatPrice(returnTotal)}
+                <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-slate-700">
+                  <span className="flex items-center gap-2 rounded-full bg-slate-900/5 px-3 py-1 text-xs font-semibold text-slate-800 ring-1 ring-slate-100">
+                    <span className="h-2 w-2 rounded-full bg-sky-500" aria-hidden />
+                    {formatTimeLabel(selectedReturnTour.departure_time)} → {formatTimeLabel(selectedReturnTour.arrival_time)}
                   </span>
                 </div>
               </div>
-            </div>
+            </>
           ) : null}
 
-          <div className="grid gap-3">
-            <div className="flex items-center gap-2 text-xs font-medium text-slate-600">
-              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-[11px] font-semibold text-slate-700">
-                3
+          <div className="rounded-2xl border border-slate-100 bg-white/80 p-4 shadow-inner ring-1 ring-slate-50">
+            <div className="flex items-center justify-between text-[13px] font-semibold uppercase tracking-wide text-slate-500">
+              <div className="flex items-center gap-3">
+                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-sky-600/10 text-xs font-bold text-sky-700 ring-1 ring-sky-100">
+                  3
+                </span>
+                {t.ticketPassengers}
+              </div>
+              <span className="rounded-full bg-slate-50 px-2 py-1 text-[11px] font-semibold text-slate-600">
+                {t.step2ShortLabel}
               </span>
-              <span>{t.ticketPassengers}</span>
             </div>
-            <div className="rounded-xl border border-slate-100 bg-white p-4 text-sm text-slate-700 shadow-inner">
+            <div className="mt-3">
               {passengerList.length ? (
                 <ul className="space-y-2">
                   {passengerList.map((name, index) => (
                     <li
                       key={`${name}-${index}`}
-                      className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2"
+                      className="flex items-center justify-between gap-3 rounded-xl bg-gradient-to-r from-slate-50 via-white to-slate-50 px-3 py-2 text-sm text-slate-700 ring-1 ring-slate-100"
                     >
                       <span className="truncate font-medium text-slate-900">{name}</span>
-                      <span className="text-xs text-slate-500">
+                      <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-2 py-1 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-100">
+                        <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden />
                         {t.passengerLabel(index + 1)}
                       </span>
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-slate-500">
-                  {t.step2SummaryFillNames}
-                </p>
+                <p className="text-sm text-slate-500">{t.step2SummaryFillNames}</p>
               )}
             </div>
           </div>
 
-          <div className="grid gap-3">
-            <div className="flex items-center gap-2 text-xs font-medium text-slate-600">
-              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-[11px] font-semibold text-slate-700">
-                4
+          <div className="rounded-2xl border border-slate-100 bg-white/80 p-4 shadow-inner ring-1 ring-slate-50">
+            <div className="flex items-center justify-between text-[13px] font-semibold uppercase tracking-wide text-slate-500">
+              <div className="flex items-center gap-3">
+                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-sky-600/10 text-xs font-bold text-sky-700 ring-1 ring-sky-100">
+                  4
+                </span>
+                {t.ticketContacts}
+              </div>
+              <span className="rounded-full bg-slate-50 px-2 py-1 text-[11px] font-semibold text-slate-600">
+                {t.contactsAndPayment}
               </span>
-              <span>{t.ticketContacts}</span>
             </div>
-            <div className="rounded-xl border border-slate-100 bg-white p-4 text-sm text-slate-700 shadow-inner space-y-1">
+            <div className="mt-3 space-y-1 text-sm text-slate-700">
               {contactsProvided ? (
                 <>
-                  {phone ? <div className="font-medium text-slate-900">{phone}</div> : null}
+                  {phone ? <div className="font-semibold text-slate-900">{phone}</div> : null}
                   {email ? (
                     <div className="text-slate-600">{email}</div>
                   ) : null}
-                  <div className="flex items-center gap-2 text-xs text-emerald-700">
+                  <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-100">
                     <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden />
                     {t.step3SummaryPending}
                   </div>
@@ -1656,16 +1671,20 @@ export default function SearchResults({
           </div>
 
           {baggageBadges.length > 0 ? (
-            <div className="grid gap-2">
-              <div className="text-xs uppercase tracking-wide text-slate-500">
-                {t.extraBaggageHeading}
+            <div className="rounded-2xl border border-amber-100 bg-amber-50/80 p-4 shadow-inner ring-1 ring-amber-100">
+              <div className="flex items-center justify-between text-[13px] font-semibold uppercase tracking-wide text-amber-800">
+                <span>{t.extraBaggageHeading}</span>
+                <span className="rounded-full bg-white/70 px-2 py-1 text-[11px] font-semibold text-amber-700 ring-1 ring-amber-100">
+                  +
+                </span>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="mt-3 flex flex-wrap gap-2">
                 {baggageBadges.map((label) => (
                   <span
                     key={label}
-                    className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 shadow-sm"
+                    className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold text-amber-800 ring-1 ring-amber-100"
                   >
+                    <span className="h-2 w-2 rounded-full bg-amber-500" aria-hidden />
                     {label}
                   </span>
                 ))}
@@ -1673,19 +1692,19 @@ export default function SearchResults({
             </div>
           ) : null}
 
-          <div className="rounded-xl border border-slate-200 bg-gradient-to-r from-slate-50 via-white to-sky-50 p-4 shadow-inner">
-            <div className="flex items-center justify-between text-sm text-slate-600">
-              <span className="font-medium text-slate-700">{t.subtotal}</span>
-              <span className="font-semibold text-slate-900">
+          <div className="rounded-2xl border border-slate-100 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 p-4 text-white shadow-2xl ring-1 ring-slate-900/10">
+            <div className="flex items-center justify-between text-sm text-slate-200">
+              <span className="font-medium">{t.subtotal}</span>
+              <span className="font-semibold text-white">
                 {formatPrice(outboundTotal + returnTotal)}
               </span>
             </div>
-            <div className="mt-3 flex items-center justify-between text-lg font-semibold text-slate-900">
+            <div className="mt-3 flex items-center justify-between text-lg font-semibold">
               <div className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-sky-500" aria-hidden />
+                <span className="h-2 w-2 rounded-full bg-emerald-400" aria-hidden />
                 {t.total}
               </div>
-              <span className="text-sky-700">
+              <span className="text-emerald-300">
                 {formatPrice(overallTotal)}
               </span>
             </div>
