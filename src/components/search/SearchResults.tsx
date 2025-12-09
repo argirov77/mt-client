@@ -181,8 +181,8 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     ticketPassengers: "Пассажиры",
     ticketPassengerSeat: "Место туда",
     ticketPassengerSeatReturn: "Место обратно",
-    ticketPassengerBaggage: "Багаж туда",
-    ticketPassengerBaggageReturn: "Багаж обратно",
+    ticketPassengerBaggage: "Доп багаж",
+    ticketPassengerBaggageReturn: "Доп багаж обратно",
     ticketYes: "Да",
     ticketNo: "Нет",
     ticketDownload: "Скачать билет",
@@ -1490,7 +1490,6 @@ export default function SearchResults({
       date: string,
       departure: string,
       arrival: string,
-      price: number,
       accent: string,
     ) => {
       return (
@@ -1509,9 +1508,6 @@ export default function SearchResults({
                   {departure} → {arrival}
                 </span>
               </div>
-            </div>
-            <div className="flex flex-col items-end gap-2 text-right">
-              <span className="text-base font-semibold text-slate-900">{formatPrice(price * safeSeatCount)}</span>
             </div>
           </div>
         </div>
@@ -1538,7 +1534,6 @@ export default function SearchResults({
             selectedOutboundTour.date,
             selectedOutboundTour.departure_time,
             selectedOutboundTour.arrival_time,
-            selectedOutboundTour.price,
             "bg-sky-50 text-sky-700 ring-sky-100",
           )}
 
@@ -1549,7 +1544,6 @@ export default function SearchResults({
                 selectedReturnTour.date,
                 selectedReturnTour.departure_time,
                 selectedReturnTour.arrival_time,
-                selectedReturnTour.price,
                 "bg-indigo-50 text-indigo-700 ring-indigo-100",
               )
             : null}
