@@ -8,6 +8,15 @@ type Dict = {
   outboundShort: string;
   inboundShort: string;
   next: string;
+  seatSelectionTitle: string;
+  openSeatPicker: string;
+  hideSeatPicker: string;
+  selectedSeatsLabel: (selected: number, total: number) => string;
+  passengersTitle: string;
+  passengersHint: string;
+  passengerPlaceholder: string;
+  errorSelectSeat: string;
+  errorFillName: string;
 };
 
 type Props = {
@@ -66,6 +75,8 @@ export default function BookingPanel({
   onReadyForContacts,
 }: Props) {
   const [activeLeg, setActiveLeg] = useState<"outbound" | "return">("outbound");
+  const [outboundSeatsOpen, setOutboundSeatsOpen] = useState(false);
+  const [returnSeatsOpen, setReturnSeatsOpen] = useState(false);
 
   const outboundComplete = useMemo(
     () => selectedOutboundSeats.length === seatCount,
@@ -127,73 +138,117 @@ export default function BookingPanel({
     </div>
   ) : null;
 
+  const renderSeatSection = (
+    isOpen: boolean,
+    setIsOpen: (v: boolean) => void,
+    selectedSeats: number[],
+    setSelectedSeats: (v: number[]) => void,
+    tour: Tour,
+    departureId: number,
+    arrivalId: number,
+    departureText: string,
+    arrivalText: string,
+    extraBaggage: boolean,
+    onExtraBaggageChange: (v: boolean) => void
+  ) => (
+    <section className="space-y-3 rounded-xl bg-white/70 p-4 shadow-sm ring-1 ring-slate-200">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h3 className="text-lg font-semibold text-slate-900">{t.seatSelectionTitle}</h3>
+          <p className="text-sm text-slate-600">
+            {t.selectedSeatsLabel(selectedSeats.length, seatCount)}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setIsOpen(!isOpen)}
+          className="inline-flex items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50"
+        >
+          {isOpen ? t.hideSeatPicker : t.openSeatPicker}
+        </button>
+      </div>
+
+      {isOpen && (
+        <SeatClient
+          tourId={tour.id}
+          departureStopId={departureId}
+          arrivalStopId={arrivalId}
+          layoutVariant={tour.layout_variant || undefined}
+          selectedSeats={selectedSeats}
+          maxSeats={seatCount}
+          onChange={(seats) => {
+            setSelectedSeats(seats);
+            if (seats.length === seatCount) {
+              setIsOpen(false);
+            }
+          }}
+          departureText={departureText}
+          arrivalText={arrivalText}
+          extraBaggage={extraBaggage}
+          onExtraBaggageChange={onExtraBaggageChange}
+          showExtraBaggage={false}
+        />
+      )}
+    </section>
+  );
+
   return (
     <div className="space-y-4">
       {legTabs}
 
-      {(!selectedReturnTour || activeLeg === "outbound") && (
-        <section className="space-y-3 rounded-xl bg-white/70 p-4 shadow-sm ring-1 ring-slate-200">
-          <h3 className="text-lg font-semibold text-slate-900">Выберите места:</h3>
+      {(!selectedReturnTour || activeLeg === "outbound") &&
+        renderSeatSection(
+          outboundSeatsOpen,
+          setOutboundSeatsOpen,
+          selectedOutboundSeats,
+          setSelectedOutboundSeats,
+          selectedOutboundTour,
+          fromId,
+          toId,
+          `${fromName} ${selectedOutboundTour.departure_time}`,
+          `${toName} ${selectedOutboundTour.arrival_time}`,
+          extraBaggageOutbound[0] || false,
+          (v) => {
+            const arr = [...extraBaggageOutbound];
+            arr[0] = v;
+            setExtraBaggageOutbound(arr);
+          }
+        )}
 
-          <SeatClient
-            tourId={selectedOutboundTour.id}
-            departureStopId={fromId}
-            arrivalStopId={toId}
-            layoutVariant={selectedOutboundTour.layout_variant || undefined}
-            selectedSeats={selectedOutboundSeats}
-            maxSeats={seatCount}
-            onChange={setSelectedOutboundSeats}
-            departureText={`${fromName} ${selectedOutboundTour.departure_time}`}
-            arrivalText={`${toName} ${selectedOutboundTour.arrival_time}`}
-            extraBaggage={extraBaggageOutbound[0] || false}
-            onExtraBaggageChange={(v) => {
-              const arr = [...extraBaggageOutbound];
-              arr[0] = v;
-              setExtraBaggageOutbound(arr);
-            }}
-            showExtraBaggage={false}
-          />
-        </section>
-      )}
-
-      {selectedReturnTour && activeLeg === "return" && (
-        <section className="space-y-3 rounded-xl bg-white/70 p-4 shadow-sm ring-1 ring-slate-200">
-          <h3 className="text-lg font-semibold text-slate-900">Выберите места:</h3>
-
-          <SeatClient
-            tourId={selectedReturnTour.id}
-            departureStopId={toId}
-            arrivalStopId={fromId}
-            layoutVariant={selectedReturnTour.layout_variant || undefined}
-            selectedSeats={selectedReturnSeats}
-            maxSeats={seatCount}
-            onChange={setSelectedReturnSeats}
-            departureText={`${toName} ${selectedReturnTour.departure_time}`}
-            arrivalText={`${fromName} ${selectedReturnTour.arrival_time}`}
-            extraBaggage={extraBaggageReturn[0] || false}
-            onExtraBaggageChange={(v) => {
-              const arr = [...extraBaggageReturn];
-              arr[0] = v;
-              setExtraBaggageReturn(arr);
-            }}
-            showExtraBaggage={false}
-          />
-        </section>
-      )}
+      {selectedReturnTour &&
+        activeLeg === "return" &&
+        renderSeatSection(
+          returnSeatsOpen,
+          setReturnSeatsOpen,
+          selectedReturnSeats,
+          setSelectedReturnSeats,
+          selectedReturnTour,
+          toId,
+          fromId,
+          `${toName} ${selectedReturnTour.departure_time}`,
+          `${fromName} ${selectedReturnTour.arrival_time}`,
+          extraBaggageReturn[0] || false,
+          (v) => {
+            const arr = [...extraBaggageReturn];
+            arr[0] = v;
+            setExtraBaggageReturn(arr);
+          }
+        )}
 
       <form
         onSubmit={(e) => e.preventDefault()}
         className="mt-2 flex w-full max-w-[640px] flex-col gap-3 rounded-xl bg-white/70 p-4 shadow-sm ring-1 ring-slate-200"
       >
-        <div className="text-base font-semibold text-slate-900">Пассажиры</div>
-        <p className="text-sm text-slate-600">Укажите имя и фамилию как в документе.</p>
+        <div className="text-base font-semibold text-slate-900">{t.passengersTitle}</div>
+        <p className="text-sm text-slate-600">{t.passengersHint}</p>
 
         {passengerNames.map((name, idx) => (
           <label key={idx} className="space-y-1 text-sm font-medium text-slate-800">
 
             <FormInput
               type="text"
-              placeholder="Имя Фамилия"
+              placeholder={t.passengerPlaceholder}
               required
               value={name}
               onChange={(e) => {
@@ -219,12 +274,12 @@ export default function BookingPanel({
             }
 
             if (!outboundComplete || !returnComplete) {
-              setErrorMessage("Выберите место для ОТ - ДО (туда или обратно)");
+              setErrorMessage(t.errorSelectSeat);
               return;
             }
 
             if (!namesFilled) {
-              setErrorMessage("Заполните Имя и фамилию пассажира");
+              setErrorMessage(t.errorFillName);
             }
           }}
           className={`rounded-xl px-6 py-3 text-white shadow transition ${
