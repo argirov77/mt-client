@@ -133,6 +133,41 @@
   font-size: 14px;
 }
 
+.fareRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.fareLabel {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--purchase-text);
+}
+
+.fareTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.fareActions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  min-width: 240px;
+}
+
+.fareNote {
+  color: var(--purchase-muted);
+  font-size: 13px;
+}
+
 .amountBadge {
   align-self: flex-start;
   margin-top: 4px;
@@ -437,6 +472,12 @@
 .btnPrimary:hover {
   background: #0b4a86;
   border-color: #0b4a86;
+}
+
+.btnCompact {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 10px;
 }
 
 .menuList {
@@ -811,6 +852,58 @@
   padding-left: 16px;
   font-size: 13px;
   color: #445b76;
+}
+
+.baggageSummaryRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.baggageSummaryTitle {
+  margin: 0 0 4px;
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--purchase-text);
+}
+
+.baggageSummaryChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.baggagePassengerList {
+  display: grid;
+  gap: 12px;
+}
+
+.baggagePassengerCard {
+  border: 1px solid var(--purchase-line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: #fbfcff;
+}
+
+.baggagePassengerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  padding: 0 18px 18px;
+  border-top: 1px solid var(--purchase-line);
+  margin-top: 14px;
 }
 
 .modal {
