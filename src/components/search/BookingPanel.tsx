@@ -77,10 +77,12 @@ export default function BookingPanel({
 
   onReadyForContacts,
 }: Props) {
-  const [activeLeg, setActiveLeg] = useState<"outbound" | "return">("outbound");
-  const [activeModal, setActiveModal] = useState<null | "outbound" | "return">(null);
-  const [tempSeats, setTempSeats] = useState<number[]>([]);
-  const [tempExtraBaggage, setTempExtraBaggage] = useState(false);
+  const [isSeatModalOpen, setIsSeatModalOpen] = useState(false);
+  const [modalLeg, setModalLeg] = useState<"outbound" | "return">("outbound");
+  const [modalOutboundSeats, setModalOutboundSeats] = useState<number[]>([]);
+  const [modalReturnSeats, setModalReturnSeats] = useState<number[]>([]);
+  const [modalOutboundExtra, setModalOutboundExtra] = useState(false);
+  const [modalReturnExtra, setModalReturnExtra] = useState(false);
 
   const outboundComplete = useMemo(
     () => selectedOutboundSeats.length === seatCount,
@@ -119,30 +121,35 @@ export default function BookingPanel({
     });
   }, [seatCount, setExtraBaggageOutbound, setExtraBaggageReturn]);
 
-  const openModal = (leg: "outbound" | "return", seats: number[], extraBaggage: boolean) => {
-    setTempSeats(seats);
-    setTempExtraBaggage(extraBaggage);
-    setActiveModal(leg);
+  const openModal = (leg: "outbound" | "return") => {
+    setModalLeg(leg);
+    setModalOutboundSeats(selectedOutboundSeats);
+    setModalReturnSeats(selectedReturnSeats);
+    setModalOutboundExtra(extraBaggageOutbound[0] ?? false);
+    setModalReturnExtra(extraBaggageReturn[0] ?? false);
+    setIsSeatModalOpen(true);
   };
 
   const closeModal = () => {
-    setActiveModal(null);
-    setTempSeats([]);
+    setIsSeatModalOpen(false);
   };
 
   const confirmSelection = () => {
-    if (tempSeats.length === 0 || tempSeats.length !== seatCount || !activeModal) return;
+    const outboundValid = modalOutboundSeats.length === seatCount;
+    const returnValid = !selectedReturnTour || modalReturnSeats.length === seatCount;
 
-    if (activeModal === "outbound") {
-      setSelectedOutboundSeats(tempSeats);
-      const arr = [...extraBaggageOutbound];
-      arr[0] = tempExtraBaggage;
-      setExtraBaggageOutbound(arr);
-    } else {
-      setSelectedReturnSeats(tempSeats);
-      const arr = [...extraBaggageReturn];
-      arr[0] = tempExtraBaggage;
-      setExtraBaggageReturn(arr);
+    if (!outboundValid || !returnValid) return;
+
+    setSelectedOutboundSeats(modalOutboundSeats);
+    const outboundBaggage = Array.from({ length: seatCount }, (_, idx) => extraBaggageOutbound[idx] ?? false);
+    outboundBaggage[0] = modalOutboundExtra;
+    setExtraBaggageOutbound(outboundBaggage);
+
+    if (selectedReturnTour) {
+      setSelectedReturnSeats(modalReturnSeats);
+      const returnBaggage = Array.from({ length: seatCount }, (_, idx) => extraBaggageReturn[idx] ?? false);
+      returnBaggage[0] = modalReturnExtra;
+      setExtraBaggageReturn(returnBaggage);
     }
 
     closeModal();
@@ -159,44 +166,23 @@ export default function BookingPanel({
     return t.seatSummaryMultiple(sorted.length, sorted);
   };
 
-  const legTabs = selectedReturnTour ? (
-    <div className="mt-5 inline-flex overflow-hidden rounded-lg border">
-      <button
-        type="button"
-        onClick={() => setActiveLeg("outbound")}
-        className={`px-4 py-2 ${
-          activeLeg === "outbound" ? "bg-sky-600 text-white" : "bg-white text-sky-600"
-        }`}
-      >
-        {t.outboundShort}
-      </button>
-      <button
-        type="button"
-        onClick={() => setActiveLeg("return")}
-        className={`px-4 py-2 ${
-          activeLeg === "return" ? "bg-sky-600 text-white" : "bg-white text-sky-600"
-        }`}
-      >
-        {t.inboundShort}
-      </button>
-    </div>
-  ) : null;
-
   const renderSeatSection = (
     selectedSeats: number[],
     extraBaggage: boolean,
-    isOutboundLeg: boolean
+    isOutboundLeg: boolean,
+    legLabel: string
   ) => (
     <section className="space-y-3 rounded-xl bg-white/70 p-4 shadow-sm ring-1 ring-slate-200">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h3 className="text-lg font-semibold text-slate-900">{t.seatSelectionTitle}</h3>
           <p className="text-sm text-slate-600">{renderSelectionSummary(selectedSeats)}</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{legLabel}</p>
         </div>
 
         <button
           type="button"
-          onClick={() => openModal(isOutboundLeg ? "outbound" : "return", selectedSeats, extraBaggage)}
+          onClick={() => openModal(isOutboundLeg ? "outbound" : "return")}
           className="inline-flex items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50"
         >
           {selectedSeats.length > 0 ? t.changeSeatPicker : t.openSeatPicker}
@@ -206,46 +192,79 @@ export default function BookingPanel({
   );
 
   const renderSeatModal = () => {
-    if (!activeModal) return null;
+    if (!isSeatModalOpen) return null;
 
-    const isOutboundModal = activeModal === "outbound";
+    const isOutboundModal = modalLeg === "outbound";
     const tour = isOutboundModal ? selectedOutboundTour : selectedReturnTour;
 
     if (!tour) return null;
 
+    const currentSeats = isOutboundModal ? modalOutboundSeats : modalReturnSeats;
+    const currentExtraBaggage = isOutboundModal ? modalOutboundExtra : modalReturnExtra;
+    const onSeatsChange = isOutboundModal ? setModalOutboundSeats : setModalReturnSeats;
+    const onBaggageChange = isOutboundModal ? setModalOutboundExtra : setModalReturnExtra;
+    const outboundValid = modalOutboundSeats.length === seatCount;
+    const returnValid = !selectedReturnTour || modalReturnSeats.length === seatCount;
+
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 px-3 py-6">
-        <div className="relative flex h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
-          <header className="flex items-start justify-between gap-3 border-b px-6 py-4">
-            <div>
-              <h3 className="text-xl font-semibold text-slate-900">{t.seatSelectionTitle}</h3>
-              <p className="text-sm text-slate-600">{t.seatSelectionSubtitle}</p>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 px-3 py-4">
+        <div className="relative flex w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl max-h-[80vh]">
+          <header className="border-b px-5 py-3">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-xl font-semibold text-slate-900">{t.seatSelectionTitle}</h3>
+                <p className="text-sm text-slate-600">{t.seatSelectionSubtitle}</p>
+              </div>
+
+              <button
+                type="button"
+                aria-label="Close"
+                onClick={closeModal}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-lg font-semibold text-slate-600 shadow-sm transition hover:bg-slate-50"
+              >
+                ×
+              </button>
             </div>
 
-            <button
-              type="button"
-              aria-label="Close"
-              onClick={closeModal}
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-lg font-semibold text-slate-600 shadow-sm transition hover:bg-slate-50"
-            >
-              ×
-            </button>
+            {selectedReturnTour ? (
+              <div className="mt-3 inline-flex overflow-hidden rounded-lg border bg-slate-50 text-sm font-medium text-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setModalLeg("outbound")}
+                  className={`px-3 py-2 transition ${
+                    isOutboundModal ? "bg-white text-slate-900" : "hover:bg-white/70"
+                  }`}
+                >
+                  {t.outboundShort}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => selectedReturnTour && setModalLeg("return")}
+                  disabled={!selectedReturnTour}
+                  className={`px-3 py-2 transition ${
+                    !isOutboundModal ? "bg-white text-slate-900" : "hover:bg-white/70"
+                  } ${!selectedReturnTour ? "cursor-not-allowed opacity-60" : ""}`}
+                >
+                  {t.inboundShort}
+                </button>
+              </div>
+            ) : null}
           </header>
 
-          <div className="flex flex-1 flex-col overflow-hidden">
-            <div className="border-b px-6 py-3 text-sm font-medium text-slate-800">
-              {t.selectedSeatsLabel(tempSeats.length, seatCount)}
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+            <div className="border-b px-5 py-2.5 text-sm font-medium text-slate-800">
+              {t.selectedSeatsLabel(currentSeats.length, seatCount)}
             </div>
 
-            <div className="flex-1 overflow-auto px-6 py-4">
+            <div className="flex-1 overflow-auto px-5 py-3">
               <SeatClient
                 tourId={tour.id}
                 departureStopId={isOutboundModal ? fromId : toId}
                 arrivalStopId={isOutboundModal ? toId : fromId}
                 layoutVariant={tour.layout_variant || undefined}
-                selectedSeats={tempSeats}
+                selectedSeats={currentSeats}
                 maxSeats={seatCount}
-                onChange={setTempSeats}
+                onChange={onSeatsChange}
                 departureText={
                   isOutboundModal
                     ? `${fromName} ${tour.departure_time}`
@@ -256,13 +275,13 @@ export default function BookingPanel({
                     ? `${toName} ${tour.arrival_time}`
                     : `${fromName} ${tour.arrival_time}`
                 }
-                extraBaggage={tempExtraBaggage}
-                onExtraBaggageChange={setTempExtraBaggage}
+                extraBaggage={currentExtraBaggage}
+                onExtraBaggageChange={onBaggageChange}
                 showExtraBaggage={false}
               />
             </div>
 
-            <div className="flex flex-col gap-2 border-t bg-white px-6 py-4 sm:flex-row sm:justify-end">
+            <div className="flex flex-col gap-2 border-t bg-white px-5 py-3 sm:flex-row sm:justify-end">
               <button
                 type="button"
                 onClick={closeModal}
@@ -272,7 +291,7 @@ export default function BookingPanel({
               </button>
               <button
                 type="button"
-                disabled={tempSeats.length !== seatCount}
+                disabled={!outboundValid || !returnValid}
                 onClick={confirmSelection}
                 className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
               >
@@ -289,21 +308,19 @@ export default function BookingPanel({
     <div className="space-y-4">
       {renderSeatModal()}
 
-      {legTabs}
-
-      {(!selectedReturnTour || activeLeg === "outbound") &&
-        renderSeatSection(
-          selectedOutboundSeats,
-          extraBaggageOutbound[0] || false,
-          true
-        )}
+      {renderSeatSection(
+        selectedOutboundSeats,
+        extraBaggageOutbound[0] || false,
+        true,
+        t.outboundShort
+      )}
 
       {selectedReturnTour &&
-        activeLeg === "return" &&
         renderSeatSection(
           selectedReturnSeats,
           extraBaggageReturn[0] || false,
-          false
+          false,
+          t.inboundShort
         )}
 
       <form
