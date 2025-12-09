@@ -182,7 +182,7 @@ export default function BookingPanel({
 
         {passengerNames.map((name, idx) => (
           <label key={idx} className="space-y-1 text-sm font-medium text-slate-800">
-            <span>Имя и фамилия</span>
+
             <FormInput
               type="text"
               placeholder="Имя Фамилия"
