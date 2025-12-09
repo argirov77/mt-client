@@ -8,7 +8,6 @@ import Travego from "@/components/Travego";
 import { Wifi, Toilet, Snowflake, Plug, Armchair } from "lucide-react";
 
 import seatAvailableIcon from "./icons/seat-avail.svg";
-import seatSelectedIcon from "./icons/seat-selected.svg";
 import seatTakenIcon from "./icons/seat-blocked.svg";
 
 type SeatStatus = "available" | "occupied" | "blocked";
@@ -66,9 +65,11 @@ export default function SeatClient({
   useEffect(() => {
     let aborted = false;
     setSeats([]);
-    onChange([]);
+    if (selectedSeats.length === 0) {
+      onChange([]);
+      onSelectionDetailsChange?.([]);
+    }
     onSeatMapLoad?.([]);
-    onSelectionDetailsChange?.([]);
     (async () => {
       try {
         setLoading(true);
@@ -86,14 +87,18 @@ export default function SeatClient({
 
         const seatData = data.seats || [];
         setSeats(seatData);
-        onChange([]); // сброс при смене рейса
+        if (selectedSeats.length === 0) {
+          onChange([]); // сброс при смене рейса
+          onSelectionDetailsChange?.([]);
+        }
         onSeatMapLoad?.(seatData);
-        onSelectionDetailsChange?.([]);
       } catch (e) {
         if (aborted) return;
         setErr(e instanceof Error ? e.message : String(e));
         onSeatMapLoad?.([]);
-        onSelectionDetailsChange?.([]);
+        if (selectedSeats.length === 0) {
+          onSelectionDetailsChange?.([]);
+        }
       } finally {
         if (!aborted) setLoading(false);
       }
@@ -147,22 +152,14 @@ export default function SeatClient({
           Свободно
         </span>
         <span className={tiny.badge}>
-          <Image src={seatTakenIcon} alt="Занято" width={20} height={20} />
-          Занято
-        </span>
-        <span className={tiny.badge}>
           <Image
             src={seatTakenIcon}
             alt="Недоступно"
             width={20}
             height={20}
-            style={{ opacity: 0.6 }}
+            style={{ opacity: 0.65 }}
           />
           Недоступно
-        </span>
-        <span className={tiny.badge}>
-          <Image src={seatSelectedIcon} alt="Выбрано" width={20} height={20} />
-          Выбрано
         </span>
       </div>
 

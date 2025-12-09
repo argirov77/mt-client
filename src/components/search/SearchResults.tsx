@@ -127,6 +127,10 @@ type Dict = {
   seatsLabel: string;
   seatsPending: string;
   seatsSelected: (seats: number[]) => string;
+  seatSelectionSubtitle: string;
+  changeSeatPicker: string;
+  seatSummarySingle: (seat: number) => string;
+  seatSummaryMultiple: (count: number, seats: number[]) => string;
   passengerLabel: (index: number) => string;
   extraBaggageHeading: string;
   configureBaggage: string;
@@ -233,9 +237,12 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     seatsPending: "Не выбраны",
     seatsSelected: (seats) => `Места: ${seats.join(", ")}`,
     seatSelectionTitle: "Выберите места",
+    seatSelectionSubtitle: "Выберите места для пассажиров",
     openSeatPicker: "Выбрать места",
-    hideSeatPicker: "Скрыть схему",
+    changeSeatPicker: "Изменить места",
     selectedSeatsLabel: (selected, total) => `Выбрано ${selected} из ${total}`,
+    seatSummarySingle: (seat) => `Выбрано место: ${seat}`,
+    seatSummaryMultiple: (count, seats) => `Выбрано ${count} места: ${seats.join(", ")}`,
     passengersTitle: "Пассажиры",
     passengersHint: "Укажите имя и фамилию как в документе.",
     passengerPlaceholder: "Имя Фамилия",
@@ -341,9 +348,12 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     seatsPending: "Pending",
     seatsSelected: (seats) => `Seats: ${seats.join(", ")}`,
     seatSelectionTitle: "Pick seats",
+    seatSelectionSubtitle: "Choose seats for all passengers",
     openSeatPicker: "Choose seats",
-    hideSeatPicker: "Hide seat map",
+    changeSeatPicker: "Change seats",
     selectedSeatsLabel: (selected, total) => `Selected ${selected}/${total}`,
+    seatSummarySingle: (seat) => `Selected seat: ${seat}`,
+    seatSummaryMultiple: (count, seats) => `Selected ${count} seats: ${seats.join(", ")}`,
     passengersTitle: "Passengers",
     passengersHint: "Enter first and last name as in the document.",
     passengerPlaceholder: "First and last name",
@@ -450,9 +460,12 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     seatsPending: "Неизбрани",
     seatsSelected: (seats) => `Места: ${seats.join(", ")}`,
     seatSelectionTitle: "Изберете места",
+    seatSelectionSubtitle: "Изберете места за пътниците",
     openSeatPicker: "Избор на места",
-    hideSeatPicker: "Скрий схемата",
+    changeSeatPicker: "Промени места",
     selectedSeatsLabel: (selected, total) => `Избрани ${selected}/${total}`,
+    seatSummarySingle: (seat) => `Избрано място: ${seat}`,
+    seatSummaryMultiple: (count, seats) => `Избрани ${count} места: ${seats.join(", ")}`,
     passengersTitle: "Пътници",
     passengersHint: "Въведете име и фамилия както в документа.",
     passengerPlaceholder: "Име и фамилия",
@@ -559,9 +572,12 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     seatsPending: "Не вибрані",
     seatsSelected: (seats) => `Місця: ${seats.join(", ")}`,
     seatSelectionTitle: "Оберіть місця",
+    seatSelectionSubtitle: "Виберіть місця для пасажирів",
     openSeatPicker: "Вибрати місця",
-    hideSeatPicker: "Приховати схему",
+    changeSeatPicker: "Змінити місця",
     selectedSeatsLabel: (selected, total) => `Обрано ${selected}/${total}`,
+    seatSummarySingle: (seat) => `Обране місце: ${seat}`,
+    seatSummaryMultiple: (count, seats) => `Обрано ${count} місця: ${seats.join(", ")}`,
     passengersTitle: "Пасажири",
     passengersHint: "Вкажіть ім'я та прізвище як у документі.",
     passengerPlaceholder: "Ім'я та прізвище",
