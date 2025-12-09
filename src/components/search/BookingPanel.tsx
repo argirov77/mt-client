@@ -66,7 +66,6 @@ export default function BookingPanel({
   onReadyForContacts,
 }: Props) {
   const [activeLeg, setActiveLeg] = useState<"outbound" | "return">("outbound");
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const outboundComplete = useMemo(
     () => selectedOutboundSeats.length === seatCount,
@@ -84,12 +83,6 @@ export default function BookingPanel({
   );
 
   const readyForNext = seatCount > 0 && outboundComplete && returnComplete && namesFilled;
-
-  useEffect(() => {
-    if (readyForNext) {
-      setErrorMessage(null);
-    }
-  }, [readyForNext]);
 
   // гарантируем, что массивы багажа не пустые
   useEffect(() => {
@@ -206,37 +199,17 @@ export default function BookingPanel({
         ))}
       </form>
 
-      <div className="space-y-2">
+      {readyForNext && (
         <div className="flex justify-start">
           <button
             type="button"
-            onClick={() => {
-              if (readyForNext) {
-                onReadyForContacts?.();
-                return;
-              }
-
-              if (!outboundComplete || !returnComplete) {
-                setErrorMessage("Выберите место для ОТ - ДО (туда или обратно)");
-                return;
-              }
-
-              if (!namesFilled) {
-                setErrorMessage("Заполните Имя и фамилию пассажира");
-              }
-            }}
-            aria-disabled={!readyForNext}
-            className={`rounded-xl px-6 py-3 text-white shadow ${
-              readyForNext
-                ? "bg-sky-600 hover:bg-sky-700"
-                : "cursor-not-allowed bg-slate-300 text-slate-600"
-            }`}
+            onClick={() => onReadyForContacts?.()}
+            className="rounded-xl bg-sky-600 px-6 py-3 text-white shadow hover:bg-sky-700"
           >
             {t.next}
           </button>
         </div>
-        {errorMessage && <p className="text-sm font-medium text-red-600">{errorMessage}</p>}
-      </div>
+      )}
     </div>
   );
 }
