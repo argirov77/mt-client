@@ -267,76 +267,35 @@ export default function ContactsAndPaymentStep({
         <p className="text-sm text-slate-600">{t.contactsDescription}</p>
 
         <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <div className="space-y-3 rounded-2xl border border-slate-100 bg-gradient-to-br from-white via-sky-50 to-blue-50/60 p-4 shadow-inner">
-            <label
-              className="flex items-center gap-2 text-sm font-semibold text-slate-800"
-              htmlFor="contact-phone"
-            >
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-sky-700 shadow-sm ring-1 ring-slate-100">
-                <svg
-                  aria-hidden
-                  viewBox="0 0 24 24"
-                  className="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M6.5 3.75h1.25c.35 0 .64.26.7.6l.6 3.52a.7.7 0 01-.41.75l-1.1.48c.86 2.22 2.57 3.94 4.79 4.79l.48-1.1a.7.7 0 01.75-.41l3.52.6c.34.06.6.35.6.7V18c0 .69-.56 1.25-1.25 1.25H17A12.25 12.25 0 014.75 7V4.99c0-.68.56-1.24 1.25-1.24z"
-                  />
-                </svg>
-              </span>
-              <span>{t.contactsPhone}</span>
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-slate-800" htmlFor="contact-phone">
+              {t.contactsPhone}
             </label>
-            <div className="rounded-2xl border border-slate-100 bg-white/80 p-2 shadow-sm">
-              <PhoneInput
-                id="contact-phone"
-                placeholder={t.contactsPhone}
-                value={phone}
-                onChange={setPhone}
-                required
-                className="w-full"
-              />
-            </div>
+            <PhoneInput
+              id="contact-phone"
+              placeholder={t.contactsPhone}
+              value={phone}
+              onChange={setPhone}
+              required
+              className="w-full"
+            />
+            
           </div>
 
-          <div className="space-y-3 rounded-2xl border border-slate-100 bg-gradient-to-br from-white via-slate-50 to-sky-50/70 p-4 shadow-inner">
-            <label
-              className="flex items-center gap-2 text-sm font-semibold text-slate-800"
-              htmlFor="contact-email"
-            >
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-emerald-700 shadow-sm ring-1 ring-slate-100">
-                <svg
-                  aria-hidden
-                  viewBox="0 0 24 24"
-                  className="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M4.75 6.5h14.5a.75.75 0 01.75.75v9.5a.75.75 0 01-.75.75H4.75A.75.75 0 014 16.75v-9.5a.75.75 0 01.75-.75z"
-                  />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 7l7 5 7-5" />
-                </svg>
-              </span>
-              <span>{t.contactsEmail}</span>
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-slate-800" htmlFor="contact-email">
+              {t.contactsEmail}
             </label>
-            <div className="rounded-2xl border border-slate-100 bg-white/80 p-2 shadow-sm">
-              <FormInput
-                id="contact-email"
-                type="email"
-                placeholder="name@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="h-12 w-full rounded-full border border-slate-200 bg-gradient-to-r from-white to-slate-50/80 px-4 text-base text-slate-900 shadow-inner focus:border-emerald-200 focus:bg-white"
-              />
-            </div>
+            <FormInput
+              id="contact-email"
+              type="email"
+              placeholder="name@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="h-12 w-full rounded-full border border-slate-200 bg-gradient-to-r from-white to-slate-50/80 px-4 text-base text-slate-900 shadow-inner focus:border-emerald-200 focus:bg-white"
+            />
+           
           </div>
         </div>
       </div>
