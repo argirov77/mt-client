@@ -125,7 +125,7 @@ export default function BookingPanel({
 
       {(!selectedReturnTour || activeLeg === "outbound") && (
         <section className="space-y-3 rounded-xl bg-white/70 p-4 shadow-sm ring-1 ring-slate-200">
-          <h3 className="text-lg font-semibold text-slate-900">Выбор места</h3>
+          <h3 className="text-lg font-semibold text-slate-900">Выберите места:</h3>
 
           <SeatClient
             tourId={selectedOutboundTour.id}
@@ -135,8 +135,6 @@ export default function BookingPanel({
             selectedSeats={selectedOutboundSeats}
             maxSeats={seatCount}
             onChange={setSelectedOutboundSeats}
-            departureText={`${fromName} ${selectedOutboundTour.departure_time}`}
-            arrivalText={`${toName} ${selectedOutboundTour.arrival_time}`}
             extraBaggage={extraBaggageOutbound[0] || false}
             onExtraBaggageChange={(v) => {
               const arr = [...extraBaggageOutbound];
@@ -150,7 +148,7 @@ export default function BookingPanel({
 
       {selectedReturnTour && activeLeg === "return" && (
         <section className="space-y-3 rounded-xl bg-white/70 p-4 shadow-sm ring-1 ring-slate-200">
-          <h3 className="text-lg font-semibold text-slate-900">Выбор места</h3>
+          <h3 className="text-lg font-semibold text-slate-900">Выберите места:</h3>
 
           <SeatClient
             tourId={selectedReturnTour.id}
@@ -160,8 +158,6 @@ export default function BookingPanel({
             selectedSeats={selectedReturnSeats}
             maxSeats={seatCount}
             onChange={setSelectedReturnSeats}
-            departureText={`${toName} ${selectedReturnTour.departure_time}`}
-            arrivalText={`${fromName} ${selectedReturnTour.arrival_time}`}
             extraBaggage={extraBaggageReturn[0] || false}
             onExtraBaggageChange={(v) => {
               const arr = [...extraBaggageReturn];
@@ -181,19 +177,27 @@ export default function BookingPanel({
         <p className="text-sm text-slate-600">Введите имя и фамилию для каждого пассажира.</p>
 
         {passengerNames.map((name, idx) => (
-          <FormInput
-            key={idx}
-            type="text"
-            placeholder="Имя и фамилия пассажира"
-            required
-            value={name}
-            onChange={(e) => {
-              const arr = [...passengerNames];
-              arr[idx] = e.target.value;
-              setPassengerNames(arr);
-            }}
-            className="flex-1 rounded-lg border border-slate-200 bg-white/90 px-3 py-2 text-base shadow-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
-          />
+          <div key={idx} className="flex flex-col gap-1">
+            <label htmlFor={`passenger-${idx}`} className="text-sm font-medium text-slate-700">
+              Имя и фамилия пассажира
+            </label>
+            <FormInput
+              id={`passenger-${idx}`}
+              type="text"
+              placeholder="Имя Фамилия"
+              required
+              value={name}
+              onChange={(e) => {
+                const arr = [...passengerNames];
+                arr[idx] = e.target.value;
+                setPassengerNames(arr);
+              }}
+              className="flex-1 rounded-lg border border-slate-200 bg-white/90 px-3 py-2 text-base shadow-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
+            />
+            <p className="text-xs text-slate-500">
+              Введите имя и фамилию как в документе.
+            </p>
+          </div>
         ))}
       </form>
 
