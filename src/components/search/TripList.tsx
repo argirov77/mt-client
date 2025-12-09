@@ -71,6 +71,7 @@ export default function TripList({
           return (
             <TripCard
               key={tour.id}
+              // Здесь рендерится блок "departure → arrival" внутри списка выбора рейса
               dateText={dateStr}
               fromStop={fromName}
               toStop={toName}
