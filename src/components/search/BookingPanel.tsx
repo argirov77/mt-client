@@ -177,12 +177,12 @@ export default function BookingPanel({
         onSubmit={(e) => e.preventDefault()}
         className="mt-2 flex w-full max-w-[640px] flex-col gap-3 rounded-xl bg-white/70 p-4 shadow-sm ring-1 ring-slate-200"
       >
-        <div className="text-base font-semibold text-slate-900">Данные пассажиров</div>
-        <p className="text-sm text-slate-600">Введите имя и фамилию для каждого пассажира.</p>
+        <div className="text-base font-semibold text-slate-900">Пассажиры</div>
+        <p className="text-sm text-slate-600">Укажите имя и фамилию как в документе.</p>
 
         {passengerNames.map((name, idx) => (
           <label key={idx} className="space-y-1 text-sm font-medium text-slate-800">
-            <span>Имя и фамилия пассажира</span>
+            <span>Имя и фамилия</span>
             <FormInput
               type="text"
               placeholder="Имя Фамилия"
@@ -195,9 +195,6 @@ export default function BookingPanel({
               }}
               className="flex-1 rounded-lg border border-slate-200 bg-white/90 px-3 py-2 text-base shadow-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
             />
-            <p className="text-xs font-normal text-slate-500">
-              Введите имя и фамилию как в документе.
-            </p>
           </label>
         ))}
       </form>
