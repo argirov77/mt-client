@@ -126,6 +126,7 @@ type Dict = {
   liveLabel: string;
   seatsLabel: string;
   seatsPending: string;
+  seatsSelected: (seats: number[]) => string;
   passengerLabel: (index: number) => string;
   extraBaggageHeading: string;
   configureBaggage: string;
@@ -230,6 +231,7 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     liveLabel: "Онлайн",
     seatsLabel: "Места",
     seatsPending: "Не выбраны",
+    seatsSelected: (seats) => `Места: ${seats.join(", ")}`,
     seatSelectionTitle: "Выберите места",
     openSeatPicker: "Выбрать места",
     hideSeatPicker: "Скрыть схему",
@@ -337,6 +339,7 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     liveLabel: "Live",
     seatsLabel: "Seats",
     seatsPending: "Pending",
+    seatsSelected: (seats) => `Seats: ${seats.join(", ")}`,
     seatSelectionTitle: "Pick seats",
     openSeatPicker: "Choose seats",
     hideSeatPicker: "Hide seat map",
@@ -445,6 +448,7 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     liveLabel: "На живо",
     seatsLabel: "Места",
     seatsPending: "Неизбрани",
+    seatsSelected: (seats) => `Места: ${seats.join(", ")}`,
     seatSelectionTitle: "Изберете места",
     openSeatPicker: "Избор на места",
     hideSeatPicker: "Скрий схемата",
@@ -553,6 +557,7 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     liveLabel: "Онлайн",
     seatsLabel: "Місця",
     seatsPending: "Не вибрані",
+    seatsSelected: (seats) => `Місця: ${seats.join(", ")}`,
     seatSelectionTitle: "Оберіть місця",
     openSeatPicker: "Вибрати місця",
     hideSeatPicker: "Приховати схему",
@@ -1503,34 +1508,42 @@ export default function SearchResults({
       departure: string,
       arrival: string,
       seats: number | { free: number },
+      selectedSeats: number[],
       price: number,
       accent: string,
-    ) => (
-      <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-        <div className="flex items-start justify-between gap-3">
-          <div className="space-y-1">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{title}</p>
-            <p className="text-base font-semibold text-slate-900">{subtitle}</p>
-            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600">
-              <span className={`inline-flex items-center gap-2 rounded-full px-2 py-1 ring-1 ${accent}`}>
-                <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden />
-                {formatDateLabel(date)}
+    ) => {
+      const selectedSeatLabel = selectedSeats.length
+        ? t.seatsSelected([...selectedSeats].sort((a, b) => a - b))
+        : null;
+
+      return (
+        <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+          <div className="flex items-start justify-between gap-3">
+            <div className="space-y-1">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{title}</p>
+              <p className="text-base font-semibold text-slate-900">{subtitle}</p>
+              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600">
+                <span className={`inline-flex items-center gap-2 rounded-full px-2 py-1 ring-1 ${accent}`}>
+                  <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden />
+                  {formatDateLabel(date)}
+                </span>
+                <span className="inline-flex items-center gap-2 rounded-full bg-slate-50 px-2 py-1 ring-1 ring-slate-200">
+                  <span className="h-2 w-2 rounded-full bg-sky-400" aria-hidden />
+                  {departure} → {arrival}
+                </span>
+              </div>
+            </div>
+            <div className="flex flex-col items-end gap-2 text-right">
+              <span className="rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-100">
+                {selectedSeatLabel ??
+                  (seats && typeof seats === "object" ? t.freeSeats(seats.free) : t.seatsPending)}
               </span>
-              <span className="inline-flex items-center gap-2 rounded-full bg-slate-50 px-2 py-1 ring-1 ring-slate-200">
-                <span className="h-2 w-2 rounded-full bg-sky-400" aria-hidden />
-                {departure} → {arrival}
-              </span>
+              <span className="text-base font-semibold text-slate-900">{formatPrice(price * safeSeatCount)}</span>
             </div>
           </div>
-          <div className="flex flex-col items-end gap-2 text-right">
-            <span className="rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-100">
-              {seats && typeof seats === "object" ? t.freeSeats(seats.free) : t.seatsPending}
-            </span>
-            <span className="text-base font-semibold text-slate-900">{formatPrice(price * safeSeatCount)}</span>
-          </div>
         </div>
-      </div>
-    );
+      );
+    };
 
     return (
       <aside className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
@@ -1553,6 +1566,7 @@ export default function SearchResults({
             selectedOutboundTour.departure_time,
             selectedOutboundTour.arrival_time,
             selectedOutboundTour.seats,
+            selectedOutboundSeats,
             selectedOutboundTour.price,
             "bg-sky-50 text-sky-700 ring-sky-100",
           )}
@@ -1565,6 +1579,7 @@ export default function SearchResults({
                 selectedReturnTour.departure_time,
                 selectedReturnTour.arrival_time,
                 selectedReturnTour.seats,
+                selectedReturnSeats,
                 selectedReturnTour.price,
                 "bg-indigo-50 text-indigo-700 ring-indigo-100",
               )
