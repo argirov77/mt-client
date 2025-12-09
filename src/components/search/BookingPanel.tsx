@@ -166,26 +166,38 @@ export default function BookingPanel({
     return t.seatSummaryMultiple(sorted.length, sorted);
   };
 
-  const renderSeatSection = (
-    selectedSeats: number[],
-    extraBaggage: boolean,
-    isOutboundLeg: boolean,
-    legLabel: string
-  ) => (
-    <section className="space-y-3 rounded-xl bg-white/70 p-4 shadow-sm ring-1 ring-slate-200">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
+  const renderSeatOverview = () => (
+    <section className="space-y-4 rounded-xl bg-white/70 p-4 shadow-sm ring-1 ring-slate-200">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="space-y-2">
           <h3 className="text-lg font-semibold text-slate-900">{t.seatSelectionTitle}</h3>
-          <p className="text-sm text-slate-600">{renderSelectionSummary(selectedSeats)}</p>
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{legLabel}</p>
+          <div className="space-y-1 text-sm text-slate-700">
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-slate-700">
+                {t.outboundShort}
+              </span>
+              <span>{renderSelectionSummary(selectedOutboundSeats)}</span>
+            </div>
+
+            {selectedReturnTour && (
+              <div className="flex items-center gap-2">
+                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-slate-700">
+                  {t.inboundShort}
+                </span>
+                <span>{renderSelectionSummary(selectedReturnSeats)}</span>
+              </div>
+            )}
+          </div>
         </div>
 
         <button
           type="button"
-          onClick={() => openModal(isOutboundLeg ? "outbound" : "return")}
-          className="inline-flex items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50"
+          onClick={() => openModal("outbound")}
+          className="inline-flex items-center justify-center self-start rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50"
         >
-          {selectedSeats.length > 0 ? t.changeSeatPicker : t.openSeatPicker}
+          {selectedOutboundSeats.length > 0 || selectedReturnSeats.length > 0
+            ? t.changeSeatPicker
+            : t.openSeatPicker}
         </button>
       </div>
     </section>
@@ -227,35 +239,42 @@ export default function BookingPanel({
             </div>
 
             {selectedReturnTour ? (
-              <div className="mt-3 inline-flex overflow-hidden rounded-lg border bg-slate-50 text-sm font-medium text-slate-800">
-                <button
-                  type="button"
-                  onClick={() => setModalLeg("outbound")}
-                  className={`px-3 py-2 transition ${
-                    isOutboundModal ? "bg-white text-slate-900" : "hover:bg-white/70"
-                  }`}
-                >
-                  {t.outboundShort}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => selectedReturnTour && setModalLeg("return")}
-                  disabled={!selectedReturnTour}
-                  className={`px-3 py-2 transition ${
-                    !isOutboundModal ? "bg-white text-slate-900" : "hover:bg-white/70"
-                  } ${!selectedReturnTour ? "cursor-not-allowed opacity-60" : ""}`}
-                >
-                  {t.inboundShort}
-                </button>
+              <div className="mt-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Маршрут</p>
+                <div className="mt-2 grid grid-cols-2 gap-2 rounded-xl bg-slate-100 p-1 text-sm font-semibold text-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setModalLeg("outbound")}
+                    className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2 transition ${
+                      isOutboundModal
+                        ? "bg-white text-slate-900 shadow"
+                        : "text-slate-700 hover:bg-white/70"
+                    }`}
+                    aria-pressed={isOutboundModal}
+                  >
+                    <span aria-hidden>⇢</span>
+                    {t.outboundShort}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => selectedReturnTour && setModalLeg("return")}
+                    disabled={!selectedReturnTour}
+                    className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2 transition ${
+                      !isOutboundModal
+                        ? "bg-white text-slate-900 shadow"
+                        : "text-slate-700 hover:bg-white/70"
+                    } ${!selectedReturnTour ? "cursor-not-allowed opacity-60" : ""}`}
+                    aria-pressed={!isOutboundModal}
+                  >
+                    <span aria-hidden>⇠</span>
+                    {t.inboundShort}
+                  </button>
+                </div>
               </div>
             ) : null}
           </header>
 
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-            <div className="border-b px-5 py-2.5 text-sm font-medium text-slate-800">
-              {t.selectedSeatsLabel(currentSeats.length, seatCount)}
-            </div>
-
             <div className="flex-1 overflow-auto px-5 py-3">
               <SeatClient
                 tourId={tour.id}
@@ -308,20 +327,7 @@ export default function BookingPanel({
     <div className="space-y-4">
       {renderSeatModal()}
 
-      {renderSeatSection(
-        selectedOutboundSeats,
-        extraBaggageOutbound[0] || false,
-        true,
-        t.outboundShort
-      )}
-
-      {selectedReturnTour &&
-        renderSeatSection(
-          selectedReturnSeats,
-          extraBaggageReturn[0] || false,
-          false,
-          t.inboundShort
-        )}
+      {renderSeatOverview()}
 
       <form
         onSubmit={(e) => e.preventDefault()}
