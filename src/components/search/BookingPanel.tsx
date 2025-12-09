@@ -156,7 +156,9 @@ export default function BookingPanel({
         <div>
           <h3 className="text-lg font-semibold text-slate-900">{t.seatSelectionTitle}</h3>
           <p className="text-sm text-slate-600">
-            {t.selectedSeatsLabel(selectedSeats.length, seatCount)}
+            {selectedSeats.length > 0
+              ? selectedSeats.join(", ")
+              : t.selectedSeatsLabel(selectedSeats.length, seatCount)}
           </p>
         </div>
 
