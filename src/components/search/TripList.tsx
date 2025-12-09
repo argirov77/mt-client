@@ -18,8 +18,6 @@ type TripListProps = {
     chosen: string;
     adults: string;
     discounted: string;
-    departure: string;
-    arrival: string;
     price: string;
   };
 };
@@ -76,8 +74,6 @@ export default function TripList({
               toStop={toName}
               departTime={depTime}
               arriveTime={arrTime}
-              departureLabel={t.departure}
-              arrivalLabel={t.arrival}
               total={total}
               priceLabel={t.price}
               onSelect={() => onSelect(tour)}
