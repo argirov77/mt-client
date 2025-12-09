@@ -6,9 +6,11 @@ import Schedule from "@/components/Schedule";
 import About from "@/components/About";
 import BookingCard from "@/components/booking/BookingCard";
 import { useLanguage } from "@/components/common/LanguageProvider";
+import { bookingTranslations } from "@/translations/home";
 
 export default function Page() {
   const { lang } = useLanguage();
+  const bookingCopy = bookingTranslations[lang];
 
   return (
     <main className="min-h-screen">
@@ -19,15 +21,9 @@ export default function Page() {
       <section id="booking" className="-mt-12 bg-slate-50 pb-14 pt-16">
         <div className="mx-auto w-full max-w-6xl px-4">
           <div className="mb-6 flex flex-col gap-2 text-center">
-            <p className="text-sm font-semibold uppercase tracking-widest text-sky-600">
-              {lang === "en" ? "Ticket purchase" : "Покупка билета"}
-            </p>
-            <h2 className="text-3xl font-bold text-slate-900">Пошаговый процесс бронирования</h2>
-            <p className="text-slate-600">
-              {lang === "en"
-                ? "Follow the steps to search, select seats, add extras and pay without leaving the flow."
-                : "Проходите шаги последовательно: поиск, выбор рейсов, места, пассажиры и оплата без смены логики."}
-            </p>
+            <p className="text-sm font-semibold uppercase tracking-widest text-sky-600">{bookingCopy.eyebrow}</p>
+            <h2 className="text-3xl font-bold text-slate-900">{bookingCopy.title}</h2>
+            <p className="text-slate-600">{bookingCopy.description}</p>
           </div>
           <BookingCard />
         </div>

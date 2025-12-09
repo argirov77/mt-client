@@ -115,6 +115,26 @@ type Dict = {
   step3SummaryPaid: string;
   step3SummaryCanceled: string;
   next: string;
+  subtotal: string;
+  stepLabel: (step: number) => string;
+  stepCounter: (current: number, total: number) => string;
+  changeOutbound: string;
+  changeReturn: string;
+  outboundNotSelected: string;
+  orderSummaryTitle: string;
+  orderSummaryNote: string;
+  liveLabel: string;
+  seatsLabel: string;
+  seatsPending: string;
+  passengerLabel: (index: number) => string;
+  extraBaggageHeading: string;
+  configureBaggage: string;
+  pricePerBagLabel: string;
+  baggageToggleHide: string;
+  baggageIncludedBadge: string;
+  baggageCollapsedHint: string;
+  addBagAria: string;
+  removeBagAria: string;
 };
 
 const DISCOUNT_RATE = 0.05;
@@ -199,6 +219,26 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     step3SummaryPaid: "Билет оплачен",
     step3SummaryCanceled: "Бронирование отменено",
     next: "Далее",
+    subtotal: "Промежуточно",
+    stepLabel: (step) => `Шаг ${step}`,
+    stepCounter: (current, total) => `Шаг ${current} / ${total}`,
+    changeOutbound: "Изменить рейсы",
+    changeReturn: "Изменить обратно",
+    outboundNotSelected: "не выбран",
+    orderSummaryTitle: "Сводка заказа",
+    orderSummaryNote: "Обновляется по мере заполнения",
+    liveLabel: "Онлайн",
+    seatsLabel: "Места",
+    seatsPending: "Не выбраны",
+    passengerLabel: (index) => `Пассажир ${index}`,
+    extraBaggageHeading: "Дополнительный багаж",
+    configureBaggage: "Добавьте места багажа для каждого пассажира",
+    pricePerBagLabel: "Цена за место",
+    baggageToggleHide: "Свернуть",
+    baggageIncludedBadge: "Багаж включён",
+    baggageCollapsedHint: "Нажмите «Добавить багаж», чтобы настроить багаж для пассажиров.",
+    addBagAria: "Добавить багаж",
+    removeBagAria: "Убрать багаж",
   },
   en: {
     noResults: "No trips found",
@@ -277,6 +317,26 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     step3SummaryPaid: "Ticket paid",
     step3SummaryCanceled: "Booking canceled",
     next: "Next",
+    subtotal: "Subtotal",
+    stepLabel: (step) => `Step ${step}`,
+    stepCounter: (current, total) => `Step ${current} / ${total}`,
+    changeOutbound: "Change outbound",
+    changeReturn: "Change return",
+    outboundNotSelected: "not selected",
+    orderSummaryTitle: "Order summary",
+    orderSummaryNote: "Updates as you fill the form",
+    liveLabel: "Live",
+    seatsLabel: "Seats",
+    seatsPending: "Pending",
+    passengerLabel: (index) => `Passenger ${index}`,
+    extraBaggageHeading: "Extra baggage",
+    configureBaggage: "Configure baggage for each passenger",
+    pricePerBagLabel: "€ per bag",
+    baggageToggleHide: "Hide",
+    baggageIncludedBadge: "Bags included",
+    baggageCollapsedHint: 'Click "Add baggage" to configure checked bags for your passengers.',
+    addBagAria: "Add bag",
+    removeBagAria: "Remove bag",
   },
   bg: {
     noResults: "Няма намерени курсове",
@@ -356,6 +416,26 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     step3SummaryPaid: "Билетът е платен",
     step3SummaryCanceled: "Резервацията е отменена",
     next: "Напред",
+    subtotal: "Междинно",
+    stepLabel: (step) => `Стъпка ${step}`,
+    stepCounter: (current, total) => `Стъпка ${current} / ${total}`,
+    changeOutbound: "Промени курса натам",
+    changeReturn: "Промени обратно",
+    outboundNotSelected: "не е избран",
+    orderSummaryTitle: "Обобщение на поръчката",
+    orderSummaryNote: "Актуализира се при попълване",
+    liveLabel: "На живо",
+    seatsLabel: "Места",
+    seatsPending: "Неизбрани",
+    passengerLabel: (index) => `Пътник ${index}`,
+    extraBaggageHeading: "Допълнителен багаж",
+    configureBaggage: "Настройте багажа за всеки пътник",
+    pricePerBagLabel: "Цена за багаж",
+    baggageToggleHide: "Скрий",
+    baggageIncludedBadge: "Багаж включен",
+    baggageCollapsedHint: "Използвайте «Добави багаж», за да настроите куфарите за пътниците.",
+    addBagAria: "Добави багаж",
+    removeBagAria: "Премахни багаж",
   },
   ua: {
     noResults: "Рейси не знайдено",
@@ -435,6 +515,26 @@ const dict: Record<NonNullable<Props["lang"]>, Dict> = {
     step3SummaryPaid: "Квиток оплачено",
     step3SummaryCanceled: "Бронювання скасовано",
     next: "Далі",
+    subtotal: "Проміжно",
+    stepLabel: (step) => `Крок ${step}`,
+    stepCounter: (current, total) => `Крок ${current} / ${total}`,
+    changeOutbound: "Змінити рейси",
+    changeReturn: "Змінити назад",
+    outboundNotSelected: "не обрано",
+    orderSummaryTitle: "Зведення замовлення",
+    orderSummaryNote: "Оновлюється під час заповнення",
+    liveLabel: "Онлайн",
+    seatsLabel: "Місця",
+    seatsPending: "Не вибрані",
+    passengerLabel: (index) => `Пасажир ${index}`,
+    extraBaggageHeading: "Додатковий багаж",
+    configureBaggage: "Налаштуйте багаж для кожного пасажира",
+    pricePerBagLabel: "Ціна за місце",
+    baggageToggleHide: "Згорнути",
+    baggageIncludedBadge: "Багаж включено",
+    baggageCollapsedHint: "Натисніть «Додати багаж», щоб налаштувати багаж для пасажирів.",
+    addBagAria: "Додати багаж",
+    removeBagAria: "Прибрати багаж",
   },
 };
 
@@ -1029,7 +1129,7 @@ export default function SearchResults({
             />
           </div>
           <span className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-            {lang === "en" ? "Step" : "Шаг"} {activeStep} / {steps.length}
+            {t.stepCounter(activeStep, steps.length)}
           </span>
         </div>
         <div className="relative mt-3">
@@ -1186,7 +1286,7 @@ export default function SearchResults({
 
   const renderStepHeader = (stepNumber: Step, title: string, summary: string) => {
     const showInlineSummary = !showStepNavigation;
-    const stepLabel = `${lang === "en" ? "Step" : "Шаг"} ${stepNumber}`;
+    const stepLabel = t.stepLabel(stepNumber);
 
     return (
       <div className="flex items-start justify-between gap-3">
@@ -1260,7 +1360,7 @@ export default function SearchResults({
                   className="rounded-lg border border-slate-300 px-3 py-2 text-xs text-slate-700 hover:bg-slate-100"
                   onClick={resetOutbound}
                 >
-                  {lang === "en" ? "Change outbound" : "Изменить рейсы"}
+                  {t.changeOutbound}
                 </button>
                 {returnRequired && selectedReturnTour && (
                   <button
@@ -1268,7 +1368,7 @@ export default function SearchResults({
                     className="rounded-lg border border-slate-300 px-3 py-2 text-xs text-slate-700 hover:bg-slate-100"
                     onClick={resetReturn}
                   >
-                    {lang === "en" ? "Change return" : "Изменить обратно"}
+                    {t.changeReturn}
                   </button>
                 )}
               </div>
@@ -1310,7 +1410,7 @@ export default function SearchResults({
                 onReadyForContacts={handleReadyForContacts}
               />
             ) : (
-              <p className="text-sm text-slate-600">{t.outboundShort} {lang === "en" ? "not selected" : "не выбран"}</p>
+              <p className="text-sm text-slate-600">{t.outboundShort} {t.outboundNotSelected}</p>
             )}
           </div>
         </section>
@@ -1323,7 +1423,6 @@ export default function SearchResults({
         <div className="rounded-xl border border-slate-100 bg-white p-3 space-y-3">
           <ContactsAndPaymentStep
             t={t}
-            lang={lang}
             passengerNames={passengerNames}
             phone={phone}
             setPhone={setPhone}
@@ -1359,10 +1458,10 @@ export default function SearchResults({
     const contactsProvided = Boolean(phone || email);
     const baggageBadges = [
       extraBaggageOutboundCount > 0
-        ? `${lang === "en" ? "Outbound" : "Туда"}: ${extraBaggageOutboundCount}`
+        ? `${t.outboundShort}: ${extraBaggageOutboundCount}`
         : null,
       extraBaggageReturnCount > 0
-        ? `${lang === "en" ? "Return" : "Обратно"}: ${extraBaggageReturnCount}`
+        ? `${t.inboundShort}: ${extraBaggageReturnCount}`
         : null,
     ].filter(Boolean);
 
@@ -1371,16 +1470,14 @@ export default function SearchResults({
         <div className="flex items-center justify-between gap-3">
           <div>
             <div className="text-sm font-semibold text-slate-900">
-              {lang === "en" ? "Order summary" : "Сводка заказа"}
+              {t.orderSummaryTitle}
             </div>
             <p className="text-xs text-slate-500">
-              {lang === "en"
-                ? "Updates as you fill the form"
-                : "Обновляется по мере заполнения"}
+              {t.orderSummaryNote}
             </p>
           </div>
           <span className="rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">
-            Live
+            {t.liveLabel}
           </span>
         </div>
 
@@ -1404,12 +1501,10 @@ export default function SearchResults({
               </div>
               <div className="mt-2 flex items-center justify-between text-xs text-slate-600">
                 <span>
-                  {lang === "en" ? "Seats" : "Места"}:{" "}
+                  {t.seatsLabel}:{" "}
                   {selectedOutboundSeats.length
                     ? selectedOutboundSeats.join(", ")
-                    : lang === "en"
-                      ? "Pending"
-                      : "Не выбраны"}
+                    : t.seatsPending}
                 </span>
                 <span className="font-semibold text-slate-900">
                   {formatPrice(outboundTotal)}
@@ -1438,12 +1533,10 @@ export default function SearchResults({
                 </div>
                 <div className="mt-2 flex items-center justify-between text-xs text-slate-600">
                   <span>
-                    {lang === "en" ? "Seats" : "Места"}:{" "}
+                    {t.seatsLabel}:{" "}
                     {selectedReturnSeats.length
                       ? selectedReturnSeats.join(", ")
-                      : lang === "en"
-                        ? "Pending"
-                        : "Не выбраны"}
+                      : t.seatsPending}
                   </span>
                   <span className="font-semibold text-slate-900">
                     {formatPrice(returnTotal)}
@@ -1467,7 +1560,7 @@ export default function SearchResults({
                     >
                       <span className="truncate">{name}</span>
                       <span className="text-xs text-slate-500">
-                        {lang === "en" ? "Passenger" : "Пассажир"} {index + 1}
+                        {t.passengerLabel(index + 1)}
                       </span>
                     </li>
                   ))}
@@ -1501,7 +1594,7 @@ export default function SearchResults({
           {baggageBadges.length > 0 ? (
             <div className="space-y-2">
               <div className="text-xs uppercase tracking-wide text-slate-500">
-                {lang === "en" ? "Extra baggage" : "Дополнительный багаж"}
+                {t.extraBaggageHeading}
               </div>
               <div className="flex flex-wrap gap-2">
                 {baggageBadges.map((label) => (
@@ -1518,7 +1611,7 @@ export default function SearchResults({
 
           <div className="rounded-xl border border-slate-200 bg-gradient-to-r from-slate-50 to-sky-50 p-3 shadow-inner">
             <div className="flex items-center justify-between text-sm text-slate-600">
-              <span>{lang === "en" ? "Subtotal" : "Промежуточно"}</span>
+              <span>{t.subtotal}</span>
               <span className="font-semibold text-slate-900">
                 {formatPrice(outboundTotal + returnTotal)}
               </span>

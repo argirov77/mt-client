@@ -9,6 +9,7 @@ import {
   sectionBgMuted,
 } from "../common/designGuide";
 import { aboutContent, type Lang } from "./content";
+import { aboutTranslations } from "@/translations/home";
 
 type Props = {
   lang?: Lang;
@@ -22,18 +23,13 @@ export default function AboutSection({
   className = "",
 }: Props) {
   const blocks = aboutContent[lang] ?? aboutContent.ru;
+  const heading = aboutTranslations[lang]?.heading ?? aboutTranslations.ru.heading;
 
   return (
     <section id={id} className={`${sectionBgMuted} py-16 ${className}`}>
       <div className="mx-auto w-full max-w-6xl px-4">
         <h2 className={`${headingH2Class} text-center`}>
-          {lang === "en"
-            ? "About company"
-            : lang === "bg"
-            ? "За компанията"
-            : lang === "ua"
-            ? "Про компанію"
-            : "О компании"}
+          {heading}
         </h2>
 
         <ol className="mt-10 grid gap-5 md:grid-cols-2">
