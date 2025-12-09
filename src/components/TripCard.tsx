@@ -11,6 +11,8 @@ export type TripCardProps = {
   selected?: boolean;
   pickLabel?: string;
   chosenLabel?: string;
+  departureLabel?: string;
+  arrivalLabel?: string;
   priceLabel?: string;
 };
 
@@ -25,6 +27,8 @@ export default function TripCard({
   selected = false,
   pickLabel = "Выбрать",
   chosenLabel = "Выбрано",
+  departureLabel = "Отправление",
+  arrivalLabel = "Прибытие",
   priceLabel = "Цена",
 }: TripCardProps) {
   return (
@@ -42,11 +46,17 @@ export default function TripCard({
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-8">
           <div className="flex flex-col gap-1">
+            <span className="text-[11px] uppercase tracking-wide text-slate-400">
+              {departureLabel}
+            </span>
             <span className="text-xl font-semibold text-slate-900">{fromStop}</span>
             <span className="text-base font-medium text-slate-700">{departTime}</span>
           </div>
 
           <div className="flex flex-col gap-1 sm:items-end sm:text-right">
+            <span className="text-[11px] uppercase tracking-wide text-slate-400">
+              {arrivalLabel}
+            </span>
             <span className="text-xl font-semibold text-slate-900">{toStop}</span>
             <span className="text-base font-medium text-slate-700">{arriveTime}</span>
           </div>
