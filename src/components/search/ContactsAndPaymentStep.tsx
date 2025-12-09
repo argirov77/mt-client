@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import FormInput from "../common/FormInput";
+import PhoneInput from "../common/PhoneInput";
 
 import type { ElectronicTicketData } from "@/types/ticket";
 
@@ -268,13 +269,12 @@ export default function ContactsAndPaymentStep({
         <div className="mt-4 grid gap-3 md:grid-cols-2">
           <label className="space-y-1 text-sm font-medium text-slate-700">
             <span className="text-slate-600">{t.contactsPhone}</span>
-            <FormInput
-              type="tel"
+            <PhoneInput
               placeholder={t.contactsPhone}
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              onChange={setPhone}
               required
-              className="w-full rounded-xl border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-900 shadow-inner focus:bg-white"
+              className="w-full"
             />
           </label>
           <label className="space-y-1 text-sm font-medium text-slate-700">
