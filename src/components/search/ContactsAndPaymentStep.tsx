@@ -279,7 +279,7 @@ export default function ContactsAndPaymentStep({
               required
               className="w-full"
             />
-            <p className="text-xs text-slate-500">Номер для SMS-билета и уведомлений</p>
+            
           </div>
 
           <div className="space-y-2">
@@ -295,7 +295,7 @@ export default function ContactsAndPaymentStep({
               required
               className="w-full rounded-full border border-slate-200 bg-gradient-to-r from-white to-slate-50/80 px-4 py-3 text-sm text-slate-900 shadow-inner focus:border-emerald-200 focus:bg-white"
             />
-            <p className="text-xs text-slate-500">Электронный билет придёт на этот адрес</p>
+           
           </div>
         </div>
       </div>
