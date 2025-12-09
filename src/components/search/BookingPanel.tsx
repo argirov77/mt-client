@@ -84,6 +84,14 @@ export default function BookingPanel({
 
   const readyForNext = seatCount > 0 && outboundComplete && returnComplete && namesFilled;
 
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (readyForNext) {
+      setErrorMessage(null);
+    }
+  }, [readyForNext]);
+
   // гарантируем, что массивы багажа не пустые
   useEffect(() => {
     setExtraBaggageOutbound((prev) => {
@@ -199,17 +207,41 @@ export default function BookingPanel({
         ))}
       </form>
 
-      {readyForNext && (
-        <div className="flex justify-start">
-          <button
-            type="button"
-            onClick={() => onReadyForContacts?.()}
-            className="rounded-xl bg-sky-600 px-6 py-3 text-white shadow hover:bg-sky-700"
-          >
-            {t.next}
-          </button>
-        </div>
-      )}
+      <div className="flex flex-col gap-2">
+        <button
+          type="button"
+          aria-disabled={!readyForNext}
+          onClick={() => {
+            if (readyForNext) {
+              setErrorMessage(null);
+              onReadyForContacts?.();
+              return;
+            }
+
+            if (!outboundComplete || !returnComplete) {
+              setErrorMessage("Выберите место для ОТ - ДО (туда или обратно)");
+              return;
+            }
+
+            if (!namesFilled) {
+              setErrorMessage("Заполните Имя и фамилию пассажира");
+            }
+          }}
+          className={`rounded-xl px-6 py-3 text-white shadow transition ${
+            readyForNext
+              ? "bg-sky-600 hover:bg-sky-700"
+              : "cursor-not-allowed bg-slate-300 text-slate-600"
+          }`}
+        >
+          {t.next}
+        </button>
+
+        {errorMessage && (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+            {errorMessage}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
