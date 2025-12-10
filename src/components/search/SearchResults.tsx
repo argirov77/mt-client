@@ -11,6 +11,7 @@ import TripList from "./TripList";
 import BookingPanel from "./BookingPanel";
 import ElectronicTicket from "./ElectronicTicket";
 import TicketDownloadPrompt from "./TicketDownloadPrompt";
+import StepTransition from "./StepTransition";
 import ContactsAndPaymentStep from "./ContactsAndPaymentStep";
 
 import { downloadTicketPdf } from "@/utils/ticketPdf";
@@ -1728,9 +1729,9 @@ export default function SearchResults({
 
         {/* Текущий шаг: слева, под прогресс-баром */}
         <div className="lg:col-start-1 lg:row-start-2">
-          <div key={stepToRender} className="animate-step-fade">
+          <StepTransition activeKey={stepToRender}>
             {renderStepContent(stepToRender)}
-          </div>
+          </StepTransition>
         </div>
 
         {/* Сводка: справа, тянется по двум строкам и липнет к верху */}

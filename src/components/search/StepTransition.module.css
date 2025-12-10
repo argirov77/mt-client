@@ -1,0 +1,76 @@
+:root {
+  --step-transition-duration: 240ms;
+}
+
+.container {
+  position: relative;
+}
+
+.layer {
+  position: relative;
+}
+
+.leaving {
+  position: absolute;
+  inset: 0;
+}
+
+.enterUp {
+  animation: stepEnterUp var(--step-transition-duration) ease-in-out forwards;
+}
+
+.enterDown {
+  animation: stepEnterDown var(--step-transition-duration) ease-in-out forwards;
+}
+
+.exitUp {
+  animation: stepExitUp var(--step-transition-duration) ease-out forwards;
+}
+
+.exitDown {
+  animation: stepExitDown var(--step-transition-duration) ease-out forwards;
+}
+
+@keyframes stepEnterUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes stepEnterDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes stepExitUp {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes stepExitDown {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
