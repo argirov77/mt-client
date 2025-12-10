@@ -5,7 +5,6 @@ import axios from "axios";
 
 import Loader from "../common/Loader";
 import Alert from "../common/Alert";
-import StepTransition from "../common/StepTransition";
 import { API } from "@/config";
 
 import TripList from "./TripList";
@@ -1729,9 +1728,9 @@ export default function SearchResults({
 
         {/* Текущий шаг: слева, под прогресс-баром */}
         <div className="lg:col-start-1 lg:row-start-2">
-          <StepTransition activeKey={stepToRender}>
+          <div key={stepToRender} className="animate-step-fade">
             {renderStepContent(stepToRender)}
-          </StepTransition>
+          </div>
         </div>
 
         {/* Сводка: справа, тянется по двум строкам и липнет к верху */}
