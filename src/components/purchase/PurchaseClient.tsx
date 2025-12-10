@@ -1163,22 +1163,9 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
           setBanner({ type: "error", message: "Не удалось скачать PDF. Попробуйте позже" });
           break;
         }
-        }
-      })();
-    }, [data, resolveContactEmail, selectedTicketIds]);
-
-  const handleDownloadPrimary = useCallback(() => {
-    if (!data || data.tickets.length === 0) {
-      return;
-    }
-
-    if (data.tickets.length === 1) {
-      void handleDownloadTicket(data.tickets[0].id);
-      return;
-    }
-
-    handleDownloadAll();
-  }, [data, handleDownloadAll, handleDownloadTicket]);
+      }
+    })();
+  }, [data, resolveContactEmail, selectedTicketIds]);
 
   const validTicketIds = useMemo(() => {
     if (!data) {
@@ -2266,8 +2253,9 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
   const customer = data.customer ?? null;
   const totals = data.totals ? { ...DEFAULT_TOTALS, ...data.totals } : { ...DEFAULT_TOTALS };
   const isPaid = data.purchase.status === "paid";
-  const primaryDownloadLabel = data.tickets.length > 1 ? "Скачать билеты" : "Скачать билет";
+  const primaryActionLabel = isPaid ? "Оформить возврат" : "Оплатить";
   const showReturnTickets = returnTickets.length > 0;
+  const shouldShowDownloadAll = data.tickets.length > 1;
   const shouldShowBulkActions = bulkSelectionCount > 0;
   const selectedTicketsTotal = data.tickets.reduce((sum, ticket) => {
     if (!selectedTicketSet.has(String(ticket.id))) {
@@ -2546,11 +2534,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
             </div>
             <div className={styles.contactMeta}>
               <span className={styles.muted}>Создана {formatDate(data.purchase.created_at)}</span>
-              {isPaid ? (
-                <span className={`${styles.statusPill} ${styles.statusPillSuccess}`}>
-                  <span className={styles.statusDot} aria-hidden="true" /> Оплачено
-                </span>
-              ) : purchaseDeadline ? (
+              {purchaseDeadline ? (
                 <span className={styles.muted}>Оплатить до {purchaseDeadline}</span>
               ) : null}
               <span className={styles.amountBadge}>{totalAmountText}</span>
@@ -3031,40 +3015,33 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
           </div>
         ) : null}
 
-        <section className={`${styles.paybar} ${isPaid ? styles.paybarSuccess : styles.paybarPending}`}>
+        <section className={styles.paybar}>
           <div className={styles.paybarInner}>
             <div className={styles.paySummary}>
-              <div className={styles.payStatusGroup}>
-                <span className={styles.statusPillCompact}>
-                  <span className={styles.statusDot} aria-hidden="true" />
-                  {isPaid ? "Оплачено" : "К оплате"}
-                </span>
-                <div>
-                  <div className={`${styles.sumInline} ${styles.mono}`}>
-                    {isPaid ? totalAmountText : dueAmountText}
-                  </div>
-                  {!isPaid && purchaseDeadline ? (
-                    <div className={styles.mutedSmall}>Оплатить до {purchaseDeadline}</div>
-                  ) : null}
-                </div>
-              </div>
+              <span className={styles.muted}>К оплате:</span>
+              <span className={`${styles.sumInline} ${styles.mono}`}>{dueAmountText}</span>
             </div>
             <div className={styles.payButtons}>
-              {isPaid ? (
-                <button type="button" className={`${styles.btn} ${styles.btnPay} ${styles.btnSoft}`} onClick={handleDownloadPrimary}>
-                  {primaryDownloadLabel}
+              {shouldShowDownloadAll ? (
+                <button type="button" className={`${styles.btn} ${styles.btnGhost}`} onClick={handleDownloadAll}>
+                  Скачать все PDF
                 </button>
-              ) : (
-                <button
-                  type="button"
-                  className={`${styles.btn} ${styles.btnPay}`}
-                  onClick={handlePrimaryAction}
-                  disabled={primaryActionDisabled}
-                >
-                  <span className={styles.payDot} aria-hidden="true" />
-                  Оплатить • <span className={styles.mono}>{dueAmountText}</span>
-                </button>
-              )}
+              ) : null}
+              <button
+                type="button"
+                className={`${styles.btn} ${styles.btnPay}`}
+                onClick={handlePrimaryAction}
+                disabled={primaryActionDisabled}
+              >
+                {isPaid ? (
+                  primaryActionLabel
+                ) : (
+                  <>
+                    <span className={styles.payDot} aria-hidden="true" />
+                    Оплатить • <span className={styles.mono}>{dueAmountText}</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </section>
