@@ -2,6 +2,8 @@ import { useState } from "react";
 
 import FormInput from "../common/FormInput";
 import PhoneInput from "../common/PhoneInput";
+import { useLockBodyScroll } from "@/utils/useLockBodyScroll";
+import { useModalVisibility } from "@/utils/useModalVisibility";
 
 import type { ElectronicTicketData } from "@/types/ticket";
 
@@ -96,6 +98,9 @@ export default function ContactsAndPaymentStep({
   const passengerLabel = (idx: number) => t.passengerLabel(idx + 1);
 
   const [isBaggageModalOpen, setIsBaggageModalOpen] = useState(false);
+  const baggageModal = useModalVisibility(isBaggageModalOpen);
+
+  useLockBodyScroll(baggageModal.shouldRender);
 
   const renderDirection = (
     direction: "outbound" | "return",
@@ -314,8 +319,17 @@ export default function ContactsAndPaymentStep({
         )}
       </div>
 
-      {isBaggageModalOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4 py-6" role="presentation">
+      {baggageModal.shouldRender ? (
+        <div
+          className={`fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-[2px] px-4 py-6 transition-opacity ease-out ${
+            baggageModal.isClosing ? "opacity-0" : "opacity-100"
+          } ${
+            baggageModal.prefersReducedMotion ? "motion-reduce:transition-none" : ""
+          }`}
+          role="presentation"
+          style={{ transitionDuration: `${baggageModal.animationDuration}ms` }}
+          onClick={() => setIsBaggageModalOpen(false)}
+        >
           <div
             className="absolute inset-0 h-full w-full cursor-default"
             aria-hidden
@@ -326,7 +340,14 @@ export default function ContactsAndPaymentStep({
             role="dialog"
             aria-modal="true"
             aria-label={t.extraBaggageHeading}
-            className="relative z-10 w-full max-w-4xl overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-slate-200"
+            className={`relative z-10 w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-slate-200 transition-all ease-out ${
+              baggageModal.isClosing ? "scale-95 opacity-0" : "scale-100 opacity-100"
+            } ${
+              baggageModal.prefersReducedMotion
+                ? "motion-reduce:transform-none motion-reduce:transition-none"
+                : ""
+            }`}
+            style={{ transitionDuration: `${baggageModal.animationDuration}ms` }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">

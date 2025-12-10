@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import SeatClient from "../SeatClient";
 import type { Tour } from "./SearchResults";
 import FormInput from "../common/FormInput";
+import { useLockBodyScroll } from "@/utils/useLockBodyScroll";
+import { useModalVisibility } from "@/utils/useModalVisibility";
 
 type Dict = {
   freeSeats: (n: number) => string;
@@ -83,6 +85,9 @@ export default function BookingPanel({
   const [modalReturnSeats, setModalReturnSeats] = useState<number[]>([]);
   const [modalOutboundExtra, setModalOutboundExtra] = useState(false);
   const [modalReturnExtra, setModalReturnExtra] = useState(false);
+  const seatModal = useModalVisibility(isSeatModalOpen);
+
+  useLockBodyScroll(seatModal.shouldRender);
 
   const outboundComplete = useMemo(
     () => selectedOutboundSeats.length === seatCount,
@@ -204,7 +209,7 @@ export default function BookingPanel({
   );
 
   const renderSeatModal = () => {
-    if (!isSeatModalOpen) return null;
+    if (!seatModal.shouldRender) return null;
 
     const isOutboundModal = modalLeg === "outbound";
     const tour = isOutboundModal ? selectedOutboundTour : selectedReturnTour;
@@ -219,8 +224,26 @@ export default function BookingPanel({
     const returnValid = !selectedReturnTour || modalReturnSeats.length === seatCount;
 
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 px-3 py-4">
-        <div className="relative flex w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl max-h-[80vh]">
+      <div
+        className={`fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-[2px] px-3 py-4 transition-opacity ease-out ${
+          seatModal.isClosing ? "opacity-0" : "opacity-100"
+        } ${
+          seatModal.prefersReducedMotion ? "motion-reduce:transition-none" : ""
+        }`}
+        style={{ transitionDuration: `${seatModal.animationDuration}ms` }}
+        onClick={closeModal}
+      >
+        <div
+          className={`relative flex w-full max-w-5xl transform flex-col overflow-hidden rounded-2xl bg-white shadow-2xl transition-all ease-out max-h-[80vh] ${
+            seatModal.isClosing ? "scale-95 opacity-0" : "scale-100 opacity-100"
+          } ${
+            seatModal.prefersReducedMotion
+              ? "motion-reduce:transform-none motion-reduce:transition-none"
+              : ""
+          }`}
+          style={{ transitionDuration: `${seatModal.animationDuration}ms` }}
+          onClick={(e) => e.stopPropagation()}
+        >
           <header className="border-b px-5 py-3">
             <div className="flex items-start justify-between gap-3">
               <div>
