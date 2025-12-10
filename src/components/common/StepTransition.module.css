@@ -1,0 +1,83 @@
+.container {
+  position: relative;
+}
+
+.layer {
+  position: relative;
+}
+
+.exiting {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.enterFromBottom {
+  animation: stepEnterFromBottom var(--step-duration, 240ms) var(--step-ease, ease-out) forwards;
+}
+
+.enterFromTop {
+  animation: stepEnterFromTop var(--step-duration, 240ms) var(--step-ease, ease-out) forwards;
+}
+
+.exitToTop {
+  animation: stepExitToTop var(--step-duration, 240ms) var(--step-ease, ease-out) forwards;
+}
+
+.exitToBottom {
+  animation: stepExitToBottom var(--step-duration, 240ms) var(--step-ease, ease-out) forwards;
+}
+
+@keyframes stepEnterFromBottom {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes stepEnterFromTop {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes stepExitToTop {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+}
+
+@keyframes stepExitToBottom {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .enterFromBottom,
+  .enterFromTop,
+  .exitToTop,
+  .exitToBottom {
+    animation-duration: 60ms;
+    transform: none !important;
+  }
+}
