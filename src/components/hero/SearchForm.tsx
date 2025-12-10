@@ -8,6 +8,8 @@ import Calendar from '../Calendar';
 import DateInput from './DateInput';
 import PassengersInput from './PassengersInput';
 import { API } from '@/config';
+import { useLockBodyScroll } from '@/utils/useLockBodyScroll';
+import { useModalVisibility } from '@/utils/useModalVisibility';
 
 type Stop = { id: number; stop_name: string };
 
@@ -102,6 +104,11 @@ export default function SearchForm({
 
   const [showDepart, setShowDepart] = useState(false);
   const [showReturn, setShowReturn] = useState(false);
+
+  const departModal = useModalVisibility(showDepart);
+  const returnModal = useModalVisibility(showReturn);
+
+  useLockBodyScroll(departModal.shouldRender || returnModal.shouldRender);
 
   const fromId = useMemo(() => Number(from) || 0, [from]);
   const toId = useMemo(() => Number(to) || 0, [to]);
@@ -326,12 +333,29 @@ export default function SearchForm({
   return (
     <>
       {form}
-      {showDepart && (
+      {departModal.shouldRender && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/20"
+          className={`fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-[2px] transition-opacity ease-out ${
+            departModal.isClosing ? 'opacity-0' : 'opacity-100'
+          } ${
+            departModal.prefersReducedMotion
+              ? 'motion-reduce:transition-none'
+              : ''
+          }`}
+          style={{ transitionDuration: `${departModal.animationDuration}ms` }}
           onClick={() => setShowDepart(false)}
         >
-          <div onClick={(e) => e.stopPropagation()}>
+          <div
+            className={`origin-center transform rounded-2xl bg-white shadow-2xl transition-all ease-out ${
+              departModal.isClosing ? 'scale-95 opacity-0' : 'scale-100 opacity-100'
+            } ${
+              departModal.prefersReducedMotion
+                ? 'motion-reduce:transform-none motion-reduce:transition-none'
+                : ''
+            }`}
+            style={{ transitionDuration: `${departModal.animationDuration}ms` }}
+            onClick={(e) => e.stopPropagation()}
+          >
             <Calendar
               activeDates={departActive}
               selectedDate={departDate}
@@ -345,12 +369,29 @@ export default function SearchForm({
           </div>
         </div>
       )}
-      {showReturn && (
+      {returnModal.shouldRender && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/20"
+          className={`fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-[2px] transition-opacity ease-out ${
+            returnModal.isClosing ? 'opacity-0' : 'opacity-100'
+          } ${
+            returnModal.prefersReducedMotion
+              ? 'motion-reduce:transition-none'
+              : ''
+          }`}
+          style={{ transitionDuration: `${returnModal.animationDuration}ms` }}
           onClick={() => setShowReturn(false)}
         >
-          <div onClick={(e) => e.stopPropagation()}>
+          <div
+            className={`origin-center transform rounded-2xl bg-white shadow-2xl transition-all ease-out ${
+              returnModal.isClosing ? 'scale-95 opacity-0' : 'scale-100 opacity-100'
+            } ${
+              returnModal.prefersReducedMotion
+                ? 'motion-reduce:transform-none motion-reduce:transition-none'
+                : ''
+            }`}
+            style={{ transitionDuration: `${returnModal.animationDuration}ms` }}
+            onClick={(e) => e.stopPropagation()}
+          >
             <Calendar
               activeDates={returnActive}
               selectedDate={returnDate}
