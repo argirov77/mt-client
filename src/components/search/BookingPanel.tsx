@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import AnimatedDialog from "../common/AnimatedDialog";
 import SeatClient from "../SeatClient";
 import type { Tour } from "./SearchResults";
 import FormInput from "../common/FormInput";
@@ -219,107 +220,111 @@ export default function BookingPanel({
     const returnValid = !selectedReturnTour || modalReturnSeats.length === seatCount;
 
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 px-3 py-4">
-        <div className="relative flex w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl max-h-[80vh]">
-          <header className="border-b px-5 py-3">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h3 className="text-xl font-semibold text-slate-900">{t.seatSelectionTitle}</h3>
-                <p className="text-sm text-slate-600">{t.seatSelectionSubtitle}</p>
+      <AnimatedDialog
+        open={isSeatModalOpen}
+        onClose={closeModal}
+        ariaLabel={t.seatSelectionTitle}
+        containerClassName="px-3 py-4"
+        contentClassName="relative flex w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl max-h-[80vh]"
+      >
+        <header className="border-b px-5 py-3">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h3 className="text-xl font-semibold text-slate-900">{t.seatSelectionTitle}</h3>
+              <p className="text-sm text-slate-600">{t.seatSelectionSubtitle}</p>
+            </div>
+
+            <button
+              type="button"
+              aria-label="Close"
+              onClick={closeModal}
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-lg font-semibold text-slate-600 shadow-sm transition hover:bg-slate-50"
+            >
+              ×
+            </button>
+          </div>
+
+          {selectedReturnTour ? (
+            <div className="mt-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Маршрут</p>
+              <div className="mt-2 grid grid-cols-2 gap-2 rounded-xl bg-slate-100 p-1 text-sm font-semibold text-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setModalLeg("outbound")}
+                  className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2 transition ${
+                    isOutboundModal
+                      ? "bg-white text-slate-900 shadow"
+                      : "text-slate-700 hover:bg-white/70"
+                  }`}
+                  aria-pressed={isOutboundModal}
+                >
+                  <span aria-hidden>⇢</span>
+                  {t.outboundShort}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => selectedReturnTour && setModalLeg("return")}
+                  disabled={!selectedReturnTour}
+                  className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2 transition ${
+                    !isOutboundModal
+                      ? "bg-white text-slate-900 shadow"
+                      : "text-slate-700 hover:bg-white/70"
+                  } ${!selectedReturnTour ? "cursor-not-allowed opacity-60" : ""}`}
+                  aria-pressed={!isOutboundModal}
+                >
+                  <span aria-hidden>⇠</span>
+                  {t.inboundShort}
+                </button>
               </div>
-
-              <button
-                type="button"
-                aria-label="Close"
-                onClick={closeModal}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-lg font-semibold text-slate-600 shadow-sm transition hover:bg-slate-50"
-              >
-                ×
-              </button>
             </div>
+          ) : null}
+        </header>
 
-            {selectedReturnTour ? (
-              <div className="mt-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Маршрут</p>
-                <div className="mt-2 grid grid-cols-2 gap-2 rounded-xl bg-slate-100 p-1 text-sm font-semibold text-slate-800">
-                  <button
-                    type="button"
-                    onClick={() => setModalLeg("outbound")}
-                    className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2 transition ${
-                      isOutboundModal
-                        ? "bg-white text-slate-900 shadow"
-                        : "text-slate-700 hover:bg-white/70"
-                    }`}
-                    aria-pressed={isOutboundModal}
-                  >
-                    <span aria-hidden>⇢</span>
-                    {t.outboundShort}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => selectedReturnTour && setModalLeg("return")}
-                    disabled={!selectedReturnTour}
-                    className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2 transition ${
-                      !isOutboundModal
-                        ? "bg-white text-slate-900 shadow"
-                        : "text-slate-700 hover:bg-white/70"
-                    } ${!selectedReturnTour ? "cursor-not-allowed opacity-60" : ""}`}
-                    aria-pressed={!isOutboundModal}
-                  >
-                    <span aria-hidden>⇠</span>
-                    {t.inboundShort}
-                  </button>
-                </div>
-              </div>
-            ) : null}
-          </header>
+        <div className="grid flex-1 grid-cols-1 overflow-hidden md:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="overflow-auto px-5 py-3 md:border-r md:border-slate-100">
+            <SeatClient
+              tourId={tour.id}
+              departureStopId={isOutboundModal ? fromId : toId}
+              arrivalStopId={isOutboundModal ? toId : fromId}
+              layoutVariant={tour.layout_variant || undefined}
+              selectedSeats={currentSeats}
+              maxSeats={seatCount}
+              onChange={onSeatsChange}
+              departureText={
+                isOutboundModal
+                  ? `${fromName} ${tour.departure_time}`
+                  : `${toName} ${tour.departure_time}`
+              }
+              arrivalText={
+                isOutboundModal
+                  ? `${toName} ${tour.arrival_time}`
+                  : `${fromName} ${tour.arrival_time}`
+              }
+              extraBaggage={currentExtraBaggage}
+              onExtraBaggageChange={onBaggageChange}
+              showExtraBaggage={false}
+            />
+          </div>
 
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-            <div className="flex-1 overflow-auto px-5 py-3">
-              <SeatClient
-                tourId={tour.id}
-                departureStopId={isOutboundModal ? fromId : toId}
-                arrivalStopId={isOutboundModal ? toId : fromId}
-                layoutVariant={tour.layout_variant || undefined}
-                selectedSeats={currentSeats}
-                maxSeats={seatCount}
-                onChange={onSeatsChange}
-                departureText={
-                  isOutboundModal
-                    ? `${fromName} ${tour.departure_time}`
-                    : `${toName} ${tour.departure_time}`
-                }
-                arrivalText={
-                  isOutboundModal
-                    ? `${toName} ${tour.arrival_time}`
-                    : `${fromName} ${tour.arrival_time}`
-                }
-                extraBaggage={currentExtraBaggage}
-                onExtraBaggageChange={onBaggageChange}
-                showExtraBaggage={false}
-              />
-            </div>
-
-            <div className="flex flex-col gap-2 border-t bg-white px-5 py-3 sm:flex-row sm:justify-end">
-              <button
-                type="button"
-                onClick={closeModal}
-                className="inline-flex items-center justify-center rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
-              >
-                Отмена
-              </button>
-              <button
-                type="button"
-                disabled={!outboundValid || !returnValid}
-                onClick={confirmSelection}
-                className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
-              >
-                Подтвердить выбор
-              </button>
-            </div>
+          <div className="flex flex-col gap-2 border-t bg-white px-5 py-3 md:border-t-0 md:border-l md:border-slate-100">
+            <button
+              type="button"
+              onClick={closeModal}
+              className="inline-flex items-center justify-center rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+            >
+              Отмена
+            </button>
+            <button
+              type="button"
+              disabled={!outboundValid || !returnValid}
+              onClick={confirmSelection}
+              className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+            >
+              Подтвердить выбор
+            </button>
           </div>
         </div>
-      </div>
+      </AnimatedDialog>
     );
   };
 

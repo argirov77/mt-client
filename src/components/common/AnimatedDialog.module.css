@@ -1,0 +1,91 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(2px);
+  padding: 1rem;
+}
+
+.overlayEnter {
+  animation: overlayFadeIn var(--modal-duration, 220ms) var(--modal-ease, ease-out) forwards;
+}
+
+.overlayExit {
+  animation: overlayFadeOut var(--modal-duration, 220ms) var(--modal-ease, ease-out) forwards;
+}
+
+.panelWrapper {
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.panel {
+  width: 100%;
+  max-height: 90vh;
+  transform-origin: center center;
+}
+
+.panelEnter {
+  animation: dialogEnter var(--modal-duration, 220ms) var(--modal-ease, ease-out) forwards;
+}
+
+.panelExit {
+  animation: dialogExit var(--modal-duration, 220ms) var(--modal-ease, ease-out) forwards;
+}
+
+@keyframes overlayFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes overlayFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes dialogEnter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes dialogExit {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(6px) scale(0.97);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlayEnter,
+  .overlayExit,
+  .panelEnter,
+  .panelExit {
+    animation-duration: 80ms;
+    transform: none !important;
+  }
+}
