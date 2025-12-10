@@ -1,10 +1,10 @@
 .page {
-  --purchase-bg: #f6f8fb;
+  --purchase-bg: linear-gradient(135deg, #eef4ff 0%, #f8fbff 50%, #fef7ff 100%);
   --purchase-surface: #ffffff;
   --purchase-text: #0b1b2b;
   --purchase-muted: #6b7c93;
-  --purchase-line: #e5eaf1;
-  --purchase-shadow: 0 8px 22px rgba(11, 74, 134, 0.06);
+  --purchase-line: #e1e8f2;
+  --purchase-shadow: 0 16px 36px rgba(11, 74, 134, 0.08);
   --purchase-primary: #0b4a86;
   --purchase-primary-hover: #073763;
   --purchase-accent: #ff9800;
@@ -30,9 +30,11 @@
 
 .card {
   background: var(--purchase-surface);
-  border: 1px solid var(--purchase-line);
+  border: 1px solid rgba(11, 74, 134, 0.06);
   border-radius: var(--purchase-radius-lg);
   box-shadow: var(--purchase-shadow);
+  background-image: radial-gradient(circle at 18% 20%, rgba(11, 74, 134, 0.03), transparent 24%),
+    radial-gradient(circle at 88% 10%, rgba(255, 152, 0, 0.05), transparent 28%);
 }
 
 .orderCard {
@@ -131,6 +133,46 @@
   gap: 4px;
   color: var(--purchase-muted);
   font-size: 14px;
+}
+
+.statusPill,
+.statusPillCompact {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.01em;
+  background: #eef4ff;
+  color: #0b4a86;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.statusPillCompact {
+  padding: 6px 12px;
+  border: 1px solid rgba(11, 74, 134, 0.12);
+}
+
+.statusPillSuccess {
+  background: #e8f7ef;
+  color: #237a4b;
+  border: 1px solid rgba(48, 181, 103, 0.2);
+}
+
+.statusDot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #0b4a86;
+  box-shadow: 0 0 0 4px rgba(11, 74, 134, 0.08);
+}
+
+.statusPillSuccess .statusDot,
+.statusPillCompact.statusPillSuccess .statusDot {
+  background: #30b567;
+  box-shadow: 0 0 0 4px rgba(48, 181, 103, 0.18);
 }
 
 .amountBadge {
@@ -884,6 +926,16 @@
   padding: 0 16px;
 }
 
+.paybarPending .paybarInner {
+  background: linear-gradient(135deg, #ffffff 0%, #f6fbff 80%);
+  border-color: rgba(11, 74, 134, 0.14);
+}
+
+.paybarSuccess .paybarInner {
+  background: linear-gradient(135deg, #f5fffa 0%, #f0faf5 90%);
+  border-color: rgba(48, 181, 103, 0.2);
+}
+
 .paybarInner {
   display: flex;
   align-items: center;
@@ -893,19 +945,31 @@
   border: 1px solid var(--purchase-line);
   border-radius: 14px;
   box-shadow: var(--purchase-shadow);
-  padding: 14px 16px;
+  padding: 16px 18px;
 }
 
 .paySummary {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
+  align-items: center;
+  gap: 14px;
   font-size: 16px;
   font-weight: 700;
 }
 
+.payStatusGroup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .sumInline {
   font-weight: 900;
+  font-size: 18px;
+}
+
+.mutedSmall {
+  color: var(--purchase-muted);
+  font-size: 13px;
 }
 
 .payButtons {
@@ -921,6 +985,16 @@
   border-radius: 50%;
   background: var(--purchase-accent);
   display: inline-block;
+}
+
+.btnSoft {
+  background: #0b4a86;
+  color: #fff;
+  box-shadow: 0 12px 30px rgba(11, 74, 134, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.24);
+}
+
+.btnSoft:hover {
+  background: #093a69;
 }
 
 .muted {
