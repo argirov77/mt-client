@@ -5,7 +5,6 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import axios from 'axios';
 
 import Calendar from '../Calendar';
-import AnimatedDialog from '../common/AnimatedDialog';
 import DateInput from './DateInput';
 import PassengersInput from './PassengersInput';
 import { API } from '@/config';
@@ -327,41 +326,43 @@ export default function SearchForm({
   return (
     <>
       {form}
-      <AnimatedDialog
-        open={showDepart}
-        onClose={() => setShowDepart(false)}
-        ariaLabel="Выбор даты отправления"
-        containerClassName="px-3 py-4"
-        contentClassName="max-w-[480px] rounded-2xl bg-white shadow-xl"
-      >
-        <Calendar
-          activeDates={departActive}
-          selectedDate={departDate}
-          onSelect={(iso) => {
-            setDepartDate(iso);
-            setShowDepart(false);
-            // после выбора даты НИЧЕГО автоматически не открываем
-          }}
-          lang={lang}
-        />
-      </AnimatedDialog>
-      <AnimatedDialog
-        open={showReturn}
-        onClose={() => setShowReturn(false)}
-        ariaLabel="Выбор даты обратного рейса"
-        containerClassName="px-3 py-4"
-        contentClassName="max-w-[480px] rounded-2xl bg-white shadow-xl"
-      >
-        <Calendar
-          activeDates={returnActive}
-          selectedDate={returnDate}
-          onSelect={(iso) => {
-            setReturnDate(iso);
-            setShowReturn(false);
-          }}
-          lang={lang}
-        />
-      </AnimatedDialog>
+      {showDepart && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/20"
+          onClick={() => setShowDepart(false)}
+        >
+          <div onClick={(e) => e.stopPropagation()}>
+            <Calendar
+              activeDates={departActive}
+              selectedDate={departDate}
+              onSelect={(iso) => {
+                setDepartDate(iso);
+                setShowDepart(false);
+                // после выбора даты НИЧЕГО автоматически не открываем
+              }}
+              lang={lang}
+            />
+          </div>
+        </div>
+      )}
+      {showReturn && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/20"
+          onClick={() => setShowReturn(false)}
+        >
+          <div onClick={(e) => e.stopPropagation()}>
+            <Calendar
+              activeDates={returnActive}
+              selectedDate={returnDate}
+              onSelect={(iso) => {
+                setReturnDate(iso);
+                setShowReturn(false);
+              }}
+              lang={lang}
+            />
+          </div>
+        </div>
+      )}
     </>
   );
 }
