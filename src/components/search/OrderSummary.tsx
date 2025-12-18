@@ -154,12 +154,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
         </div>
 
         <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.ticketContacts}</p>
-            <span className="rounded-full bg-slate-50 px-3 py-1 text-[11px] font-semibold text-slate-600 ring-1 ring-slate-200">
-              {t.contactsAndPayment}
-            </span>
-          </div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.ticketContacts}</p>
           <div className="mt-3 space-y-2 text-sm text-slate-700">
             {contactsProvided ? (
               <>
