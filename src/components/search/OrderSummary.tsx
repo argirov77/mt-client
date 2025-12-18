@@ -146,7 +146,9 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-slate-500">{t.step2SummaryFillNames}</p>
+              <p className="text-sm text-slate-500" aria-hidden>
+                &nbsp;
+              </p>
             )}
           </div>
         </div>

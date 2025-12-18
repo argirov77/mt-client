@@ -555,9 +555,8 @@ export default function SearchResults({
   const step2Summary = useMemo(() => {
     if (!selectedOutboundTour) return t.step1SummaryChoose;
     if (!seatsDone) return t.step2SummaryChooseSeats;
-    if (!namesDone) return t.step2SummaryFillNames;
     return t.step2SummaryReady;
-  }, [namesDone, seatsDone, selectedOutboundTour, t]);
+  }, [seatsDone, selectedOutboundTour, t]);
 
   const step3Summary = useMemo(() => {
     if (ticket?.status === "paid") return t.step3SummaryPaid;
