@@ -8,14 +8,14 @@ import Alert from "../common/Alert";
 import { API } from "@/config";
 
 import TripList from "./TripList";
-import BookingPanel from "./BookingPanel";
 import ElectronicTicket from "./ElectronicTicket";
 import TicketDownloadPrompt from "./TicketDownloadPrompt";
-import ContactsAndPaymentStep from "./ContactsAndPaymentStep";
 import OrderSummary from "./OrderSummary";
 import StepProgress from "./StepProgress";
 import { dict } from "./searchDictionary";
 import type { Lang, Step, Tour } from "./types";
+import StepTwo from "./steps/StepTwo";
+import StepThree from "./steps/StepThree";
 
 import { downloadTicketPdf } from "@/utils/ticketPdf";
 import type { ElectronicTicketData } from "@/types/ticket";
@@ -810,71 +810,57 @@ export default function SearchResults({
 
     if (stepToRender === 2) {
       return (
-        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-3">
-          {renderStepHeader(2, t.step2Title, step2Summary)}
-          <div className="rounded-xl border border-slate-100 bg-white p-3">
-            {selectedOutboundTour ? (
-              <BookingPanel
-                t={t}
-                seatCount={safeSeatCount}
-                fromId={fromId}
-                toId={toId}
-                fromName={fromName}
-                toName={toName}
-                selectedOutboundTour={selectedOutboundTour}
-                selectedReturnTour={selectedReturnTour}
-                selectedOutboundSeats={selectedOutboundSeats}
-                setSelectedOutboundSeats={setSelectedOutboundSeats}
-                selectedReturnSeats={selectedReturnSeats}
-                setSelectedReturnSeats={setSelectedReturnSeats}
-                passengerNames={passengerNames}
-                setPassengerNames={setPassengerNames}
-                extraBaggageOutbound={extraBaggageOutbound}
-                setExtraBaggageOutbound={setExtraBaggageOutbound}
-                extraBaggageReturn={extraBaggageReturn}
-                setExtraBaggageReturn={setExtraBaggageReturn}
-                onReadyForContacts={handleReadyForContacts}
-              />
-            ) : (
-              <p className="text-sm text-slate-600">{t.outboundShort} {t.outboundNotSelected}</p>
-            )}
-          </div>
-        </section>
+        <StepTwo
+          renderStepHeader={renderStepHeader}
+          t={t}
+          safeSeatCount={safeSeatCount}
+          fromId={fromId}
+          toId={toId}
+          fromName={fromName}
+          toName={toName}
+          selectedOutboundTour={selectedOutboundTour}
+          selectedReturnTour={selectedReturnTour}
+          selectedOutboundSeats={selectedOutboundSeats}
+          setSelectedOutboundSeats={setSelectedOutboundSeats}
+          selectedReturnSeats={selectedReturnSeats}
+          setSelectedReturnSeats={setSelectedReturnSeats}
+          passengerNames={passengerNames}
+          setPassengerNames={setPassengerNames}
+          extraBaggageOutbound={extraBaggageOutbound}
+          setExtraBaggageOutbound={setExtraBaggageOutbound}
+          extraBaggageReturn={extraBaggageReturn}
+          setExtraBaggageReturn={setExtraBaggageReturn}
+          handleReadyForContacts={handleReadyForContacts}
+          step2Summary={step2Summary}
+        />
       );
     }
 
     return (
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-3">
-        {renderStepHeader(3, t.contactsAndPayment, step3Summary)}
-        <div className="rounded-xl border border-slate-100 bg-white p-3 space-y-3">
-          <ContactsAndPaymentStep
-            t={t}
-            passengerNames={passengerNames}
-            phone={phone}
-            setPhone={setPhone}
-            email={email}
-            setEmail={setEmail}
-            fromName={fromName}
-            toName={toName}
-            hasReturnSection={returnRequired}
-            extraBaggageOutbound={extraBaggageOutbound}
-            setExtraBaggageOutbound={setExtraBaggageOutbound}
-            extraBaggageReturn={extraBaggageReturn}
-            setExtraBaggageReturn={setExtraBaggageReturn}
-            purchaseId={purchaseId}
-            ticket={ticket}
-            handleAction={handleAction}
-            handlePay={handlePay}
-            onDownloadTicket={handleTicketDownloadClick}
-          />
-          <TicketDownloadPrompt
-            visible={showDownloadPrompt && !!ticket}
-            t={t}
-            onDownload={() => handleTicketDownloadClick()}
-            onClose={handlePromptClose}
-          />
-        </div>
-      </section>
+      <StepThree
+        renderStepHeader={renderStepHeader}
+        t={t}
+        passengerNames={passengerNames}
+        phone={phone}
+        setPhone={setPhone}
+        email={email}
+        setEmail={setEmail}
+        fromName={fromName}
+        toName={toName}
+        returnRequired={returnRequired}
+        extraBaggageOutbound={extraBaggageOutbound}
+        setExtraBaggageOutbound={setExtraBaggageOutbound}
+        extraBaggageReturn={extraBaggageReturn}
+        setExtraBaggageReturn={setExtraBaggageReturn}
+        purchaseId={purchaseId}
+        ticket={ticket}
+        handleAction={handleAction}
+        handlePay={handlePay}
+        handleTicketDownloadClick={handleTicketDownloadClick}
+        handlePromptClose={handlePromptClose}
+        showDownloadPrompt={showDownloadPrompt}
+        step3Summary={step3Summary}
+      />
     );
   };
 
