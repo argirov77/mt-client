@@ -196,12 +196,6 @@ export default function ContactsAndPaymentStep({
               {t.addExtraBaggage}
             </button>
           </div>
-          <div className="hidden sm:flex flex-col items-end gap-2 text-right text-xs text-slate-500">
-            <span className={`${badgeTone} bg-white text-slate-700 shadow-sm`}>{t.contactsAndPayment}</span>
-            <span className="rounded-full bg-emerald-50 px-3 py-1 font-semibold text-emerald-700 shadow-sm">
-              {t.baggageIncludedBadge}
-            </span>
-          </div>
         </div>
       </div>
 
