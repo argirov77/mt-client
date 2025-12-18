@@ -956,7 +956,6 @@ export default function SearchResults({
               phone={phone}
               email={email}
               totals={orderSummaryTotals}
-              step3Summary={step3Summary}
               formatDateLabel={formatDateLabel}
               formatPrice={formatPrice}
             />

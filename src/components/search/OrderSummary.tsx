@@ -22,7 +22,6 @@ type OrderSummaryProps = {
   phone: string;
   email: string;
   totals: { outbound: number; return: number; overall: number };
-  step3Summary: string;
   formatDateLabel: (value: string) => string;
   formatPrice: (value: number) => string;
 };
@@ -39,7 +38,6 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
   phone,
   email,
   totals,
-  step3Summary,
   formatDateLabel,
   formatPrice,
 }) => {
@@ -77,15 +75,8 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
 
   return (
     <aside className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
-      <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.orderSummaryTitle}</p>
-          <p className="mt-1 text-sm text-slate-700">{t.orderSummaryNote}</p>
-        </div>
-        <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-100">
-          <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden />
-          {t.liveLabel}
-        </span>
+      <div className="border-b border-slate-100 px-5 py-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.orderSummaryTitle}</p>
       </div>
 
       <div className="space-y-4 px-5 py-4">
@@ -177,18 +168,12 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
                   {t.step3SummaryPending}
                 </span>
               </>
-            ) : (
-              <p className="text-sm text-slate-500">{step3Summary}</p>
-            )}
+            ) : null}
           </div>
         </div>
 
         <div className="rounded-xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
-          <div className="flex items-center justify-between text-sm text-slate-600">
-            <span className="font-medium">{t.subtotal}</span>
-            <span className="font-semibold text-slate-900">{formatPrice(totals.outbound + totals.return)}</span>
-          </div>
-          <div className="mt-3 flex items-center justify-between text-lg font-semibold text-slate-900">
+          <div className="flex items-center justify-between text-lg font-semibold text-slate-900">
             <span>{t.total}</span>
             <span className="text-emerald-600">{formatPrice(totals.overall)}</span>
           </div>
