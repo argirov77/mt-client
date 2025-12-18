@@ -1,5 +1,5 @@
 import React from "react";
-import type { Tour } from "./SearchResults";
+import type { Lang, Tour } from "./types";
 import { formatDate } from "@/utils/date";
 import TripCard from "../TripCard";
 
@@ -10,7 +10,7 @@ type TripListProps = {
   onSelect: (tour: Tour) => void;
   fromName: string;
   toName: string;
-  lang: "ru" | "bg" | "en" | "ua";
+  lang: Lang;
   seatCount: number;
   discountCount: number;
   t: {
