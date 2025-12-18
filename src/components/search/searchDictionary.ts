@@ -61,7 +61,7 @@ const dict: Record<Lang, Dict> = {
     baggageIncludedChecked: "1 чемодан (10–20 кг) включен",
     baggageIncludedNote:
       "Дополнительный багаж можно добавить отдельно для каждого пассажира.",
-    extraBaggagePrice: "+€10",
+    extraBaggagePrice: "+10% от стоимости билета",
     addExtraBaggage: "Добавить багаж",
     addedExtraBaggage: "Багаж добавлен",
     removeExtraBaggage: "Убрать багаж",
@@ -172,7 +172,7 @@ const dict: Record<Lang, Dict> = {
     baggageIncludedCabin: "1 cabin bag (7 kg) included",
     baggageIncludedChecked: "1 checked bag (10–20 kg) included",
     baggageIncludedNote: "Extra baggage can be added per passenger.",
-    extraBaggagePrice: "+€10",
+    extraBaggagePrice: "+10% of ticket price",
     addExtraBaggage: "Add extra baggage",
     addedExtraBaggage: "Added",
     removeExtraBaggage: "Remove",
@@ -284,7 +284,7 @@ const dict: Record<Lang, Dict> = {
     baggageIncludedChecked: "1 куфар (10–20 кг) включен",
     baggageIncludedNote:
       "Допълнителен багаж може да се добави за всеки пътник отделно.",
-    extraBaggagePrice: "+€10",
+    extraBaggagePrice: "+10% от цената на билета",
     addExtraBaggage: "Добави багаж",
     addedExtraBaggage: "Добавено",
     removeExtraBaggage: "Премахни",
@@ -396,7 +396,7 @@ const dict: Record<Lang, Dict> = {
     baggageIncludedChecked: "1 валіза (10–20 кг) включена",
     baggageIncludedNote:
       "Додатковий багаж можна додати окремо для кожного пасажира.",
-    extraBaggagePrice: "+€10",
+    extraBaggagePrice: "+10% від ціни квитка",
     addExtraBaggage: "Додати багаж",
     addedExtraBaggage: "Додано",
     removeExtraBaggage: "Прибрати",

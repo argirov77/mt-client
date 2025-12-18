@@ -1,6 +1,6 @@
 import React from "react";
 
-import ContactsAndPaymentStep from "../ContactsAndPaymentStep";
+import ContactsAndPaymentStep, { type BaggagePriceByDirection } from "../ContactsAndPaymentStep";
 import TicketDownloadPrompt from "../TicketDownloadPrompt";
 import type { ElectronicTicketData } from "@/types/ticket";
 
@@ -17,6 +17,7 @@ export type StepThreeProps = {
   fromName: string;
   toName: string;
   returnRequired: boolean;
+  baggagePriceByDirection: BaggagePriceByDirection;
   extraBaggageOutbound: boolean[];
   setExtraBaggageOutbound: React.Dispatch<React.SetStateAction<boolean[]>>;
   extraBaggageReturn: boolean[];
@@ -42,6 +43,7 @@ export default function StepThree({
   fromName,
   toName,
   returnRequired,
+  baggagePriceByDirection,
   extraBaggageOutbound,
   setExtraBaggageOutbound,
   extraBaggageReturn,
@@ -66,14 +68,15 @@ export default function StepThree({
           setPhone={setPhone}
           email={email}
           setEmail={setEmail}
-          fromName={fromName}
-          toName={toName}
-          hasReturnSection={returnRequired}
-          extraBaggageOutbound={extraBaggageOutbound}
-          setExtraBaggageOutbound={setExtraBaggageOutbound}
-          extraBaggageReturn={extraBaggageReturn}
-          setExtraBaggageReturn={setExtraBaggageReturn}
-          purchaseId={purchaseId}
+        fromName={fromName}
+        toName={toName}
+        hasReturnSection={returnRequired}
+        baggagePriceByDirection={baggagePriceByDirection}
+        extraBaggageOutbound={extraBaggageOutbound}
+        setExtraBaggageOutbound={setExtraBaggageOutbound}
+        extraBaggageReturn={extraBaggageReturn}
+        setExtraBaggageReturn={setExtraBaggageReturn}
+        purchaseId={purchaseId}
           ticket={ticket}
           handleAction={handleAction}
           handlePay={handlePay}

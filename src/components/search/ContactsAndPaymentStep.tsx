@@ -39,6 +39,11 @@ type Dict = {
   removeBagAria: string;
 };
 
+export type BaggagePriceByDirection = {
+  outbound: string | null;
+  return: string | null;
+};
+
 type Props = {
   t: Dict;
   passengerNames: string[];
@@ -49,6 +54,7 @@ type Props = {
   fromName: string;
   toName: string;
   hasReturnSection: boolean;
+  baggagePriceByDirection: BaggagePriceByDirection;
   extraBaggageOutbound: boolean[];
   setExtraBaggageOutbound: (value: boolean[]) => void;
   extraBaggageReturn: boolean[];
@@ -70,6 +76,7 @@ export default function ContactsAndPaymentStep({
   fromName,
   toName,
   hasReturnSection,
+  baggagePriceByDirection,
   extraBaggageOutbound,
   setExtraBaggageOutbound,
   extraBaggageReturn,
@@ -96,6 +103,26 @@ export default function ContactsAndPaymentStep({
   };
 
   const passengerLabel = (idx: number) => t.passengerLabel(idx + 1);
+
+  const getBaggagePriceLabel = (direction: "outbound" | "return") => {
+    const directionPrice =
+      direction === "return"
+        ? baggagePriceByDirection.return ?? baggagePriceByDirection.outbound
+        : baggagePriceByDirection.outbound;
+
+    return directionPrice ?? t.extraBaggagePrice;
+  };
+
+  const renderPriceBadgeContent = () => {
+    const outboundLabel = baggagePriceByDirection.outbound;
+    const returnLabel = hasReturnSection ? baggagePriceByDirection.return : null;
+
+    if (returnLabel && returnLabel !== outboundLabel) {
+      return `${t.outboundShort}: ${outboundLabel ?? t.extraBaggagePrice} · ${t.inboundShort}: ${returnLabel}`;
+    }
+
+    return outboundLabel ?? returnLabel ?? t.extraBaggagePrice;
+  };
 
   const [isBaggageModalOpen, setIsBaggageModalOpen] = useState(false);
   const baggageModal = useModalVisibility(isBaggageModalOpen);
@@ -142,7 +169,7 @@ export default function ContactsAndPaymentStep({
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-sm font-semibold text-slate-700">{t.extraBaggagePrice}</span>
+            <span className="text-sm font-semibold text-slate-700">{getBaggagePriceLabel(direction)}</span>
             <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-sm font-semibold text-slate-900">
               <button
                 type="button"
@@ -351,7 +378,7 @@ export default function ContactsAndPaymentStep({
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 <span className={`${badgeTone} border border-amber-100 bg-amber-50 text-amber-800`}>
-                  {t.pricePerBagLabel}: {t.extraBaggagePrice}
+                  {t.pricePerBagLabel}: {renderPriceBadgeContent()}
                 </span>
                 <button
                   type="button"

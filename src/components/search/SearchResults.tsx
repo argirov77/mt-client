@@ -652,6 +652,8 @@ export default function SearchResults({
     [locale]
   );
 
+  const formatPrice = useCallback((value: number) => `${value.toFixed(2)} ₴`, []);
+
   const calculateTotal = useCallback(
     (tour: Tour | null) => {
       if (!tour) return 0;
@@ -666,6 +668,29 @@ export default function SearchResults({
   const outboundTotal = useMemo(() => calculateTotal(selectedOutboundTour), [calculateTotal, selectedOutboundTour]);
   const returnTotal = useMemo(() => calculateTotal(selectedReturnTour), [calculateTotal, selectedReturnTour]);
   const overallTotal = useMemo(() => outboundTotal + returnTotal, [outboundTotal, returnTotal]);
+
+  const calculateBaggagePrice = useCallback((tour: Tour | null) => {
+    if (!tour) return null;
+
+    const rawPrice = tour.price * 0.1;
+    return Math.round(rawPrice * 100) / 100;
+  }, []);
+
+  const baggagePriceLabels = useMemo(
+    () => ({
+      outbound: calculateBaggagePrice(selectedOutboundTour),
+      return: calculateBaggagePrice(selectedReturnTour),
+    }),
+    [calculateBaggagePrice, selectedOutboundTour, selectedReturnTour]
+  );
+
+  const formattedBaggagePriceLabels = useMemo(
+    () => ({
+      outbound: baggagePriceLabels.outbound != null ? formatPrice(baggagePriceLabels.outbound) : null,
+      return: baggagePriceLabels.return != null ? formatPrice(baggagePriceLabels.return) : null,
+    }),
+    [baggagePriceLabels.outbound, baggagePriceLabels.return, formatPrice]
+  );
 
   const passengerSummaries = useMemo(
     () =>
@@ -697,8 +722,6 @@ export default function SearchResults({
     () => ({ outbound: outboundTotal, return: returnTotal, overall: overallTotal }),
     [outboundTotal, overallTotal, returnTotal]
   );
-
-  const formatPrice = useCallback((value: number) => `${value.toFixed(2)} ₴`, []);
   const showStepNavigation = Boolean(selectedOutboundTour);
   const stepCounterLabel = t.stepCounter(activeStep, stepNavigation.length);
 
@@ -847,6 +870,7 @@ export default function SearchResults({
         fromName={fromName}
         toName={toName}
         returnRequired={returnRequired}
+        baggagePriceByDirection={formattedBaggagePriceLabels}
         extraBaggageOutbound={extraBaggageOutbound}
         setExtraBaggageOutbound={setExtraBaggageOutbound}
         extraBaggageReturn={extraBaggageReturn}
