@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import SeatClient from "../SeatClient";
-import type { Tour } from "./SearchResults";
+import type { Tour } from "./types";
 import FormInput from "../common/FormInput";
 import { useLockBodyScroll } from "@/utils/useLockBodyScroll";
 import { useModalVisibility } from "@/utils/useModalVisibility";
