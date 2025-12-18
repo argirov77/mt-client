@@ -270,51 +270,52 @@ export default function SearchResults({
         ...(lang ? { lang } : {}),
       };
 
-      const coerceTicketNumber = (value: unknown): string | null => {
+      const coerceTicketNumbers = (value: unknown): string[] => {
         if (value == null) {
-          return null;
+          return [];
         }
         if (Array.isArray(value)) {
-          for (const item of value) {
-            const normalized = coerceTicketNumber(item);
-            if (normalized) return normalized;
-          }
-          return null;
+          return value.flatMap((item) => coerceTicketNumbers(item));
         }
         if (typeof value === "object") {
           const obj = value as Record<string, unknown>;
-          return (
-            coerceTicketNumber(obj["ticket_number"]) ??
-            coerceTicketNumber(obj["ticketNumber"]) ??
-            coerceTicketNumber(obj["ticket_id"]) ??
-            coerceTicketNumber(obj["ticketId"]) ??
-            coerceTicketNumber(obj["number"]) ??
-            coerceTicketNumber(obj["id"])
-          );
+          const nestedSources = [
+            obj["ticket_number"],
+            obj["ticketNumber"],
+            obj["ticket_id"],
+            obj["ticketId"],
+            obj["number"],
+            obj["id"],
+          ];
+          return nestedSources.flatMap((source) => coerceTicketNumbers(source));
         }
         if (typeof value === "string" || typeof value === "number") {
           const normalized = String(value).trim();
-          return normalized || null;
+          return normalized ? [normalized] : [];
         }
-        return null;
+        return [];
       };
 
-      const extractTicketNumber = (payload: unknown): string | null => {
+      const extractTicketNumbers = (payload: unknown): string[] => {
         if (!payload || typeof payload !== "object") {
-          return null;
+          return [];
         }
         const data = payload as Record<string, unknown>;
-        return (
-          coerceTicketNumber(data["ticket_number"]) ??
-          coerceTicketNumber(data["ticketNumber"]) ??
-          coerceTicketNumber(data["ticket_id"]) ??
-          coerceTicketNumber(data["ticketId"]) ??
-          coerceTicketNumber(data["ticket_numbers"]) ??
-          coerceTicketNumber(data["ticketNumbers"]) ??
-          coerceTicketNumber(data["ticket_ids"]) ??
-          coerceTicketNumber(data["ticketIds"]) ??
-          coerceTicketNumber(data["tickets"])
-        );
+        const potentialSources = [
+          data["ticket_number"],
+          data["ticketNumber"],
+          data["ticket_id"],
+          data["ticketId"],
+          data["ticket_numbers"],
+          data["ticketNumbers"],
+          data["ticket_ids"],
+          data["ticketIds"],
+          data["tickets"],
+        ];
+
+        return potentialSources
+          .flatMap((source) => coerceTicketNumbers(source))
+          .filter(Boolean);
       };
 
       // туда
@@ -329,7 +330,7 @@ export default function SearchResults({
 
       let total = outRes.data.amount_due;
       let pId = outRes.data.purchase_id as number;
-      let ticketNumberValue = extractTicketNumber(outRes.data);
+      let ticketNumbers = extractTicketNumbers(outRes.data);
 
       // обратно
       if (selectedReturnTour) {
@@ -344,14 +345,17 @@ export default function SearchResults({
         });
         total = retRes.data.amount_due;
         pId = retRes.data.purchase_id;
-        ticketNumberValue =
-          extractTicketNumber(retRes.data) ?? ticketNumberValue;
+        ticketNumbers = [...ticketNumbers, ...extractTicketNumbers(retRes.data)];
       }
 
       setPurchaseId(pId);
-      const resolvedTicketNumber = ticketNumberValue ?? String(pId);
+      const resolvedTicketNumbers = Array.from(
+        new Set(ticketNumbers.length ? ticketNumbers : [String(pId)])
+      );
+      const primaryTicketNumber = resolvedTicketNumbers[0];
       const ticketData: ElectronicTicketData = {
-        ticketNumber: resolvedTicketNumber,
+        ticketNumber: primaryTicketNumber,
+        ticketNumbers: resolvedTicketNumbers,
         purchaseId: pId,
         action,
         total: Number(total),
@@ -491,25 +495,35 @@ export default function SearchResults({
   };
 
   const handleTicketDownload = async (ticketNumberOverride?: string) => {
-    const targetTicketNumber =
-      ticketNumberOverride ??
-      ticket?.ticketNumber ??
-      (ticket?.purchaseId != null ? String(ticket.purchaseId) : null);
+    const candidateTicketIds = ticketNumberOverride
+      ? [ticketNumberOverride]
+      : ticket?.ticketNumbers?.length
+        ? ticket.ticketNumbers
+        : ticket?.ticketNumber
+          ? [ticket.ticketNumber]
+          : [];
+    const targetTicketNumbers = candidateTicketIds.length
+      ? candidateTicketIds
+      : ticket?.purchaseId != null
+        ? [String(ticket.purchaseId)]
+        : [];
     const targetPurchaseId = ticket?.purchaseId ?? purchaseId ?? null;
     const targetEmail = (ticket?.contact.email ?? email ?? "").trim();
 
-    if (targetTicketNumber == null || targetPurchaseId == null || !targetEmail) {
+    if (!targetTicketNumbers.length || targetPurchaseId == null || !targetEmail) {
       setMsg("Не хватает данных для скачивания билета");
       setMsgType("error");
       return;
     }
 
     try {
-      await downloadTicketPdf({
-        ticketId: targetTicketNumber,
-        purchaseId: targetPurchaseId,
-        email: targetEmail,
-      });
+      for (const ticketId of targetTicketNumbers) {
+        await downloadTicketPdf({
+          ticketId,
+          purchaseId: targetPurchaseId,
+          email: targetEmail,
+        });
+      }
       setShowDownloadPrompt(false);
     } catch (error) {
       console.error(error);
