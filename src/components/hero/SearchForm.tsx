@@ -217,12 +217,12 @@ export default function SearchForm({
 
   // ВНУТРЕННЕЕ СОДЕРЖИМОЕ ФОРМЫ
   const row = (
-    <div className="flex flex-wrap md:flex-nowrap items-center gap-3">
-      <div className="relative flex w-full md:w-1/2">
+    <div className="flex flex-col gap-3 md:flex-row md:flex-nowrap md:items-center">
+      <div className="relative flex w-full flex-col gap-3 md:w-1/2 md:flex-row md:items-center md:gap-0">
         <select
           ref={fromSelectRef}
           aria-label={t.from}
-          className="h-14 w-1/2 pr-10 rounded-2xl rounded-r-none bg-white/90 hover:bg-white text-slate-800 shadow ring-1 ring-black/5 px-4"
+          className="h-14 w-full pr-10 rounded-2xl md:w-1/2 md:rounded-r-none bg-white/90 hover:bg-white text-slate-800 shadow ring-1 ring-black/5 px-4"
           value={from}
           onChange={(e) => {
             const val = e.target.value;
@@ -232,7 +232,9 @@ export default function SearchForm({
             if (val && toSelectRef.current) {
               // небольшой timeout чтобы не конфликтовать с ре-рендером
               setTimeout(() => {
-                toSelectRef.current && toSelectRef.current.focus();
+                if (toSelectRef.current) {
+                  toSelectRef.current.focus();
+                }
               }, 0);
             }
           }}
@@ -248,7 +250,7 @@ export default function SearchForm({
         <select
           ref={toSelectRef}
           aria-label={t.to}
-          className="h-14 w-1/2 pl-10 rounded-2xl rounded-l-none bg-white/90 hover:bg-white text-slate-800 shadow ring-1 ring-black/5 px-4"
+          className="h-14 w-full pl-10 rounded-2xl md:w-1/2 md:rounded-l-none bg-white/90 hover:bg-white text-slate-800 shadow ring-1 ring-black/5 px-4"
           value={to}
           onChange={(e) => {
             const val = e.target.value;
@@ -273,42 +275,44 @@ export default function SearchForm({
           type="button"
           title={t.swapTitle}
           onClick={handleSwap}
-          className="absolute left-1/2 top-1/2 z-10 h-10 w-10 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/90 hover:bg-white text-sky-700 shadow ring-1 ring-black/5 grid place-items-center"
+          className="order-3 self-center grid h-10 w-10 place-items-center rounded-full bg-white/90 hover:bg-white text-sky-700 shadow ring-1 ring-black/5 md:order-none md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2"
         >
           ⇄
         </button>
       </div>
 
-      <div className="flex w-full md:w-1/2 items-center gap-3">
-        <DateInput
-          value={departDate}
-          setValue={setDepartDate}
-          activeDates={departActive}
-          label={t.date}
-          lang={lang}
-          disabled={!fromId || !toId}
-          onOpen={handleDepartOpen}
-        />
+      <div className="flex w-full flex-col gap-3 md:w-1/2 md:flex-row md:items-center md:gap-3">
+        <div className="grid w-full grid-cols-2 gap-3 max-[420px]:grid-cols-1">
+          <DateInput
+            value={departDate}
+            setValue={setDepartDate}
+            activeDates={departActive}
+            label={t.date}
+            lang={lang}
+            disabled={!fromId || !toId}
+            onOpen={handleDepartOpen}
+          />
 
-        <DateInput
-          value={returnDate}
-          setValue={setReturnDate}
-          activeDates={returnActive}
-          label={t.back}
-          lang={lang}
-          disabled={!fromId || !toId}
-          onOpen={handleReturnOpen}
-        />
+          <DateInput
+            value={returnDate}
+            setValue={setReturnDate}
+            activeDates={returnActive}
+            label={t.back}
+            lang={lang}
+            disabled={!fromId || !toId}
+            onOpen={handleReturnOpen}
+          />
+        </div>
 
         <PassengersInput
           value={passengers}
           onChange={setPassengers}
-          pillClass="h-14 px-3 rounded-2xl bg-white/90 hover:bg-white text-slate-800 shadow ring-1 ring-black/5 inline-flex items-center gap-2"
+          pillClass="h-14 px-3 w-full rounded-2xl bg-white/90 hover:bg-white text-slate-800 shadow ring-1 ring-black/5 inline-flex items-center gap-2"
         />
 
         <button
           type="submit"
-          className="h-14 px-6 rounded-2xl bg-[#ff6a00] hover:bg-[#ff7a1c] text-white font-medium shadow-lg"
+          className="h-14 w-full px-6 rounded-2xl bg-[#ff6a00] hover:bg-[#ff7a1c] text-white font-medium shadow-lg"
           disabled={!fromId || !toId || !departDate}
           aria-label={t.search}
         >
