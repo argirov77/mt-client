@@ -29,36 +29,41 @@ export default function TripCard({
 }: TripCardProps) {
   return (
     <div
-      className={`group flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition duration-200 hover:border-orange-100 hover:shadow-md md:flex-row md:items-center md:justify-between md:p-5 ${
+      className={`group flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition duration-200 hover:border-orange-100 hover:shadow-md md:flex-row md:items-center md:justify-between md:p-5 ${
         selected ? "border-orange-200 ring-2 ring-orange-200" : ""
       }`}
       role="button"
       onClick={onSelect}
     >
-      <div className="flex flex-col gap-4 md:gap-3">
-        <div className="text-sm font-medium text-slate-700">
-          <span className="text-slate-500">Дата:</span> {dateText}
+      <div className="flex flex-1 flex-col gap-3 md:gap-2">
+        <div className="flex items-center justify-between gap-2 text-sm font-semibold text-slate-900 md:text-base">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="truncate">{fromStop}</span>
+            <span aria-hidden className="text-slate-500">
+              →
+            </span>
+            <span className="truncate">{toStop}</span>
+          </div>
+          <span className="shrink-0 text-xs font-medium text-slate-500 md:text-sm">{dateText}</span>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-8">
-          <div className="flex flex-col gap-1">
-            <span className="text-xl font-semibold text-slate-900">{fromStop}</span>
-            <span className="text-base font-medium text-slate-700">{departTime}</span>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col gap-0.5">
+            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">{fromStop}</span>
+            <span className="text-xl font-bold text-slate-900">{departTime}</span>
           </div>
 
-          <div className="flex flex-col gap-1 sm:items-end sm:text-right">
-            <span className="text-xl font-semibold text-slate-900">{toStop}</span>
-            <span className="text-base font-medium text-slate-700">{arriveTime}</span>
+          <div className="flex flex-col gap-0.5 items-end text-right">
+            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">{toStop}</span>
+            <span className="text-xl font-bold text-slate-900">{arriveTime}</span>
           </div>
         </div>
       </div>
 
-      <div className="flex w-full items-center justify-between gap-4 md:w-auto md:flex-col md:items-end md:justify-center">
-        <div className="text-right">
-          <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-            {priceLabel}
-          </div>
-          <div className="text-2xl font-bold text-slate-900">{total.toFixed(2)} ₴</div>
+      <div className="mt-1 flex w-full items-center justify-between gap-3 md:mt-0 md:w-auto md:flex-col md:items-end md:justify-center">
+        <div className="text-left leading-tight md:text-right">
+          <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{priceLabel}</div>
+          <div className="text-xl font-bold text-slate-900">{total.toFixed(2)} ₴</div>
         </div>
         <button
           onClick={(e) => {
