@@ -165,8 +165,8 @@ export default function SeatClient({
 
       {err && <div className="mt-2 rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-rose-900">{err}</div>}
 
-      <div className="mt-3 flex gap-4">
-        <div className="overflow-x-auto rounded-xl border p-3 bg-slate-50">
+      <div className="mt-3 flex flex-col gap-4 md:flex-row">
+        <div className="flex-1 overflow-x-auto rounded-xl border bg-slate-50 p-3">
           {loading ? (
             <div className="text-sm text-slate-500">Загрузка схемы…</div>
           ) : (layoutVariant || "").toString().toLowerCase() === "travego" ? (
@@ -185,7 +185,7 @@ export default function SeatClient({
             />
           )}
         </div>
-        <div className="w-64 text-sm flex flex-col gap-2">
+        <div className="hidden w-64 flex-col gap-2 text-sm md:flex">
           {departureText && <div>Отправление: {departureText}</div>}
           {arrivalText && <div>Прибытие: {arrivalText}</div>}
           <div className="flex gap-2 flex-wrap">
