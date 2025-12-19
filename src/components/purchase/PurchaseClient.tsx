@@ -2675,7 +2675,6 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
                             <p className={styles.panelNote}>
                               Свободных мест: {typeof tour.seats === "number" ? tour.seats : Number((tour.seats as { free?: number }).free ?? 0)}
                             </p>
-                            {tour.description ? <p className={styles.panelNote}>{tour.description}</p> : null}
                           </div>
                           <input
                             type="radio"
