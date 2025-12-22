@@ -216,108 +216,138 @@ export default function SearchForm({
   };
 
   // ВНУТРЕННЕЕ СОДЕРЖИМОЕ ФОРМЫ
+  const baseFieldStyles =
+    "h-14 w-full rounded-2xl bg-white/95 px-4 text-slate-900 shadow ring-1 ring-black/5 transition hover:bg-white focus-visible:ring-2 focus-visible:ring-sky-400 focus:outline-none";
+
+  const labelStyles = "text-xs font-semibold uppercase tracking-wide text-slate-500";
+
   const row = (
-    <div className="flex flex-col gap-3 md:flex-row md:flex-nowrap md:items-center">
-      <div className="relative flex w-full flex-col gap-3 md:w-1/2 md:flex-row md:items-center md:gap-0">
-        <select
-          ref={fromSelectRef}
-          aria-label={t.from}
-          className="h-14 w-full pr-10 rounded-2xl md:w-1/2 md:rounded-r-none bg-white/90 hover:bg-white text-slate-800 shadow ring-1 ring-black/5 px-4"
-          value={from}
-          onChange={(e) => {
-            const val = e.target.value;
-            setFrom(val);
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3 md:flex-row md:items-stretch md:gap-4">
+        <div className="relative flex w-full flex-col gap-3 rounded-2xl bg-white/50 p-3 shadow-sm ring-1 ring-white/50 backdrop-blur">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="flex flex-col gap-2">
+              <span className={labelStyles}>{t.from}</span>
+              <div className="relative">
+                <select
+                  ref={fromSelectRef}
+                  aria-label={t.from}
+                  className={`${baseFieldStyles} pr-12 appearance-none`}
+                  value={from}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setFrom(val);
 
-            // после выбора "Откуда" — автоматически фокус на "Куда"
-            if (val && toSelectRef.current) {
-              // небольшой timeout чтобы не конфликтовать с ре-рендером
-              setTimeout(() => {
-                if (toSelectRef.current) {
-                  toSelectRef.current.focus();
-                }
-              }, 0);
-            }
-          }}
-        >
-          <option value="">{t.from}</option>
-          {departureStops.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.stop_name}
-            </option>
-          ))}
-        </select>
+                    if (val && toSelectRef.current) {
+                      setTimeout(() => {
+                        toSelectRef.current?.focus();
+                      }, 0);
+                    }
+                  }}
+                >
+                  <option value="">{t.from}</option>
+                  {departureStops.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.stop_name}
+                    </option>
+                  ))}
+                </select>
+                <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
+                  ▼
+                </span>
+              </div>
+            </div>
 
-        <select
-          ref={toSelectRef}
-          aria-label={t.to}
-          className="h-14 w-full pl-10 rounded-2xl md:w-1/2 md:rounded-l-none bg-white/90 hover:bg-white text-slate-800 shadow ring-1 ring-black/5 px-4"
-          value={to}
-          onChange={(e) => {
-            const val = e.target.value;
-            setTo(val);
+            <div className="flex flex-col gap-2">
+              <span className={labelStyles}>{t.to}</span>
+              <div className="relative">
+                <select
+                  ref={toSelectRef}
+                  aria-label={t.to}
+                  className={`${baseFieldStyles} pl-10 pr-12 appearance-none disabled:cursor-not-allowed disabled:bg-white/60 disabled:text-slate-400`}
+                  value={to}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setTo(val);
 
-            // после выбора "Куда" — автоматически открываем календарь даты туда
-            if (val && fromId) {
-              handleDepartOpen();
-            }
-          }}
-          disabled={!fromId}
-        >
-          <option value="">{t.to}</option>
-          {arrivalStops.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.stop_name}
-            </option>
-          ))}
-        </select>
+                    if (val && fromId) {
+                      handleDepartOpen();
+                    }
+                  }}
+                  disabled={!fromId}
+                >
+                  <option value="">{t.to}</option>
+                  {arrivalStops.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.stop_name}
+                    </option>
+                  ))}
+                </select>
+                <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
+                  ▼
+                </span>
+              </div>
+            </div>
+          </div>
 
-        <button
-          type="button"
-          title={t.swapTitle}
-          onClick={handleSwap}
-          className="order-3 self-center grid h-10 w-10 place-items-center rounded-full bg-white/90 hover:bg-white text-sky-700 shadow ring-1 ring-black/5 md:order-none md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2"
-        >
-          ⇄
-        </button>
-      </div>
-
-      <div className="flex w-full flex-col gap-3 md:w-1/2 md:flex-row md:items-center md:gap-3">
-        <div className="grid w-full grid-cols-2 gap-3 max-[420px]:grid-cols-1">
-          <DateInput
-            value={departDate}
-            setValue={setDepartDate}
-            activeDates={departActive}
-            label={t.date}
-            lang={lang}
-            disabled={!fromId || !toId}
-            onOpen={handleDepartOpen}
-          />
-
-          <DateInput
-            value={returnDate}
-            setValue={setReturnDate}
-            activeDates={returnActive}
-            label={t.back}
-            lang={lang}
-            disabled={!fromId || !toId}
-            onOpen={handleReturnOpen}
-          />
+          <div className="flex items-center justify-between gap-3 rounded-xl bg-gradient-to-r from-sky-50/80 to-white/80 p-3 text-sm text-slate-700 md:absolute md:-right-16 md:top-1/2 md:w-16 md:-translate-y-1/2 md:flex-col md:justify-center md:bg-white md:shadow-lg md:ring-1 md:ring-sky-100">
+            <span className="hidden text-xs font-semibold uppercase tracking-wide text-slate-500 md:block">
+              ⇄
+            </span>
+            <button
+              type="button"
+              title={t.swapTitle}
+              onClick={handleSwap}
+              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-white/90 px-4 text-sky-700 shadow ring-1 ring-sky-100 transition hover:-translate-y-0.5 hover:bg-white focus-visible:ring-2 focus-visible:ring-sky-400 focus:outline-none md:h-12 md:w-12 md:rounded-full md:p-0"
+            >
+              <span aria-hidden className="text-lg">
+                ⇄
+              </span>
+              <span className="text-xs font-semibold md:hidden">{t.swapTitle}</span>
+            </button>
+          </div>
         </div>
 
-        <PassengersInput
-          value={passengers}
-          onChange={setPassengers}
-          pillClass="h-14 px-3 w-full rounded-2xl bg-white/90 hover:bg-white text-slate-800 shadow ring-1 ring-black/5 inline-flex items-center gap-2"
-        />
+        <div className="flex w-full flex-col gap-3 rounded-2xl bg-white/50 p-3 shadow-sm ring-1 ring-white/50 backdrop-blur md:w-1/2">
+          <div className="grid w-full grid-cols-2 gap-3 max-[480px]:grid-cols-1">
+            <DateInput
+              value={departDate}
+              setValue={setDepartDate}
+              activeDates={departActive}
+              label={t.date}
+              lang={lang}
+              disabled={!fromId || !toId}
+              onOpen={handleDepartOpen}
+            />
 
-        <button
-          type="submit"
-          className="h-14 w-full px-6 rounded-2xl bg-[#ff6a00] hover:bg-[#ff7a1c] text-white font-medium shadow-lg"
-          disabled={!fromId || !toId || !departDate}
-          aria-label={t.search}
-        >
-          {t.search}
-        </button>
+            <DateInput
+              value={returnDate}
+              setValue={setReturnDate}
+              activeDates={returnActive}
+              label={t.back}
+              lang={lang}
+              disabled={!fromId || !toId}
+              onOpen={handleReturnOpen}
+            />
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+            <PassengersInput
+              value={passengers}
+              onChange={setPassengers}
+              pillClass="h-14 px-3 w-full rounded-2xl bg-white/90 hover:bg-white text-slate-800 shadow ring-1 ring-sky-100 inline-flex items-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+            />
+
+            <button
+              type="submit"
+              className="h-14 w-full rounded-2xl bg-gradient-to-r from-[#ff6a00] to-[#ff8c1a] px-6 text-base font-semibold text-white shadow-lg transition hover:shadow-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#ff6a00]"
+              disabled={!fromId || !toId || !departDate}
+              aria-label={t.search}
+            >
+              {t.search}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
