@@ -34,9 +34,10 @@ export default function DateInput({
       onClick={onOpen}
       className={[
         // единая «пилюля»: одинаковая высота/радиус/тени
-        "h-14 w-[200px] rounded-2xl bg-white/90 hover:bg-white shadow ring-1 ring-black/5",
+        "h-14 w-full rounded-xl bg-slate-50 hover:bg-white ring-1 ring-slate-200",
         "px-4 text-left",
         "flex items-center",
+        "transition focus-visible:ring-2 focus-visible:ring-sky-400 focus:outline-none",
         className,
         disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer",
       ].join(" ")}
