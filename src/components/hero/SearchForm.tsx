@@ -217,129 +217,134 @@ export default function SearchForm({
 
   // ВНУТРЕННЕЕ СОДЕРЖИМОЕ ФОРМЫ
   const baseFieldStyles =
-    "h-14 w-full rounded-xl bg-slate-50 px-4 text-slate-900 ring-1 ring-slate-200 transition hover:bg-white focus-visible:ring-2 focus-visible:ring-sky-400 focus:outline-none";
+    "h-14 w-full rounded-2xl bg-white/95 px-4 text-slate-900 shadow ring-1 ring-black/5 transition hover:bg-white focus-visible:ring-2 focus-visible:ring-sky-400 focus:outline-none";
 
-  const labelStyles =
-    "text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500";
+  const labelStyles = "text-xs font-semibold uppercase tracking-wide text-slate-500";
 
   const row = (
-    <div className="grid gap-4">
-      <div className="grid gap-4 md:grid-cols-[1fr_auto_1fr] md:items-end">
-        <div className="flex flex-col gap-2">
-          <span className={labelStyles}>{t.from}</span>
-          <div className="relative">
-            <select
-              ref={fromSelectRef}
-              aria-label={t.from}
-              className={`${baseFieldStyles} pr-12 appearance-none`}
-              value={from}
-              onChange={(e) => {
-                const val = e.target.value;
-                setFrom(val);
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 md:flex-row md:items-stretch md:gap-4">
+        <div className="w-full rounded-2xl bg-white/50 p-3 shadow-sm ring-1 ring-white/50 backdrop-blur">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_auto_1fr] md:items-end">
+            <div className="flex flex-col gap-2">
+              <span className={labelStyles}>{t.from}</span>
+              <div className="relative">
+                <select
+                  ref={fromSelectRef}
+                  aria-label={t.from}
+                  className={`${baseFieldStyles} pr-12 appearance-none`}
+                  value={from}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setFrom(val);
 
-                if (val && toSelectRef.current) {
-                  setTimeout(() => {
-                    toSelectRef.current?.focus();
-                  }, 0);
-                }
-              }}
-            >
-              <option value="">{t.from}</option>
-              {departureStops.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.stop_name}
-                </option>
-              ))}
-            </select>
-            <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
-              ▼
-            </span>
+                    if (val && toSelectRef.current) {
+                      setTimeout(() => {
+                        toSelectRef.current?.focus();
+                      }, 0);
+                    }
+                  }}
+                >
+                  <option value="">{t.from}</option>
+                  {departureStops.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.stop_name}
+                    </option>
+                  ))}
+                </select>
+                <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
+                  ▼
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-end justify-center md:pb-1">
+              <button
+                type="button"
+                title={t.swapTitle}
+                onClick={handleSwap}
+                className="inline-flex h-14 w-full min-w-[140px] items-center justify-center gap-2 rounded-2xl bg-white/90 px-4 text-sky-700 shadow ring-1 ring-sky-100 transition hover:-translate-y-0.5 hover:bg-white focus-visible:ring-2 focus-visible:ring-sky-400 focus:outline-none md:h-12 md:w-12 md:min-w-0 md:rounded-full"
+              >
+                <span aria-hidden className="text-lg">
+                  ⇄
+                </span>
+                <span className="text-xs font-semibold md:hidden">{t.swapTitle}</span>
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <span className={labelStyles}>{t.to}</span>
+              <div className="relative">
+                <select
+                  ref={toSelectRef}
+                  aria-label={t.to}
+                  className={`${baseFieldStyles} pl-10 pr-12 appearance-none disabled:cursor-not-allowed disabled:bg-white/60 disabled:text-slate-400`}
+                  value={to}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setTo(val);
+
+                    if (val && fromId) {
+                      handleDepartOpen();
+                    }
+                  }}
+                  disabled={!fromId}
+                >
+                  <option value="">{t.to}</option>
+                  {arrivalStops.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.stop_name}
+                    </option>
+                  ))}
+                </select>
+                <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
+                  ▼
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="flex items-end justify-center md:pb-1">
-          <button
-            type="button"
-            title={t.swapTitle}
-            onClick={handleSwap}
-            className="inline-flex h-12 w-full min-w-[140px] items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-slate-600 shadow-sm transition hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-sky-400 focus:outline-none md:h-12 md:w-12 md:min-w-0 md:rounded-full"
-          >
-            <span aria-hidden className="text-lg">
-              ⇄
-            </span>
-            <span className="text-xs font-semibold md:hidden">{t.swapTitle}</span>
-          </button>
-        </div>
+        <div className="flex w-full flex-col gap-3 rounded-2xl bg-white/50 p-3 shadow-sm ring-1 ring-white/50 backdrop-blur md:w-1/2">
+          <div className="grid w-full grid-cols-2 gap-3 max-[480px]:grid-cols-1">
+            <DateInput
+              value={departDate}
+              setValue={setDepartDate}
+              activeDates={departActive}
+              label={t.date}
+              lang={lang}
+              disabled={!fromId || !toId}
+              onOpen={handleDepartOpen}
+            />
 
-        <div className="flex flex-col gap-2">
-          <span className={labelStyles}>{t.to}</span>
-          <div className="relative">
-            <select
-              ref={toSelectRef}
-              aria-label={t.to}
-              className={`${baseFieldStyles} pr-12 appearance-none disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400`}
-              value={to}
-              onChange={(e) => {
-                const val = e.target.value;
-                setTo(val);
+            <DateInput
+              value={returnDate}
+              setValue={setReturnDate}
+              activeDates={returnActive}
+              label={t.back}
+              lang={lang}
+              disabled={!fromId || !toId}
+              onOpen={handleReturnOpen}
+            />
+          </div>
 
-                if (val && fromId) {
-                  handleDepartOpen();
-                }
-              }}
-              disabled={!fromId}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+            <PassengersInput
+              value={passengers}
+              onChange={setPassengers}
+              pillClass="h-14 px-3 w-full rounded-2xl bg-white/90 hover:bg-white text-slate-800 shadow ring-1 ring-sky-100 inline-flex items-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+            />
+
+            <button
+              type="submit"
+              className="h-14 w-full rounded-2xl bg-gradient-to-r from-[#ff6a00] to-[#ff8c1a] px-6 text-base font-semibold text-white shadow-lg transition hover:shadow-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#ff6a00]"
+              disabled={!fromId || !toId || !departDate}
+              aria-label={t.search}
             >
-              <option value="">{t.to}</option>
-              {arrivalStops.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.stop_name}
-                </option>
-              ))}
-            </select>
-            <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
-              ▼
-            </span>
+              {t.search}
+            </button>
           </div>
         </div>
-      </div>
-
-      <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2">
-        <DateInput
-          value={departDate}
-          setValue={setDepartDate}
-          activeDates={departActive}
-          label={t.date}
-          lang={lang}
-          disabled={!fromId || !toId}
-          onOpen={handleDepartOpen}
-        />
-
-        <DateInput
-          value={returnDate}
-          setValue={setReturnDate}
-          activeDates={returnActive}
-          label={t.back}
-          lang={lang}
-          disabled={!fromId || !toId}
-          onOpen={handleReturnOpen}
-        />
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-center">
-        <PassengersInput
-          value={passengers}
-          onChange={setPassengers}
-          pillClass="h-14 w-full rounded-xl bg-slate-50 px-3 text-slate-800 ring-1 ring-slate-200 inline-flex items-center gap-2 transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
-        />
-
-        <button
-          type="submit"
-          className="h-14 w-full rounded-xl bg-gradient-to-r from-[#ff6a00] to-[#ff8c1a] px-8 text-base font-semibold text-white shadow-lg transition hover:shadow-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#ff6a00] sm:w-auto"
-          disabled={!fromId || !toId || !departDate}
-          aria-label={t.search}
-        >
-          {t.search}
-        </button>
       </div>
     </div>
   );
