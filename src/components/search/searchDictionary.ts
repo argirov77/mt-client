@@ -113,6 +113,8 @@ const dict: Record<Lang, Dict> = {
     baggageCollapsedHint: "Нажмите «Добавить багаж», чтобы настроить багаж для пассажиров.",
     addBagAria: "Добавить багаж",
     removeBagAria: "Убрать багаж",
+    baggageSummaryOutbound: "Доп. багаж (Туда)",
+    baggageSummaryReturn: "Доп. багаж (Обратно)",
   },
   en: {
     noResults: "No trips found",
@@ -224,6 +226,8 @@ const dict: Record<Lang, Dict> = {
     baggageCollapsedHint: 'Click "Add baggage" to configure checked bags for your passengers.',
     addBagAria: "Add bag",
     removeBagAria: "Remove bag",
+    baggageSummaryOutbound: "Extra baggage (Outbound)",
+    baggageSummaryReturn: "Extra baggage (Return)",
   },
   bg: {
     noResults: "Няма намерени курсове",
@@ -336,6 +340,8 @@ const dict: Record<Lang, Dict> = {
     baggageCollapsedHint: "Използвайте «Добави багаж», за да настроите куфарите за пътниците.",
     addBagAria: "Добави багаж",
     removeBagAria: "Премахни багаж",
+    baggageSummaryOutbound: "Доп. багаж (Натам)",
+    baggageSummaryReturn: "Доп. багаж (Обратно)",
   },
   ua: {
     noResults: "Рейси не знайдено",
@@ -448,8 +454,9 @@ const dict: Record<Lang, Dict> = {
     baggageCollapsedHint: "Натисніть «Додати багаж», щоб налаштувати багаж для пасажирів.",
     addBagAria: "Додати багаж",
     removeBagAria: "Прибрати багаж",
+    baggageSummaryOutbound: "Додатковий багаж (Туди)",
+    baggageSummaryReturn: "Додатковий багаж (Назад)",
   },
 };
 
 export { dict };
-
