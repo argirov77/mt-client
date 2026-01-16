@@ -14,21 +14,6 @@
   margin-bottom: 32px;
 }
 
-.routesEyebrow {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  color: #94a3b8;
-  margin: 0;
-}
-
-.routesTitle {
-  font-size: 26px;
-  font-weight: 700;
-  color: #0f172a;
-  margin: 6px 0 0;
-}
-
 .routesCards {
   display: flex;
   gap: 24px;

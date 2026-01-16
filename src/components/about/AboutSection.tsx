@@ -4,9 +4,9 @@ import React from "react";
 import {
   bodyTextClass,
   cardBaseClass,
-  headingH2Class,
   iconCircleClass,
   sectionBgMuted,
+  sectionTitleClass,
 } from "../common/designGuide";
 import { aboutContent, type Lang } from "./content";
 import { aboutTranslations } from "@/translations/home";
@@ -26,9 +26,9 @@ export default function AboutSection({
   const heading = aboutTranslations[lang]?.heading ?? aboutTranslations.ru.heading;
 
   return (
-    <section id={id} className={`${sectionBgMuted} py-16 ${className}`}>
+    <section id={id} className={`${sectionBgMuted} py-12 ${className}`}>
       <div className="mx-auto w-full max-w-6xl px-4">
-        <h2 className={`${headingH2Class} text-center`}>
+        <h2 className={`${sectionTitleClass} text-center`}>
           {heading}
         </h2>
 

@@ -20,7 +20,7 @@ export const designGuide = {
   },
 };
 
-export const sectionBgMuted = "bg-[#f5f7fb]";
+export const sectionBgMuted = "bg-slate-50";
 export const headingH2Class = "text-3xl font-bold tracking-tight text-slate-900";
 export const bodyTextClass = "text-base text-slate-700";
 export const cardBaseClass =
@@ -31,3 +31,7 @@ export const accentPillClass =
   "inline-flex items-center rounded-full bg-[#ff6a00]/10 px-3 py-1 text-sm font-semibold text-[#ff6a00]";
 export const secondaryEyebrowClass =
   "text-xs font-semibold uppercase tracking-[0.18em] text-sky-600";
+export const sectionEyebrowClass =
+  "text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-400";
+export const sectionTitleClass = "text-[26px] font-bold text-slate-900";
+export const sectionDescriptionClass = "text-base text-slate-600";

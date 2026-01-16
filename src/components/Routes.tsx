@@ -6,6 +6,7 @@ import { API } from "@/config";
 import { useLanguage, type Lang } from "@/components/common/LanguageProvider";
 import { routesTranslations } from "@/translations/home";
 import styles from "./Routes.module.css";
+import { sectionEyebrowClass, sectionTitleClass } from "./common/designGuide";
 
 /* ===================== Types ===================== */
 
@@ -119,8 +120,8 @@ export default function Routes() {
     <section id="routes" className={styles.routes}>
       <div className={styles.routesInner}>
         <header className={styles.routesHeader}>
-          <p className={styles.routesEyebrow}>{L.eyebrow}</p>
-          <h2 className={styles.routesTitle}>{L.title}</h2>
+          <p className={sectionEyebrowClass}>{L.eyebrow}</p>
+          <h2 className={sectionTitleClass}>{L.title}</h2>
         </header>
 
         {loading && <SkeletonCards />}

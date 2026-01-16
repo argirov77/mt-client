@@ -9,10 +9,11 @@ import {
   accentPillClass,
   bodyTextClass,
   cardBaseClass,
-  headingH2Class,
   iconCircleClass,
   sectionBgMuted,
-  secondaryEyebrowClass,
+  sectionDescriptionClass,
+  sectionEyebrowClass,
+  sectionTitleClass,
 } from './common/designGuide';
 import type { Lang } from './common/LanguageProvider';
 
@@ -54,12 +55,12 @@ export default function PriceListCompact({ lang = 'ru' }: { lang?: Lang }) {
   }, [lang]);
 
   return (
-    <section id="prices" className={`${sectionBgMuted} py-16`}>
+    <section id="prices" className={`${sectionBgMuted} py-12`}>
       <div className="mx-auto w-full max-w-6xl px-4">
         <div className="mb-8 text-center">
-          <p className={secondaryEyebrowClass}>{t.eyebrow}</p>
-          <h2 className={`${headingH2Class} mt-2`}>{t.title}</h2>
-          <p className={`${bodyTextClass} mt-3 text-slate-600`}>{t.description}</p>
+          <p className={sectionEyebrowClass}>{t.eyebrow}</p>
+          <h2 className={`${sectionTitleClass} mt-2`}>{t.title}</h2>
+          <p className={`${sectionDescriptionClass} mt-3`}>{t.description}</p>
         </div>
 
         {loading && (
