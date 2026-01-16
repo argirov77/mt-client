@@ -302,7 +302,7 @@ export default function SearchForm({
         </div>
       </div>
 
-      <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-end">
         <DateInput
           value={departDate}
           setValue={setDepartDate}
@@ -322,9 +322,7 @@ export default function SearchForm({
           disabled={!fromId || !toId}
           onOpen={handleReturnOpen}
         />
-      </div>
 
-      <div className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-center">
         <PassengersInput
           value={passengers}
           onChange={setPassengers}
