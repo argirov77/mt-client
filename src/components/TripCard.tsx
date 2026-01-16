@@ -9,9 +9,7 @@ export type TripCardProps = {
   total: number; // 85.80
   onSelect?: () => void;
   selected?: boolean;
-  pickLabel?: string;
   chosenLabel?: string;
-  priceLabel?: string;
 };
 
 export default function TripCard({
@@ -23,9 +21,7 @@ export default function TripCard({
   total,
   onSelect,
   selected = false,
-  pickLabel = "Выбрать",
   chosenLabel = "Выбрано",
-  priceLabel = "Цена",
 }: TripCardProps) {
   return (
     <div
@@ -36,14 +32,7 @@ export default function TripCard({
       onClick={onSelect}
     >
       <div className="flex flex-1 flex-col gap-3 md:gap-2">
-        <div className="flex items-center justify-between gap-2 text-sm font-semibold text-slate-900 md:text-base">
-          <div className="flex min-w-0 items-center gap-2">
-            <span className="truncate">{fromStop}</span>
-            <span aria-hidden className="text-slate-500">
-              →
-            </span>
-            <span className="truncate">{toStop}</span>
-          </div>
+        <div className="flex justify-end text-sm font-semibold text-slate-900 md:text-base">
           <span className="shrink-0 text-xs font-medium text-slate-500 md:text-sm">{dateText}</span>
         </div>
 
@@ -60,11 +49,7 @@ export default function TripCard({
         </div>
       </div>
 
-      <div className="mt-1 flex w-full items-center justify-between gap-3 md:mt-0 md:w-auto md:flex-col md:items-end md:justify-center">
-        <div className="text-left leading-tight md:text-right">
-          <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{priceLabel}</div>
-          <div className="text-xl font-bold text-slate-900">{total.toFixed(2)} ₴</div>
-        </div>
+      <div className="mt-1 flex w-full items-center justify-end gap-3 md:mt-0 md:w-auto md:flex-col md:items-end md:justify-center">
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -76,7 +61,7 @@ export default function TripCard({
               : "bg-orange-500 hover:bg-orange-600"
           }`}
         >
-          {selected ? chosenLabel : pickLabel}
+          {selected ? chosenLabel : `${total.toFixed(2)} ₴`}
           <ChevronRight className="h-4 w-4" />
         </button>
       </div>

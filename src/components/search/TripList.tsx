@@ -14,11 +14,9 @@ type TripListProps = {
   seatCount: number;
   discountCount: number;
   t: {
-    pick: string;
     chosen: string;
     adults: string;
     discounted: string;
-    price: string;
   };
 };
 
@@ -73,10 +71,8 @@ export default function TripList({
               departTime={depTime}
               arriveTime={arrTime}
               total={total}
-              priceLabel={t.price}
               onSelect={() => onSelect(tour)}
               selected={isChosen}
-              pickLabel={t.pick}
               chosenLabel={t.chosen}
             />
           );
