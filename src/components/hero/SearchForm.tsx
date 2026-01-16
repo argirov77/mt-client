@@ -223,9 +223,9 @@ export default function SearchForm({
 
   const row = (
     <div className="flex flex-col gap-4">
-      <div className="w-full rounded-2xl bg-white/50 p-4 shadow-sm ring-1 ring-white/50 backdrop-blur">
-        <div className="grid gap-4">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto_1fr] sm:items-end">
+      <div className="flex flex-col gap-4 md:flex-row md:items-stretch md:gap-4">
+        <div className="w-full rounded-2xl bg-white/50 p-3 shadow-sm ring-1 ring-white/50 backdrop-blur">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_auto_1fr] md:items-end">
             <div className="flex flex-col gap-2">
               <span className={labelStyles}>{t.from}</span>
               <div className="relative">
@@ -258,17 +258,17 @@ export default function SearchForm({
               </div>
             </div>
 
-            <div className="flex items-end justify-center sm:pb-1">
+            <div className="flex items-end justify-center md:pb-1">
               <button
                 type="button"
                 title={t.swapTitle}
                 onClick={handleSwap}
-                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-white/90 px-4 text-sky-700 shadow ring-1 ring-sky-100 transition hover:-translate-y-0.5 hover:bg-white focus-visible:ring-2 focus-visible:ring-sky-400 focus:outline-none sm:h-12 sm:w-12 sm:min-w-0 sm:rounded-full"
+                className="inline-flex h-14 w-full min-w-[140px] items-center justify-center gap-2 rounded-2xl bg-white/90 px-4 text-sky-700 shadow ring-1 ring-sky-100 transition hover:-translate-y-0.5 hover:bg-white focus-visible:ring-2 focus-visible:ring-sky-400 focus:outline-none md:h-12 md:w-12 md:min-w-0 md:rounded-full"
               >
                 <span aria-hidden className="text-lg">
                   ⇄
                 </span>
-                <span className="text-xs font-semibold sm:hidden">{t.swapTitle}</span>
+                <span className="text-xs font-semibold md:hidden">{t.swapTitle}</span>
               </button>
             </div>
 
@@ -303,8 +303,10 @@ export default function SearchForm({
               </div>
             </div>
           </div>
+        </div>
 
-          <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="flex w-full flex-col gap-3 rounded-2xl bg-white/50 p-3 shadow-sm ring-1 ring-white/50 backdrop-blur md:w-1/2">
+          <div className="grid w-full grid-cols-2 gap-3 max-[480px]:grid-cols-1">
             <DateInput
               value={departDate}
               setValue={setDepartDate}
@@ -326,7 +328,7 @@ export default function SearchForm({
             />
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] sm:items-center sm:gap-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
             <PassengersInput
               value={passengers}
               onChange={setPassengers}
