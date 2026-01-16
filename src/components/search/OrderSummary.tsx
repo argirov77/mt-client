@@ -21,7 +21,18 @@ type OrderSummaryProps = {
   seatCount: number;
   phone: string;
   email: string;
-  totals: { outbound: number; return: number; overall: number };
+  totals: {
+    outbound: number;
+    return: number;
+    overall: number;
+    baggage: {
+      outboundCount: number;
+      outboundPrice: number;
+      returnCount: number;
+      returnPrice: number;
+      total: number;
+    };
+  };
   formatDateLabel: (value: string) => string;
   formatPrice: (value: number) => string;
 };
@@ -42,6 +53,29 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
   formatPrice,
 }) => {
   const contactsProvided = Boolean(phone || email);
+  const baggageLines = [
+    totals.baggage.outboundCount > 0
+      ? {
+          label: t.baggageSummaryOutbound,
+          count: totals.baggage.outboundCount,
+          price: totals.baggage.outboundPrice,
+          total: totals.baggage.outboundCount * totals.baggage.outboundPrice,
+        }
+      : null,
+    totals.baggage.returnCount > 0
+      ? {
+          label: t.baggageSummaryReturn,
+          count: totals.baggage.returnCount,
+          price: totals.baggage.returnPrice,
+          total: totals.baggage.returnCount * totals.baggage.returnPrice,
+        }
+      : null,
+  ].filter(Boolean) as Array<{
+    label: string;
+    count: number;
+    price: number;
+    total: number;
+  }>;
 
   const renderRouteBlock = (
     title: string,
@@ -168,6 +202,20 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
             ) : null}
           </div>
         </div>
+
+        {baggageLines.length ? (
+          <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+            <div className="space-y-1 text-sm text-slate-700">
+              {baggageLines.map((line) => (
+                <div key={line.label} className="flex items-center justify-between gap-3">
+                  <span className="text-slate-600">
+                    {line.label}: {line.count} × {formatPrice(line.price)} = {formatPrice(line.total)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
 
         <div className="rounded-xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
           <div className="flex items-center justify-between text-lg font-semibold text-slate-900">

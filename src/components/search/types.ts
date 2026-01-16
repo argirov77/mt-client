@@ -121,4 +121,6 @@ export type Dict = {
   baggageCollapsedHint: string;
   addBagAria: string;
   removeBagAria: string;
+  baggageSummaryOutbound: string;
+  baggageSummaryReturn: string;
 };

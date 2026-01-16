@@ -679,16 +679,49 @@ export default function SearchResults({
     [safeDiscountCount, safeSeatCount]
   );
 
-  const outboundTotal = useMemo(() => calculateTotal(selectedOutboundTour), [calculateTotal, selectedOutboundTour]);
-  const returnTotal = useMemo(() => calculateTotal(selectedReturnTour), [calculateTotal, selectedReturnTour]);
-  const overallTotal = useMemo(() => outboundTotal + returnTotal, [outboundTotal, returnTotal]);
-
   const calculateBaggagePrice = useCallback((tour: Tour | null) => {
     if (!tour) return null;
 
     const rawPrice = tour.price * 0.1;
     return Math.round(rawPrice * 100) / 100;
   }, []);
+
+  const outboundTotal = useMemo(
+    () => calculateTotal(selectedOutboundTour),
+    [calculateTotal, selectedOutboundTour]
+  );
+  const returnTotal = useMemo(() => calculateTotal(selectedReturnTour), [calculateTotal, selectedReturnTour]);
+  const baggageCounts = useMemo(
+    () => ({
+      outbound: extraBaggageOutbound.filter(Boolean).length,
+      return: returnRequired ? extraBaggageReturn.filter(Boolean).length : 0,
+    }),
+    [extraBaggageOutbound, extraBaggageReturn, returnRequired]
+  );
+  const baggageTotals = useMemo(() => {
+    const outboundPrice = calculateBaggagePrice(selectedOutboundTour) ?? 0;
+    const returnPrice = calculateBaggagePrice(selectedReturnTour) ?? 0;
+    const outboundTotal = baggageCounts.outbound * outboundPrice;
+    const returnTotal = baggageCounts.return * returnPrice;
+
+    return {
+      outboundCount: baggageCounts.outbound,
+      outboundPrice,
+      returnCount: baggageCounts.return,
+      returnPrice,
+      total: outboundTotal + returnTotal,
+    };
+  }, [
+    baggageCounts.outbound,
+    baggageCounts.return,
+    calculateBaggagePrice,
+    selectedOutboundTour,
+    selectedReturnTour,
+  ]);
+  const overallTotal = useMemo(
+    () => outboundTotal + returnTotal + baggageTotals.total,
+    [baggageTotals.total, outboundTotal, returnTotal]
+  );
 
   const baggagePriceLabels = useMemo(
     () => ({
@@ -733,8 +766,13 @@ export default function SearchResults({
   );
 
   const orderSummaryTotals = useMemo(
-    () => ({ outbound: outboundTotal, return: returnTotal, overall: overallTotal }),
-    [outboundTotal, overallTotal, returnTotal]
+    () => ({
+      outbound: outboundTotal,
+      return: returnTotal,
+      overall: overallTotal,
+      baggage: baggageTotals,
+    }),
+    [baggageTotals, outboundTotal, overallTotal, returnTotal]
   );
   const showStepNavigation = Boolean(selectedOutboundTour);
   const stepCounterLabel = t.stepCounter(activeStep, stepNavigation.length);
