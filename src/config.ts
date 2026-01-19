@@ -1,1 +1,1 @@
-export const API = process.env.NEXT_PUBLIC_API_URL || "http://38.79.154.248:8000";
+export const API = process.env.NEXT_PUBLIC_API_URL || "172.20.10.3:8000";
