@@ -85,7 +85,7 @@ export default function BookingPanel({
   const [modalReturnSeats, setModalReturnSeats] = useState<number[]>([]);
   const [modalOutboundExtra, setModalOutboundExtra] = useState(false);
   const [modalReturnExtra, setModalReturnExtra] = useState(false);
-  const seatModal = useModalVisibility(isSeatModalOpen);
+  const seatModal = useModalVisibility(isSeatModalOpen, 300);
 
   useLockBodyScroll(seatModal.shouldRender);
 
@@ -225,7 +225,7 @@ export default function BookingPanel({
 
     return (
       <div
-        className={`fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-[2px] px-3 py-4 transition-opacity ease-out ${
+        className={`fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-[2px] px-3 py-4 transition-opacity ease-in-out ${
           seatModal.isClosing ? "opacity-0" : "opacity-100"
         } ${
           seatModal.prefersReducedMotion ? "motion-reduce:transition-none" : ""
@@ -234,7 +234,7 @@ export default function BookingPanel({
         onClick={closeModal}
       >
         <div
-          className={`relative flex w-full max-w-5xl transform flex-col overflow-hidden rounded-2xl bg-white shadow-2xl transition-all ease-out max-h-[80vh] ${
+          className={`relative flex w-full max-w-5xl transform flex-col overflow-hidden rounded-2xl bg-white shadow-2xl transition-[opacity,transform] ease-in-out max-h-[80vh] ${
             seatModal.isClosing ? "scale-95 opacity-0" : "scale-100 opacity-100"
           } ${
             seatModal.prefersReducedMotion

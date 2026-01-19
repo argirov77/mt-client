@@ -11,7 +11,7 @@ export type ModalVisibilityState = {
 
 export function useModalVisibility(
   isOpen: boolean,
-  baseDuration = 180,
+  baseDuration = 300,
 ): ModalVisibilityState {
   const prefersReducedMotion = usePrefersReducedMotion();
   const animationDuration = prefersReducedMotion
