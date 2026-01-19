@@ -18,6 +18,7 @@ type ScheduleCopy = {
   title: string;
   description: string;
   serviceDescription: string;
+  meta: string[];
   loading: string;
   error: string;
   noData: string;
@@ -105,9 +106,9 @@ export const scheduleTranslations: Record<Lang, ScheduleCopy> = {
   ru: {
     eyebrow: "Цены",
     title: "Актуальные тарифы",
-    description:
-      "Актуальные тарифы по популярным направлениям — в едином стиле бронирования.",
+    description: "Стоимость популярных направлений.",
     serviceDescription: "Прямой автобусный рейс",
+    meta: ["Цены в гривнах (UAH)", "Могут отличаться по дате", "Все рейсы прямые"],
     loading: "Загрузка…",
     error: "Ошибка загрузки",
     noData: "Данные не найдены",
@@ -116,9 +117,13 @@ export const scheduleTranslations: Record<Lang, ScheduleCopy> = {
   bg: {
     eyebrow: "Цени",
     title: "Актуални тарифи",
-    description:
-      "Актуални тарифи по популярни направления — в същия стил като процеса за резервация.",
+    description: "Цени за популярни направления.",
     serviceDescription: "Директен автобусен курс",
+    meta: [
+      "Цените са в гривни (UAH)",
+      "Може да се променят според датата",
+      "Всички курсове са директни",
+    ],
     loading: "Зареждане…",
     error: "Грешка при зареждането",
     noData: "Няма данни",
@@ -127,9 +132,9 @@ export const scheduleTranslations: Record<Lang, ScheduleCopy> = {
   en: {
     eyebrow: "Prices",
     title: "Current fares",
-    description:
-      "Actual fares for popular directions. Same card style as booking steps.",
+    description: "Popular route pricing.",
     serviceDescription: "Direct coach service",
+    meta: ["Prices in UAH", "May vary by travel date", "All routes are direct"],
     loading: "Loading…",
     error: "Failed to load",
     noData: "No data",
@@ -138,9 +143,9 @@ export const scheduleTranslations: Record<Lang, ScheduleCopy> = {
   ua: {
     eyebrow: "Ціни",
     title: "Актуальні тарифи",
-    description:
-      "Актуальні тарифи за популярними напрямками — у єдиному стилі бронювання.",
+    description: "Вартість популярних напрямків.",
     serviceDescription: "Прямий автобусний рейс",
+    meta: ["Ціни в гривнях (UAH)", "Можуть відрізнятися за датою", "Усі рейси прямі"],
     loading: "Завантаження…",
     error: "Помилка завантаження",
     noData: "Даних немає",
