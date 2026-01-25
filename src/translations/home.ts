@@ -41,7 +41,14 @@ type RoutesCopy = {
 };
 
 type AboutCopy = {
-  heading: string;
+  kicker: string;
+  title: string;
+  subtitle: string;
+  closeLabel: string;
+  stats: Array<{
+    value: string;
+    label: string;
+  }>;
 };
 
 export const heroTranslations: Record<Lang, HeroCopy> = {
@@ -219,8 +226,88 @@ export const routesTranslations: Record<Lang, RoutesCopy> = {
 };
 
 export const aboutTranslations: Record<Lang, AboutCopy> = {
-  ru: { heading: "О компании" },
-  en: { heading: "About company" },
-  bg: { heading: "За компанията" },
-  ua: { heading: "Про компанію" },
+  ru: {
+    kicker: "О компании",
+    title: "Премиальный сервис и понятная поддержка",
+    subtitle:
+      "«Максимов Турс» работает с 1991 года. Стабильные рейсы, комфортный автопарк и живые офисы поддержки.",
+    closeLabel: "Закрыть",
+    stats: [
+      {
+        value: "с 1991 года",
+        label: "Регулярные международные рейсы",
+      },
+      {
+        value: "3 автобуса",
+        label: "Van Hool, Travego, Neoplan",
+      },
+      {
+        value: "2 офиса",
+        label: "Варна и Одесса",
+      },
+    ],
+  },
+  en: {
+    kicker: "About company",
+    title: "Premium service with clear support",
+    subtitle:
+      "Maksimov Tours has operated since 1991. Reliable routes, a comfortable fleet, and real support offices.",
+    closeLabel: "Close",
+    stats: [
+      {
+        value: "since 1991",
+        label: "Regular international routes",
+      },
+      {
+        value: "3 coaches",
+        label: "Van Hool, Travego, Neoplan",
+      },
+      {
+        value: "2 offices",
+        label: "Varna and Odesa",
+      },
+    ],
+  },
+  bg: {
+    kicker: "За компанията",
+    title: "Премиум обслужване с ясна подкрепа",
+    subtitle:
+      "„Максимов Турс“ работи от 1991 г. Стабилни курсове, комфортен автопарк и реални офиси за помощ.",
+    closeLabel: "Затвори",
+    stats: [
+      {
+        value: "от 1991 г.",
+        label: "Редовни международни линии",
+      },
+      {
+        value: "3 автобуса",
+        label: "Van Hool, Travego, Neoplan",
+      },
+      {
+        value: "2 офиса",
+        label: "Варна и Одеса",
+      },
+    ],
+  },
+  ua: {
+    kicker: "Про компанію",
+    title: "Преміальний сервіс і зрозуміла підтримка",
+    subtitle:
+      "«Максимов Турс» працює з 1991 року. Стабільні рейси, комфортний автопарк і реальні офіси підтримки.",
+    closeLabel: "Закрити",
+    stats: [
+      {
+        value: "з 1991 року",
+        label: "Регулярні міжнародні рейси",
+      },
+      {
+        value: "3 автобуси",
+        label: "Van Hool, Travego, Neoplan",
+      },
+      {
+        value: "2 офіси",
+        label: "Варна та Одеса",
+      },
+    ],
+  },
 };
