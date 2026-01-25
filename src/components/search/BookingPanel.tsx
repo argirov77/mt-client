@@ -172,7 +172,7 @@ export default function BookingPanel({
   };
 
   const renderSeatOverview = () => (
-    <section className="space-y-4 rounded-xl bg-white/70 p-4 shadow-sm ring-1 ring-slate-200">
+    <section className="space-y-4 rounded-none bg-transparent p-0 sm:rounded-xl sm:bg-white/70 sm:p-4 sm:shadow-sm sm:ring-1 sm:ring-slate-200">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-2">
           <h3 className="text-lg font-semibold text-slate-900">{t.seatSelectionTitle}</h3>
@@ -354,7 +354,7 @@ export default function BookingPanel({
 
       <form
         onSubmit={(e) => e.preventDefault()}
-        className="mt-2 flex w-full max-w-[640px] flex-col gap-3 rounded-xl bg-white/70 p-4 shadow-sm ring-1 ring-slate-200"
+        className="mt-2 flex w-full max-w-[640px] flex-col gap-3 rounded-none bg-transparent p-0 shadow-none ring-0 sm:rounded-xl sm:bg-white/70 sm:p-4 sm:shadow-sm sm:ring-1 sm:ring-slate-200"
       >
         <div className="text-base font-semibold text-slate-900">{t.passengersTitle}</div>
         <p className="text-sm text-slate-600">{t.passengersHint}</p>
@@ -372,7 +372,7 @@ export default function BookingPanel({
                 arr[idx] = e.target.value;
                 setPassengerNames(arr);
               }}
-              className="flex-1 rounded-lg border border-slate-200 bg-white/90 px-3 py-2 text-base shadow-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
+              className="flex-1 rounded-lg border border-slate-200 bg-white/90 px-3 py-2 text-base shadow-none focus:border-sky-500 focus:ring-2 focus:ring-sky-200 sm:shadow-sm"
             />
           </label>
         ))}
