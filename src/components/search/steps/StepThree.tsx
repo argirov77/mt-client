@@ -24,6 +24,7 @@ export type StepThreeProps = {
   setExtraBaggageReturn: React.Dispatch<React.SetStateAction<boolean[]>>;
   purchaseId: number | null;
   ticket: ElectronicTicketData | null;
+  publicOfferUrl: string;
   handleAction: (action: "book" | "purchase") => Promise<void> | void;
   handlePay: () => Promise<void> | void;
   handleTicketDownloadClick: (ticketNumberOverride?: string) => void;
@@ -50,6 +51,7 @@ export default function StepThree({
   setExtraBaggageReturn,
   purchaseId,
   ticket,
+  publicOfferUrl,
   handleAction,
   handlePay,
   handleTicketDownloadClick,
@@ -68,16 +70,17 @@ export default function StepThree({
           setPhone={setPhone}
           email={email}
           setEmail={setEmail}
-        fromName={fromName}
-        toName={toName}
-        hasReturnSection={returnRequired}
-        baggagePriceByDirection={baggagePriceByDirection}
-        extraBaggageOutbound={extraBaggageOutbound}
-        setExtraBaggageOutbound={setExtraBaggageOutbound}
-        extraBaggageReturn={extraBaggageReturn}
-        setExtraBaggageReturn={setExtraBaggageReturn}
-        purchaseId={purchaseId}
+          fromName={fromName}
+          toName={toName}
+          hasReturnSection={returnRequired}
+          baggagePriceByDirection={baggagePriceByDirection}
+          extraBaggageOutbound={extraBaggageOutbound}
+          setExtraBaggageOutbound={setExtraBaggageOutbound}
+          extraBaggageReturn={extraBaggageReturn}
+          setExtraBaggageReturn={setExtraBaggageReturn}
+          purchaseId={purchaseId}
           ticket={ticket}
+          publicOfferUrl={publicOfferUrl}
           handleAction={handleAction}
           handlePay={handlePay}
           onDownloadTicket={handleTicketDownloadClick}
