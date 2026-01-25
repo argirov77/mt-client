@@ -25,7 +25,7 @@ export default function TripCard({
 }: TripCardProps) {
   return (
     <div
-      className={`group flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-none transition duration-200 hover:border-orange-100 md:shadow-sm md:hover:shadow-md md:flex-row md:items-center md:justify-between md:gap-6 md:p-5 ${
+      className={`group flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition duration-200 hover:border-orange-100 hover:shadow-md md:flex-row md:items-center md:justify-between md:gap-6 md:p-5 ${
         selected ? "border-orange-200 ring-2 ring-orange-200" : ""
       }`}
       role="button"
