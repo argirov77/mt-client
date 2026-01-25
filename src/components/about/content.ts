@@ -15,6 +15,12 @@ type Section = {
     city: string;
     tag: string;
     address: string;
+    image: {
+      src: string;
+      alt: string;
+      caption?: string;
+    };
+    phones: string[];
   }[];
 };
 
@@ -67,8 +73,6 @@ export const aboutContent: Record<Lang, Section[]> = {
       text: [
         "«Максимов Турс» — это не только онлайн-сервис, но и сеть реальных офисов, где пассажиры могут получить консультацию и поддержку.",
         "Прямое общение с клиентами помогает нам поддерживать высокий уровень сервиса.",
-        "Варна, Болгария — Автовокзал Варна, внутри здания, офис № 1 (бул. Владислав Варненчик, 158Б).",
-        "Одесса, Украина — Автовокзал Привоз, 2 этаж, офис № 5 (ул. Новощепной ряд, 5).",
       ],
       bullets: [
         "Консультации и помощь в офисах на маршруте.",
@@ -80,23 +84,23 @@ export const aboutContent: Record<Lang, Section[]> = {
           city: "Варна",
           tag: "Офис № 1",
           address: "Автовокзал Варна, внутри здания, бул. Владислав Варненчик, 158Б",
+          image: {
+            src: "/images/varna.webp",
+            alt: "Офис в Варне",
+            caption: "Варна — Автовокзал Варна, офис № 1",
+          },
+          phones: ["+359894290356", "+359879554559"],
         },
         {
           city: "Одесса",
           tag: "Офис № 5",
           address: "Автовокзал Привоз, 2 этаж, ул. Новощепной ряд, 5",
-        },
-      ],
-      media: [
-        {
-          src: "/images/varna.webp",
-          alt: "Офис в Варне",
-          caption: "Варна — Автовокзал Варна, офис № 1",
-        },
-        {
-          src: "/images/privoz.webp",
-          alt: "Офис в Одессе",
-          caption: "Одесса — Автовокзал Привоз, офис № 5",
+          image: {
+            src: "/images/privoz.webp",
+            alt: "Офис в Одессе",
+            caption: "Одесса — Автовокзал Привоз, офис № 5",
+          },
+          phones: ["+380930004636", "+380674232247"],
         },
       ],
     },
@@ -150,8 +154,6 @@ export const aboutContent: Record<Lang, Section[]> = {
       text: [
         "Beyond our online service, Maksimov Tours maintains physical offices where passengers can receive consultation and support.",
         "Personal interaction with clients allows us to provide a consistently high standard of service.",
-        "Varna, Bulgaria — Varna Bus Station, inside the building, Office № 1 (158B Vladislav Varnenchik Blvd.).",
-        "Odesa, Ukraine — Pryvoz Bus Station, 2nd floor, Office № 5 (5 Novoshchepnyi Ryad St.).",
       ],
       bullets: [
         "In-person consultations at key route hubs.",
@@ -163,23 +165,23 @@ export const aboutContent: Record<Lang, Section[]> = {
           city: "Varna",
           tag: "Office № 1",
           address: "Varna Bus Station, inside the building, 158B Vladislav Varnenchik Blvd.",
+          image: {
+            src: "/images/varna.webp",
+            alt: "Varna office",
+            caption: "Varna — Varna Bus Station, Office № 1",
+          },
+          phones: ["+359894290356", "+359879554559"],
         },
         {
           city: "Odesa",
           tag: "Office № 5",
           address: "Pryvoz Bus Station, 2nd floor, 5 Novoshchepnyi Ryad St.",
-        },
-      ],
-      media: [
-        {
-          src: "/images/varna.webp",
-          alt: "Varna office",
-          caption: "Varna — Varna Bus Station, Office № 1",
-        },
-        {
-          src: "/images/privoz.webp",
-          alt: "Odesa office",
-          caption: "Odesa — Pryvoz Bus Station, Office № 5",
+          image: {
+            src: "/images/privoz.webp",
+            alt: "Odesa office",
+            caption: "Odesa — Pryvoz Bus Station, Office № 5",
+          },
+          phones: ["+380930004636", "+380674232247"],
         },
       ],
     },
@@ -233,8 +235,6 @@ export const aboutContent: Record<Lang, Section[]> = {
       text: [
         "„Максимов Турс“ не е само онлайн услуга, а и мрежа от реални офиси, където пътниците могат да получат консултация и съдействие.",
         "Прякото обслужване гарантира високо качество на услугата.",
-        "Варна, България — Автогара Варна, вътре в сградата, офис № 1 (бул. Владислав Варненчик, 158Б).",
-        "Одеса, Украйна — Автогара Привоз, 2 етаж, офис № 5 (ул. Новощепной ряд, 5).",
       ],
       bullets: [
         "Консултации на място в ключови точки по маршрута.",
@@ -246,23 +246,23 @@ export const aboutContent: Record<Lang, Section[]> = {
           city: "Варна",
           tag: "Офис № 1",
           address: "Автогара Варна, вътре в сградата, бул. Владислав Варненчик, 158Б",
+          image: {
+            src: "/images/varna.webp",
+            alt: "Офис във Варна",
+            caption: "Варна — Автогара Варна, офис № 1",
+          },
+          phones: ["+359894290356", "+359879554559"],
         },
         {
           city: "Одеса",
           tag: "Офис № 5",
           address: "Автогара Привоз, 2 етаж, ул. Новощепной ряд, 5",
-        },
-      ],
-      media: [
-        {
-          src: "/images/varna.webp",
-          alt: "Офис във Варна",
-          caption: "Варна — Автогара Варна, офис № 1",
-        },
-        {
-          src: "/images/privoz.webp",
-          alt: "Офис в Одеса",
-          caption: "Одеса — Автогара Привоз, офис № 5",
+          image: {
+            src: "/images/privoz.webp",
+            alt: "Офис в Одеса",
+            caption: "Одеса — Автогара Привоз, офис № 5",
+          },
+          phones: ["+380930004636", "+380674232247"],
         },
       ],
     },
@@ -316,8 +316,6 @@ export const aboutContent: Record<Lang, Section[]> = {
       text: [
         "«Максимов Турс» — це не лише онлайн-сервіс, а й мережа реальних офісів, де пасажири можуть отримати консультацію та допомогу.",
         "Особисте спілкування з клієнтами гарантує високий рівень обслуговування.",
-        "Варна, Болгарія — Автовокзал Варна, всередині будівлі, офіс № 1 (бул. Владислав Варненчик, 158Б).",
-        "Одеса, Україна — Автовокзал Привоз, 2 поверх, офіс № 5 (вул. Новощепний ряд, 5).",
       ],
       bullets: [
         "Консультації на місці в ключових точках маршруту.",
@@ -329,23 +327,23 @@ export const aboutContent: Record<Lang, Section[]> = {
           city: "Варна",
           tag: "Офіс № 1",
           address: "Автовокзал Варна, всередині будівлі, бул. Владислав Варненчик, 158Б",
+          image: {
+            src: "/images/varna.webp",
+            alt: "Офіс у Варні",
+            caption: "Варна — Автовокзал Варна, офіс № 1",
+          },
+          phones: ["+359894290356", "+359879554559"],
         },
         {
           city: "Одеса",
           tag: "Офіс № 5",
           address: "Автовокзал Привоз, 2 поверх, вул. Новощепний ряд, 5",
-        },
-      ],
-      media: [
-        {
-          src: "/images/varna.webp",
-          alt: "Офіс у Варні",
-          caption: "Варна — Автовокзал Варна, офіс № 1",
-        },
-        {
-          src: "/images/privoz.webp",
-          alt: "Офіс в Одесі",
-          caption: "Одеса — Автовокзал Привоз, офіс № 5",
+          image: {
+            src: "/images/privoz.webp",
+            alt: "Офіс в Одесі",
+            caption: "Одеса — Автовокзал Привоз, офіс № 5",
+          },
+          phones: ["+380930004636", "+380674232247"],
         },
       ],
     },
