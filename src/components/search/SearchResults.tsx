@@ -989,7 +989,7 @@ export default function SearchResults({
   const stepToRender = resolveStepToRender();
 
   return (
-    <div className="w-full max-w-6xl mx-auto">
+    <div className="w-full">
       {loading && <Loader />}
       {msg && <Alert type={msgType}>{msg}</Alert>}
 
