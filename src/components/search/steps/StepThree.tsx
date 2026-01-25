@@ -60,9 +60,9 @@ export default function StepThree({
   step3Summary,
 }: StepThreeProps) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-3">
+    <section className="space-y-3 rounded-none border-0 bg-transparent p-0 shadow-none sm:rounded-2xl sm:border sm:border-slate-200 sm:bg-white sm:p-4 sm:shadow-sm">
       {renderStepHeader(3, t.contactsAndPayment, step3Summary)}
-      <div className="rounded-xl border border-slate-100 bg-white p-3 space-y-3">
+      <div className="space-y-3 rounded-none border-0 bg-transparent p-0 sm:rounded-xl sm:border sm:border-slate-100 sm:bg-white sm:p-3">
         <ContactsAndPaymentStep
           t={t}
           passengerNames={passengerNames}
