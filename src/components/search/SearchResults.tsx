@@ -813,7 +813,7 @@ export default function SearchResults({
       const returnDirectionTitle = `${toName} → ${fromName} (${t.inboundShort.toLowerCase()})`;
 
       return (
-        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-4">
+        <section className="space-y-4 rounded-none border-0 bg-transparent p-0 shadow-none sm:rounded-2xl sm:border sm:border-slate-200 sm:bg-white sm:p-4 sm:shadow-sm">
           {renderStepHeader(1, t.step1Title, step1Summary)}
 
           {outboundListVisible && (
@@ -847,7 +847,7 @@ export default function SearchResults({
           )}
 
           {!outboundListVisible && !returnListVisible && selectedOutboundTour && (
-            <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+            <div className="space-y-2 rounded-none border-0 bg-slate-50/70 p-3 text-sm text-slate-700 sm:rounded-xl sm:border sm:border-slate-200 sm:bg-slate-50 sm:p-4">
               <p>
                 {t.outboundShort}: {selectedOutboundTour.departure_time} · {fromName} → {toName}
               </p>
