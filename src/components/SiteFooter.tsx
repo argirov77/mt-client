@@ -1,6 +1,7 @@
 "use client";
 
 import { useLanguage } from "@/components/common/LanguageProvider";
+import { getPublicOfferUrl } from "@/utils/publicOffer";
 
 // src/components/SiteFooter.tsx
 const translations = {
@@ -53,6 +54,7 @@ const translations = {
 export default function SiteFooter() {
   const { lang } = useLanguage();
   const t = translations[lang];
+  const publicOfferUrl = getPublicOfferUrl(lang);
   return (
     <footer className="bg-primary-dark text-gray-100 py-10">
       <div className="container mx-auto px-4 grid md:grid-cols-3 gap-8 text-sm">
@@ -72,7 +74,16 @@ export default function SiteFooter() {
         <div>
           <h4 className="font-semibold mb-2">{t.docs}</h4>
           <ul>
-            <li><a href="#" className="hover:underline">{t.offer}</a></li>
+            <li>
+              <a
+                href={publicOfferUrl}
+                className="hover:underline"
+                target="_blank"
+                rel="noreferrer"
+              >
+                {t.offer}
+              </a>
+            </li>
             <li><a href="#" className="hover:underline">{t.agreement}</a></li>
             <li><a href="#" className="hover:underline">{t.contacts}</a></li>
           </ul>

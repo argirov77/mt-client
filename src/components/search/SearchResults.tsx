@@ -18,6 +18,7 @@ import StepTwo from "./steps/StepTwo";
 import StepThree from "./steps/StepThree";
 
 import { downloadTicketPdf } from "@/utils/ticketPdf";
+import { getPublicOfferUrl } from "@/utils/publicOffer";
 import type { ElectronicTicketData } from "@/types/ticket";
 
 // ======== Типы ========
@@ -47,6 +48,7 @@ export default function SearchResults({
   discountCount,
 }: Props) {
   const t = dict[lang ?? "ru"];
+  const publicOfferUrl = getPublicOfferUrl(lang ?? "ru");
 
   // Limit seat count to a reasonable range to avoid huge allocations
   const MAX_SEAT_COUNT = 50;
@@ -929,6 +931,7 @@ export default function SearchResults({
         setExtraBaggageReturn={setExtraBaggageReturn}
         purchaseId={purchaseId}
         ticket={ticket}
+        publicOfferUrl={publicOfferUrl}
         handleAction={handleAction}
         handlePay={handlePay}
         handleTicketDownloadClick={handleTicketDownloadClick}

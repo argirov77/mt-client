@@ -65,6 +65,8 @@ export type Dict = {
   contactsAndPayment: string;
   contactsPhone: string;
   contactsEmail: string;
+  publicOfferConsent: string;
+  publicOfferLink: string;
   baggageIncludedTitle: string;
   baggageIncludedCabin: string;
   baggageIncludedChecked: string;

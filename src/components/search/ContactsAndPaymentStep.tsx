@@ -18,6 +18,8 @@ type Dict = {
   contactsAndPayment: string;
   contactsPhone: string;
   contactsEmail: string;
+  publicOfferConsent: string;
+  publicOfferLink: string;
   ticketPassengerBaggage: string;
   ticketPassengerBaggageReturn: string;
   baggageIncludedTitle: string;
@@ -61,6 +63,7 @@ type Props = {
   setExtraBaggageReturn: (value: boolean[]) => void;
   purchaseId: number | null;
   ticket: ElectronicTicketData | null;
+  publicOfferUrl: string;
   handleAction: (action: "book" | "purchase") => void;
   handlePay: () => void;
   onDownloadTicket?: (ticketNumber: string) => void;
@@ -83,6 +86,7 @@ export default function ContactsAndPaymentStep({
   setExtraBaggageReturn,
   purchaseId,
   ticket,
+  publicOfferUrl,
   handleAction,
   handlePay,
   onDownloadTicket,
@@ -339,6 +343,21 @@ export default function ContactsAndPaymentStep({
           </button>
         )}
       </div>
+
+      {purchaseId && (
+        <p className="text-xs text-slate-500">
+          {t.publicOfferConsent}{" "}
+          <a
+            href={publicOfferUrl}
+            className="font-semibold text-slate-700 underline decoration-dotted underline-offset-2 hover:text-slate-900"
+            target="_blank"
+            rel="noreferrer"
+          >
+            {t.publicOfferLink}
+          </a>
+          .
+        </p>
+      )}
 
       {baggageModal.shouldRender ? (
         <div
