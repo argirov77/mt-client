@@ -1,105 +1,187 @@
-<section class="w-full px-4">
-  <div
-    class="mx-auto max-w-5xl rounded-3xl bg-white/20 backdrop-blur-xl shadow-xl ring-1 ring-white/30 p-5 md:p-6"
-  >
-    <form class="flex flex-col gap-4">
-      <!-- Верхний ряд: откуда / куда -->
-      <div class="grid grid-cols-1 md:grid-cols-[2fr_2fr_auto] gap-3 items-center">
-        <div class="relative">
-          <label class="mb-1 block text-xs font-medium text-slate-100/90">
-            Откуда
-          </label>
-          <select
-            class="h-12 w-full rounded-2xl bg-white/95 px-4 text-sm text-slate-900 shadow ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-sky-400"
-          >
-            <option value="">Выберите город</option>
-            <option>Варна</option>
-            <option>Одесса</option>
-          </select>
-        </div>
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MT — Актуальные тарифы</title>
 
-        <div class="relative">
-          <label class="mb-1 block text-xs font-medium text-slate-100/90">
-            Куда
-          </label>
-          <select
-            class="h-12 w-full rounded-2xl bg-white/95 px-4 text-sm text-slate-900 shadow ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-sky-400"
-          >
-            <option value="">Выберите город</option>
-            <option>Одесса</option>
-            <option>Варна</option>
-          </select>
+  <style>
+    :root{
+      --bg:#f6f8fb;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#64748b;
+      --line:rgba(15,23,42,.06);
+      --shadow:0 12px 30px rgba(15,23,42,.06);
+      --radius:18px;
 
-          <!-- swap button -->
-          <button
-            type="button"
-            class="absolute -right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white text-sky-700 shadow ring-1 ring-black/5 hover:bg-slate-50 active:scale-95"
-            title="Поменять местами"
-          >
-            ⇄
-          </button>
-        </div>
+      --accent:#ff7a00;
+      --accent-soft:rgba(255,122,0,.12);
+    }
 
-        <!-- Пассажиры (пилюля) -->
-        <button
-          type="button"
-          class="mt-1 inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-white/95 px-4 text-sm text-slate-800 shadow ring-1 ring-black/5 hover:bg-white active:scale-95 md:mt-6"
-        >
-          <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-sky-100 text-sky-700 text-xs font-semibold">
-            👤
-          </span>
-          <span class="text-xs text-slate-500">Пассажиры</span>
-          <span class="tabular-nums text-sm font-medium text-slate-900">
-            1
-          </span>
-        </button>
+    *{box-sizing:border-box;}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background:var(--bg);
+      color:var(--text);
+    }
+
+    .prices{
+      max-width:1120px;
+      margin:0 auto;
+      padding:64px 16px 80px;
+    }
+
+    /* HEAD */
+    .prices__head{
+      text-align:center;
+      margin-bottom:32px;
+    }
+
+    .prices__kicker{
+      font-size:12px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color:#94a3b8;
+      margin-bottom:6px;
+    }
+
+    .prices__title{
+      font-size:36px;
+      margin:0 0 8px;
+    }
+
+    .prices__sub{
+      color:var(--muted);
+      margin:0 0 14px;
+    }
+
+    .prices__meta{
+      display:flex;
+      justify-content:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .meta-pill{
+      font-size:13px;
+      padding:6px 12px;
+      border-radius:999px;
+      background:#f1f5f9;
+      color:#475569;
+    }
+
+    /* GRID */
+    .prices__grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:16px;
+    }
+
+    .price-card{
+      background:var(--card);
+      border-radius:var(--radius);
+      padding:20px 22px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      border:1px solid var(--line);
+      box-shadow:var(--shadow);
+      transition:transform .15s ease, box-shadow .15s ease;
+    }
+
+    .price-card:hover{
+      transform:translateY(-2px);
+      box-shadow:0 18px 40px rgba(15,23,42,.1);
+    }
+
+    .price-card__route{
+      font-weight:600;
+      font-size:17px;
+    }
+
+    .price-card__route span{
+      margin:0 6px;
+      color:#94a3b8;
+    }
+
+    .price-card__price{
+      font-weight:700;
+      font-size:15px;
+      padding:6px 12px;
+      border-radius:999px;
+      background:var(--accent-soft);
+      color:#c2410c;
+      white-space:nowrap;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width:900px){
+      .prices__grid{grid-template-columns:repeat(2,1fr);}
+    }
+    @media (max-width:520px){
+      .prices__grid{grid-template-columns:1fr;}
+      .prices__title{font-size:30px;}
+    }
+  </style>
+</head>
+
+<body>
+  <section class="prices">
+    <div class="prices__head">
+      <div class="prices__kicker">Цены</div>
+      <h2 class="prices__title">Актуальные тарифы</h2>
+      <p class="prices__sub">Стоимость популярных направлений.</p>
+
+      <div class="prices__meta">
+        <span class="meta-pill">Цены в гривнах (UAH)</span>
+        <span class="meta-pill">Могут отличаться по дате</span>
+        <span class="meta-pill">Все рейсы прямые</span>
+      </div>
+    </div>
+
+    <div class="prices__grid">
+      <div class="price-card">
+        <div class="price-card__route">Одесса <span>→</span> Варна</div>
+        <div class="price-card__price">1750 грн</div>
       </div>
 
-      <!-- Нижний ряд: даты + поиск -->
-      <div class="grid grid-cols-1 md:grid-cols-[2fr_2fr_auto] gap-3 items-center">
-        <!-- Дата туда -->
-        <div>
-          <label class="mb-1 block text-xs font-medium text-slate-100/90">
-            Дата
-          </label>
-          <button
-            type="button"
-            class="flex h-12 w-full items-center justify-between rounded-2xl bg-white/95 px-4 text-sm text-slate-900 shadow ring-1 ring-black/5 hover:bg-white focus:outline-none focus:ring-2 focus:ring-sky-400"
-          >
-            <span class="text-slate-500">Выберите дату</span>
-            <span class="text-slate-400 text-xs">📅</span>
-          </button>
-        </div>
-
-        <!-- Дата обратно -->
-        <div>
-          <label class="mb-1 block text-xs font-medium text-slate-100/90">
-            Обратно
-          </label>
-          <button
-            type="button"
-            class="flex h-12 w-full items-center justify-between rounded-2xl bg-white/70 px-4 text-sm text-slate-500 shadow ring-1 ring-black/5 hover:bg-white focus:outline-none focus:ring-2 focus:ring-sky-400"
-          >
-            <span class="text-slate-400">Не выбрано</span>
-            <span class="text-slate-400 text-xs">📅</span>
-          </button>
-        </div>
-
-        <!-- Поиск -->
-        <div class="flex md:items-end">
-          <button
-            type="submit"
-            class="mt-1 inline-flex h-12 w-full items-center justify-center rounded-2xl bg-[#ff6a00] px-6 text-sm font-semibold text-white shadow-lg hover:bg-[#ff7a1c] active:scale-95 md:mt-6"
-          >
-            Поиск
-          </button>
-        </div>
+      <div class="price-card">
+        <div class="price-card__route">Одесса <span>→</span> Бургас</div>
+        <div class="price-card__price">1800 грн</div>
       </div>
 
-      <!-- Подпись / гарантия -->
-      <p class="text-xs text-slate-100/80 md:text-[11px]">
-        Бесплатное бронирование, возврат билета до отправления по правилам перевозчика.
-      </p>
-    </form>
-  </div>
-</section>
+      <div class="price-card">
+        <div class="price-card__route">Константа <span>→</span> Варна</div>
+        <div class="price-card__price">580 грн</div>
+      </div>
+
+      <div class="price-card">
+        <div class="price-card__route">Константа <span>→</span> Бургас</div>
+        <div class="price-card__price">2550 грн</div>
+      </div>
+
+      <div class="price-card">
+        <div class="price-card__route">Бургас <span>→</span> Константа</div>
+        <div class="price-card__price">540 грн</div>
+      </div>
+
+      <div class="price-card">
+        <div class="price-card__route">Бургас <span>→</span> Одесса</div>
+        <div class="price-card__price">920 грн</div>
+      </div>
+
+      <div class="price-card">
+        <div class="price-card__route">Варна <span>→</span> Константа</div>
+        <div class="price-card__price">600 грн</div>
+      </div>
+
+      <div class="price-card">
+        <div class="price-card__route">Варна <span>→</span> Одесса</div>
+        <div class="price-card__price">900 грн</div>
+      </div>
+    </div>
+  </section>
+</body>
+</html>
