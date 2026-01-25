@@ -86,7 +86,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
     accent: string,
   ) => {
     return (
-      <div className="rounded-none border-0 bg-slate-50/70 px-3 py-3 shadow-none sm:rounded-xl sm:border sm:border-slate-200 sm:bg-white sm:px-4 sm:py-3 sm:shadow-sm">
+      <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
         <div className="flex items-start justify-between gap-3">
           <div className="space-y-1">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{title}</p>
@@ -108,12 +108,12 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
   };
 
   return (
-    <aside className="overflow-hidden rounded-none border-0 bg-transparent shadow-none sm:rounded-2xl sm:border sm:border-slate-200 sm:bg-white sm:shadow-xl">
-      <div className="border-b border-slate-100 px-3 py-3 sm:px-5 sm:py-4">
+    <aside className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
+      <div className="border-b border-slate-100 px-5 py-4">
         <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.orderSummaryTitle}</p>
       </div>
 
-      <div className="space-y-4 px-3 py-3 sm:px-5 sm:py-4">
+      <div className="space-y-4 px-5 py-4">
         {renderRouteBlock(
           t.outboundShort,
           `${fromName} → ${toName}`,
@@ -134,7 +134,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
             )
           : null}
 
-        <div className="rounded-none border-0 bg-slate-50/70 px-3 py-3 shadow-none sm:rounded-xl sm:border sm:border-slate-200 sm:bg-white sm:px-4 sm:py-3 sm:shadow-sm">
+        <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
           <div className="flex items-center justify-between">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.passengersTitle}</p>
             <span className="rounded-full bg-slate-50 px-3 py-1 text-[11px] font-semibold text-slate-600 ring-1 ring-slate-200">
@@ -187,7 +187,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
           </div>
         </div>
 
-        <div className="rounded-none border-0 bg-slate-50/70 px-3 py-3 shadow-none sm:rounded-xl sm:border sm:border-slate-200 sm:bg-white sm:px-4 sm:py-3 sm:shadow-sm">
+        <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.ticketContacts}</p>
           <div className="mt-3 space-y-2 text-sm text-slate-700">
             {contactsProvided ? (
@@ -204,7 +204,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
         </div>
 
         {baggageLines.length ? (
-          <div className="rounded-none border-0 bg-slate-50/70 px-3 py-3 shadow-none sm:rounded-xl sm:border sm:border-slate-200 sm:bg-white sm:px-4 sm:py-3 sm:shadow-sm">
+          <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
             <div className="space-y-1 text-sm text-slate-700">
               {baggageLines.map((line) => (
                 <div key={line.label} className="flex items-center justify-between gap-3">
@@ -217,7 +217,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
           </div>
         ) : null}
 
-        <div className="rounded-none border-0 bg-slate-50/70 px-3 py-3 shadow-none sm:rounded-xl sm:border sm:border-slate-200 sm:bg-white sm:px-4 sm:py-4 sm:shadow-sm">
+        <div className="rounded-xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
           <div className="flex items-center justify-between text-lg font-semibold text-slate-900">
             <span>{t.total}</span>
             <span className="text-emerald-600">{formatPrice(totals.overall)}</span>

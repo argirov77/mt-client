@@ -155,7 +155,7 @@ export default function ContactsAndPaymentStep({
     };
 
     return (
-      <div className="rounded-none border-0 bg-slate-50/70 p-3 shadow-none sm:rounded-xl sm:border sm:border-slate-200 sm:bg-white/90 sm:shadow-sm">
+      <div className="rounded-xl border border-slate-200 bg-white/90 p-3 shadow-sm">
         <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-600">
           <span className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1">
             {directionLabel}
@@ -201,7 +201,7 @@ export default function ContactsAndPaymentStep({
 
   return (
     <div className="space-y-5">
-      <div className="rounded-none border-0 bg-slate-50/70 p-3 shadow-none sm:rounded-2xl sm:border sm:border-slate-200 sm:bg-gradient-to-br sm:from-sky-50 sm:via-white sm:to-blue-50 sm:p-4 sm:shadow-sm">
+      <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-sky-50 via-white to-blue-50 p-4 shadow-sm">
         <div className="flex items-start justify-between gap-3">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
@@ -230,12 +230,12 @@ export default function ContactsAndPaymentStep({
         </div>
       </div>
 
-      <div className="rounded-none border-0 bg-transparent p-0 shadow-none sm:rounded-2xl sm:border sm:border-slate-200 sm:bg-white sm:p-4 sm:shadow-sm">
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <h3 className="text-base font-semibold text-slate-900">{t.contactsAndPayment}</h3>
         <p className="text-sm text-slate-600">{t.contactsDescription}</p>
 
         <div className="mt-4 flex flex-col gap-4 md:flex-row md:flex-wrap">
-          <div className="w-full min-w-0 flex-1 space-y-3 rounded-xl border border-slate-200 bg-white/80 p-3 shadow-none sm:rounded-2xl sm:border sm:border-slate-100 sm:bg-gradient-to-br sm:from-white sm:via-sky-50 sm:to-blue-50/60 sm:p-4 sm:shadow-inner">
+          <div className="w-full min-w-0 flex-1 space-y-3 rounded-2xl border border-slate-100 bg-gradient-to-br from-white via-sky-50 to-blue-50/60 p-4 shadow-inner">
             <label
               className="flex items-center gap-2 text-sm font-semibold text-slate-800"
               htmlFor="contact-phone"
@@ -258,7 +258,7 @@ export default function ContactsAndPaymentStep({
               </span>
               <span>{t.contactsPhone}</span>
             </label>
-            <div className="rounded-xl border border-slate-200 bg-white p-2 shadow-none sm:rounded-2xl sm:border-slate-100 sm:bg-white/80 sm:shadow-sm">
+            <div className="rounded-2xl border border-slate-100 bg-white/80 p-2 shadow-sm">
               <PhoneInput
                 id="contact-phone"
                 placeholder={t.contactsPhone}
@@ -270,7 +270,7 @@ export default function ContactsAndPaymentStep({
             </div>
           </div>
 
-          <div className="w-full min-w-0 flex-1 space-y-3 rounded-xl border border-slate-200 bg-white/80 p-3 shadow-none sm:rounded-2xl sm:border sm:border-slate-100 sm:bg-gradient-to-br sm:from-white sm:via-slate-50 sm:to-sky-50/70 sm:p-4 sm:shadow-inner">
+          <div className="w-full min-w-0 flex-1 space-y-3 rounded-2xl border border-slate-100 bg-gradient-to-br from-white via-slate-50 to-sky-50/70 p-4 shadow-inner">
             <label
               className="flex items-center gap-2 text-sm font-semibold text-slate-800"
               htmlFor="contact-email"
@@ -294,7 +294,7 @@ export default function ContactsAndPaymentStep({
               </span>
               <span>{t.contactsEmail}</span>
             </label>
-            <div className="rounded-xl border border-slate-200 bg-white p-2 shadow-none sm:rounded-2xl sm:border-slate-100 sm:bg-white/80 sm:shadow-sm">
+            <div className="rounded-2xl border border-slate-100 bg-white/80 p-2 shadow-sm">
               <FormInput
                 id="contact-email"
                 type="email"
@@ -302,7 +302,7 @@ export default function ContactsAndPaymentStep({
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-base text-slate-900 shadow-none focus:border-emerald-200 focus:bg-white sm:rounded-full sm:bg-gradient-to-r sm:from-white sm:to-slate-50/80 sm:shadow-inner"
+                className="h-12 w-full rounded-full border border-slate-200 bg-gradient-to-r from-white to-slate-50/80 px-4 text-base text-slate-900 shadow-inner focus:border-emerald-200 focus:bg-white"
               />
             </div>
           </div>
