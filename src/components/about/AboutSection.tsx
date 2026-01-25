@@ -35,12 +35,6 @@ export default function AboutSection({
   const media = activeBlock?.media ?? [];
   const heroMedia = media[activeMediaIndex] ?? media[0];
 
-  const formatPhoneDigits = (phone: string) => phone.replace(/\D/g, "");
-  const buildWhatsAppLink = (phone: string) => `https://wa.me/${formatPhoneDigits(phone)}`;
-  const buildViberLink = (phone: string) =>
-    `viber://chat?number=%2B${formatPhoneDigits(phone)}`;
-  const buildTelegramLink = (phone: string) => `https://t.me/+${formatPhoneDigits(phone)}`;
-
   useEffect(() => {
     setActiveMediaIndex(0);
   }, [activeIndex]);
@@ -119,7 +113,7 @@ export default function AboutSection({
             </div>
 
             <div className="px-5 py-6">
-              {media.length > 0 && !activeBlock?.offices ? (
+              {media.length > 0 ? (
                 <>
                   <div className="hidden gap-3 sm:grid sm:grid-cols-2">
                     {media.map((item, index) => (
@@ -199,75 +193,19 @@ export default function AboutSection({
               ) : null}
 
               {activeBlock?.offices ? (
-                <div className="mt-2 grid gap-4 md:grid-cols-2">
+                <div className="mt-4 space-y-3">
                   {activeBlock.offices.map((office, index) => (
                     <div
                       key={`${office.city}-${index}`}
-                      className="flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-[0_12px_30px_rgba(15,23,42,0.08)]"
+                      className="rounded-2xl border border-slate-200/70 bg-slate-50/60 p-3"
                     >
-                      <div className="relative aspect-[4/3] bg-gradient-to-br from-slate-50 to-orange-50">
-                        <Image
-                          src={office.image.src}
-                          alt={office.image.alt}
-                          fill
-                          className="object-cover"
-                        />
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="text-sm font-extrabold text-slate-900">{office.city}</div>
+                        <span className="rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-bold text-orange-700">
+                          {office.tag}
+                        </span>
                       </div>
-                      <div className="flex flex-1 flex-col gap-3 p-4">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <div className="text-base font-extrabold text-slate-900">{office.city}</div>
-                          <span className="rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-bold text-orange-700">
-                            {office.tag}
-                          </span>
-                        </div>
-                        <div className="text-sm text-slate-600">{office.address}</div>
-                        {office.image.caption ? (
-                          <div className="text-xs font-semibold text-slate-500">
-                            {office.image.caption}
-                          </div>
-                        ) : null}
-                        <div className="mt-1 space-y-2">
-                          {office.phones.map((phone) => (
-                            <div
-                              key={phone}
-                              className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-slate-200/70 bg-slate-50/70 px-3 py-2"
-                            >
-                              <a
-                                href={`tel:${phone}`}
-                                className="text-sm font-semibold text-slate-800 hover:text-orange-600"
-                              >
-                                {phone}
-                              </a>
-                              <div className="flex flex-wrap gap-2 text-[11px] font-bold uppercase tracking-wide">
-                                <a
-                                  href={buildViberLink(phone)}
-                                  className="rounded-full border border-purple-200 bg-purple-50 px-2 py-1 text-purple-700"
-                                  target="_blank"
-                                  rel="noreferrer"
-                                >
-                                  Viber
-                                </a>
-                                <a
-                                  href={buildWhatsAppLink(phone)}
-                                  className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-emerald-700"
-                                  target="_blank"
-                                  rel="noreferrer"
-                                >
-                                  WhatsApp
-                                </a>
-                                <a
-                                  href={buildTelegramLink(phone)}
-                                  className="rounded-full border border-sky-200 bg-sky-50 px-2 py-1 text-sky-700"
-                                  target="_blank"
-                                  rel="noreferrer"
-                                >
-                                  Telegram
-                                </a>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
+                      <div className="mt-2 text-sm text-slate-600">{office.address}</div>
                     </div>
                   ))}
                 </div>
