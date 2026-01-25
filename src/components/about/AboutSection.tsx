@@ -22,7 +22,7 @@ export default function AboutSection({
   className = "",
 }: Props) {
   const blocks = aboutContent[lang] ?? aboutContent.ru;
-  const { kicker, title, subtitle, closeLabel, stats } = aboutTranslations[lang] ?? aboutTranslations.ru;
+  const { kicker, title, subtitle, closeLabel } = aboutTranslations[lang] ?? aboutTranslations.ru;
   const [activeIndex, setActiveIndex] = useState(0);
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
   const [modalItem, setModalItem] = useState<null | {
@@ -56,22 +56,7 @@ export default function AboutSection({
           </p>
         </div>
 
-        <div className="mt-6 grid gap-3 md:grid-cols-3">
-          {stats.map((stat, index) => (
-            <div
-              key={`${stat.value}-${index}`}
-              className="rounded-2xl border border-slate-200/70 bg-white/75 p-4 shadow-sm"
-            >
-              <div className="flex items-center gap-3 text-base font-extrabold text-slate-900">
-                <span className="h-2.5 w-2.5 rounded-full bg-orange-400 shadow-[0_0_0_6px_rgba(251,146,60,0.25)]" />
-                {stat.value}
-              </div>
-              <div className="mt-1 text-sm text-slate-500">{stat.label}</div>
-            </div>
-          ))}
-        </div>
-
-        <section className="mt-6 overflow-hidden rounded-3xl border border-slate-200/70 bg-white/80 shadow-[0_16px_40px_rgba(15,23,42,0.08)]">
+        <section className="mt-8 overflow-hidden rounded-3xl border border-slate-200/70 bg-white/80 shadow-[0_16px_40px_rgba(15,23,42,0.08)]">
           <div className="border-b border-slate-200/70 bg-gradient-to-b from-white/95 to-white/80 px-4 py-3">
             <div
               className="flex flex-nowrap gap-2 overflow-auto md:flex-wrap"
