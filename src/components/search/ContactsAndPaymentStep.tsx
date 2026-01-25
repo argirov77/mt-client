@@ -234,7 +234,7 @@ export default function ContactsAndPaymentStep({
         <h3 className="text-base font-semibold text-slate-900">{t.contactsAndPayment}</h3>
         <p className="text-sm text-slate-600">{t.contactsDescription}</p>
 
-        <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:flex-wrap">
+        <div className="mt-4 flex flex-wrap gap-4">
           <div className="w-full min-w-0 flex-1 space-y-3 rounded-2xl border border-slate-100 bg-gradient-to-br from-white via-sky-50 to-blue-50/60 p-4 shadow-inner sm:min-w-[360px]">
             <label
               className="flex items-center gap-2 text-sm font-semibold text-slate-800"
