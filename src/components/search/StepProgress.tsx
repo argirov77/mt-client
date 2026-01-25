@@ -40,7 +40,7 @@ const StepProgress: React.FC<StepProgressProps> = ({
         </span>
       </div>
       <div className="relative mt-3">
-        <div className="grid gap-2 pb-3 sm:grid-cols-3 sm:gap-3">
+        <div className="flex gap-2 pb-3 sm:grid sm:grid-cols-3 sm:gap-3">
           {steps.map((step) => {
             const isActive = step.state === "active";
             const isDone = step.state === "done";
@@ -51,7 +51,7 @@ const StepProgress: React.FC<StepProgressProps> = ({
                 key={step.id}
                 type="button"
                 onClick={() => onNavigate(step.id)}
-                className={`group flex w-full transform flex-col items-start gap-2 rounded-xl border p-3 text-left shadow-sm transition hover:border-sky-200 hover:shadow-md duration-400 ease-in-out ${
+                className={`group flex min-w-0 flex-1 transform flex-col items-start gap-2 rounded-xl border p-3 text-left shadow-sm transition hover:border-sky-200 hover:shadow-md duration-400 ease-in-out sm:flex-none ${
                   isActive
                     ? "scale-[1.04] border-sky-400 bg-sky-50"
                     : isDone
