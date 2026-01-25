@@ -35,6 +35,12 @@ export default function AboutSection({
   const media = activeBlock?.media ?? [];
   const heroMedia = media[activeMediaIndex] ?? media[0];
 
+  const formatPhoneDigits = (phone: string) => phone.replace(/\D/g, "");
+  const buildWhatsAppLink = (phone: string) => `https://wa.me/${formatPhoneDigits(phone)}`;
+  const buildViberLink = (phone: string) =>
+    `viber://chat?number=%2B${formatPhoneDigits(phone)}`;
+  const buildTelegramLink = (phone: string) => `https://t.me/+${formatPhoneDigits(phone)}`;
+
   useEffect(() => {
     setActiveMediaIndex(0);
   }, [activeIndex]);
@@ -82,8 +88,8 @@ export default function AboutSection({
             </div>
           </div>
 
-          <div className="grid gap-0 lg:grid-cols-[1.05fr_0.95fr]">
-            <div className="border-b border-slate-200/70 px-5 py-6 lg:border-b-0 lg:border-r">
+          {activeBlock?.offices ? (
+            <div className="px-5 py-6">
               <h3 className="text-xl font-extrabold tracking-tight text-slate-900">
                 {activeBlock?.title}
               </h3>
@@ -95,7 +101,7 @@ export default function AboutSection({
                 ))}
               </div>
 
-              <ul className="mt-5 grid gap-3">
+              <ul className="mt-5 grid gap-3 md:grid-cols-3">
                 {bulletItems.map((item, index) => (
                   <li
                     key={`${item}-${index}`}
@@ -110,108 +116,201 @@ export default function AboutSection({
                   </li>
                 ))}
               </ul>
-            </div>
 
-            <div className="px-5 py-6">
-              {media.length > 0 ? (
-                <>
-                  <div className="hidden gap-3 sm:grid sm:grid-cols-2">
-                    {media.map((item, index) => (
-                      <button
-                        key={`${item.src}-${index}`}
-                        type="button"
-                        className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg"
-                        onClick={() => setModalItem(item)}
-                      >
-                        <div className="aspect-[16/10] bg-gradient-to-br from-slate-50 to-orange-50">
-                          <Image
-                            src={item.src}
-                            alt={item.alt}
-                            width={640}
-                            height={420}
-                            className="h-full w-full object-cover"
-                          />
+              <div className="mt-6 grid gap-6 lg:grid-cols-2">
+                {activeBlock.offices.map((office, index) => (
+                  <div
+                    key={`${office.city}-${index}`}
+                    className="flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-[0_12px_30px_rgba(15,23,42,0.08)]"
+                  >
+                    <div className="relative aspect-[16/9] bg-gradient-to-br from-slate-50 to-orange-50">
+                      <Image
+                        src={office.image.src}
+                        alt={office.image.alt}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="flex flex-1 flex-col gap-3 p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="text-base font-extrabold text-slate-900">{office.city}</div>
+                        <span className="rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-bold text-orange-700">
+                          {office.tag}
+                        </span>
+                      </div>
+                      <div className="text-sm text-slate-600">{office.address}</div>
+                      {office.image.caption ? (
+                        <div className="text-xs font-semibold text-slate-500">
+                          {office.image.caption}
                         </div>
-                        <div className="flex items-center justify-between gap-2 px-3 py-2 text-xs font-bold text-slate-700">
-                          <span>{item.caption ?? ""}</span>
-                        </div>
-                      </button>
-                    ))}
+                      ) : null}
+                      <div className="mt-2 space-y-2">
+                        {office.phones.map((phone) => (
+                          <div
+                            key={phone}
+                            className="rounded-2xl border border-slate-200/70 bg-slate-50/70 px-3 py-3"
+                          >
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <a
+                                href={`tel:${phone}`}
+                                className="text-sm font-semibold text-slate-800 hover:text-orange-600"
+                              >
+                                {phone}
+                              </a>
+                              <a
+                                href={`tel:${phone}`}
+                                className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-bold uppercase tracking-wide text-slate-700"
+                              >
+                                Позвонить
+                              </a>
+                            </div>
+                            <div className="mt-2 flex flex-wrap gap-2 text-[11px] font-bold uppercase tracking-wide">
+                              <a
+                                href={buildViberLink(phone)}
+                                className="rounded-full border border-purple-200 bg-purple-50 px-2 py-1 text-purple-700"
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                Viber
+                              </a>
+                              <a
+                                href={buildWhatsAppLink(phone)}
+                                className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-emerald-700"
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                WhatsApp
+                              </a>
+                              <a
+                                href={buildTelegramLink(phone)}
+                                className="rounded-full border border-sky-200 bg-sky-50 px-2 py-1 text-sky-700"
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                Telegram
+                              </a>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="grid gap-0 lg:grid-cols-[1.05fr_0.95fr]">
+              <div className="border-b border-slate-200/70 px-5 py-6 lg:border-b-0 lg:border-r">
+                <h3 className="text-xl font-extrabold tracking-tight text-slate-900">
+                  {activeBlock?.title}
+                </h3>
+                <div className="mt-3 space-y-3">
+                  {activeBlock?.text.map((paragraph, index) => (
+                    <p key={`${paragraph}-${index}`} className={`${bodyTextClass} text-slate-600`}>
+                      {paragraph}
+                    </p>
+                  ))}
+                </div>
 
-                  <div className="block sm:hidden">
-                    <button
-                      type="button"
-                      className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white text-left shadow-md"
-                      onClick={() => heroMedia && setModalItem(heroMedia)}
+                <ul className="mt-5 grid gap-3">
+                  {bulletItems.map((item, index) => (
+                    <li
+                      key={`${item}-${index}`}
+                      className="flex gap-3 rounded-2xl border border-slate-200/70 bg-slate-50/60 p-3"
                     >
-                      <div className="aspect-[16/10] bg-gradient-to-br from-slate-50 to-orange-50">
-                        {heroMedia ? (
-                          <Image
-                            src={heroMedia.src}
-                            alt={heroMedia.alt}
-                            width={640}
-                            height={420}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : null}
-                      </div>
-                      <div className="flex items-center justify-between gap-2 border-t border-slate-200/70 px-3 py-2 text-xs font-bold text-slate-700">
-                        <span>{heroMedia?.caption ?? ""}</span>
-                      </div>
-                    </button>
+                      <span className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-lg border border-blue-200 bg-blue-50 text-blue-600">
+                        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M20 6L9 17l-5-5" />
+                        </svg>
+                      </span>
+                      <span className="text-sm text-slate-700">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
 
-                    <div className="mt-3 flex gap-3 overflow-auto pb-2">
+              <div className="px-5 py-6">
+                {media.length > 0 ? (
+                  <>
+                    <div className="hidden gap-3 sm:grid sm:grid-cols-2">
                       {media.map((item, index) => (
                         <button
                           key={`${item.src}-${index}`}
                           type="button"
-                          className={`flex w-28 flex-shrink-0 flex-col overflow-hidden rounded-2xl border text-left shadow-sm ${
-                            index === activeMediaIndex
-                              ? "border-orange-200 bg-orange-50/60"
-                              : "border-slate-200/70 bg-white"
-                          }`}
-                          onClick={() => setActiveMediaIndex(index)}
+                          className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg"
+                          onClick={() => setModalItem(item)}
                         >
                           <div className="aspect-[16/10] bg-gradient-to-br from-slate-50 to-orange-50">
                             <Image
                               src={item.src}
                               alt={item.alt}
-                              width={240}
-                              height={160}
+                              width={640}
+                              height={420}
                               className="h-full w-full object-cover"
                             />
                           </div>
-                          <div className="px-2 py-2 text-[11px] font-bold text-slate-700">
-                            {item.caption ?? ""}
+                          <div className="flex items-center justify-between gap-2 px-3 py-2 text-xs font-bold text-slate-700">
+                            <span>{item.caption ?? ""}</span>
                           </div>
                         </button>
                       ))}
                     </div>
-                  </div>
-                </>
-              ) : null}
 
-              {activeBlock?.offices ? (
-                <div className="mt-4 space-y-3">
-                  {activeBlock.offices.map((office, index) => (
-                    <div
-                      key={`${office.city}-${index}`}
-                      className="rounded-2xl border border-slate-200/70 bg-slate-50/60 p-3"
-                    >
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="text-sm font-extrabold text-slate-900">{office.city}</div>
-                        <span className="rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-bold text-orange-700">
-                          {office.tag}
-                        </span>
+                    <div className="block sm:hidden">
+                      <button
+                        type="button"
+                        className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white text-left shadow-md"
+                        onClick={() => heroMedia && setModalItem(heroMedia)}
+                      >
+                        <div className="aspect-[16/10] bg-gradient-to-br from-slate-50 to-orange-50">
+                          {heroMedia ? (
+                            <Image
+                              src={heroMedia.src}
+                              alt={heroMedia.alt}
+                              width={640}
+                              height={420}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : null}
+                        </div>
+                        <div className="flex items-center justify-between gap-2 border-t border-slate-200/70 px-3 py-2 text-xs font-bold text-slate-700">
+                          <span>{heroMedia?.caption ?? ""}</span>
+                        </div>
+                      </button>
+
+                      <div className="mt-3 flex gap-3 overflow-auto pb-2">
+                        {media.map((item, index) => (
+                          <button
+                            key={`${item.src}-${index}`}
+                            type="button"
+                            className={`flex w-28 flex-shrink-0 flex-col overflow-hidden rounded-2xl border text-left shadow-sm ${
+                              index === activeMediaIndex
+                                ? "border-orange-200 bg-orange-50/60"
+                                : "border-slate-200/70 bg-white"
+                            }`}
+                            onClick={() => setActiveMediaIndex(index)}
+                          >
+                            <div className="aspect-[16/10] bg-gradient-to-br from-slate-50 to-orange-50">
+                              <Image
+                                src={item.src}
+                                alt={item.alt}
+                                width={240}
+                                height={160}
+                                className="h-full w-full object-cover"
+                              />
+                            </div>
+                            <div className="px-2 py-2 text-[11px] font-bold text-slate-700">
+                              {item.caption ?? ""}
+                            </div>
+                          </button>
+                        ))}
                       </div>
-                      <div className="mt-2 text-sm text-slate-600">{office.address}</div>
                     </div>
-                  ))}
-                </div>
-              ) : null}
+                  </>
+                ) : null}
+              </div>
             </div>
-          </div>
+          )}
         </section>
       </div>
 
