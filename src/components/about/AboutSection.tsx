@@ -164,31 +164,81 @@ export default function AboutSection({
                                 Позвонить
                               </a>
                             </div>
-                            <div className="mt-2 flex flex-wrap gap-2 text-[11px] font-bold uppercase tracking-wide">
-                              <a
-                                href={buildViberLink(phone)}
-                                className="rounded-full border border-purple-200 bg-purple-50 px-2 py-1 text-purple-700"
-                                target="_blank"
-                                rel="noreferrer"
-                              >
-                                Viber
-                              </a>
-                              <a
-                                href={buildWhatsAppLink(phone)}
-                                className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-emerald-700"
-                                target="_blank"
-                                rel="noreferrer"
-                              >
-                                WhatsApp
-                              </a>
-                              <a
-                                href={buildTelegramLink(phone)}
-                                className="rounded-full border border-sky-200 bg-sky-50 px-2 py-1 text-sky-700"
-                                target="_blank"
-                                rel="noreferrer"
-                              >
-                                Telegram
-                              </a>
+                            <div className="mt-2 flex flex-wrap items-center gap-2">
+                              <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                                Мессенджеры
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <a
+                                  href={buildViberLink(phone)}
+                                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-purple-200 bg-white text-purple-700 transition hover:border-purple-400"
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  aria-label={`Viber ${phone}`}
+                                  title="Viber"
+                                >
+                                  <svg
+                                    aria-hidden="true"
+                                    viewBox="0 0 24 24"
+                                    className="h-4 w-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="1.5"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      d="M7.5 18.75c4.5 1.5 9-1.5 9.75-6 .75-4.5-2.25-8.25-6.75-9C6 3 2.25 6 1.5 10.5a8.1 8.1 0 001.5 6.3l-.75 3.45 3.6-1.2 1.65-.3z"
+                                    />
+                                  </svg>
+                                </a>
+                                <a
+                                  href={buildWhatsAppLink(phone)}
+                                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-emerald-200 bg-white text-emerald-700 transition hover:border-emerald-400"
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  aria-label={`WhatsApp ${phone}`}
+                                  title="WhatsApp"
+                                >
+                                  <svg
+                                    aria-hidden="true"
+                                    viewBox="0 0 24 24"
+                                    className="h-4 w-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="1.5"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      d="M7.5 19.5l1.08-3.24a6.75 6.75 0 118.16 0l-3.24 1.08-2.25-.75-1.5 1.5-1.25 1.41z"
+                                    />
+                                  </svg>
+                                </a>
+                                <a
+                                  href={buildTelegramLink(phone)}
+                                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-sky-200 bg-white text-sky-700 transition hover:border-sky-400"
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  aria-label={`Telegram ${phone}`}
+                                  title="Telegram"
+                                >
+                                  <svg
+                                    aria-hidden="true"
+                                    viewBox="0 0 24 24"
+                                    className="h-4 w-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="1.5"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      d="M20.25 4.5l-16.5 7.5 5.7 1.8 2.55 6.2 1.35-4.05 4.2 3.15 2.7-14.6z"
+                                    />
+                                  </svg>
+                                </a>
+                              </div>
                             </div>
                           </div>
                         ))}
