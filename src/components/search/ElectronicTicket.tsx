@@ -74,7 +74,7 @@ export default function ElectronicTicket({ ticket, t, onDownload }: Props) {
   ) => {
     if (!segment) {
       return (
-        <div className="rounded-none border-0 border-dashed bg-slate-50/70 p-3 text-sm text-slate-600 sm:rounded-2xl sm:border sm:border-dashed sm:border-slate-200 sm:bg-white/60 sm:p-4">
+        <div className="rounded-2xl border border-dashed border-slate-200 bg-white/60 p-4 text-sm text-slate-600">
           <h4 className="font-semibold text-slate-800">{label}</h4>
           <p>Данные о рейсе недоступны</p>
         </div>
@@ -82,7 +82,7 @@ export default function ElectronicTicket({ ticket, t, onDownload }: Props) {
     }
 
     return (
-      <div className="rounded-none border-0 bg-slate-50/70 p-3 shadow-none sm:rounded-2xl sm:border sm:border-slate-100 sm:bg-white sm:p-4 sm:shadow-sm">
+      <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
         <div className="flex items-center justify-between gap-2">
           <h4 className="text-sm font-semibold text-slate-900">{label}</h4>
           <span className="rounded-full bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-700">
@@ -98,7 +98,7 @@ export default function ElectronicTicket({ ticket, t, onDownload }: Props) {
   };
 
   return (
-    <section className="mt-6 rounded-none border-0 bg-transparent p-0 shadow-none sm:rounded-3xl sm:border sm:border-sky-100 sm:bg-gradient-to-br sm:from-white sm:to-sky-50/70 sm:p-6 sm:shadow-sm">
+    <section className="mt-6 rounded-3xl border border-sky-100 bg-gradient-to-br from-white to-sky-50/70 p-6 shadow-sm">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1">
           <p className="text-xs font-semibold uppercase tracking-wide text-sky-700">
@@ -135,7 +135,7 @@ export default function ElectronicTicket({ ticket, t, onDownload }: Props) {
       </div>
 
       <div className="mt-6 grid gap-4 md:grid-cols-[1.1fr_0.9fr]">
-        <div className="rounded-none border-0 bg-slate-50/70 p-3 shadow-none sm:rounded-2xl sm:border sm:border-slate-100 sm:bg-white sm:p-4 sm:shadow-sm">
+        <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1 text-sm text-slate-700">
               <p className="text-xs uppercase tracking-wide text-slate-500">{t.ticketStatus}</p>
@@ -176,7 +176,7 @@ export default function ElectronicTicket({ ticket, t, onDownload }: Props) {
           {ticket.passengers.map((passenger, index) => (
             <div
               key={`${passenger.name}-${index}`}
-              className="flex flex-col gap-2 rounded-none border-0 bg-slate-50/70 p-3 shadow-none sm:rounded-2xl sm:border sm:border-slate-100 sm:bg-white sm:p-4 sm:shadow-sm"
+              className="flex flex-col gap-2 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm"
             >
               <p className="text-base font-semibold text-slate-900">{passenger.name}</p>
               <div className="grid grid-cols-2 gap-2 text-sm text-slate-600">
@@ -204,3 +204,4 @@ export default function ElectronicTicket({ ticket, t, onDownload }: Props) {
     </section>
   );
 }
+
