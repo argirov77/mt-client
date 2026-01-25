@@ -56,7 +56,7 @@ export default function SiteFooter() {
   const t = translations[lang];
   const publicOfferUrl = getPublicOfferUrl(lang);
   return (
-    <footer className="bg-primary-dark text-gray-100 py-10">
+    <footer className="bg-slate-900 text-slate-100 py-10">
       <div className="container mx-auto px-4 grid md:grid-cols-3 gap-8 text-sm">
         <div>
           <span className="font-bold text-lg">Максимов Турс</span>
