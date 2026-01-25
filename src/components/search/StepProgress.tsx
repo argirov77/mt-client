@@ -27,7 +27,7 @@ const StepProgress: React.FC<StepProgressProps> = ({
   const underlineWidth = `${100 / Math.max(steps.length, 1)}%`;
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 pb-3 shadow-sm">
+    <div className="rounded-none border-0 bg-transparent p-0 pb-1 shadow-none sm:rounded-2xl sm:border sm:border-slate-200 sm:bg-white sm:p-4 sm:pb-3 sm:shadow-sm">
       <div className="flex items-center gap-3">
         <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
           <div

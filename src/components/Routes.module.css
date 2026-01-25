@@ -219,6 +219,36 @@
   animation: pulse 1.3s ease-in-out infinite;
 }
 
+@media (max-width: 768px) {
+  .routes {
+    padding: 28px 16px;
+  }
+
+  .routesCards {
+    gap: 16px;
+  }
+
+  .routeCard {
+    border-radius: 16px;
+    box-shadow: none;
+    padding: 16px;
+  }
+
+  .routeCardSummary {
+    border: 0;
+    box-shadow: none;
+    background: rgba(15, 23, 42, 0.03);
+    padding: 12px 14px;
+  }
+
+  .routeStopCard {
+    border: 0;
+    box-shadow: none;
+    background: rgba(15, 23, 42, 0.02);
+    padding: 12px 14px;
+  }
+}
+
 .skeletonSummary {
   height: 64px;
   border-radius: 18px;
