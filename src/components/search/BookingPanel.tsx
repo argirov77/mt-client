@@ -372,7 +372,7 @@ export default function BookingPanel({
                 arr[idx] = e.target.value;
                 setPassengerNames(arr);
               }}
-              className="w-full rounded-lg border border-slate-200 bg-white/90 px-3 py-2 text-base shadow-none focus:border-sky-500 focus:ring-2 focus:ring-sky-200 sm:shadow-sm"
+              className="flex-1 rounded-lg border border-slate-200 bg-white/90 px-3 py-2 text-base shadow-none focus:border-sky-500 focus:ring-2 focus:ring-sky-200 sm:shadow-sm"
             />
           </label>
         ))}
