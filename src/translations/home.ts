@@ -42,6 +42,7 @@ type RoutesCopy = {
 
 type AboutCopy = {
   heading: string;
+  tagline: string;
 };
 
 export const heroTranslations: Record<Lang, HeroCopy> = {
@@ -219,8 +220,24 @@ export const routesTranslations: Record<Lang, RoutesCopy> = {
 };
 
 export const aboutTranslations: Record<Lang, AboutCopy> = {
-  ru: { heading: "О компании" },
-  en: { heading: "About company" },
-  bg: { heading: "За компанията" },
-  ua: { heading: "Про компанію" },
+  ru: {
+    heading: "О компании",
+    tagline:
+      "Премиальный сервис, современный автопарк и офисы в ключевых транспортных узлах для удобства пассажиров.",
+  },
+  en: {
+    heading: "About company",
+    tagline:
+      "Premium service, a modern fleet, and offices in key transport hubs for passenger convenience.",
+  },
+  bg: {
+    heading: "За компанията",
+    tagline:
+      "Премиум обслужване, модерен автопарк и офиси в ключови транспортни центрове за удобство на пътниците.",
+  },
+  ua: {
+    heading: "Про компанію",
+    tagline:
+      "Преміальний сервіс, сучасний автопарк і офіси в ключових транспортних вузлах для зручності пасажирів.",
+  },
 };
