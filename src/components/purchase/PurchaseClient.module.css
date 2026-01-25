@@ -935,6 +935,59 @@
   width: 100%;
 }
 
+@media (max-width: 768px) {
+  .page {
+    padding: 20px 0 72px;
+  }
+
+  .container {
+    gap: 12px;
+    padding: 16px 14px 12px;
+    background: var(--purchase-surface);
+    border: 1px solid var(--purchase-line);
+    border-radius: var(--purchase-radius-lg);
+    box-shadow: var(--purchase-shadow);
+  }
+
+  .card {
+    border: 0;
+    box-shadow: none;
+    background: transparent;
+  }
+
+  .orderCard {
+    padding: 0;
+  }
+
+  .scrollCardHeader {
+    padding: 12px 0;
+    background: transparent;
+  }
+
+  .scrollArea {
+    padding: 12px 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .panel {
+    border: 0;
+    box-shadow: none;
+    background: transparent;
+  }
+
+  .panelSection {
+    padding: 0;
+  }
+
+  .panelHighlight,
+  .panelHighlightSuccess,
+  .panelHighlightWarning {
+    border: 0;
+    box-shadow: none;
+  }
+}
+
 @media (max-width: 640px) {
   .btn {
     flex: 1;

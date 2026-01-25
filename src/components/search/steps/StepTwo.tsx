@@ -51,7 +51,7 @@ export default function StepTwo({
   step2Summary,
 }: StepTwoProps) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-3">
+    <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
       {renderStepHeader(2, t.step2Title, step2Summary)}
       <div className="rounded-none border-0 bg-transparent p-0 sm:rounded-xl sm:border sm:border-slate-100 sm:bg-white sm:p-3">
         {selectedOutboundTour ? (
