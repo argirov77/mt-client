@@ -35,6 +35,7 @@ type Props = {
 };
 
 const DISCOUNT_RATE = 0.05;
+type SelectedTour = Tour | null;
 
 export default function SearchResults({
   lang = "ru",
@@ -77,12 +78,8 @@ export default function SearchResults({
   const [showDownloadPrompt, setShowDownloadPrompt] = useState(false);
 
   // Выбор рейсов
-  const [selectedOutboundTour, setSelectedOutboundTour] = useState<Tour | null>(
-    null
-  );
-  const [selectedReturnTour, setSelectedReturnTour] = useState<Tour | null>(
-    null
-  );
+  const [selectedOutboundTour, setSelectedOutboundTour] = useState<SelectedTour>(null);
+  const [selectedReturnTour, setSelectedReturnTour] = useState<SelectedTour>(null);
 
   // Выбор мест
   const [selectedOutboundSeats, setSelectedOutboundSeats] = useState<number[]>(
