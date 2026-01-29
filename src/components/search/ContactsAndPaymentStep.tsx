@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type Dispatch, type SetStateAction } from "react";
 
 import FormInput from "../common/FormInput";
 import PhoneInput from "../common/PhoneInput";
@@ -58,9 +58,9 @@ type Props = {
   hasReturnSection: boolean;
   baggagePriceByDirection: BaggagePriceByDirection;
   extraBaggageOutbound: boolean[];
-  setExtraBaggageOutbound: (value: boolean[]) => void;
+  setExtraBaggageOutbound: Dispatch<SetStateAction<boolean[]>>;
   extraBaggageReturn: boolean[];
-  setExtraBaggageReturn: (value: boolean[]) => void;
+  setExtraBaggageReturn: Dispatch<SetStateAction<boolean[]>>;
   purchaseId: number | null;
   ticket: ElectronicTicketData | null;
   publicOfferUrl: string;
