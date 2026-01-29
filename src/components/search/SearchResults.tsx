@@ -13,7 +13,7 @@ import TicketDownloadPrompt from "./TicketDownloadPrompt";
 import OrderSummary from "./OrderSummary";
 import StepProgress from "./StepProgress";
 import { dict } from "./searchDictionary";
-import type { Lang, Step, Tour } from "./types";
+import type { Lang, Step, Tour as SearchTour } from "./types";
 import StepTwo from "./steps/StepTwo";
 import StepThree from "./steps/StepThree";
 
@@ -35,7 +35,12 @@ type Props = {
 };
 
 const DISCOUNT_RATE = 0.05;
-type SelectedTour = Tour | null;
+type StepNavigationItem = {
+  id: Step;
+  label: string;
+  summary: string;
+  state: "active" | "done" | "future";
+};
 
 export default function SearchResults({
   lang = "ru",
@@ -71,15 +76,17 @@ export default function SearchResults({
   const [msgType, setMsgType] = useState<"info" | "error" | "success">("info");
 
   // Результаты поиска
-  const [outboundTours, setOutboundTours] = useState<Tour[]>([]);
-  const [returnTours, setReturnTours] = useState<Tour[]>([]);
+  const [outboundTours, setOutboundTours] = useState<SearchTour[]>([]);
+  const [returnTours, setReturnTours] = useState<SearchTour[]>([]);
 
   const [ticket, setTicket] = useState<ElectronicTicketData | null>(null);
   const [showDownloadPrompt, setShowDownloadPrompt] = useState(false);
 
   // Выбор рейсов
-  const [selectedOutboundTour, setSelectedOutboundTour] = useState<SelectedTour>(null);
-  const [selectedReturnTour, setSelectedReturnTour] = useState<SelectedTour>(null);
+  const [selectedOutboundTour, setSelectedOutboundTour] = useState<SearchTour | null>(
+    null
+  );
+  const [selectedReturnTour, setSelectedReturnTour] = useState<SearchTour | null>(null);
 
   // Выбор мест
   const [selectedOutboundSeats, setSelectedOutboundSeats] = useState<number[]>(
@@ -117,10 +124,10 @@ export default function SearchResults({
   useEffect(() => {
     let cancelled = false;
 
-    const freeSeats = (value: Tour["seats"]) =>
+    const freeSeats = (value: SearchTour["seats"]) =>
       typeof value === "number" ? value : value?.free ?? 0;
 
-    const filterBySeats = (tours: Tour[]) =>
+    const filterBySeats = (tours: SearchTour[]) =>
       tours.filter((tour) => freeSeats(tour.seats) >= safeSeatCount);
 
     const search = async () => {
@@ -141,7 +148,7 @@ export default function SearchResults({
       setPurchaseId(null);
 
       try {
-        const outReq = axios.get<Tour[]>(`${API}/tours/search`, {
+        const outReq = axios.get<SearchTour[]>(`${API}/tours/search`, {
           params: {
             departure_stop_id: fromId,
             arrival_stop_id: toId,
@@ -151,7 +158,7 @@ export default function SearchResults({
         });
 
         const retReq = returnDate
-          ? axios.get<Tour[]>(`${API}/tours/search`, {
+          ? axios.get<SearchTour[]>(`${API}/tours/search`, {
               params: {
                 departure_stop_id: toId,
                 arrival_stop_id: fromId,
@@ -159,7 +166,7 @@ export default function SearchResults({
                 seats: safeSeatCount,
               },
             })
-          : Promise.resolve({ data: [] as Tour[] });
+          : Promise.resolve({ data: [] as SearchTour[] });
 
         const [outRes, retRes] = await Promise.all([outReq, retReq]);
 
@@ -204,16 +211,17 @@ export default function SearchResults({
   }, [fromId, toId, date, returnDate, safeSeatCount, t]);
 
   const hasReturnSection = Boolean(returnDate && returnTours.length > 0);
+  const getTourId = (tour: SearchTour | null) => tour?.id;
 
   // Выбор рейсов
-  const onSelectOutbound = (tour: Tour) => {
+  const onSelectOutbound = (tour: SearchTour) => {
     setSelectedOutboundTour(tour);
     setSelectedOutboundSeats([]);
     setSelectedReturnSeats([]);
     setMsg("");
   };
 
-  const onSelectReturn = (tour: Tour) => {
+  const onSelectReturn = (tour: SearchTour) => {
     setSelectedReturnTour(tour);
     setSelectedOutboundSeats([]);
     setSelectedReturnSeats([]);
@@ -592,7 +600,7 @@ export default function SearchResults({
     setActiveStep(step);
   };
 
-  const stepNavigation = useMemo(
+  const stepNavigation = useMemo<StepNavigationItem[]>(
     () => [
       {
         id: 1 as Step,
@@ -668,7 +676,7 @@ export default function SearchResults({
   const formatPrice = useCallback((value: number) => `${value.toFixed(2)} ₴`, []);
 
   const calculateTotal = useCallback(
-    (tour: Tour | null) => {
+    (tour: SearchTour | null) => {
       if (!tour) return 0;
       const adults = Math.max(0, safeSeatCount - safeDiscountCount);
       const adultSum = adults * tour.price;
@@ -678,7 +686,7 @@ export default function SearchResults({
     [safeDiscountCount, safeSeatCount]
   );
 
-  const calculateBaggagePrice = useCallback((tour: Tour | null) => {
+  const calculateBaggagePrice = useCallback((tour: SearchTour | null) => {
     if (!tour) return null;
 
     const rawPrice = tour.price * 0.1;
@@ -817,7 +825,7 @@ export default function SearchResults({
             <TripList
               title={outboundDirectionTitle}
               tours={outboundTours}
-              selectedId={selectedOutboundTour?.id}
+              selectedId={getTourId(selectedOutboundTour)}
               onSelect={onSelectOutbound}
               fromName={fromName}
               toName={toName}
@@ -832,7 +840,7 @@ export default function SearchResults({
             <TripList
               title={returnDirectionTitle}
               tours={returnTours}
-              selectedId={selectedReturnTour?.id}
+              selectedId={getTourId(selectedReturnTour)}
               onSelect={onSelectReturn}
               fromName={toName}
               toName={fromName}
@@ -1023,7 +1031,7 @@ export default function SearchResults({
               t={t}
               fromName={fromName}
               toName={toName}
-              outboundTour={selectedOutboundTour as Tour}
+              outboundTour={selectedOutboundTour as SearchTour}
               returnTour={selectedReturnTour}
               returnRequired={returnRequired}
               passengerSummaries={passengerSummaries}
