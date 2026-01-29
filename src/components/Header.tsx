@@ -310,7 +310,7 @@ export default function Header() {
                   >
                     <div className="min-w-0">
                       <p className="text-xs font-black uppercase tracking-wide text-slate-700">
-                        {t[entry.city]}
+                        {t[entry.city as keyof typeof t]}
                       </p>
                       <p className="text-xs text-slate-500">{entry.phone}</p>
                     </div>
