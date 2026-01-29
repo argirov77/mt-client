@@ -206,11 +206,11 @@ export default function Header() {
       </nav>
       {isContactOpen ? (
         <div
-          className="fixed inset-0 z-40 flex items-start justify-center overflow-y-auto bg-slate-900/50 px-4 py-8 sm:items-center"
+          className="fixed inset-x-0 top-14 z-40 flex items-start justify-center overflow-y-auto bg-slate-900/50 px-4 py-8 sm:items-center"
           role="dialog"
           aria-modal="true"
         >
-          <div className="max-h-[calc(100vh-4rem)] w-full max-w-xl overflow-y-auto rounded-[18px] border border-slate-200 bg-white shadow-2xl">
+          <div className="max-h-[calc(100vh-7.5rem)] w-full max-w-xl overflow-y-auto rounded-[18px] border border-slate-200 bg-white shadow-2xl">
             <div className="flex items-start justify-between gap-4 border-b border-slate-200/70 px-4 py-3">
               <div>
                 <h2 className="text-base font-black text-slate-900">{t.title}</h2>
