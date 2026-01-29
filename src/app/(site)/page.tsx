@@ -34,9 +34,9 @@ export default function Page() {
         </div>
       </section>
 
+      <About />
       <Routes />
       <Schedule lang={lang} />
-      <About />
     </main>
   );
 }
