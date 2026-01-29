@@ -35,7 +35,23 @@ const menu: MenuItem[] = [
   },
 ];
 
-const contactTranslations = {
+type ContactCity = "varna" | "odessa";
+
+type ContactTranslations = Record<
+  Lang,
+  {
+    title: string;
+    description: string;
+    varna: string;
+    odessa: string;
+    call: string;
+    message: string;
+    close: string;
+    hint: string;
+  }
+>;
+
+const contactTranslations: ContactTranslations = {
   ru: {
     title: "Контакты",
     description: "Выберите способ связи, затем выберите номер.",
@@ -78,7 +94,7 @@ const contactTranslations = {
   },
 };
 
-const contacts = [
+const contacts: { city: ContactCity; phone: string }[] = [
   { city: "varna", phone: "+359894290356" },
   { city: "varna", phone: "+359879554559" },
   { city: "odessa", phone: "+380930004636" },
