@@ -5,7 +5,21 @@ import Link from "next/link";
 import { useState } from "react";
 import { useLanguage, type Lang } from "@/components/common/LanguageProvider";
 
-const menu = [
+type MenuLabel = Record<Lang, string>;
+
+type MenuItem =
+  | {
+      href: string;
+      label: MenuLabel;
+      isPrimary?: boolean;
+      isContact?: false;
+    }
+  | {
+      label: MenuLabel;
+      isContact: true;
+    };
+
+const menu: MenuItem[] = [
   {
     href: "/booking",
     label: { ru: "Купить билет", bg: "Купи билет", en: "Buy ticket", ua: "Купити квиток" },
@@ -21,7 +35,23 @@ const menu = [
   },
 ];
 
-const contactTranslations = {
+type ContactCity = "varna" | "odessa";
+
+type ContactTranslations = Record<
+  Lang,
+  {
+    title: string;
+    description: string;
+    varna: string;
+    odessa: string;
+    call: string;
+    message: string;
+    close: string;
+    hint: string;
+  }
+>;
+
+const contactTranslations: ContactTranslations = {
   ru: {
     title: "Контакты",
     description: "Выберите способ связи, затем выберите номер.",
@@ -64,7 +94,7 @@ const contactTranslations = {
   },
 };
 
-const contacts = [
+const contacts: { city: ContactCity; phone: string }[] = [
   { city: "varna", phone: "+359894290356" },
   { city: "varna", phone: "+359879554559" },
   { city: "odessa", phone: "+380930004636" },
