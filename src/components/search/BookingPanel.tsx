@@ -45,10 +45,10 @@ type Props = {
   setPassengerNames: (v: string[]) => void;
 
   extraBaggageOutbound: boolean[];
-  setExtraBaggageOutbound: (v: boolean[]) => void;
+  setExtraBaggageOutbound: React.Dispatch<React.SetStateAction<boolean[]>>;
 
   extraBaggageReturn: boolean[];
-  setExtraBaggageReturn: (v: boolean[]) => void;
+  setExtraBaggageReturn: React.Dispatch<React.SetStateAction<boolean[]>>;
 
   /** вызываем при готовности перейти к контактам */
   onReadyForContacts?: () => void;
