@@ -5,7 +5,21 @@ import Link from "next/link";
 import { useState } from "react";
 import { useLanguage, type Lang } from "@/components/common/LanguageProvider";
 
-const menu = [
+type MenuLabel = Record<Lang, string>;
+
+type MenuItem =
+  | {
+      href: string;
+      label: MenuLabel;
+      isPrimary?: boolean;
+      isContact?: false;
+    }
+  | {
+      label: MenuLabel;
+      isContact: true;
+    };
+
+const menu: MenuItem[] = [
   {
     href: "/booking",
     label: { ru: "Купить билет", bg: "Купи билет", en: "Buy ticket", ua: "Купити квиток" },
