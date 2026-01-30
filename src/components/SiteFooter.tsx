@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 
 import { useLanguage } from "@/components/common/LanguageProvider";
@@ -101,6 +102,14 @@ export default function SiteFooter() {
             <li><a href="#" className="hover:underline">{t.agreement}</a></li>
             <li><a href="#" className="hover:underline">{t.contacts}</a></li>
           </ul>
+        </div>
+      </div>
+      <div className="container mx-auto mt-6 flex flex-wrap items-center justify-between gap-4 px-4 text-xs text-slate-300">
+        <span>Поддерживаемые способы оплаты</span>
+        <div className="flex items-center gap-3">
+          <Image src="/icons/apple-pay.png" alt="Apple Pay" width={54} height={28} />
+          <Image src="/icons/visa.png" alt="Visa" width={50} height={28} />
+          <Image src="/icons/mastercard.png" alt="Mastercard" width={50} height={28} />
         </div>
       </div>
       {isOfferOpen ? (
