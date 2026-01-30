@@ -203,7 +203,7 @@ export default function Header() {
             }
 
             return (
-              <li key={item.href}>
+              <li key={item.href} className={item.href === "#about" ? "hidden md:block" : undefined}>
                 <Link
                   href={item.href}
                   className={
@@ -298,28 +298,13 @@ export default function Header() {
                     }
                   >
                     {item.key === "telegram" ? (
-                      <Image
-                        src="/icons/telegram.png"
-                        alt="Telegram"
-                        width={18}
-                        height={18}
-                      />
+                      <img src="/icons/telegram.png" alt="Telegram" width={18} height={18} />
                     ) : null}
                     {item.key === "viber" ? (
-                      <Image
-                        src="/icons/viber.png"
-                        alt="Viber"
-                        width={18}
-                        height={18}
-                      />
+                      <img src="/icons/viber.png" alt="Viber" width={18} height={18} />
                     ) : null}
                     {item.key === "whatsapp" ? (
-                      <Image
-                        src="/icons/whatsapp.png"
-                        alt="WhatsApp"
-                        width={18}
-                        height={18}
-                      />
+                      <img src="/icons/whatsapp.png" alt="WhatsApp" width={18} height={18} />
                     ) : null}
                     {item.key === "call" ? (
                       <svg
@@ -360,28 +345,13 @@ export default function Header() {
                       className="inline-flex h-9 w-9 items-center justify-center rounded-[14px] border border-slate-200 bg-slate-50 text-slate-700 transition hover:-translate-y-0.5 hover:shadow-md"
                     >
                       {method === "telegram" ? (
-                        <Image
-                          src="/icons/telegram.png"
-                          alt="Telegram"
-                          width={18}
-                          height={18}
-                        />
+                        <img src="/icons/telegram.png" alt="Telegram" width={18} height={18} />
                       ) : null}
                       {method === "viber" ? (
-                        <Image
-                          src="/icons/viber.png"
-                          alt="Viber"
-                          width={18}
-                          height={18}
-                        />
+                        <img src="/icons/viber.png" alt="Viber" width={18} height={18} />
                       ) : null}
                       {method === "whatsapp" ? (
-                        <Image
-                          src="/icons/whatsapp.png"
-                          alt="WhatsApp"
-                          width={18}
-                          height={18}
-                        />
+                        <img src="/icons/whatsapp.png" alt="WhatsApp" width={18} height={18} />
                       ) : null}
                       {method === "call" ? (
                         <svg
