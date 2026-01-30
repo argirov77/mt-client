@@ -1,10 +1,11 @@
 import type { Lang } from "@/components/common/LanguageProvider";
 
 type HeroCopy = {
+  since: string;
   title: string;
-  subtitle: string;
-  note: string;
-  startBooking: string;
+  route: string;
+  primaryCta: string;
+  secondaryCta: string;
 };
 
 type BookingCopy = {
@@ -72,32 +73,32 @@ type ParcelCopy = {
 
 export const heroTranslations: Record<Lang, HeroCopy> = {
   ru: {
-    title: "Покупка билета онлайн",
-    subtitle:
-      "Быстро. Удобно. Без очередей. Максимов Турc — ваш надёжный перевозчик.",
-    note: "100% возврат до отправления",
-    startBooking: "Начать бронирование",
+    since: "На линии с 1991 года",
+    title: "Одесса ↔ Болгария",
+    route: "Бургас • Варна • Констанца • Одесса",
+    primaryCta: "Купить билет",
+    secondaryCta: "Отправить посылку",
   },
   bg: {
-    title: "Купете билет онлайн",
-    subtitle:
-      "Бързо. Удобно. Без опашки. Максимов Турс — вашият надежден превозвач.",
-    note: "100% връщане до заминаването",
-    startBooking: "Започнете резервация",
+    since: "На линия от 1991 г.",
+    title: "Одеса ↔ България",
+    route: "Бургас • Варна • Констанца • Одеса",
+    primaryCta: "Купете билет",
+    secondaryCta: "Изпратете пратка",
   },
   en: {
-    title: "Buy your ticket online",
-    subtitle:
-      "Fast. Easy. No queues. Maksimov Tours — your reliable carrier.",
-    note: "100% refund before departure",
-    startBooking: "Start booking",
+    since: "On the line since 1991",
+    title: "Odessa ↔ Bulgaria",
+    route: "Burgas • Varna • Constanța • Odessa",
+    primaryCta: "Buy a ticket",
+    secondaryCta: "Send a parcel",
   },
   ua: {
-    title: "Купуйте квиток онлайн",
-    subtitle:
-      "Швидко. Зручно. Без черг. Максимов Турc — ваш надійний перевізник.",
-    note: "100% повернення до відправлення",
-    startBooking: "Почати бронювання",
+    since: "На лінії з 1991 року",
+    title: "Одеса ↔ Болгарія",
+    route: "Бургас • Варна • Констанца • Одеса",
+    primaryCta: "Купити квиток",
+    secondaryCta: "Відправити посилку",
   },
 };
 
