@@ -1,187 +1,179 @@
-<!doctype html>
-<html lang="ru">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>MT — Актуальные тарифы</title>
+<section class="mt-hero-min" id="top">
+  <div class="mt-hero-min__bg" aria-hidden="true"></div>
 
-  <style>
-    :root{
-      --bg:#f6f8fb;
-      --card:#ffffff;
-      --text:#0f172a;
-      --muted:#64748b;
-      --line:rgba(15,23,42,.06);
-      --shadow:0 12px 30px rgba(15,23,42,.06);
-      --radius:18px;
+  <div class="mt-hero-min__wrap">
+    <div class="mt-hero-min__content">
+      <h1 class="mt-hero-min__title">Купите билет онлайн</h1>
+      <p class="mt-hero-min__subtitle">
+        Одесса ↔ Варна. Регулярные рейсы. Поддержка в мессенджерах.
+      </p>
 
-      --accent:#ff7a00;
-      --accent-soft:rgba(255,122,0,.12);
-    }
-
-    *{box-sizing:border-box;}
-    body{
-      margin:0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      background:var(--bg);
-      color:var(--text);
-    }
-
-    .prices{
-      max-width:1120px;
-      margin:0 auto;
-      padding:64px 16px 80px;
-    }
-
-    /* HEAD */
-    .prices__head{
-      text-align:center;
-      margin-bottom:32px;
-    }
-
-    .prices__kicker{
-      font-size:12px;
-      letter-spacing:.14em;
-      text-transform:uppercase;
-      color:#94a3b8;
-      margin-bottom:6px;
-    }
-
-    .prices__title{
-      font-size:36px;
-      margin:0 0 8px;
-    }
-
-    .prices__sub{
-      color:var(--muted);
-      margin:0 0 14px;
-    }
-
-    .prices__meta{
-      display:flex;
-      justify-content:center;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-
-    .meta-pill{
-      font-size:13px;
-      padding:6px 12px;
-      border-radius:999px;
-      background:#f1f5f9;
-      color:#475569;
-    }
-
-    /* GRID */
-    .prices__grid{
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:16px;
-    }
-
-    .price-card{
-      background:var(--card);
-      border-radius:var(--radius);
-      padding:20px 22px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      border:1px solid var(--line);
-      box-shadow:var(--shadow);
-      transition:transform .15s ease, box-shadow .15s ease;
-    }
-
-    .price-card:hover{
-      transform:translateY(-2px);
-      box-shadow:0 18px 40px rgba(15,23,42,.1);
-    }
-
-    .price-card__route{
-      font-weight:600;
-      font-size:17px;
-    }
-
-    .price-card__route span{
-      margin:0 6px;
-      color:#94a3b8;
-    }
-
-    .price-card__price{
-      font-weight:700;
-      font-size:15px;
-      padding:6px 12px;
-      border-radius:999px;
-      background:var(--accent-soft);
-      color:#c2410c;
-      white-space:nowrap;
-    }
-
-    /* RESPONSIVE */
-    @media (max-width:900px){
-      .prices__grid{grid-template-columns:repeat(2,1fr);}
-    }
-    @media (max-width:520px){
-      .prices__grid{grid-template-columns:1fr;}
-      .prices__title{font-size:30px;}
-    }
-  </style>
-</head>
-
-<body>
-  <section class="prices">
-    <div class="prices__head">
-      <div class="prices__kicker">Цены</div>
-      <h2 class="prices__title">Актуальные тарифы</h2>
-      <p class="prices__sub">Стоимость популярных направлений.</p>
-
-      <div class="prices__meta">
-        <span class="meta-pill">Цены в гривнах (UAH)</span>
-        <span class="meta-pill">Могут отличаться по дате</span>
-        <span class="meta-pill">Все рейсы прямые</span>
+      <div class="mt-hero-min__actions">
+        <a class="mt-btn2 mt-btn2--primary" href="#booking">Купить билет</a>
+        <a class="mt-btn2 mt-btn2--ghost" href="#parcel">Отправить посылку</a>
       </div>
+
+      <p class="mt-hero-min__hint">
+        Цены зависят от даты. Все рейсы — прямые.
+      </p>
     </div>
+  </div>
+</section>
 
-    <div class="prices__grid">
-      <div class="price-card">
-        <div class="price-card__route">Одесса <span>→</span> Варна</div>
-        <div class="price-card__price">1750 грн</div>
-      </div>
+<style>
+  :root{
+    /* поставь свою картинку в public/images/hero-varna.png */
+    --hero-img: url("/images/hero-varna.png");
 
-      <div class="price-card">
-        <div class="price-card__route">Одесса <span>→</span> Бургас</div>
-        <div class="price-card__price">1800 грн</div>
-      </div>
+    --blue:#0b6cff;
+    --orange:#ff7a00;
+  }
 
-      <div class="price-card">
-        <div class="price-card__route">Константа <span>→</span> Варна</div>
-        <div class="price-card__price">580 грн</div>
-      </div>
+  .mt-hero-min{
+    position: relative;
+    padding: 14px;
+    background: #f6f8fb;
+  }
 
-      <div class="price-card">
-        <div class="price-card__route">Константа <span>→</span> Бургас</div>
-        <div class="price-card__price">2550 грн</div>
-      </div>
+  .mt-hero-min__bg{
+    position:absolute;
+    inset: 14px;
+    border-radius: 24px;
+    overflow:hidden;
+    border: 1px solid rgba(15,23,42,.10);
+    box-shadow: 0 26px 80px rgba(15,23,42,.16);
 
-      <div class="price-card">
-        <div class="price-card__route">Бургас <span>→</span> Константа</div>
-        <div class="price-card__price">540 грн</div>
-      </div>
+    background:
+      /* desktop overlay: слева темнее под текст */
+      linear-gradient(90deg, rgba(6,14,28,.86) 0%, rgba(6,14,28,.62) 52%, rgba(6,14,28,.18) 100%),
+      radial-gradient(900px 520px at 18% 30%, rgba(11,108,255,.22), transparent 60%),
+      radial-gradient(760px 460px at 78% 55%, rgba(255,122,0,.16), transparent 58%),
+      var(--hero-img);
+    background-size: cover;
+    background-position: center;
+    transform: translateZ(0);
+  }
 
-      <div class="price-card">
-        <div class="price-card__route">Бургас <span>→</span> Одесса</div>
-        <div class="price-card__price">920 грн</div>
-      </div>
+  .mt-hero-min__wrap{
+    position: relative;
+    max-width: 1180px;
+    margin: 0 auto;
+    min-height: 420px;
+    display:flex;
+    align-items: center;
+    padding: 54px 28px;
+  }
 
-      <div class="price-card">
-        <div class="price-card__route">Варна <span>→</span> Константа</div>
-        <div class="price-card__price">600 грн</div>
-      </div>
+  .mt-hero-min__content{
+    max-width: 560px;
+    color: #fff;
+  }
 
-      <div class="price-card">
-        <div class="price-card__route">Варна <span>→</span> Одесса</div>
-        <div class="price-card__price">900 грн</div>
-      </div>
-    </div>
-  </section>
-</body>
-</html>
+  .mt-hero-min__title{
+    margin: 0 0 10px;
+    font-size: clamp(32px, 4vw, 52px);
+    line-height: 1.06;
+    letter-spacing: -0.03em;
+    font-weight: 1000;
+  }
+
+  .mt-hero-min__subtitle{
+    margin: 0 0 18px;
+    font-size: 16px;
+    line-height: 1.6;
+    color: rgba(255,255,255,.86);
+  }
+
+  .mt-hero-min__actions{
+    display:flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 18px 0 12px;
+  }
+
+  .mt-btn2{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding: 12px 18px;
+    border-radius: 16px;
+    font-weight: 950;
+    font-size: 13px;
+    border: 1px solid rgba(255,255,255,.16);
+    text-decoration:none;
+    user-select:none;
+    transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+  }
+  .mt-btn2:hover{
+    transform: translateY(-1px);
+    box-shadow: 0 18px 48px rgba(0,0,0,.22);
+  }
+
+  .mt-btn2--primary{
+    background: linear-gradient(135deg, rgba(255,255,255,1), rgba(255,255,255,.86));
+    color: #0b1220;
+    border-color: rgba(255,255,255,.22);
+  }
+  .mt-btn2--ghost{
+    background: rgba(255,255,255,.08);
+    color: #fff;
+    backdrop-filter: blur(10px);
+  }
+
+  .mt-hero-min__hint{
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.45;
+    color: rgba(255,255,255,.72);
+  }
+
+  /* TABLET */
+  @media (max-width: 980px){
+    .mt-hero-min__wrap{
+      min-height: 460px;
+      padding: 44px 18px;
+    }
+  }
+
+  /* MOBILE: одна колонка, усиленное затемнение сверху вниз */
+  @media (max-width: 640px){
+    .mt-hero-min{
+      padding: 10px;
+    }
+
+    .mt-hero-min__bg{
+      inset: 10px;
+      border-radius: 20px;
+      background:
+        /* mobile overlay: сверху темнее, чтобы текст читался на любом участке фото */
+        linear-gradient(180deg, rgba(6,14,28,.92) 0%, rgba(6,14,28,.72) 56%, rgba(6,14,28,.38) 100%),
+        radial-gradient(760px 520px at 20% 20%, rgba(11,108,255,.20), transparent 62%),
+        radial-gradient(680px 520px at 80% 70%, rgba(255,122,0,.14), transparent 60%),
+        var(--hero-img);
+      background-position: center;
+      background-size: cover;
+    }
+
+    .mt-hero-min__wrap{
+      min-height: 560px;
+      padding: 34px 14px;
+      align-items: flex-start;
+      text-align: center;
+      justify-content: center;
+    }
+
+    .mt-hero-min__content{
+      max-width: 520px;
+    }
+
+    .mt-hero-min__actions{
+      gap: 10px;
+    }
+
+    .mt-btn2{
+      width: 100%;
+      padding: 13px 18px;
+      border-radius: 16px;
+    }
+  }
+</style>
