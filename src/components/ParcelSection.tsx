@@ -3,6 +3,12 @@
 
 import { useLanguage } from "@/components/common/LanguageProvider";
 import { parcelTranslations } from "@/translations/home";
+import {
+  sectionBgMuted,
+  sectionDescriptionClass,
+  sectionEyebrowClass,
+  sectionTitleClass,
+} from "@/components/common/designGuide";
 
 export default function ParcelSection() {
   const { lang } = useLanguage();
@@ -13,47 +19,38 @@ export default function ParcelSection() {
   };
 
   return (
-    <section
-      id="parcel"
-      className="bg-slate-50 px-4 py-16 [background:radial-gradient(900px_420px_at_15%_10%,rgba(11,108,255,.1),transparent_60%),radial-gradient(760px_380px_at_85%_80%,rgba(255,122,0,.1),transparent_55%),#f6f8fb]"
-    >
-      <div className="mx-auto w-full max-w-6xl">
-        <div className="relative overflow-hidden rounded-[26px] border border-slate-200/60 bg-white/90 p-7 shadow-[0_28px_90px_rgba(15,23,42,.12)]">
-          <div className="pointer-events-none absolute inset-[-1px] rounded-[26px] opacity-20 [background:linear-gradient(135deg,rgba(11,108,255,.18),rgba(255,122,0,.16))] [mask:linear-gradient(#000_0_0)_content-box,linear-gradient(#000_0_0)] [padding:1px]" />
+    <section id="parcel" className={`${sectionBgMuted} py-16`}>
+      <div className="mx-auto w-full max-w-6xl px-4">
+        <div className="text-center">
+          <p className={sectionEyebrowClass}>{t.kicker}</p>
+          <h2 className={`${sectionTitleClass} mt-2`}>{t.title}</h2>
+          <p className={`mx-auto mt-3 max-w-3xl ${sectionDescriptionClass}`}>
+            {t.description.start}
+            <strong className="font-semibold text-slate-900">{t.description.from}</strong>
+            {t.description.middle}
+            <strong className="font-semibold text-slate-900">{t.description.to}</strong>
+            {t.description.end}
+            {t.description.carrierPrefix}
+            <strong className="font-semibold text-slate-900">{t.description.carrierBg}</strong>
+            {t.description.carrierMiddle}
+            <strong className="font-semibold text-slate-900">{t.description.carrierUa}</strong>.
+          </p>
+        </div>
 
-          <div className="relative z-10 mx-auto mb-6 max-w-3xl text-center">
-            <span className="mb-2 inline-flex rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-slate-600">
-              {t.kicker}
-            </span>
-            <h2 className="mb-2 text-balance text-2xl font-black tracking-[-0.02em] text-slate-900 sm:text-3xl">
-              {t.title}
-            </h2>
-            <p className="text-sm leading-relaxed text-slate-600 sm:text-base">
-              {t.description.start}
-              <strong className="font-semibold text-slate-900">{t.description.from}</strong>
-              {t.description.middle}
-              <strong className="font-semibold text-slate-900">{t.description.to}</strong>
-              {t.description.end}
-              {t.description.carrierPrefix}
-              <strong className="font-semibold text-slate-900">{t.description.carrierBg}</strong>
-              {t.description.carrierMiddle}
-              <strong className="font-semibold text-slate-900">{t.description.carrierUa}</strong>.
-            </p>
-          </div>
-
-          <div className="relative z-10 grid gap-3 md:grid-cols-3">
+        <div className="mt-8 overflow-hidden rounded-3xl border border-slate-200/70 bg-white/80 px-5 py-6 shadow-[0_16px_40px_rgba(15,23,42,0.08)]">
+          <div className="grid gap-3 md:grid-cols-3">
             {t.facts.map((fact, index) => (
               <div
                 key={fact.title}
-                className="flex gap-3 rounded-[20px] border border-slate-200/60 bg-slate-900/[0.02] p-4 transition hover:-translate-y-0.5 hover:bg-slate-900/[0.03] hover:shadow-[0_18px_50px_rgba(15,23,42,.1)]"
+                className="flex gap-3 rounded-2xl border border-slate-200/70 bg-slate-50/60 p-4"
               >
                 <div
                   className={
                     index === 1
-                      ? "flex h-11 w-11 flex-none items-center justify-center rounded-[16px] border border-orange-200/80 bg-orange-100/60 text-orange-500"
+                      ? "flex h-10 w-10 flex-none items-center justify-center rounded-xl border border-orange-200 bg-orange-50 text-orange-600"
                       : index === 2
-                        ? "flex h-11 w-11 flex-none items-center justify-center rounded-[16px] border border-emerald-200/80 bg-emerald-100/60 text-emerald-600"
-                        : "flex h-11 w-11 flex-none items-center justify-center rounded-[16px] border border-blue-200/80 bg-blue-100/60 text-blue-500"
+                        ? "flex h-10 w-10 flex-none items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-600"
+                        : "flex h-10 w-10 flex-none items-center justify-center rounded-xl border border-blue-200 bg-blue-50 text-blue-600"
                   }
                   aria-hidden="true"
                 >
@@ -79,10 +76,10 @@ export default function ParcelSection() {
                   ) : null}
                 </div>
                 <div>
-                  <div className="text-[11px] font-black uppercase tracking-[0.1em] text-slate-500">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500">
                     {fact.title}
                   </div>
-                  <div className="text-sm font-black text-slate-900">
+                  <div className="text-sm font-bold text-slate-900">
                     {fact.value}
                     {fact.hint ? (
                       <span className="ml-2 text-xs font-semibold text-slate-600">{fact.hint}</span>
@@ -92,17 +89,17 @@ export default function ParcelSection() {
               </div>
             ))}
           </div>
+        </div>
 
-          <div className="relative z-10 mt-6 flex flex-wrap items-center justify-between gap-4">
-            <button
-              type="button"
-              onClick={handleClick}
-              className="inline-flex items-center justify-center rounded-[16px] border border-blue-500/30 bg-blue-500 px-5 py-3 text-xs font-black uppercase tracking-wide text-white shadow-[0_18px_45px_rgba(11,108,255,.2)] transition hover:-translate-y-0.5 hover:shadow-[0_24px_60px_rgba(11,108,255,.26)]"
-            >
-              {t.cta}
-            </button>
-            <p className="max-w-xl text-sm text-slate-600 sm:text-base">{t.note}</p>
-          </div>
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
+          <button
+            type="button"
+            onClick={handleClick}
+            className="inline-flex items-center justify-center rounded-full border border-orange-200 bg-orange-50 px-5 py-3 text-xs font-bold uppercase tracking-wide text-orange-700 shadow-[0_12px_24px_rgba(251,146,60,0.18)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_30px_rgba(251,146,60,0.2)]"
+          >
+            {t.cta}
+          </button>
+          <p className={`max-w-xl text-sm text-slate-600 sm:text-base`}>{t.note}</p>
         </div>
       </div>
     </section>
