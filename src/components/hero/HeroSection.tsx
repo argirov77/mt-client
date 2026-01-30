@@ -24,9 +24,9 @@ export default function HeroSection({ lang = "ru" }: Props) {
           }}
         />
 
-        <div className="absolute inset-0 flex items-end">
-          <div className="mx-auto flex h-full w-full max-w-[1180px] items-end justify-center px-3 pb-6 sm:px-4 lg:justify-start lg:px-6">
-            <div className="w-full max-w-[720px] text-center text-white lg:max-w-[560px] lg:text-left">
+        <div className="absolute inset-0 flex items-center">
+          <div className="mx-auto flex h-full w-full max-w-[1180px] items-center justify-center px-3 sm:px-4 lg:px-6">
+            <div className="w-full max-w-[720px] text-center text-white lg:max-w-[560px]">
               <span className="inline-block text-xs font-extrabold uppercase tracking-[0.12em] text-white/80">
                 {t.since}
               </span>
@@ -36,7 +36,7 @@ export default function HeroSection({ lang = "ru" }: Props) {
               <p className="mt-2 text-sm font-semibold text-white/90">
                 {t.route}
               </p>
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-center lg:justify-start">
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
                 <Link
                   href="#booking"
                   className="inline-flex w-full items-center justify-center rounded-2xl border border-white/20 bg-sky-600 px-5 py-3 text-sm font-extrabold text-white shadow-[0_16px_40px_rgba(11,108,255,0.3)] transition hover:-translate-y-0.5 hover:shadow-[0_22px_54px_rgba(0,0,0,0.25)] sm:w-auto"
