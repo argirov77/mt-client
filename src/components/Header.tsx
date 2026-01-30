@@ -139,7 +139,14 @@ export default function Header() {
           href="/"
           className="flex items-center gap-2 font-bold text-primary text-lg md:text-2xl tracking-tight"
         >
-          <span className="hidden md:inline">Запись</span>
+          <Image
+            src="/icons/speling.svg"
+            alt="Запись"
+            width={110}
+            height={28}
+            className="hidden md:inline"
+            priority
+          />
           <Image
             src="/icons/logo.svg"
             alt="Максимов Турс"
