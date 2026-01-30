@@ -23,7 +23,7 @@ type MenuItem =
 
 const menu: MenuItem[] = [
   {
-    href: "/booking",
+    href: "/#booking",
     label: { ru: "Купить билет", bg: "Купи билет", en: "Buy ticket", ua: "Купити квиток" },
     isPrimary: true,
   },
