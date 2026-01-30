@@ -33,7 +33,7 @@ const menu: MenuItem[] = [
   },
   {
     href: "#parcel",
-    label: { ru: "Посылки", bg: "Пратки", en: "Parcels", ua: "Посилки" },
+    label: { ru: "Посылка", bg: "Пратка", en: "Parcel", ua: "Посилка" },
     icon: "parcel",
   },
   {
@@ -214,8 +214,9 @@ export default function Header() {
                 >
                   {item.icon === "parcel" ? (
                     <span className="flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-600">
-                      <Image src="/icons/parcels.png" alt="" width={14} height={14} />
-                      <span>UA↔BG</span>
+                      <span aria-hidden="true">🇺🇦</span>
+                      <span aria-hidden="true">🇧🇬</span>
+                      <span className="sr-only">UA BG</span>
                     </span>
                   ) : null}
                   {item.label[current]}
