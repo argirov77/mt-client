@@ -24,7 +24,7 @@ type MenuItem =
 const menu: MenuItem[] = [
   {
     href: "/#booking",
-    label: { ru: "Купить билет", bg: "Билет", en: "Buy ticket", ua: "Купити квиток" },
+    label: { ru: "Билет", bg: "Билет", en: "Ticket", ua: "Квиток" },
     isPrimary: true,
   },
   {
@@ -155,8 +155,8 @@ export default function Header() {
           <Image
             src="/icons/speling.svg"
             alt="Запись"
-            width={110}
-            height={28}
+            width={150}
+            height={38}
             className="hidden md:inline"
             priority
           />
@@ -213,11 +213,7 @@ export default function Header() {
                   }
                 >
                   {item.icon === "parcel" ? (
-                    <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-slate-600">
-                      <span aria-hidden="true">🇺🇦</span>
-                      <span aria-hidden="true">🇧🇬</span>
-                      <span className="sr-only">UA BG</span>
-                    </span>
+                    <span className="sr-only">UA BG</span>
                   ) : null}
                   {item.label[current]}
                 </Link>
