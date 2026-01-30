@@ -1,1 +1,7 @@
-export const API = process.env.NEXT_PUBLIC_API_URL || "http://38.79.154.248:8000";
+const apiEnvUrl =
+  process.env.REACT_APP_API_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  "http://127.0.0.1:8000";
+
+export const API =
+  process.env.NODE_ENV === "production" ? "/api" : apiEnvUrl;
