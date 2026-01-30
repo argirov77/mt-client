@@ -5,6 +5,7 @@ import Routes from "@/components/Routes";
 import Schedule from "@/components/Schedule";
 import About from "@/components/About";
 import BookingCard from "@/components/booking/BookingCard";
+import ParcelSection from "@/components/ParcelSection";
 import { useLanguage } from "@/components/common/LanguageProvider";
 import {
   sectionDescriptionClass,
@@ -35,6 +36,7 @@ export default function Page() {
       </section>
 
       <About />
+      <ParcelSection />
       <Routes />
       <Schedule lang={lang} />
     </main>
