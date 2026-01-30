@@ -24,7 +24,7 @@ type MenuItem =
 const menu: MenuItem[] = [
   {
     href: "/#booking",
-    label: { ru: "Купить билет", bg: "Купи билет", en: "Buy ticket", ua: "Купити квиток" },
+    label: { ru: "Купить билет", bg: "Билет", en: "Buy ticket", ua: "Купити квиток" },
     isPrimary: true,
   },
   {
@@ -146,7 +146,7 @@ export default function Header() {
 
   return (
     <header className="bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 sticky top-0 z-30 border-b border-slate-200">
-      <nav className="container mx-auto flex max-w-6xl flex-wrap items-center gap-2 px-4 py-2 md:h-14 md:flex-nowrap md:gap-3">
+      <nav className="container mx-auto flex max-w-6xl flex-nowrap items-center gap-2 px-4 py-2 md:h-14 md:gap-3">
         {/* Лого */}
         <Link
           href="/"
@@ -171,7 +171,7 @@ export default function Header() {
         </Link>
 
         {/* Меню */}
-        <ul className="order-3 flex w-full items-center gap-2 overflow-x-auto pb-1 md:order-none md:w-auto md:flex-nowrap md:overflow-visible md:pb-0">
+        <ul className="order-2 flex flex-nowrap items-center gap-2 overflow-x-auto whitespace-nowrap pb-1 md:order-none md:overflow-visible md:pb-0">
           {menu.map((item) => {
             if (item.isContact) {
               return (
@@ -208,12 +208,12 @@ export default function Header() {
                   href={item.href}
                   className={
                     item.isPrimary
-                      ? "flex items-center gap-2 rounded-[14px] border border-orange-200 bg-orange-50 px-4 py-2 text-[11px] font-black uppercase tracking-wide text-orange-700 shadow-md transition hover:-translate-y-0.5 hover:shadow-lg sm:text-xs"
-                      : "flex items-center gap-2 rounded-[14px] border border-transparent px-3 py-2 text-[11px] font-black uppercase tracking-wide text-slate-700 transition hover:-translate-y-0.5 hover:border-slate-200 hover:bg-slate-50 sm:text-xs"
+                      ? "flex items-center gap-2 whitespace-nowrap rounded-[14px] border border-orange-200 bg-orange-50 px-4 py-2 text-[11px] font-black uppercase tracking-wide text-orange-700 shadow-md transition hover:-translate-y-0.5 hover:shadow-lg sm:text-xs"
+                      : "flex items-center gap-2 whitespace-nowrap rounded-[14px] border border-transparent px-3 py-2 text-[11px] font-black uppercase tracking-wide text-slate-700 transition hover:-translate-y-0.5 hover:border-slate-200 hover:bg-slate-50 sm:text-xs"
                   }
                 >
                   {item.icon === "parcel" ? (
-                    <span className="flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-600">
+                    <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-slate-600">
                       <span aria-hidden="true">🇺🇦</span>
                       <span aria-hidden="true">🇧🇬</span>
                       <span className="sr-only">UA BG</span>
@@ -227,7 +227,7 @@ export default function Header() {
         </ul>
 
         {/* Селектор языка */}
-        <label className="order-2 ml-auto inline-flex items-center gap-2 md:order-none md:ml-4">
+        <label className="order-3 ml-auto inline-flex items-center gap-2 md:order-none md:ml-4">
           <span className="sr-only">Выбор языка</span>
           <select
             aria-label="Язык"
