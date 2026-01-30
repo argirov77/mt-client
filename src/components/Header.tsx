@@ -1,6 +1,7 @@
 // src/components/Header.tsx
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { useLanguage, type Lang } from "@/components/common/LanguageProvider";
@@ -134,8 +135,19 @@ export default function Header() {
     <header className="bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 sticky top-0 z-30 border-b border-slate-200">
       <nav className="container mx-auto max-w-6xl px-4 h-14 flex items-center justify-between">
         {/* Лого */}
-        <Link href="/" className="font-bold text-primary text-lg md:text-2xl tracking-tight">
-          Максимов Турc
+        <Link
+          href="/"
+          className="flex items-center gap-2 font-bold text-primary text-lg md:text-2xl tracking-tight"
+        >
+          <span className="hidden md:inline">Запись</span>
+          <Image
+            src="/icons/logo.svg"
+            alt="Максимов Турс"
+            width={34}
+            height={34}
+            className="inline md:hidden"
+            priority
+          />
         </Link>
 
         {/* Меню */}
@@ -259,28 +271,28 @@ export default function Header() {
                     }
                   >
                     {item.key === "telegram" ? (
-                      <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
-                        <path
-                          fill="currentColor"
-                          d="M9.4 14.6 9.2 19c.4 0 .6-.2.8-.4l1.9-1.8 3.9 2.9c.7.4 1.2.2 1.4-.6l2.6-12.2c.3-1.1-.4-1.6-1.1-1.3L3.7 9.6c-1 .4-1 1-.2 1.2l4.2 1.3 9.8-6.2c.5-.3.9-.1.6.2"
-                        />
-                      </svg>
+                      <Image
+                        src="/icons/telegram.png"
+                        alt="Telegram"
+                        width={18}
+                        height={18}
+                      />
                     ) : null}
                     {item.key === "viber" ? (
-                      <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
-                        <path
-                          fill="currentColor"
-                          d="M19.7 4.3C18.4 3 15.7 2 12 2S5.6 3 4.3 4.3C3 5.6 2 8.1 2 12c0 1.6.2 3 .7 4.1L2.2 22l5.1-1.3c1.1.5 2.7.8 4.7.8 3.7 0 6.4-1 7.7-2.3 1.3-1.3 2.3-4 2.3-7.7s-1-6.4-2.3-7.7z"
-                        />
-                      </svg>
+                      <Image
+                        src="/icons/viber.png"
+                        alt="Viber"
+                        width={18}
+                        height={18}
+                      />
                     ) : null}
                     {item.key === "whatsapp" ? (
-                      <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
-                        <path
-                          fill="currentColor"
-                          d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.7 14.3c-.2.6-1.2 1.1-1.7 1.2-.5.1-1.1.2-3.5-.8-2.8-1.1-4.6-3.8-4.7-4-.1-.2-1.1-1.5-1.1-2.8 0-1.4.7-2 1-2.3.2-.2.6-.3.8-.3h.6c.2 0 .5 0 .7.6.2.6.8 2 .9 2.1.1.2.1.4 0 .6-.1.2-.2.4-.4.6-.2.2-.4.4-.2.8.2.4.9 1.5 1.9 2.4 1.3 1.1 2.3 1.4 2.7 1.6.3.1.6.1.8-.1.2-.2.9-1 .1-1.2"
-                        />
-                      </svg>
+                      <Image
+                        src="/icons/whatsapp.png"
+                        alt="WhatsApp"
+                        width={18}
+                        height={18}
+                      />
                     ) : null}
                     {item.key === "call" ? (
                       <svg
@@ -321,28 +333,28 @@ export default function Header() {
                       className="inline-flex h-9 w-9 items-center justify-center rounded-[14px] border border-slate-200 bg-slate-50 text-slate-700 transition hover:-translate-y-0.5 hover:shadow-md"
                     >
                       {method === "telegram" ? (
-                        <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
-                          <path
-                            fill="currentColor"
-                            d="M9.4 14.6 9.2 19c.4 0 .6-.2.8-.4l1.9-1.8 3.9 2.9c.7.4 1.2.2 1.4-.6l2.6-12.2c.3-1.1-.4-1.6-1.1-1.3L3.7 9.6c-1 .4-1 1-.2 1.2l4.2 1.3 9.8-6.2c.5-.3.9-.1.6.2"
-                          />
-                        </svg>
+                        <Image
+                          src="/icons/telegram.png"
+                          alt="Telegram"
+                          width={18}
+                          height={18}
+                        />
                       ) : null}
                       {method === "viber" ? (
-                        <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
-                          <path
-                            fill="currentColor"
-                            d="M19.7 4.3C18.4 3 15.7 2 12 2S5.6 3 4.3 4.3C3 5.6 2 8.1 2 12c0 1.6.2 3 .7 4.1L2.2 22l5.1-1.3c1.1.5 2.7.8 4.7.8 3.7 0 6.4-1 7.7-2.3 1.3-1.3 2.3-4 2.3-7.7s-1-6.4-2.3-7.7z"
-                          />
-                        </svg>
+                        <Image
+                          src="/icons/viber.png"
+                          alt="Viber"
+                          width={18}
+                          height={18}
+                        />
                       ) : null}
                       {method === "whatsapp" ? (
-                        <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
-                          <path
-                            fill="currentColor"
-                            d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.7 14.3c-.2.6-1.2 1.1-1.7 1.2-.5.1-1.1.2-3.5-.8-2.8-1.1-4.6-3.8-4.7-4-.1-.2-1.1-1.5-1.1-2.8 0-1.4.7-2 1-2.3.2-.2.6-.3.8-.3h.6c.2 0 .5 0 .7.6.2.6.8 2 .9 2.1.1.2.1.4 0 .6-.1.2-.2.4-.4.6-.2.2-.4.4-.2.8.2.4.9 1.5 1.9 2.4 1.3 1.1 2.3 1.4 2.7 1.6.3.1.6.1.8-.1.2-.2.9-1 .1-1.2"
-                          />
-                        </svg>
+                        <Image
+                          src="/icons/whatsapp.png"
+                          alt="WhatsApp"
+                          width={18}
+                          height={18}
+                        />
                       ) : null}
                       {method === "call" ? (
                         <svg

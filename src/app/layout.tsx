@@ -6,6 +6,9 @@ import { LanguageProvider } from "@/components/common/LanguageProvider";
 export const metadata = {
   title: "Максимов Турc",
   description: "Продажа автобусных билетов по Болгарии и Европе",
+  icons: {
+    icon: "/icons/favicon.ico",
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

@@ -177,20 +177,12 @@ export default function AboutSection({
                                   aria-label={`Viber ${phone}`}
                                   title="Viber"
                                 >
-                                  <svg
-                                    aria-hidden="true"
-                                    viewBox="0 0 24 24"
-                                    className="h-4 w-4"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="1.5"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      d="M7.5 18.75c4.5 1.5 9-1.5 9.75-6 .75-4.5-2.25-8.25-6.75-9C6 3 2.25 6 1.5 10.5a8.1 8.1 0 001.5 6.3l-.75 3.45 3.6-1.2 1.65-.3z"
-                                    />
-                                  </svg>
+                                  <Image
+                                    src="/icons/viber.png"
+                                    alt="Viber"
+                                    width={18}
+                                    height={18}
+                                  />
                                 </a>
                                 <a
                                   href={buildWhatsAppLink(phone)}
@@ -200,20 +192,12 @@ export default function AboutSection({
                                   aria-label={`WhatsApp ${phone}`}
                                   title="WhatsApp"
                                 >
-                                  <svg
-                                    aria-hidden="true"
-                                    viewBox="0 0 24 24"
-                                    className="h-4 w-4"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="1.5"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      d="M7.5 19.5l1.08-3.24a6.75 6.75 0 118.16 0l-3.24 1.08-2.25-.75-1.5 1.5-1.25 1.41z"
-                                    />
-                                  </svg>
+                                  <Image
+                                    src="/icons/whatsapp.png"
+                                    alt="WhatsApp"
+                                    width={18}
+                                    height={18}
+                                  />
                                 </a>
                                 <a
                                   href={buildTelegramLink(phone)}
@@ -223,20 +207,12 @@ export default function AboutSection({
                                   aria-label={`Telegram ${phone}`}
                                   title="Telegram"
                                 >
-                                  <svg
-                                    aria-hidden="true"
-                                    viewBox="0 0 24 24"
-                                    className="h-4 w-4"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="1.5"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      d="M20.25 4.5l-16.5 7.5 5.7 1.8 2.55 6.2 1.35-4.05 4.2 3.15 2.7-14.6z"
-                                    />
-                                  </svg>
+                                  <Image
+                                    src="/icons/telegram.png"
+                                    alt="Telegram"
+                                    width={18}
+                                    height={18}
+                                  />
                                 </a>
                               </div>
                             </div>
