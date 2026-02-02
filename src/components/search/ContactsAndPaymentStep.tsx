@@ -234,8 +234,8 @@ export default function ContactsAndPaymentStep({
         <h3 className="text-base font-semibold text-slate-900">{t.contactsAndPayment}</h3>
         <p className="text-sm text-slate-600">{t.contactsDescription}</p>
 
-        <div className="mt-4 flex flex-col gap-4 md:flex-row md:flex-wrap">
-          <div className="w-full min-w-0 flex-1 space-y-3 rounded-xl border border-slate-200 bg-white/80 p-3 shadow-none sm:rounded-2xl sm:border sm:border-slate-100 sm:bg-gradient-to-br sm:from-white sm:via-sky-50 sm:to-blue-50/60 sm:p-4 sm:shadow-inner">
+        <div className="mt-4 grid gap-4 md:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
+          <div className="w-full min-w-0 space-y-3 rounded-xl border border-slate-200 bg-white/80 p-3 shadow-none sm:rounded-2xl sm:border sm:border-slate-100 sm:bg-gradient-to-br sm:from-white sm:via-sky-50 sm:to-blue-50/60 sm:p-4 sm:shadow-inner">
             <label
               className="flex items-center gap-2 text-sm font-semibold text-slate-800"
               htmlFor="contact-phone"
@@ -270,7 +270,7 @@ export default function ContactsAndPaymentStep({
             </div>
           </div>
 
-          <div className="w-full min-w-0 flex-1 space-y-3 rounded-xl border border-slate-200 bg-white/80 p-3 shadow-none sm:rounded-2xl sm:border sm:border-slate-100 sm:bg-gradient-to-br sm:from-white sm:via-slate-50 sm:to-sky-50/70 sm:p-4 sm:shadow-inner">
+          <div className="w-full min-w-0 space-y-3 rounded-xl border border-slate-200 bg-white/80 p-3 shadow-none sm:rounded-2xl sm:border sm:border-slate-100 sm:bg-gradient-to-br sm:from-white sm:via-slate-50 sm:to-sky-50/70 sm:p-4 sm:shadow-inner">
             <label
               className="flex items-center gap-2 text-sm font-semibold text-slate-800"
               htmlFor="contact-email"
