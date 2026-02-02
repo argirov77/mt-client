@@ -75,7 +75,7 @@ export default function SeatClient({
         setLoading(true);
         setErr("");
 
-        const url = `${API}/seat?tour_id=${tourId}&departure_stop_id=${departureStopId}&arrival_stop_id=${arrivalStopId}`;
+        const url = `${API}/seat/?tour_id=${tourId}&departure_stop_id=${departureStopId}&arrival_stop_id=${arrivalStopId}`;
         const res = await fetch(url, { cache: "no-store" });
 
         if (!res.ok) {

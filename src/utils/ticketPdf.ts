@@ -1,4 +1,4 @@
-import { API } from "@/config";
+import { API_BASE } from "@/lib/apiBase";
 import { fetchWithInclude } from "@/utils/fetchWithInclude";
 
 const LOCAL_HOSTNAMES = new Set(["localhost", "127.0.0.1"]);
@@ -15,7 +15,9 @@ const buildTicketPdfUrl = ({
   email,
 }: DownloadTicketPdfParams): string => {
   const encodedTicketId = encodeURIComponent(String(ticketId));
-  const url = new URL(`${API}/public/tickets/${encodedTicketId}/pdf`);
+  const baseUrl =
+    typeof window !== "undefined" ? window.location.origin : "http://localhost";
+  const url = new URL(`${API_BASE}/public/tickets/${encodedTicketId}/pdf`, baseUrl);
   if (LOCAL_HOSTNAMES.has(url.hostname)) {
     url.hostname = "127.0.0.1";
   }
