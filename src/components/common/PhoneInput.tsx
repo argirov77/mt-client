@@ -170,7 +170,7 @@ export default function PhoneInput({
             onChange={(e) => handleDialCodeChange(e.target.value)}
             onFocus={() => setIsOpen(true)}
             onBlur={() => setTimeout(() => setIsOpen(false), 100)}
-            className="w-20 sm:w-28 rounded-l-full rounded-r-none bg-slate-50/80 px-3 py-2.5 pr-8 text-base font-semibold text-slate-900 shadow-inner ring-1 ring-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+            className="w-16 rounded-l-full rounded-r-none border-r border-slate-200 bg-slate-50/80 px-3 py-2.5 pr-7 text-base font-semibold text-slate-900 shadow-inner ring-1 ring-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-200 sm:w-20 md:w-24"
             aria-expanded={isOpen}
             aria-haspopup="listbox"
           />
@@ -214,7 +214,7 @@ export default function PhoneInput({
         placeholder={placeholder}
         inputMode="numeric"
         maxLength={14}
-        className="flex-1 min-w-0 rounded-l-none rounded-r-full bg-slate-50/80 px-3 py-2.5 text-base text-slate-900 placeholder:text-slate-400 shadow-inner ring-1 ring-transparent focus:outline-none focus:ring-2 focus:ring-emerald-200"
+        className="flex-1 min-w-0 rounded-l-none rounded-r-full bg-white px-4 py-2.5 text-base text-slate-900 placeholder:text-slate-400 shadow-inner ring-1 ring-transparent focus:outline-none focus:ring-2 focus:ring-emerald-200"
       />
     </div>
   );
