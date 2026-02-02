@@ -101,18 +101,18 @@ export default function AboutSection({
                 ))}
               </div>
 
-              <ul className="mt-5 grid gap-3 md:grid-cols-3">
+              <ul className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-3">
                 {bulletItems.map((item, index) => (
                   <li
                     key={`${item}-${index}`}
-                    className="flex gap-3 rounded-2xl border border-slate-200/70 bg-slate-50/60 p-3"
+                    className="flex min-w-0 gap-3 rounded-2xl border border-slate-200/70 bg-slate-50/60 p-3"
                   >
                     <span className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-lg border border-blue-200 bg-blue-50 text-blue-600">
                       <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M20 6L9 17l-5-5" />
                       </svg>
                     </span>
-                    <span className="text-sm text-slate-700">{item}</span>
+                    <span className="min-w-0 flex-1 break-words text-sm text-slate-700">{item}</span>
                   </li>
                 ))}
               </ul>
@@ -238,18 +238,18 @@ export default function AboutSection({
                   ))}
                 </div>
 
-                <ul className="mt-5 grid gap-3">
+                <ul className="mt-5 grid grid-cols-1 gap-3">
                   {bulletItems.map((item, index) => (
                     <li
                       key={`${item}-${index}`}
-                      className="flex gap-3 rounded-2xl border border-slate-200/70 bg-slate-50/60 p-3"
+                      className="flex min-w-0 gap-3 rounded-2xl border border-slate-200/70 bg-slate-50/60 p-3"
                     >
                       <span className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-lg border border-blue-200 bg-blue-50 text-blue-600">
                         <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
                           <path d="M20 6L9 17l-5-5" />
                         </svg>
                       </span>
-                      <span className="text-sm text-slate-700">{item}</span>
+                      <span className="min-w-0 flex-1 break-words text-sm text-slate-700">{item}</span>
                     </li>
                   ))}
                 </ul>
