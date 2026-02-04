@@ -45,14 +45,16 @@ export const aboutContent: Record<Lang, Section[]> = {
     {
       title: "Автопарк",
       text: [
-        "Наш автопарк состоит из современных автобусов европейского класса.",
-        "Выполняем рейсы на автобусах Van Hool, Travego и Neoplan, чтобы обеспечить комфорт и надежность поездок.",
-        "Мы уделяем особое внимание техническому обслуживанию и гигиене: салоны проходят регулярную глубокую очистку, что обеспечивает чистоту и комфорт во время поездки.",
+        "Наш автопарк — это современные автобусы европейского класса Mercedes, Neoplan, Van Hool.",
+        "Мы уделяем особое внимание техническому обслуживанию и гигиене, что обеспечивает высокий уровень комфорта, надежности и чистоты.",
+        "Наши автобусы имеют комфортные сидения и достаточное расстояние между рядами, а также оснащены кондиционером и системой климат-контроля, зарядками и туалетами.",
       ],
       bullets: [
-        "Модели: Van Hool, Travego, Neoplan.",
-        "Регулярное техобслуживание и контроль качества.",
-        "Чистота салона перед каждым рейсом.",
+        "современные автобусы",
+        "удобные сидения",
+        "регулярное техобслуживание и контроль качества",
+        "чистота в салоне",
+        "безопасность и надежность",
       ],
       media: [
         {
@@ -130,14 +132,16 @@ export const aboutContent: Record<Lang, Section[]> = {
     {
       title: "Fleet",
       text: [
-        "Our fleet features modern European-class buses.",
-        "We operate Van Hool, Travego, and Neoplan coaches to ensure comfort and reliability on every trip.",
-        "We place strong emphasis on both technical maintenance and interior hygiene: vehicles undergo regular deep cleaning to guarantee cleanliness and comfort throughout the journey.",
+        "Our fleet features modern European-class coaches: Mercedes, Neoplan, Van Hool.",
+        "We pay special attention to maintenance and hygiene, ensuring a high level of comfort, reliability, and cleanliness.",
+        "Our coaches have comfortable seats with ample spacing between rows and are equipped with air conditioning, climate control, charging points, and restrooms.",
       ],
       bullets: [
-        "Models: Van Hool, Travego, Neoplan.",
-        "Regular maintenance and quality control.",
-        "Clean interiors before every departure.",
+        "modern coaches",
+        "comfortable seats",
+        "regular maintenance and quality control",
+        "clean interiors",
+        "safety and reliability",
       ],
       media: [
         {
@@ -215,14 +219,16 @@ export const aboutContent: Record<Lang, Section[]> = {
     {
       title: "Автопарк",
       text: [
-        "Нашият автопарк включва модерни автобуси от европейски клас.",
-        "Обслужваме курсове с автобуси Van Hool, Travego и Neoplan, за да гарантираме комфорт и надеждност.",
-        "Обръщаме специално внимание на техническата поддръжка и чистотата: салоните се подлагат на редовна дълбока хигиенизация, което осигурява приятно пътуване.",
+        "Нашият автопарк включва модерни автобуси от европейски клас Mercedes, Neoplan, Van Hool.",
+        "Обръщаме специално внимание на техническата поддръжка и хигиената, което осигурява висок комфорт, надеждност и чистота.",
+        "Автобусите разполагат с удобни седалки и достатъчно пространство между редовете, както и климатик, климат-контрол, зарядни и тоалетни.",
       ],
       bullets: [
-        "Модели: Van Hool, Travego, Neoplan.",
-        "Редовна техническа поддръжка и контрол на качеството.",
-        "Чистота на салона преди всеки курс.",
+        "модерни автобуси",
+        "удобни седалки",
+        "редовна поддръжка и контрол на качеството",
+        "чистота в салона",
+        "безопасност и надеждност",
       ],
       media: [
         {
@@ -300,14 +306,16 @@ export const aboutContent: Record<Lang, Section[]> = {
     {
       title: "Автопарк",
       text: [
-        "Наш автопарк складається з сучасних автобусів європейського класу.",
-        "Ми виконуємо рейси автобусами Van Hool, Travego та Neoplan, забезпечуючи комфорт і надійність.",
-        "Ми приділяємо особливу увагу технічному стану та чистоті салонів: регулярна глибока очистка забезпечує комфорт під час поїздки.",
+        "Наш автопарк — це сучасні автобуси європейського класу Mercedes, Neoplan, Van Hool.",
+        "Ми приділяємо особливу увагу технічному обслуговуванню та гігієні, що забезпечує високий рівень комфорту, надійності й чистоти.",
+        "Автобуси мають зручні сидіння та достатню відстань між рядами, а також оснащені кондиціонером і системою клімат-контролю, зарядками та туалетами.",
       ],
       bullets: [
-        "Моделі: Van Hool, Travego, Neoplan.",
-        "Регулярне техобслуговування та контроль якості.",
-        "Чистота салону перед кожним рейсом.",
+        "сучасні автобуси",
+        "зручні сидіння",
+        "регулярне техобслуговування та контроль якості",
+        "чистота в салоні",
+        "безпека та надійність",
       ],
       media: [
         {
