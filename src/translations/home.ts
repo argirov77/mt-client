@@ -339,30 +339,30 @@ export const parcelTranslations: Record<Lang, ParcelCopy> = {
 export const aboutTranslations: Record<Lang, AboutCopy> = {
   ru: {
     kicker: "О компании",
-    title: "Премиальный сервис и понятная поддержка",
+    title: "Быстрый сервис и живая поддержка",
     subtitle:
-      "«Максимов Турс» работает с 1991 года. Стабильные рейсы, комфортный автопарк и живые офисы поддержки.",
+      "Максимов Турс занимается пассажирскими перевозками с 1992 года! Доверие, ответственность, безопасность — наши главные принципы!",
     closeLabel: "Закрыть",
   },
   en: {
     kicker: "About company",
-    title: "Premium service with clear support",
+    title: "Fast service with real support",
     subtitle:
-      "Maksimov Tours has operated since 1991. Reliable routes, a comfortable fleet, and real support offices.",
+      "Maksimov Tours has provided passenger transport since 1992. Trust, responsibility, and safety are our core principles.",
     closeLabel: "Close",
   },
   bg: {
     kicker: "За компанията",
-    title: "Премиум обслужване с ясна подкрепа",
+    title: "Бързо обслужване и жива подкрепа",
     subtitle:
-      "„Максимов Турс“ работи от 1991 г. Стабилни курсове, комфортен автопарк и реални офиси за помощ.",
+      "„Максимов Турс“ извършва пътнически превози от 1992 г. Доверие, отговорност и безопасност са нашите основни принципи.",
     closeLabel: "Затвори",
   },
   ua: {
     kicker: "Про компанію",
-    title: "Преміальний сервіс і зрозуміла підтримка",
+    title: "Швидкий сервіс і жива підтримка",
     subtitle:
-      "«Максимов Турс» працює з 1991 року. Стабільні рейси, комфортний автопарк і реальні офіси підтримки.",
+      "«Максимов Турс» займається пасажирськими перевезеннями з 1992 року. Довіра, відповідальність і безпека — наші головні принципи.",
     closeLabel: "Закрити",
   },
 };
