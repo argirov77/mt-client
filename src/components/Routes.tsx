@@ -32,12 +32,7 @@ type ApiResponse = Partial<{
 
 /* ===================== helpers ===================== */
 
-const titleFromStops = (r?: Route | null) => {
-  if (!r || !r.stops?.length) return r?.name ?? "";
-  const first = r.stops[0]?.name?.trim();
-  const last = r.stops[r.stops.length - 1]?.name?.trim();
-  return first && last ? `${first} — ${last}` : r.name;
-};
+const titleFromStops = (r?: Route | null) => r?.name ?? "";
 
 const shallowClone = (r?: Route | null): Route | null =>
   r ? { ...r, stops: Array.isArray(r.stops) ? [...r.stops] : [] } : null;
@@ -68,11 +63,6 @@ const reverseIfEqual = (f?: Route | null, b?: Route | null): Route | null => {
   if (!deepEqualStops(f.stops, b.stops)) return shallowClone(b);
   return { ...b, stops: [...(b.stops || [])].reverse() };
 };
-
-const firstTime = (s?: Stop[]) =>
-  s?.[0]?.departure_time || s?.[0]?.arrival_time || null;
-const lastTime = (s?: Stop[]) =>
-  s?.[s.length - 1]?.arrival_time || s?.[s.length - 1]?.departure_time || null;
 
 /* ===================== Component ===================== */
 
@@ -188,10 +178,6 @@ function RoutePanel({
   const L = routesTranslations[lang];
   const count = route.stops?.length ?? 0;
 
-  const t1 = firstTime(route.stops);
-  const t2 = lastTime(route.stops);
-  const duration = t1 && t2 ? `${t1} — ${t2}` : null;
-
   return (
     <article className={styles.routeCard}>
       <div className={styles.routeCardSummary}>
@@ -202,13 +188,6 @@ function RoutePanel({
             <div className={styles.routeCardMeta}>{L.stopsCount(count)}</div>
           </div>
         </div>
-        {duration && (
-          <div className={styles.routeCardSummaryTimes}>
-            <span>
-              {L.duration}: <strong>{duration}</strong>
-            </span>
-          </div>
-        )}
       </div>
 
       <StopsList stops={route.stops || []} lang={lang} />
