@@ -28,10 +28,8 @@ export default function Page() {
         <div className="mx-auto w-full max-w-6xl px-4">
           <div className="mb-6 flex flex-col gap-2 text-center">
             <p className={sectionEyebrowClass}>{bookingCopy.eyebrow}</p>
-            <div className="mx-auto w-full max-w-3xl rounded-md bg-rose-300/80 px-4 py-3 shadow-sm">
-              <h2 className={sectionTitleClass}>{bookingCopy.title}</h2>
-              <p className="text-base text-slate-800">{bookingCopy.description}</p>
-            </div>
+            <h2 className={sectionTitleClass}>{bookingCopy.title}</h2>
+            <p className={sectionDescriptionClass}>{bookingCopy.description}</p>
           </div>
           <BookingCard />
         </div>

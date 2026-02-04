@@ -105,27 +105,27 @@ export const heroTranslations: Record<Lang, HeroCopy> = {
 export const bookingTranslations: Record<Lang, BookingCopy> = {
   ru: {
     eyebrow: "Покупка билета",
-    title: "Забронировать / Купить билет",
+    title: "Пошаговый процесс бронирования",
     description:
-      "Обеспечь себя местом: бесплатно забронируй или купи билет в несколько кликов!",
+      "Проходите шаги последовательно: поиск, выбор рейсов, места, пассажиры и оплата без смены логики.",
   },
   en: {
     eyebrow: "Ticket purchase",
-    title: "Reserve / Buy a ticket",
+    title: "Step-by-step booking flow",
     description:
-      "Secure your seat: reserve for free or buy a ticket in just a few clicks!",
+      "Follow the steps to search, select seats, add extras and pay without leaving the flow.",
   },
   bg: {
     eyebrow: "Покупка на билет",
-    title: "Резервирай / Купи билет",
+    title: "Стъпков процес на резервация",
     description:
-      "Осигури си място: резервирай безплатно или купи билет само с няколко клика!",
+      "Минавайте през стъпките подред: търсене, избор на курсове, места, пътници и плащане без да сменяте логиката.",
   },
   ua: {
     eyebrow: "Придбання квитка",
-    title: "Забронювати / Купити квиток",
+    title: "Покроковий процес бронювання",
     description:
-      "Забезпеч себе місцем: безкоштовно забронюй або купи квиток у кілька кліків!",
+      "Проходьте кроки послідовно: пошук, вибір рейсів, місця, пасажири та оплата без зміни логіки.",
   },
 };
 
