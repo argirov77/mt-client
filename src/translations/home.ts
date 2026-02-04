@@ -51,17 +51,7 @@ type AboutCopy = {
 type ParcelCopy = {
   kicker: string;
   title: string;
-  description: {
-    start: string;
-    from: string;
-    middle: string;
-    to: string;
-    end: string;
-    carrierPrefix: string;
-    carrierBg: string;
-    carrierMiddle: string;
-    carrierUa: string;
-  };
+  description: string;
   facts: {
     title: string;
     value: string;
@@ -249,90 +239,50 @@ export const parcelTranslations: Record<Lang, ParcelCopy> = {
   ru: {
     kicker: "Посылки",
     title: "Отправка посылок Болгария ↔ Украина",
-    description: {
-      start: "Мы доставляем посылки ",
-      from: "из любой точки Болгарии",
-      middle: " в ",
-      to: "любую точку Украины",
-      end: " и наоборот.",
-      carrierPrefix: " В Болгарии работаем через ",
-      carrierBg: "Econt",
-      carrierMiddle: ", в Украине — через ",
-      carrierUa: "Новую Почту",
-    },
+    description:
+      "Доставляем посылки между Болгарией и Украиной в обе стороны. Подберём оптимальный тариф и подскажем по упаковке.",
     facts: [
-      { title: "Срок доставки", value: "от 2 до 7 дней" },
-      { title: "Стоимость", value: "от 20 €", hint: "индивидуально" },
-      { title: "Тип отправлений", value: "личные посылки и небольшие грузы" },
+      { title: "Срок доставки", value: "от 1 до 5 дней" },
+      { title: "Стоимость", value: "от 15 €", hint: "зависит от веса и габаритов" },
     ],
-    cta: "Рассчитать стоимость",
-    note: "Просто напишите направление, города, вес и габариты — ответим с точной ценой.",
+    cta: "Связаться и получить расчёт",
+    note: "Свяжитесь с нами, укажите направление, города, вес и размеры — мы вернёмся с точной ценой и сроками.",
   },
   bg: {
     kicker: "Пратки",
     title: "Изпращане на пратки България ↔ Украйна",
-    description: {
-      start: "Доставяме пратки ",
-      from: "от всяка точка на България",
-      middle: " до ",
-      to: "всяка точка на Украйна",
-      end: " и обратно.",
-      carrierPrefix: " В България работим чрез ",
-      carrierBg: "Econt",
-      carrierMiddle: ", в Украйна — чрез ",
-      carrierUa: "Nova Poshta",
-    },
+    description:
+      "Доставяме пратки между България и Украйна в двете посоки. Помагаме с избор на тарифа и опаковане.",
     facts: [
-      { title: "Срок на доставка", value: "от 2 до 7 дни" },
-      { title: "Цена", value: "от 20 €", hint: "индивидуално" },
-      { title: "Вид пратки", value: "лични пратки и малки товари" },
+      { title: "Срок на доставка", value: "от 1 до 5 дни" },
+      { title: "Цена", value: "от 15 €", hint: "според тегло и размери" },
     ],
-    cta: "Изчисли цена",
-    note: "Напишете посока, градове, тегло и размери — ще върнем точна цена.",
+    cta: "Свържи се и получи оферта",
+    note: "Свържи се с нас и посочи посока, градове, тегло и размери — ще върнем точна цена и срок.",
   },
   en: {
     kicker: "Parcels",
     title: "Parcel delivery Bulgaria ↔ Ukraine",
-    description: {
-      start: "We deliver parcels ",
-      from: "from any point in Bulgaria",
-      middle: " to ",
-      to: "any point in Ukraine",
-      end: " and back.",
-      carrierPrefix: " In Bulgaria we work with ",
-      carrierBg: "Econt",
-      carrierMiddle: ", in Ukraine — with ",
-      carrierUa: "Nova Poshta",
-    },
+    description:
+      "We deliver parcels between Bulgaria and Ukraine both ways. We'll help choose the best rate and advise on packing.",
     facts: [
-      { title: "Delivery time", value: "2 to 7 days" },
-      { title: "Price", value: "from 20 €", hint: "individual" },
-      { title: "Shipment type", value: "personal parcels and small cargo" },
+      { title: "Delivery time", value: "1 to 5 days" },
+      { title: "Price", value: "from €15", hint: "based on weight and dimensions" },
     ],
-    cta: "Calculate price",
-    note: "Send the route, cities, weight and dimensions — we will reply with an exact quote.",
+    cta: "Contact us for a quote",
+    note: "Contact us and share the route, cities, weight, and dimensions — we’ll reply with an exact quote and timing.",
   },
   ua: {
     kicker: "Посилки",
     title: "Відправка посилок Болгарія ↔ Україна",
-    description: {
-      start: "Ми доставляємо посилки ",
-      from: "з будь-якої точки Болгарії",
-      middle: " до ",
-      to: "будь-якої точки України",
-      end: " і навпаки.",
-      carrierPrefix: " У Болгарії працюємо через ",
-      carrierBg: "Econt",
-      carrierMiddle: ", в Україні — через ",
-      carrierUa: "Нову Пошту",
-    },
+    description:
+      "Доставляємо посилки між Болгарією та Україною в обидва боки. Підкажемо оптимальний тариф і пакування.",
     facts: [
-      { title: "Термін доставки", value: "від 2 до 7 днів" },
-      { title: "Вартість", value: "від 20 €", hint: "індивідуально" },
-      { title: "Тип відправлень", value: "особисті посилки та невеликі вантажі" },
+      { title: "Термін доставки", value: "від 1 до 5 днів" },
+      { title: "Вартість", value: "від 15 €", hint: "залежить від ваги та габаритів" },
     ],
-    cta: "Розрахувати вартість",
-    note: "Просто напишіть напрямок, міста, вагу та габарити — відповімо з точною ціною.",
+    cta: "Звʼязатися для розрахунку",
+    note: "Звʼяжіться з нами, вкажіть напрямок, міста, вагу та розміри — відповімо з точною ціною і строками.",
   },
 };
 
