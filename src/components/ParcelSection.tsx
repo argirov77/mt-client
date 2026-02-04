@@ -24,17 +24,7 @@ export default function ParcelSection() {
         <div className="text-center">
           <p className={sectionEyebrowClass}>{t.kicker}</p>
           <h2 className={`${sectionTitleClass} mt-2`}>{t.title}</h2>
-          <p className={`mx-auto mt-3 max-w-3xl ${sectionDescriptionClass}`}>
-            {t.description.start}
-            <strong className="font-semibold text-slate-900">{t.description.from}</strong>
-            {t.description.middle}
-            <strong className="font-semibold text-slate-900">{t.description.to}</strong>
-            {t.description.end}
-            {t.description.carrierPrefix}
-            <strong className="font-semibold text-slate-900">{t.description.carrierBg}</strong>
-            {t.description.carrierMiddle}
-            <strong className="font-semibold text-slate-900">{t.description.carrierUa}</strong>.
-          </p>
+          <p className={`mx-auto mt-3 max-w-3xl ${sectionDescriptionClass}`}>{t.description}</p>
         </div>
 
         <div className="mt-8 overflow-hidden rounded-3xl border border-slate-200/70 bg-white/80 px-5 py-6 shadow-[0_16px_40px_rgba(15,23,42,0.08)]">
