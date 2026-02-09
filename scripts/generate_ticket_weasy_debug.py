@@ -15,7 +15,21 @@ except ImportError as exc:
     raise SystemExit("WeasyPrint is required: pip install weasyprint") from exc
 
 TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "..", "backend", "templates")
-TEMPLATE_NAME = "ticket_weasy.html"
+PDF_TEMPLATE_NAME = "ticket_weasy.html"
+BROWSER_TEMPLATE_NAME = "ticket.html"
+REQUIRED_CONTEXT_KEYS = {
+    "i18n",
+    "route",
+    "ticket",
+    "passenger",
+    "payment",
+    "departure",
+    "arrival",
+    "timeline",
+    "qr_data_uri",
+    "deep_link",
+    "status_chip",
+}
 
 
 def _qr_data_uri() -> str:
@@ -117,13 +131,21 @@ def build_context():
     return context
 
 
+def _validate_context(context: dict) -> None:
+    missing = sorted(REQUIRED_CONTEXT_KEYS - context.keys())
+    if missing:
+        raise ValueError(f"Context is missing required keys: {', '.join(missing)}")
+
+
 def render_ticket(output_dir: str) -> None:
     env = Environment(
         loader=FileSystemLoader(TEMPLATE_DIR),
         autoescape=select_autoescape(["html", "xml"]),
     )
-    template = env.get_template(TEMPLATE_NAME)
-    html = template.render(**build_context())
+    context = build_context()
+    _validate_context(context)
+    template = env.get_template(PDF_TEMPLATE_NAME)
+    html = template.render(**context)
 
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     html_path = os.path.join(output_dir, f"ticket_weasy_debug_{timestamp}.html")

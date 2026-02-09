@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <title>{{ i18n.ticket_title or "Электронный билет" }}</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: "DejaVu Sans", Arial, sans-serif;
+        font-size: 12px;
+        color: #111827;
+        background: #ffffff;
+      }
+
+      .page {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 16px;
+      }
+
+      table {
+        width: 100%;
+        table-layout: fixed;
+        border-collapse: separate;
+        border-spacing: 12px;
+      }
+
+      td {
+        vertical-align: top;
+      }
+
+      .card {
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 12px;
+        background: #ffffff;
+      }
+
+      .muted {
+        color: #6b7280;
+      }
+
+      .title {
+        font-size: 16px;
+        font-weight: 700;
+      }
+
+      .subtitle {
+        font-size: 13px;
+        font-weight: 600;
+        margin-top: 4px;
+      }
+
+      .route {
+        font-size: 18px;
+        font-weight: 700;
+        margin-top: 6px;
+      }
+
+      .meta {
+        font-size: 12px;
+        margin-top: 6px;
+      }
+
+      .section-title {
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+        color: #374151;
+      }
+
+      .row {
+        margin-bottom: 6px;
+      }
+
+      .label {
+        font-weight: 600;
+        display: inline-block;
+        width: 120px;
+      }
+
+      .break {
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+
+      .status-chip {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 600;
+        background: #e5e7eb;
+        color: #111827;
+      }
+
+      .status-paid {
+        background: #dcfce7;
+        color: #166534;
+      }
+
+      .status-pending {
+        background: #fef9c3;
+        color: #854d0e;
+      }
+
+      .status-canceled {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+
+      .qr-table {
+        width: 100%;
+        table-layout: fixed;
+        border-collapse: separate;
+        border-spacing: 8px;
+      }
+
+      .qr-box {
+        width: 132px;
+        height: 132px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 6px;
+        background: #ffffff;
+      }
+
+      .qr-box img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+      }
+
+      .cta {
+        display: inline-block;
+        padding: 6px 10px;
+        border-radius: 6px;
+        background: #111827;
+        color: #ffffff;
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .footer {
+        font-size: 11px;
+        color: #6b7280;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Browser-friendly template; PDF rendering uses ticket_weasy.html -->
+    <div class="page">
+      <table>
+        <tr>
+          <td>
+            <div class="card">
+              <div class="title">{{ i18n.brand or "Maximov Tours" }}</div>
+              <div class="subtitle">{{ i18n.ticket_title or "Электронный билет" }}</div>
+              <div class="route break">
+                {{ route.from }} → {{ route.to }}
+              </div>
+              <div class="meta muted break">{{ route.label }}</div>
+              <div class="meta">{{ route.date }}</div>
+            </div>
+          </td>
+          <td>
+            <div class="card">
+              <div class="row">
+                {{ status_chip | safe }}
+              </div>
+              <div class="row">
+                <span class="label">{{ i18n.ticket_number or "Билет №" }}</span>
+                <span class="break">{{ ticket.number }}</span>
+              </div>
+              <div class="row">
+                <span class="label">{{ i18n.order_number or "Заказ №" }}</span>
+                <span class="break">{{ ticket.order_number }}</span>
+              </div>
+              <div class="row">
+                <span class="label">{{ i18n.seat or "Место" }}</span>
+                <span>{{ ticket.seat or "—" }}</span>
+              </div>
+              <div class="row">
+                <span class="label">{{ i18n.baggage or "Багаж" }}</span>
+                <span>{{ ticket.baggage or "—" }}</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+      </table>
+
+      <table>
+        <colgroup>
+          <col style="width: 60%;" />
+          <col style="width: 40%;" />
+        </colgroup>
+        <tr>
+          <td>
+            <div class="card">
+              <div class="section-title">{{ i18n.trip or "Поездка" }}</div>
+
+              <div class="row">
+                <div class="subtitle">{{ i18n.departure or "Отправление" }}</div>
+                <div class="row break">{{ departure.name }}</div>
+                <div class="row">{{ departure.datetime }}</div>
+                <div class="row break">{{ departure.address }}</div>
+                {% if departure.map_url %}
+                  <div class="row break">
+                    <a class="break" href="{{ departure.map_url }}">{{ departure.map_url }}</a>
+                  </div>
+                {% endif %}
+              </div>
+
+              <div class="row">
+                <div class="subtitle">{{ i18n.arrival or "Прибытие" }}</div>
+                <div class="row break">{{ arrival.name }}</div>
+                <div class="row">{{ arrival.datetime }}</div>
+                <div class="row break">{{ arrival.address }}</div>
+                {% if arrival.map_url %}
+                  <div class="row break">
+                    <a class="break" href="{{ arrival.map_url }}">{{ arrival.map_url }}</a>
+                  </div>
+                {% endif %}
+              </div>
+
+              {% if timeline.duration_text %}
+                <div class="row">
+                  <div class="subtitle">{{ i18n.on_the_way or "В пути" }}</div>
+                  <div>{{ timeline.duration_text }}</div>
+                </div>
+              {% endif %}
+            </div>
+          </td>
+          <td>
+            <div class="card">
+              <div class="section-title">{{ i18n.passenger or "Пассажир" }}</div>
+              <div class="row break">{{ passenger.name }}</div>
+              <div class="row break">{{ passenger.phone }}</div>
+              <div class="row break">{{ passenger.email }}</div>
+            </div>
+
+            <div class="card" style="margin-top: 12px;">
+              <div class="section-title">{{ i18n.payment or "Оплата" }}</div>
+              <div class="row">
+                <span class="label">{{ i18n.status or "Статус" }}</span>
+                <span>{{ payment.status }}</span>
+              </div>
+              <div class="row">
+                <span class="label">{{ i18n.method or "Метод" }}</span>
+                <span>{{ payment.method }}</span>
+              </div>
+              <div class="row">
+                <span class="label">{{ i18n.amount or "Сумма" }}</span>
+                <span>{{ payment.amount }}</span>
+              </div>
+            </div>
+
+            <div class="card" style="margin-top: 12px;">
+              <div class="section-title">{{ i18n.qr_title or "QR + ссылка" }}</div>
+              <table class="qr-table">
+                <tr>
+                  <td style="width: 140px;">
+                    <div class="qr-box">
+                      <img src="{{ qr_data_uri }}" alt="QR" />
+                    </div>
+                  </td>
+                  <td>
+                    <div class="row break">{{ deep_link }}</div>
+                    <div class="row">
+                      <a class="cta" href="{{ deep_link }}">{{ i18n.open_online or "Открыть онлайн" }}</a>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </div>
+          </td>
+        </tr>
+      </table>
+
+      <table>
+        <tr>
+          <td>
+            <div class="card footer">
+              Maximov Tours · {{ i18n.hotline or "на линии 8 800 000-00-00" }} · {{ i18n.since or "с 1991 года" }}
+              <br />
+              {{ i18n.time_note or "Время может отличаться" }}
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>
