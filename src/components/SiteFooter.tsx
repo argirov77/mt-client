@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { Instagram } from "lucide-react";
 
 import { useLanguage } from "@/components/common/LanguageProvider";
 import { getPublicOfferUrl } from "@/utils/publicOffer";
@@ -11,18 +12,22 @@ const translations = {
   ru: {
     offer: "Публичная оферта",
     payments: "Поддерживаемые способы оплаты",
+    contacts: "Контакты",
   },
   bg: {
     offer: "Публична оферта",
     payments: "Поддържани методи за плащане",
+    contacts: "Контакти",
   },
   en: {
     offer: "Public offer",
     payments: "Supported payment methods",
+    contacts: "Contacts",
   },
   ua: {
     offer: "Публічна оферта",
     payments: "Підтримувані способи оплати",
+    contacts: "Контакти",
   },
 };
 
@@ -50,13 +55,34 @@ export default function SiteFooter() {
           <span className="font-bold text-lg">Максимов Турс</span>
           <p className="mt-2">© 2005-2025 ООО «Максимов Турс»</p>
         </div>
-        <button
-          type="button"
-          className="text-left text-sm font-semibold text-slate-100 hover:underline"
-          onClick={() => setIsOfferOpen(true)}
-        >
-          {t.offer}
-        </button>
+        <div className="flex flex-col gap-2 text-sm">
+          <span className="font-semibold text-slate-100">{t.contacts}</span>
+          <a className="hover:underline" href="tel:+380930004636">
+            +380930004636
+          </a>
+          <a className="hover:underline" href="tel:+359894290356">
+            +359894290356
+          </a>
+          <a className="hover:underline" href="mailto:Avroraiko@gmail.com">
+            Avroraiko@gmail.com
+          </a>
+          <a
+            className="inline-flex items-center gap-2 hover:underline"
+            href="https://www.instagram.com/maximov_turs?igsh=OTR5eGtuOTBoMm5u"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Instagram size={16} />
+            Instagram
+          </a>
+          <button
+            type="button"
+            className="text-left text-sm font-semibold text-slate-100 hover:underline"
+            onClick={() => setIsOfferOpen(true)}
+          >
+            {t.offer}
+          </button>
+        </div>
       </div>
       <div className="container mx-auto mt-6 flex flex-wrap items-center justify-between gap-4 px-4 text-xs text-slate-300">
         <span>{t.payments}</span>
