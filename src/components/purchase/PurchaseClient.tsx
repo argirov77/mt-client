@@ -1028,7 +1028,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
     setIsUnauthorized(false);
 
     try {
-      const response = await fetchWithInclude(`${API}/public/purchase/${purchaseId}`);
+      const response = await fetchWithInclude(`${API}/purchase/${purchaseId}`);
 
       if ([401, 403, 404].includes(response.status)) {
         setIsUnauthorized(true);
