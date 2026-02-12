@@ -42,6 +42,37 @@ type StepNavigationItem = {
   state: "active" | "done" | "future";
 };
 
+type PublicPayResponse = {
+  provider: "liqpay";
+  data: string;
+  signature: string;
+};
+
+const getCookie = (name: string): string | null => {
+  const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : null;
+};
+
+const submitLiqPayCheckout = (data: string, signature: string) => {
+  const form = document.createElement("form");
+  form.method = "POST";
+  form.action = "https://www.liqpay.ua/api/3/checkout";
+
+  const dataInput = document.createElement("input");
+  dataInput.type = "hidden";
+  dataInput.name = "data";
+  dataInput.value = data;
+
+  const signatureInput = document.createElement("input");
+  signatureInput.type = "hidden";
+  signatureInput.name = "signature";
+  signatureInput.value = signature;
+
+  form.append(dataInput, signatureInput);
+  document.body.appendChild(form);
+  form.submit();
+};
+
 export default function SearchResults({
   lang = "ru",
   from,
@@ -446,20 +477,25 @@ export default function SearchResults({
       setLoading(true);
       setMsg("Оплата…");
       setMsgType("info");
-      await axios.post(`${API}/pay`, { purchase_id: purchaseId });
-      setMsg(t.paid);
-      setMsgType("success");
-      setPurchaseId(null);
-      setTicket((prev) =>
-        prev
-          ? {
-              ...prev,
-              status: "paid",
-            }
-          : prev
+      const csrf = getCookie("mc_csrf");
+      if (!csrf) {
+        throw new Error("missing csrf cookie");
+      }
+
+      const response = await axios.post<PublicPayResponse>(
+        `${API}/public/purchase/${purchaseId}/pay`,
+        undefined,
+        {
+          withCredentials: true,
+          headers: {
+            "X-CSRF": csrf,
+          },
+        }
       );
-      setShowDownloadPrompt(true);
-      setActiveStep(3);
+
+      submitLiqPayCheckout(response.data.data, response.data.signature);
+      setMsg("Перенаправляем на страницу оплаты…");
+      setMsgType("info");
     } catch {
       setMsg(t.errAction);
       setMsgType("error");
