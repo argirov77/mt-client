@@ -22,6 +22,7 @@ import type {
   PurchaseTotals,
 } from "@/types/purchase";
 import { fetchWithInclude } from "@/utils/fetchWithInclude";
+import { buildPublicPurchasePayEndpoint } from "@/utils/publicPurchasePayEndpoint";
 import styles from "./PurchaseClient.module.css";
 
 const SCROLL_STORAGE_KEY = "purchase.scrolls.v1";
@@ -1748,7 +1749,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
     setBanner(null);
 
     try {
-      const response = await fetchWithInclude(`${API}/public/purchase/${purchaseId}/pay`, {
+      const response = await fetchWithInclude(buildPublicPurchasePayEndpoint(purchaseId), {
         method: "POST",
       });
 
