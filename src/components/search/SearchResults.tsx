@@ -19,6 +19,7 @@ import StepThree from "./steps/StepThree";
 
 import { downloadTicketPdf } from "@/utils/ticketPdf";
 import { getPublicOfferUrl } from "@/utils/publicOffer";
+import { buildPublicPurchasePayEndpoint } from "@/utils/publicPurchasePayEndpoint";
 import type { ElectronicTicketData } from "@/types/ticket";
 
 // ======== Типы ========
@@ -483,7 +484,7 @@ export default function SearchResults({
       }
 
       const response = await axios.post<PublicPayResponse>(
-        `${API}/public/purchase/${purchaseId}/pay`,
+        buildPublicPurchasePayEndpoint(purchaseId),
         undefined,
         {
           withCredentials: true,
