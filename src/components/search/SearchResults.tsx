@@ -20,6 +20,11 @@ import StepThree from "./steps/StepThree";
 import { downloadTicketPdf } from "@/utils/ticketPdf";
 import { getPublicOfferUrl } from "@/utils/publicOffer";
 import { buildPublicPurchasePayEndpoint } from "@/utils/publicPurchasePayEndpoint";
+import {
+  normalizePublicPayResponse,
+  persistLastLiqPayOrderId,
+  type PublicPayResponse,
+} from "@/utils/liqpayCheckout";
 import type { ElectronicTicketData } from "@/types/ticket";
 
 // ======== Типы ========
@@ -43,21 +48,16 @@ type StepNavigationItem = {
   state: "active" | "done" | "future";
 };
 
-type PublicPayResponse = {
-  provider: "liqpay";
-  data: string;
-  signature: string;
-};
 
 const getCookie = (name: string): string | null => {
   const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
   return match ? decodeURIComponent(match[1]) : null;
 };
 
-const submitLiqPayCheckout = (data: string, signature: string) => {
+const submitLiqPayCheckout = (checkoutFormUrl: string, data: string, signature: string) => {
   const form = document.createElement("form");
   form.method = "POST";
-  form.action = "https://www.liqpay.ua/api/3/checkout";
+  form.action = checkoutFormUrl;
 
   const dataInput = document.createElement("input");
   dataInput.type = "hidden";
@@ -494,7 +494,13 @@ export default function SearchResults({
         }
       );
 
-      submitLiqPayCheckout(response.data.data, response.data.signature);
+      const checkoutPayload = normalizePublicPayResponse(response.data);
+      persistLastLiqPayOrderId(checkoutPayload.orderId);
+      submitLiqPayCheckout(
+        checkoutPayload.checkoutFormUrl,
+        checkoutPayload.data,
+        checkoutPayload.signature
+      );
       setMsg("Перенаправляем на страницу оплаты…");
       setMsgType("info");
     } catch {

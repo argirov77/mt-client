@@ -23,6 +23,12 @@ import type {
 } from "@/types/purchase";
 import { fetchWithInclude } from "@/utils/fetchWithInclude";
 import { buildPublicPurchasePayEndpoint } from "@/utils/publicPurchasePayEndpoint";
+import {
+  normalizePublicPayResponse,
+  persistLastLiqPayOrderId,
+  type LiqPayCheckoutPayload,
+  type PublicPayResponse,
+} from "@/utils/liqpayCheckout";
 import styles from "./PurchaseClient.module.css";
 
 const SCROLL_STORAGE_KEY = "purchase.scrolls.v1";
@@ -830,19 +836,10 @@ type PurchaseClientProps = {
   purchaseId: string;
 };
 
-type PaymentPayload = {
-  url: string;
-  [key: string]: unknown;
-};
+type PaymentPayload = LiqPayCheckoutPayload;
 
 const submitPaymentForm = (payload: PaymentPayload) => {
   if (typeof window === "undefined") return;
-
-  const { url, ...fields } = payload;
-  const targetUrl = typeof url === "string" ? url : "";
-  if (!targetUrl) {
-    return;
-  }
 
   const paymentWindow = window.open("", "payment-window");
   if (!paymentWindow) {
@@ -851,17 +848,20 @@ const submitPaymentForm = (payload: PaymentPayload) => {
 
   const form = document.createElement("form");
   form.method = "POST";
-  form.action = targetUrl;
+  form.action = payload.checkoutFormUrl;
   form.target = paymentWindow.name;
 
-  Object.entries(fields).forEach(([key, value]) => {
-    if (value === undefined || value === null) return;
-    const input = document.createElement("input");
-    input.type = "hidden";
-    input.name = key;
-    input.value = String(value);
-    form.appendChild(input);
-  });
+  const dataInput = document.createElement("input");
+  dataInput.type = "hidden";
+  dataInput.name = "data";
+  dataInput.value = payload.data;
+
+  const signatureInput = document.createElement("input");
+  signatureInput.type = "hidden";
+  signatureInput.name = "signature";
+  signatureInput.value = payload.signature;
+
+  form.append(dataInput, signatureInput);
 
   document.body.appendChild(form);
   form.submit();
@@ -1757,8 +1757,10 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
         throw new Error(`HTTP ${response.status}`);
       }
 
-      const payload = (await response.json()) as PaymentPayload;
-      submitPaymentForm(payload);
+      const payload = (await response.json()) as PublicPayResponse;
+      const checkoutPayload = normalizePublicPayResponse(payload);
+      persistLastLiqPayOrderId(checkoutPayload.orderId);
+      submitPaymentForm(checkoutPayload);
       setBanner({ type: "info", message: "Перенаправляем на оплату…" });
     } catch (paymentError) {
       console.error(paymentError);
