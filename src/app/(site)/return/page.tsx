@@ -5,12 +5,16 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import { API } from "@/config";
 import { fetchWithInclude } from "@/utils/fetchWithInclude";
+import { LIQPAY_LAST_ORDER_ID_KEY } from "@/utils/liqpayCheckout";
 
 type ResolvePayload = {
   paid?: boolean;
   status?: string;
   purchaseId?: string | number | null;
   purchase_id?: string | number | null;
+  purchase?: {
+    id?: string | number | null;
+  } | null;
 };
 
 const MAX_ATTEMPTS = 3;
@@ -19,7 +23,7 @@ const RETRY_DELAY_MS = 1500;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const extractPurchaseId = (payload: ResolvePayload): string | null => {
-  const id = payload.purchaseId ?? payload.purchase_id ?? null;
+  const id = payload.purchaseId ?? payload.purchase_id ?? payload.purchase?.id ?? null;
   return id === null || id === undefined || id === "" ? null : String(id);
 };
 
@@ -39,7 +43,17 @@ export default function ReturnPage() {
   const orderId = useMemo(() => {
     const direct = searchParams.get("order_id");
     const fallback = searchParams.get("oid");
-    return (direct ?? fallback ?? "").trim();
+    const queryOrderId = (direct ?? fallback ?? "").trim();
+
+    if (queryOrderId) {
+      return queryOrderId;
+    }
+
+    if (typeof window === "undefined") {
+      return "";
+    }
+
+    return (sessionStorage.getItem(LIQPAY_LAST_ORDER_ID_KEY) ?? "").trim();
   }, [searchParams]);
 
   const liqPayStatus = useMemo(() => {
@@ -50,7 +64,7 @@ export default function ReturnPage() {
     cancelledRef.current = false;
 
     if (!orderId) {
-      setMessage("Не найден order_id в URL возврата.");
+      setMessage("order_id not found");
       return;
     }
 
@@ -65,7 +79,7 @@ export default function ReturnPage() {
 
         try {
           const params = new URLSearchParams({ order_id: orderId });
-          const response = await fetchWithInclude(`${API}/payments/resolve?${params.toString()}`, {
+          const response = await fetchWithInclude(`${API}/public/payments/resolve?${params.toString()}`, {
             method: "GET",
             cache: "no-store",
           });
