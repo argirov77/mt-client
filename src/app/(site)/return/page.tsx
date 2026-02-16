@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { API } from "@/config";
@@ -32,7 +33,7 @@ const isPaidResponse = (payload: ResolvePayload) => {
   return payload.paid === true || normalizedStatus === "paid";
 };
 
-export default function ReturnPage() {
+function ReturnPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [message, setMessage] = useState("Проверяем оплату…");
@@ -131,5 +132,20 @@ export default function ReturnPage() {
         Проверить ещё раз
       </button>
     </main>
+  );
+}
+
+export default function ReturnPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="mx-auto flex min-h-[70vh] w-full max-w-xl flex-col items-center justify-center gap-4 p-6 text-center">
+          <h1 className="text-2xl font-semibold text-slate-900">Возврат после оплаты</h1>
+          <p className="text-slate-600">Проверяем оплату…</p>
+        </main>
+      }
+    >
+      <ReturnPageContent />
+    </Suspense>
   );
 }
