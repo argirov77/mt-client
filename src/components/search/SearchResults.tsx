@@ -162,6 +162,25 @@ export default function SearchResults({
     const filterBySeats = (tours: SearchTour[]) =>
       tours.filter((tour) => freeSeats(tour.seats) >= safeSeatCount);
 
+    const normalizePlaceName = (value: string) => value.trim().toLowerCase();
+
+    const isVarna = (value: string) => {
+      const normalized = normalizePlaceName(value);
+      return normalized === "varna" || normalized === "варна";
+    };
+
+    const isOdessa = (value: string) => {
+      const normalized = normalizePlaceName(value);
+      return (
+        normalized === "odessa" ||
+        normalized === "odesa" ||
+        normalized === "одесса" ||
+        normalized === "одеса"
+      );
+    };
+
+    const isBlockedOutboundRoute = isVarna(fromName) && isOdessa(toName);
+
     const search = async () => {
       if (!fromId || !toId || !date) {
         setOutboundTours([]);
@@ -204,7 +223,9 @@ export default function SearchResults({
 
         if (cancelled) return;
 
-        const filteredOutbound = filterBySeats(outRes.data || []);
+        const filteredOutbound = isBlockedOutboundRoute
+          ? []
+          : filterBySeats(outRes.data || []);
         const filteredReturn = filterBySeats(retRes.data || []);
 
         setOutboundTours(filteredOutbound);
