@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "node scripts/fix-css-hmr.js"
+    "postinstall": "node scripts/fix-css-hmr.js",
+    "test": "npm run test:build && node --test .tmp-tests/passengerContact.test.js",
+    "test:build": "tsc --module commonjs --target es2020 --outDir .tmp-tests src/utils/passengerContact.ts src/utils/passengerContact.test.ts"
   },
   "dependencies": {
     "axios": "^1.11.0",
