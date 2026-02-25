@@ -546,18 +546,17 @@ export default function SearchResults({
       setMsg("Оплата…");
       setMsgType("info");
       const csrf = getCookie("mc_csrf");
-      if (!csrf) {
-        throw new Error("missing csrf cookie");
-      }
 
       const response = await axios.post<PublicPayResponse>(
         buildPublicPurchasePayEndpoint(purchaseId),
         undefined,
         {
           withCredentials: true,
-          headers: {
-            "X-CSRF": csrf,
-          },
+          headers: csrf
+            ? {
+                "X-CSRF": csrf,
+              }
+            : undefined,
         }
       );
 
