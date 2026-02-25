@@ -74,6 +74,22 @@ const submitLiqPayCheckout = (checkoutFormUrl: string, data: string, signature: 
   form.submit();
 };
 
+const LIQPAY_CHECKOUT_FORM_URL = "https://www.liqpay.ua/api/3/checkout";
+const ENABLE_TWO_STEP_PURCHASE_FALLBACK =
+  process.env.NEXT_PUBLIC_ENABLE_TWO_STEP_PURCHASE === "true";
+
+type PublicPurchaseCheckout = {
+  data?: unknown;
+  signature?: unknown;
+  order_id?: unknown;
+};
+
+type PublicPurchaseResponse = {
+  purchase_id?: unknown;
+  amount_due?: unknown;
+  checkout?: PublicPurchaseCheckout | null;
+};
+
 export default function SearchResults({
   lang = "ru",
   from,
@@ -299,7 +315,14 @@ export default function SearchResults({
       setMsg(action === "purchase" ? "Покупка…" : "Бронирование…");
       setMsgType("info");
 
-      const endpoint = action === "purchase" ? "purchase" : "book";
+      const isTwoStepPurchaseFallback =
+        action === "purchase" && ENABLE_TWO_STEP_PURCHASE_FALLBACK;
+      const endpoint =
+        action === "purchase"
+          ? isTwoStepPurchaseFallback
+            ? "book"
+            : "public/purchase"
+          : "book";
       const basePayload = {
         passenger_names: passengerNames,
         passenger_phone: phone,
@@ -358,7 +381,7 @@ export default function SearchResults({
       };
 
       // туда
-      const outRes = await axios.post(`${API}/${endpoint}`, {
+      const outRes = await axios.post<PublicPurchaseResponse>(`${API}/${endpoint}`, {
         ...basePayload,
         seat_nums: selectedOutboundSeats,
         extra_baggage: extraBaggageOutbound.slice(0, safeSeatCount),
@@ -368,12 +391,13 @@ export default function SearchResults({
       });
 
       let total = outRes.data.amount_due;
-      let pId = outRes.data.purchase_id as number;
+      let pId = Number(outRes.data.purchase_id);
       let ticketNumbers = extractTicketNumbers(outRes.data);
+      let finalPurchaseResponse = outRes.data;
 
       // обратно
       if (selectedReturnTour) {
-        const retRes = await axios.post(`${API}/${endpoint}`, {
+        const retRes = await axios.post<PublicPurchaseResponse>(`${API}/${endpoint}`, {
           ...basePayload,
           seat_nums: selectedReturnSeats,
           extra_baggage: extraBaggageReturn.slice(0, safeSeatCount),
@@ -383,8 +407,9 @@ export default function SearchResults({
           purchase_id: pId,
         });
         total = retRes.data.amount_due;
-        pId = retRes.data.purchase_id;
+        pId = Number(retRes.data.purchase_id);
         ticketNumbers = [...ticketNumbers, ...extractTicketNumbers(retRes.data)];
+        finalPurchaseResponse = retRes.data;
       }
 
       setPurchaseId(pId);
@@ -399,7 +424,7 @@ export default function SearchResults({
         action,
         total: Number(total),
         createdAt: new Date().toISOString(),
-        status: action === "purchase" ? "paid" : "pending",
+        status: "pending",
         contact: {
           phone,
           email,
@@ -440,7 +465,7 @@ export default function SearchResults({
       setShowDownloadPrompt(true);
       setMsg(
         action === "purchase"
-          ? `Билеты куплены! Purchase ID: ${pId}. Сумма: ${Number(
+          ? `Покупка создана, ожидание подтверждения оплаты. Purchase ID: ${pId}. Сумма: ${Number(
               total
             ).toFixed(2)}`
           : `Билеты забронированы! Purchase ID: ${pId}. Сумма: ${Number(
@@ -448,6 +473,31 @@ export default function SearchResults({
             ).toFixed(2)}`
       );
       setMsgType("success");
+
+      if (action === "purchase" && !isTwoStepPurchaseFallback) {
+        const checkoutData =
+          typeof finalPurchaseResponse.checkout?.data === "string"
+            ? finalPurchaseResponse.checkout.data
+            : "";
+        const checkoutSignature =
+          typeof finalPurchaseResponse.checkout?.signature === "string"
+            ? finalPurchaseResponse.checkout.signature
+            : "";
+
+        if (!checkoutData || !checkoutSignature) {
+          throw new Error("missing checkout payload in purchase response");
+        }
+
+        const checkoutOrderId = finalPurchaseResponse.checkout?.order_id;
+        persistLastLiqPayOrderId(
+          checkoutOrderId === undefined || checkoutOrderId === null || checkoutOrderId === ""
+            ? null
+            : String(checkoutOrderId)
+        );
+        setMsg("Перенаправляем на страницу оплаты…");
+        setMsgType("info");
+        submitLiqPayCheckout(LIQPAY_CHECKOUT_FORM_URL, checkoutData, checkoutSignature);
+      }
 
       // сброс выбора мест и пассажиров
       setSelectedOutboundSeats([]);
@@ -605,6 +655,9 @@ export default function SearchResults({
   );
   const isStep2Done = step2Complete;
   const isStep3Done = Boolean(ticket || purchaseId);
+  const canUseManualPay = Boolean(
+    purchaseId && (ticket?.action === "book" || ENABLE_TWO_STEP_PURCHASE_FALLBACK)
+  );
 
   const step1Summary = useMemo(() => {
     if (!selectedOutboundTour) {
@@ -982,6 +1035,7 @@ export default function SearchResults({
         publicOfferUrl={publicOfferUrl}
         handleAction={handleAction}
         handlePay={handlePay}
+        canPay={canUseManualPay}
         handleTicketDownloadClick={handleTicketDownloadClick}
         handlePromptClose={handlePromptClose}
         showDownloadPrompt={showDownloadPrompt}
@@ -1006,7 +1060,7 @@ export default function SearchResults({
         />
 
         <div className="flex flex-wrap gap-3">
-          {purchaseId && (
+          {canUseManualPay && (
             <button
               type="button"
               onClick={handlePay}

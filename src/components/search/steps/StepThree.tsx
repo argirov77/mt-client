@@ -27,6 +27,7 @@ export type StepThreeProps = {
   publicOfferUrl: string;
   handleAction: (action: "book" | "purchase") => Promise<void> | void;
   handlePay: () => Promise<void> | void;
+  canPay: boolean;
   handleTicketDownloadClick: (ticketNumberOverride?: string) => void;
   handlePromptClose: () => void;
   showDownloadPrompt: boolean;
@@ -54,6 +55,7 @@ export default function StepThree({
   publicOfferUrl,
   handleAction,
   handlePay,
+  canPay,
   handleTicketDownloadClick,
   handlePromptClose,
   showDownloadPrompt,
@@ -83,6 +85,7 @@ export default function StepThree({
           publicOfferUrl={publicOfferUrl}
           handleAction={handleAction}
           handlePay={handlePay}
+          canPay={canPay}
           onDownloadTicket={handleTicketDownloadClick}
         />
         <TicketDownloadPrompt
