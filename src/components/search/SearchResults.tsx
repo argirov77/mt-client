@@ -21,6 +21,10 @@ import { downloadTicketPdf } from "@/utils/ticketPdf";
 import { getPublicOfferUrl } from "@/utils/publicOffer";
 import { buildPublicPurchasePayEndpoint } from "@/utils/publicPurchasePayEndpoint";
 import {
+  isValidPassengerEmail,
+  normalizePassengerContact,
+} from "@/utils/passengerContact";
+import {
   normalizePublicPayResponse,
   persistLastLiqPayOrderId,
   type PublicPayResponse,
@@ -300,13 +304,26 @@ export default function SearchResults({
         setMsgType("error");
         return;
       }
-      if (passengerNames.some((n) => !n)) {
+      const normalizedContact = normalizePassengerContact({
+        email,
+        phone,
+        passengerNames,
+      });
+
+      if (normalizedContact.passengerNames.some((name) => !name)) {
         setMsg("Заполните имена пассажиров");
         setMsgType("error");
         return;
       }
-      if (!phone || !email) {
+
+      if (!normalizedContact.phone || !normalizedContact.email) {
         setMsg("Заполните контактные данные");
+        setMsgType("error");
+        return;
+      }
+
+      if (!isValidPassengerEmail(normalizedContact.email)) {
+        setMsg("Введите корректный email в формате name@example.com");
         setMsgType("error");
         return;
       }
@@ -324,9 +341,9 @@ export default function SearchResults({
             : "public/purchase"
           : "book";
       const basePayload = {
-        passenger_names: passengerNames,
-        passenger_phone: phone,
-        passenger_email: email,
+        passenger_names: normalizedContact.passengerNames,
+        passenger_phone: normalizedContact.phone,
+        passenger_email: normalizedContact.email,
         adult_count: safeSeatCount - safeDiscountCount,
         discount_count: safeDiscountCount,
         ...(lang ? { lang } : {}),
@@ -426,8 +443,8 @@ export default function SearchResults({
         createdAt: new Date().toISOString(),
         status: "pending",
         contact: {
-          phone,
-          email,
+          phone: normalizedContact.phone,
+          email: normalizedContact.email,
         },
         outbound: {
           fromName,
@@ -449,7 +466,7 @@ export default function SearchResults({
               extraBaggage: [...extraBaggageReturn],
             }
           : null,
-        passengers: passengerNames.map((name, idx) => ({
+        passengers: normalizedContact.passengerNames.map((name, idx) => ({
           name,
           seatOutbound: selectedOutboundSeats[idx] ?? null,
           seatReturn: selectedReturnTour
