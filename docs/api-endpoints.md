@@ -32,6 +32,32 @@
 - `POST /public/purchase/{purchaseId}/reschedule/quote` — рассчитывает доплату или возврат при переносе билетов.【F:src/components/purchase/PurchaseClient.tsx†L1597-L1642】
 - `POST /public/purchase/{purchaseId}/reschedule` — подтверждает перенос выбранных билетов на новый рейс и возвращает обновлённый статус оплаты.【F:src/components/purchase/PurchaseClient.tsx†L1650-L1699】
 
+## Flow для deep-link / QR (`opaque`)
+
+Для ссылок из билета/QR операции чтения и изменения покупки завязаны на session cookie, которую backend создаёт на шаге `GET /api/q/{opaque}`.
+
+- `GET /api/public/purchase/{id}` — это чтение покупки, но **не** «публичный REST без контекста»: endpoint ожидает purchase-session cookie.
+  Для этого GET достаточно cookies (`credentials: "include"`), `X-CSRF` не требуется.
+- `POST /api/public/purchase/{id}/pay` — mutation-запрос: нужны и purchase-session cookie, и заголовок `X-CSRF`, и `credentials: "include"`.
+- Endpoint `/api/public/purchase` (без `{id}`) в backend-flow не используется; рабочий маршрут — только `/api/public/purchase/{purchaseId}` и его подмаршруты.
+
+Минимальный правильный порядок действий на фронте:
+
+1. Получить `opaque` из deep-link payload.
+2. Открыть `GET /api/q/{opaque}` в браузере.
+3. Убедиться, что браузер сохранил cookie `minicab_purchase_{id}` и `mc_csrf`.
+4. При необходимости загрузить покупку через `GET /api/public/purchase/{id}` с `credentials: "include"`.
+5. Для оплаты вызвать `POST /api/public/purchase/{id}/pay` с `credentials: "include"` и `X-CSRF: <mc_csrf>`.
+
+Почему бывает `401` на `/pay`: backend не находит purchase-session cookie (шаг `/api/q/{opaque}` не выполнен или cookies не доезжают из-за домена, `SameSite`, `Secure`, CORS/proxy).
+
+Чек-лист в браузере:
+
+- На `GET /api/q/{opaque}` пришёл `Set-Cookie`.
+- Cookies сохранены в правильном домене/протоколе.
+- На `GET /api/public/purchase/{id}` уходят cookies (`credentials: "include"`).
+- На `POST /api/public/purchase/{id}/pay` уходят cookies + `X-CSRF`.
+
 ## Примечания
 
 - Все пути строятся на базе константы `API`, определённой в конфигурации клиента.【F:src/config.ts†L1-L15】

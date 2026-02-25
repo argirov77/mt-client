@@ -22,7 +22,7 @@ import type {
   PurchaseTotals,
 } from "@/types/purchase";
 import { fetchWithInclude } from "@/utils/fetchWithInclude";
-import { buildPublicPurchasePayEndpoint } from "@/utils/publicPurchasePayEndpoint";
+import { buildPublicPurchaseEndpoint, buildPublicPurchasePayEndpoint } from "@/utils/publicPurchasePayEndpoint";
 import {
   normalizePublicPayResponse,
   persistLastLiqPayOrderId,
@@ -1029,7 +1029,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
     setIsUnauthorized(false);
 
     try {
-      const response = await fetchWithInclude(`${API}/purchase/${purchaseId}`);
+      const response = await fetchWithInclude(buildPublicPurchaseEndpoint(purchaseId));
 
       if ([401, 403, 404].includes(response.status)) {
         setIsUnauthorized(true);
