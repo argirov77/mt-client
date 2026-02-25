@@ -66,6 +66,7 @@ type Props = {
   publicOfferUrl: string;
   handleAction: (action: "book" | "purchase") => void;
   handlePay: () => void;
+  canPay: boolean;
   onDownloadTicket?: (ticketNumber: string) => void;
 };
 
@@ -89,6 +90,7 @@ export default function ContactsAndPaymentStep({
   publicOfferUrl,
   handleAction,
   handlePay,
+  canPay,
   onDownloadTicket,
 }: Props) {
   const badgeTone = "inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold";
@@ -324,7 +326,7 @@ export default function ContactsAndPaymentStep({
         >
           {t.buy}
         </button>
-        {purchaseId && (
+        {purchaseId && canPay && (
           <button
             type="button"
             onClick={handlePay}
