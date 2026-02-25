@@ -79,4 +79,5 @@ export const persistLastLiqPayOrderId = (orderId: string | null) => {
   }
 
   sessionStorage.setItem(LIQPAY_LAST_ORDER_ID_KEY, orderId);
+  localStorage.setItem(LIQPAY_LAST_ORDER_ID_KEY, orderId);
 };
