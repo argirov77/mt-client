@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import { API } from "@/config";
 import { fetchWithInclude } from "@/utils/fetchWithInclude";
-import { LIQPAY_LAST_ORDER_ID_KEY } from "@/utils/liqpayCheckout";
+import { LIQPAY_LAST_ORDER_ID_KEY, LIQPAY_LAST_PURCHASE_ID_KEY } from "@/utils/liqpayCheckout";
 
 type ResolvePayload = {
   paid?: boolean;
@@ -17,8 +17,6 @@ type ResolvePayload = {
     id?: string | number | null;
   } | null;
 };
-
-const RETURN_LAST_PURCHASE_ID_KEY = "liqpay_last_purchase_id";
 
 const clampNumber = (value: number, min: number, max: number) => {
   if (Number.isNaN(value)) {
@@ -105,16 +103,16 @@ function ReturnPageContent() {
     if (fromQuery) {
       setLastPurchaseId(fromQuery);
       if (typeof window !== "undefined") {
-        sessionStorage.setItem(RETURN_LAST_PURCHASE_ID_KEY, fromQuery);
-        localStorage.setItem(RETURN_LAST_PURCHASE_ID_KEY, fromQuery);
+        sessionStorage.setItem(LIQPAY_LAST_PURCHASE_ID_KEY, fromQuery);
+        localStorage.setItem(LIQPAY_LAST_PURCHASE_ID_KEY, fromQuery);
       }
       return;
     }
 
     if (typeof window !== "undefined") {
       const fallbackPurchaseId = (
-        sessionStorage.getItem(RETURN_LAST_PURCHASE_ID_KEY) ??
-        localStorage.getItem(RETURN_LAST_PURCHASE_ID_KEY) ??
+        sessionStorage.getItem(LIQPAY_LAST_PURCHASE_ID_KEY) ??
+        localStorage.getItem(LIQPAY_LAST_PURCHASE_ID_KEY) ??
         ""
       ).trim();
 
@@ -141,6 +139,11 @@ function ReturnPageContent() {
     setIsFailed(false);
 
     if (!orderId) {
+      if (lastPurchaseIdRef.current) {
+        router.replace(`/purchase/${encodeURIComponent(lastPurchaseIdRef.current)}`);
+        return;
+      }
+
       setMessage("order_id not found");
       return;
     }
@@ -173,8 +176,8 @@ function ReturnPageContent() {
           if (purchaseId) {
             setLastPurchaseId(purchaseId);
             if (typeof window !== "undefined") {
-              sessionStorage.setItem(RETURN_LAST_PURCHASE_ID_KEY, purchaseId);
-              localStorage.setItem(RETURN_LAST_PURCHASE_ID_KEY, purchaseId);
+              sessionStorage.setItem(LIQPAY_LAST_PURCHASE_ID_KEY, purchaseId);
+              localStorage.setItem(LIQPAY_LAST_PURCHASE_ID_KEY, purchaseId);
             }
           }
 

@@ -27,6 +27,7 @@ import {
 import {
   normalizePublicPayResponse,
   persistLastLiqPayOrderId,
+  persistLastLiqPayPurchaseId,
   type PublicPayResponse,
 } from "@/utils/liqpayCheckout";
 import type { ElectronicTicketData } from "@/types/ticket";
@@ -430,6 +431,9 @@ export default function SearchResults({
       }
 
       setPurchaseId(pId);
+      if (action === "purchase") {
+        persistLastLiqPayPurchaseId(String(pId));
+      }
       const resolvedTicketNumbers = Array.from(
         new Set(ticketNumbers.length ? ticketNumbers : [String(pId)])
       );
@@ -505,15 +509,15 @@ export default function SearchResults({
           throw new Error("missing checkout payload in purchase response");
         }
 
-        const checkoutOrderId = finalPurchaseResponse.checkout?.order_id;
-        persistLastLiqPayOrderId(
-          checkoutOrderId === undefined || checkoutOrderId === null || checkoutOrderId === ""
-            ? null
-            : String(checkoutOrderId)
-        );
+        const checkoutPayload = normalizePublicPayResponse(finalPurchaseResponse);
+        persistLastLiqPayOrderId(checkoutPayload.orderId);
         setMsg("Перенаправляем на страницу оплаты…");
         setMsgType("info");
-        submitLiqPayCheckout(LIQPAY_CHECKOUT_FORM_URL, checkoutData, checkoutSignature);
+        submitLiqPayCheckout(
+          checkoutPayload.checkoutFormUrl || LIQPAY_CHECKOUT_FORM_URL,
+          checkoutPayload.data,
+          checkoutPayload.signature
+        );
       }
 
       // сброс выбора мест и пассажиров
@@ -542,6 +546,7 @@ export default function SearchResults({
       return;
     }
     try {
+      persistLastLiqPayPurchaseId(String(purchaseId));
       setLoading(true);
       setMsg("Оплата…");
       setMsgType("info");

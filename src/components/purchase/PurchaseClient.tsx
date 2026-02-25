@@ -26,6 +26,7 @@ import { buildPublicPurchaseEndpoint, buildPublicPurchasePayEndpoint } from "@/u
 import {
   normalizePublicPayResponse,
   persistLastLiqPayOrderId,
+  persistLastLiqPayPurchaseId,
   type LiqPayCheckoutPayload,
   type PublicPayResponse,
 } from "@/utils/liqpayCheckout";
@@ -1759,6 +1760,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
 
       const payload = (await response.json()) as PublicPayResponse;
       const checkoutPayload = normalizePublicPayResponse(payload);
+      persistLastLiqPayPurchaseId(purchaseId);
       persistLastLiqPayOrderId(checkoutPayload.orderId);
       submitPaymentForm(checkoutPayload);
       setBanner({ type: "info", message: "Перенаправляем на оплату…" });

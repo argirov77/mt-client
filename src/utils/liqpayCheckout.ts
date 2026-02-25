@@ -26,6 +26,7 @@ export type LiqPayCheckoutPayload = {
 };
 
 export const LIQPAY_LAST_ORDER_ID_KEY = "liqpay_last_order_id";
+export const LIQPAY_LAST_PURCHASE_ID_KEY = "liqpay_last_purchase_id";
 export const LIQPAY_CHECKOUT_ENDPOINT = "https://www.liqpay.ua/api/3/checkout";
 
 export const normalizePublicPayResponse = (
@@ -79,4 +80,14 @@ export const persistLastLiqPayOrderId = (orderId: string | null) => {
   }
 
   sessionStorage.setItem(LIQPAY_LAST_ORDER_ID_KEY, orderId);
+  localStorage.setItem(LIQPAY_LAST_ORDER_ID_KEY, orderId);
+};
+
+export const persistLastLiqPayPurchaseId = (purchaseId: string | null) => {
+  if (typeof window === "undefined" || !purchaseId) {
+    return;
+  }
+
+  sessionStorage.setItem(LIQPAY_LAST_PURCHASE_ID_KEY, purchaseId);
+  localStorage.setItem(LIQPAY_LAST_PURCHASE_ID_KEY, purchaseId);
 };
