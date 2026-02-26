@@ -11,10 +11,13 @@ import { LIQPAY_LAST_ORDER_ID_KEY } from "@/utils/liqpayCheckout";
 type ResolvePayload = {
   paid?: boolean;
   status?: string;
+  opaque?: string | null;
+  token?: string | null;
   purchaseId?: string | number | null;
   purchase_id?: string | number | null;
   purchase?: {
     id?: string | number | null;
+    opaque?: string | null;
   } | null;
 };
 
@@ -35,6 +38,16 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const extractPurchaseId = (payload: ResolvePayload): string | null => {
   const id = payload.purchaseId ?? payload.purchase_id ?? payload.purchase?.id ?? null;
   return id === null || id === undefined || id === "" ? null : String(id);
+};
+
+const extractOpaque = (payload: ResolvePayload): string | null => {
+  const opaque = payload.opaque ?? payload.token ?? payload.purchase?.opaque ?? null;
+  if (typeof opaque !== "string") {
+    return null;
+  }
+
+  const trimmed = opaque.trim();
+  return trimmed || null;
 };
 
 const isPaidResponse = (payload: ResolvePayload) => {
@@ -128,6 +141,10 @@ function ReturnPageContent() {
     return (searchParams.get("status") ?? "").trim();
   }, [searchParams]);
 
+  const queryOpaque = useMemo(() => {
+    return (searchParams.get("opaque") ?? searchParams.get("token") ?? "").trim();
+  }, [searchParams]);
+
   useEffect(() => {
     lastPurchaseIdRef.current = lastPurchaseId;
   }, [lastPurchaseId]);
@@ -168,6 +185,7 @@ function ReturnPageContent() {
 
           const payload = (await response.json()) as ResolvePayload;
           const purchaseId = extractPurchaseId(payload);
+          const opaque = extractOpaque(payload) ?? queryOpaque;
           const status = resolveStatus(payload);
 
           if (purchaseId) {
@@ -179,15 +197,36 @@ function ReturnPageContent() {
           }
 
           if (status === "paid") {
-            if (purchaseId) {
-              const params = new URLSearchParams({
-                purchase_id: purchaseId,
-                payment: "success",
+            if (opaque) {
+              const opaqueResponse = await fetchWithInclude(`${API}/q/${encodeURIComponent(opaque)}`, {
+                method: "GET",
+                cache: "no-store",
+                signal: abortController.signal,
               });
-              router.replace(`/?${params.toString()}`);
-            } else if (lastPurchaseIdRef.current) {
+
+              if (!opaqueResponse.ok) {
+                throw new Error(`Opaque gateway failed: HTTP ${opaqueResponse.status}`);
+              }
+            }
+
+            const targetPurchaseId = purchaseId || lastPurchaseIdRef.current;
+
+            if (targetPurchaseId) {
+              const purchaseResponse = await fetchWithInclude(
+                `${API}/public/purchase/${encodeURIComponent(targetPurchaseId)}`,
+                {
+                  method: "GET",
+                  cache: "no-store",
+                  signal: abortController.signal,
+                }
+              );
+
+              if (!purchaseResponse.ok) {
+                throw new Error(`Purchase preload failed: HTTP ${purchaseResponse.status}`);
+              }
+
               const params = new URLSearchParams({
-                purchase_id: lastPurchaseIdRef.current,
+                purchase_id: targetPurchaseId,
                 payment: "success",
               });
               router.replace(`/?${params.toString()}`);
@@ -226,7 +265,7 @@ function ReturnPageContent() {
     return () => {
       abortController.abort();
     };
-  }, [manualRetryTick, orderId, router]);
+  }, [manualRetryTick, orderId, queryOpaque, router]);
 
   const handleRetryPayment = () => {
     if (lastPurchaseId) {
