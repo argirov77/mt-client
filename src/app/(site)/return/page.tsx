@@ -180,11 +180,19 @@ function ReturnPageContent() {
 
           if (status === "paid") {
             if (purchaseId) {
-              router.replace(`/purchase/${encodeURIComponent(purchaseId)}`);
+              const params = new URLSearchParams({
+                purchase_id: purchaseId,
+                payment: "success",
+              });
+              router.replace(`/?${params.toString()}`);
             } else if (lastPurchaseIdRef.current) {
-              router.replace(`/purchase/${encodeURIComponent(lastPurchaseIdRef.current)}`);
+              const params = new URLSearchParams({
+                purchase_id: lastPurchaseIdRef.current,
+                payment: "success",
+              });
+              router.replace(`/?${params.toString()}`);
             } else {
-              router.replace("/purchase/success");
+              router.replace("/?payment=success");
             }
             return;
           }
