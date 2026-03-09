@@ -841,15 +841,9 @@ type PaymentPayload = LiqPayCheckoutPayload;
 const submitPaymentForm = (payload: PaymentPayload) => {
   if (typeof window === "undefined") return;
 
-  const paymentWindow = window.open("", "payment-window");
-  if (!paymentWindow) {
-    return;
-  }
-
   const form = document.createElement("form");
   form.method = "POST";
   form.action = payload.checkoutFormUrl;
-  form.target = paymentWindow.name;
 
   const dataInput = document.createElement("input");
   dataInput.type = "hidden";
@@ -865,7 +859,6 @@ const submitPaymentForm = (payload: PaymentPayload) => {
 
   document.body.appendChild(form);
   form.submit();
-  document.body.removeChild(form);
 };
 
 export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
