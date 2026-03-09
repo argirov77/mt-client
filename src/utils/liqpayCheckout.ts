@@ -73,6 +73,12 @@ export const normalizePublicPayResponse = (
   };
 };
 
+export const clearLastLiqPayOrderId = () => {
+  if (typeof window === "undefined") return;
+  sessionStorage.removeItem(LIQPAY_LAST_ORDER_ID_KEY);
+  localStorage.removeItem(LIQPAY_LAST_ORDER_ID_KEY);
+};
+
 export const persistLastLiqPayOrderId = (orderId: string | null) => {
   if (typeof window === "undefined" || !orderId) {
     return;

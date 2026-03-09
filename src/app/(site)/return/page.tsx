@@ -7,7 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { API } from "@/config";
 import { fetchWithInclude } from "@/utils/fetchWithInclude";
 import { downloadTicketPdf } from "@/utils/ticketPdf";
-import { LIQPAY_LAST_ORDER_ID_KEY } from "@/utils/liqpayCheckout";
+import { LIQPAY_LAST_ORDER_ID_KEY, clearLastLiqPayOrderId } from "@/utils/liqpayCheckout";
 import type { PurchaseView, PurchaseTicket } from "@/types/purchase";
 
 // ========== Types ==========
@@ -28,6 +28,7 @@ type ResolvePayload = {
 type PageState =
   | { kind: "checking"; attempt: number; message: string }
   | { kind: "paid"; purchaseView: PurchaseView; purchaseId: string }
+  | { kind: "paid_no_details" }
   | { kind: "pending_timeout" }
   | { kind: "failed"; message: string };
 
@@ -96,6 +97,7 @@ const resolveStatus = (
     return "pending";
   }
 
+  console.warn("[return] resolveStatus: unexpected status value:", JSON.stringify(payload.status));
   return "unknown";
 };
 
@@ -403,7 +405,19 @@ function ReturnPageContent() {
           );
 
           if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
+            if (response.status >= 400 && response.status < 500) {
+              // 4xx — client error, no point retrying
+              if (isCurrentRun()) {
+                setPageState({
+                  kind: "failed",
+                  message: `Ошибка запроса (HTTP ${response.status}). Попробуйте позже или обратитесь в поддержку.`,
+                });
+              }
+              return;
+            }
+            // 5xx — server error, continue polling
+            console.warn(`[return] resolve HTTP ${response.status}, retrying…`);
+            continue;
           }
 
           const payload = (await response.json()) as ResolvePayload;
@@ -416,6 +430,8 @@ function ReturnPageContent() {
           }
 
           if (status === "paid") {
+            clearLastLiqPayOrderId();
+
             // Restore session via opaque token if available (non-fatal)
             if (opaque) {
               try {
@@ -461,9 +477,9 @@ function ReturnPageContent() {
                 purchaseId: targetPurchaseId,
               });
             } else {
-              // Paid but no purchase ID — show timeout state
+              // Paid but no purchase ID — show success without ticket details
               if (isCurrentRun()) {
-                setPageState({ kind: "pending_timeout" });
+                setPageState({ kind: "paid_no_details" });
               }
             }
             return;
@@ -516,6 +532,43 @@ function ReturnPageContent() {
         purchaseView={pageState.purchaseView}
         purchaseId={pageState.purchaseId}
       />
+    );
+  }
+
+  // ── Paid but no purchase details available ──────────────────────────────
+  if (pageState.kind === "paid_no_details") {
+    return (
+      <main className="mx-auto flex min-h-[70vh] w-full max-w-xl flex-col items-center justify-center gap-5 p-6 text-center">
+        <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 mx-auto">
+          <svg
+            viewBox="0 0 24 24"
+            className="h-8 w-8"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+        </div>
+        <h1 className="text-2xl font-semibold text-slate-900">
+          Оплата прошла успешно!
+        </h1>
+        <p className="text-slate-600 max-w-sm">
+          Билеты будут отправлены на ваш email. Если вы не получите их в течение
+          нескольких минут, проверьте папку «Спам» или обратитесь в поддержку.
+        </p>
+        <button
+          type="button"
+          className="rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white hover:bg-slate-700 transition"
+          onClick={() => router.push("/")}
+        >
+          На главную
+        </button>
+      </main>
     );
   }
 
