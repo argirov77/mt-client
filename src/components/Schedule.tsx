@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import axios from 'axios';
-import { API } from '@/config';
+import apiClient from '@/lib/apiClient';
 import { scheduleTranslations } from '@/translations/home';
 import {
   sectionBgMuted,
@@ -33,7 +32,7 @@ export default function PriceListCompact({ lang = 'ru' }: { lang?: Lang }) {
     (async () => {
       try {
         setLoading(true);
-        const { data } = await axios.post(`${API}/selected_pricelist`, { lang });
+        const { data } = await apiClient.post('/selected_pricelist', { lang });
         if (!cancelled) setList(data?.prices || []);
       } catch {
         if (!cancelled) setErr(true);
