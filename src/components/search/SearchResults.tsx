@@ -1,11 +1,9 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import axios from "axios";
-
 import Loader from "../common/Loader";
 import Alert from "../common/Alert";
-import { API } from "@/config";
+import apiClient from "@/lib/apiClient";
 
 import TripList from "./TripList";
 import ElectronicTicket from "./ElectronicTicket";
@@ -19,7 +17,6 @@ import StepThree from "./steps/StepThree";
 
 import { downloadTicketPdf } from "@/utils/ticketPdf";
 import { getPublicOfferUrl } from "@/utils/publicOffer";
-import { buildPublicPurchasePayEndpoint } from "@/utils/publicPurchasePayEndpoint";
 import {
   isValidPassengerEmail,
   normalizePassengerContact,
@@ -52,11 +49,6 @@ type StepNavigationItem = {
   state: "active" | "done" | "future";
 };
 
-
-const getCookie = (name: string): string | null => {
-  const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
-  return match ? decodeURIComponent(match[1]) : null;
-};
 
 const submitLiqPayCheckout = (checkoutFormUrl: string, data: string, signature: string) => {
   const form = document.createElement("form");
@@ -200,7 +192,7 @@ export default function SearchResults({
       setPurchaseId(null);
 
       try {
-        const outReq = axios.get<SearchTour[]>(`${API}/tours/search`, {
+        const outReq = apiClient.get<SearchTour[]>("/tours/search", {
           params: {
             departure_stop_id: fromId,
             arrival_stop_id: toId,
@@ -210,7 +202,7 @@ export default function SearchResults({
         });
 
         const retReq = returnDate
-          ? axios.get<SearchTour[]>(`${API}/tours/search`, {
+          ? apiClient.get<SearchTour[]>("/tours/search", {
               params: {
                 departure_stop_id: toId,
                 arrival_stop_id: fromId,
@@ -398,7 +390,7 @@ export default function SearchResults({
       };
 
       // туда
-      const outRes = await axios.post<PublicPurchaseResponse>(`${API}/${endpoint}`, {
+      const outRes = await apiClient.post<PublicPurchaseResponse>(`/${endpoint}`, {
         ...basePayload,
         seat_nums: selectedOutboundSeats,
         extra_baggage: extraBaggageOutbound.slice(0, safeSeatCount),
@@ -414,7 +406,7 @@ export default function SearchResults({
 
       // обратно
       if (selectedReturnTour) {
-        const retRes = await axios.post<PublicPurchaseResponse>(`${API}/${endpoint}`, {
+        const retRes = await apiClient.post<PublicPurchaseResponse>(`/${endpoint}`, {
           ...basePayload,
           seat_nums: selectedReturnSeats,
           extra_baggage: extraBaggageReturn.slice(0, safeSeatCount),
@@ -545,19 +537,8 @@ export default function SearchResults({
       setLoading(true);
       setMsg("Оплата…");
       setMsgType("info");
-      const csrf = getCookie("mc_csrf");
-
-      const response = await axios.post<PublicPayResponse>(
-        buildPublicPurchasePayEndpoint(purchaseId),
-        undefined,
-        {
-          withCredentials: true,
-          headers: csrf
-            ? {
-                "X-CSRF": csrf,
-              }
-            : undefined,
-        }
+      const response = await apiClient.post<PublicPayResponse>(
+        `/public/purchase/${encodeURIComponent(String(purchaseId))}/pay`,
       );
 
       const checkoutPayload = normalizePublicPayResponse(response.data);
@@ -588,7 +569,7 @@ export default function SearchResults({
       setLoading(true);
       setMsg("Отмена…");
       setMsgType("info");
-      await axios.post(`${API}/cancel/${purchaseId}`);
+      await apiClient.post(`/cancel/${purchaseId}`);
       setMsg(t.canceled);
       setMsgType("success");
       setPurchaseId(null);

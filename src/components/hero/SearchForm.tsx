@@ -2,12 +2,10 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import axios from 'axios';
-
 import Calendar from '../Calendar';
 import DateInput from './DateInput';
 import PassengersInput from './PassengersInput';
-import { API } from '@/config';
+import apiClient from '@/lib/apiClient';
 import { useLockBodyScroll } from '@/utils/useLockBodyScroll';
 import { useModalVisibility } from '@/utils/useModalVisibility';
 
@@ -119,8 +117,8 @@ export default function SearchForm({
 
   useEffect(() => {
     let cancelled = false;
-    axios
-      .post<Stop[]>(`${API}/search/departures`, { seats: seatCount, lang })
+    apiClient
+      .post<Stop[]>('/search/departures', { seats: seatCount, lang })
       .then((res) => !cancelled && setDepartureStops(res.data || []))
       .catch(() => !cancelled && setDepartureStops([]));
     return () => {
@@ -139,8 +137,8 @@ export default function SearchForm({
       setReturnDate('');
       return;
     }
-    axios
-      .post<Stop[]>(`${API}/search/arrivals`, {
+    apiClient
+      .post<Stop[]>('/search/arrivals', {
         departure_stop_id: fromId,
         seats: seatCount,
         lang,
@@ -161,8 +159,8 @@ export default function SearchForm({
       setReturnDate('');
       return;
     }
-    axios
-      .get<string[]>(`${API}/search/dates`, {
+    apiClient
+      .get<string[]>('/search/dates', {
         params: {
           departure_stop_id: fromId,
           arrival_stop_id: toId,
@@ -171,8 +169,8 @@ export default function SearchForm({
       })
       .then((res) => !cancelled && setDepartActive(res.data || []))
       .catch(() => !cancelled && setDepartActive([]));
-    axios
-      .get<string[]>(`${API}/search/dates`, {
+    apiClient
+      .get<string[]>('/search/dates', {
         params: {
           departure_stop_id: toId,
           arrival_stop_id: fromId,
