@@ -128,14 +128,15 @@ function TicketCard({
   const departure = ticket.segment_details?.departure ?? null;
   const arrival = ticket.segment_details?.arrival ?? null;
 
-  const fromSegment = ticket.segments.find((s) => s.is_departure);
-  const toSegment = ticket.segments.find((s) => s.is_arrival);
+  const segments = Array.isArray(ticket.segments) ? ticket.segments : [];
+  const fromSegment = segments.find((s) => s.is_departure);
+  const toSegment = segments.find((s) => s.is_arrival);
 
   const fromName = departure?.name ?? fromSegment?.stop_name ?? "—";
   const toName = arrival?.name ?? toSegment?.stop_name ?? "—";
   const routeName =
-    ticket.tour.route_name ?? ticket.route?.name ?? `${fromName} → ${toName}`;
-  const date = ticket.tour.date ? formatDate(ticket.tour.date) : "—";
+    ticket.tour?.route_name ?? ticket.route?.name ?? `${fromName} → ${toName}`;
+  const date = ticket.tour?.date ? formatDate(ticket.tour.date) : "—";
   const seatNum = ticket.seat_num;
 
   const handleDownload = async () => {
@@ -252,7 +253,9 @@ function PaidView({
   purchaseView: PurchaseView;
   purchaseId: string;
 }) {
-  const { tickets, passengers, customer } = purchaseView;
+  const tickets = Array.isArray(purchaseView.tickets) ? purchaseView.tickets : [];
+  const passengers = Array.isArray(purchaseView.passengers) ? purchaseView.passengers : [];
+  const customer = purchaseView.customer ?? null;
 
   const passengerEmailById = useMemo(() => {
     const map = new Map<string, string>();
@@ -467,16 +470,27 @@ function ReturnPageContent() {
                   );
                 }
 
-                const purchaseView =
-                  (await purchaseResponse.json()) as PurchaseView;
+                const purchaseData = await purchaseResponse.json();
 
                 if (!isCurrentRun()) return;
 
-                setPageState({
-                  kind: "paid",
-                  purchaseView,
-                  purchaseId: targetPurchaseId,
-                });
+                // Validate that the response has the expected shape
+                const purchaseView = purchaseData as PurchaseView;
+                if (
+                  purchaseView &&
+                  typeof purchaseView === "object" &&
+                  Array.isArray(purchaseView.tickets) &&
+                  purchaseView.tickets.length > 0
+                ) {
+                  setPageState({
+                    kind: "paid",
+                    purchaseView,
+                    purchaseId: targetPurchaseId,
+                  });
+                } else {
+                  console.warn("[return] purchase response has unexpected shape:", purchaseData);
+                  setPageState({ kind: "paid_no_details" });
+                }
               } catch (purchaseError) {
                 if (abortController.signal.aborted) return;
                 console.warn("[return] paid but could not fetch purchase details:", purchaseError);
