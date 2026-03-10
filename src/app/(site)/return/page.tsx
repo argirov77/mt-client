@@ -451,31 +451,39 @@ function ReturnPageContent() {
             const targetPurchaseId = resolvedPurchaseId;
 
             if (targetPurchaseId) {
-              const purchaseResponse = await fetchWithInclude(
-                `${API}/public/purchase/${encodeURIComponent(targetPurchaseId)}`,
-                {
-                  method: "GET",
-                  cache: "no-store",
-                  signal: abortController.signal,
-                }
-              );
-
-              if (!purchaseResponse.ok) {
-                throw new Error(
-                  `Purchase fetch failed: HTTP ${purchaseResponse.status}`
+              try {
+                const purchaseResponse = await fetchWithInclude(
+                  `${API}/public/purchase/${encodeURIComponent(targetPurchaseId)}`,
+                  {
+                    method: "GET",
+                    cache: "no-store",
+                    signal: abortController.signal,
+                  }
                 );
+
+                if (!purchaseResponse.ok) {
+                  throw new Error(
+                    `Purchase fetch failed: HTTP ${purchaseResponse.status}`
+                  );
+                }
+
+                const purchaseView =
+                  (await purchaseResponse.json()) as PurchaseView;
+
+                if (!isCurrentRun()) return;
+
+                setPageState({
+                  kind: "paid",
+                  purchaseView,
+                  purchaseId: targetPurchaseId,
+                });
+              } catch (purchaseError) {
+                if (abortController.signal.aborted) return;
+                console.warn("[return] paid but could not fetch purchase details:", purchaseError);
+                if (isCurrentRun()) {
+                  setPageState({ kind: "paid_no_details" });
+                }
               }
-
-              const purchaseView =
-                (await purchaseResponse.json()) as PurchaseView;
-
-              if (!isCurrentRun()) return;
-
-              setPageState({
-                kind: "paid",
-                purchaseView,
-                purchaseId: targetPurchaseId,
-              });
             } else {
               // Paid but no purchase ID — show success without ticket details
               if (isCurrentRun()) {
