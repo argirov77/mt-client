@@ -111,64 +111,78 @@ const formatDate = (dateStr: string): string => {
   });
 };
 
-// ========== Ticket card ==========
+// ========== Helpers for ticket grouping ==========
 
-function TicketCard({
-  ticket,
-  purchaseId,
-  email,
-}: {
+type TicketWithPassenger = {
   ticket: PurchaseTicket;
-  purchaseId: string;
+  passengerName: string;
   email: string;
-}) {
-  const [isDownloading, setIsDownloading] = useState(false);
-  const [downloadError, setDownloadError] = useState<string | null>(null);
+};
 
+type TicketGroup = {
+  direction: "outbound" | "return";
+  label: string;
+  routeName: string;
+  date: string;
+  from: string;
+  to: string;
+  departureTime?: string;
+  arrivalTime?: string;
+  items: TicketWithPassenger[];
+};
+
+function getTicketDetails(ticket: PurchaseTicket) {
   const departure = ticket.segment_details?.departure ?? null;
   const arrival = ticket.segment_details?.arrival ?? null;
-
   const segments = Array.isArray(ticket.segments) ? ticket.segments : [];
   const fromSegment = segments.find((s) => s.is_departure);
   const toSegment = segments.find((s) => s.is_arrival);
-
   const fromName = departure?.name ?? fromSegment?.stop_name ?? "—";
   const toName = arrival?.name ?? toSegment?.stop_name ?? "—";
   const routeName =
-    ticket.tour?.route_name ?? ticket.route?.name ?? `${fromName} → ${toName}`;
+    ticket.tour?.route_name ?? ticket.route?.name ?? `${fromName} - ${toName}`;
   const date = ticket.tour?.date ? formatDate(ticket.tour.date) : "—";
-  const seatNum = ticket.seat_num;
+  return { fromName, toName, routeName, date, departureTime: departure?.time, arrivalTime: arrival?.time };
+}
 
-  const handleDownload = async () => {
-    setIsDownloading(true);
-    setDownloadError(null);
-    try {
-      await downloadTicketPdf({ ticketId: ticket.id, purchaseId, email });
-    } catch {
-      setDownloadError("Не удалось скачать билет. Попробуйте позже.");
-    } finally {
-      setIsDownloading(false);
-    }
-  };
+// ========== Ticket group card ==========
 
-  const canDownload = Boolean(email) && !isDownloading;
-
+function TicketGroupCard({ group }: { group: TicketGroup }) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+      <div className="flex items-center gap-2 mb-1">
+        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+          group.direction === "outbound"
+            ? "bg-sky-50 text-sky-700 border border-sky-100"
+            : "bg-violet-50 text-violet-700 border border-violet-100"
+        }`}>
+          {group.direction === "outbound" ? (
+            <svg aria-hidden viewBox="0 0 16 16" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 8h10m0 0L9 4m4 4L9 12" />
+            </svg>
+          ) : (
+            <svg aria-hidden viewBox="0 0 16 16" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 8H3m0 0l4-4M3 8l4 4" />
+            </svg>
+          )}
+          {group.label}
+        </span>
+      </div>
+
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="space-y-1 min-w-0">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
             Маршрут
           </p>
           <p className="text-base font-semibold text-slate-900 truncate">
-            {routeName}
+            {group.routeName}
           </p>
         </div>
         <div className="text-right shrink-0 space-y-1">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
             Дата
           </p>
-          <p className="text-sm font-medium text-slate-700">{date}</p>
+          <p className="text-sm font-medium text-slate-700">{group.date}</p>
         </div>
       </div>
 
@@ -177,68 +191,45 @@ function TicketCard({
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
             Откуда
           </p>
-          <p className="text-sm font-semibold text-slate-900">{fromName}</p>
-          {departure?.time && (
-            <p className="text-xs text-slate-500">{departure.time}</p>
+          <p className="text-sm font-semibold text-slate-900">{group.from}</p>
+          {group.departureTime && (
+            <p className="text-xs text-slate-500">{group.departureTime}</p>
           )}
         </div>
         <div className="rounded-xl bg-slate-50 p-3 space-y-1">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
             Куда
           </p>
-          <p className="text-sm font-semibold text-slate-900">{toName}</p>
-          {arrival?.time && (
-            <p className="text-xs text-slate-500">{arrival.time}</p>
+          <p className="text-sm font-semibold text-slate-900">{group.to}</p>
+          {group.arrivalTime && (
+            <p className="text-xs text-slate-500">{group.arrivalTime}</p>
           )}
         </div>
       </div>
 
-      {seatNum !== null && seatNum !== undefined && (
-        <div className="inline-flex items-center gap-2 rounded-full bg-sky-50 border border-sky-100 px-3 py-1 text-sm font-semibold text-sky-700">
-          Место №{seatNum}
-        </div>
-      )}
-
-      <div className="flex flex-col gap-2">
-        <button
-          type="button"
-          onClick={handleDownload}
-          disabled={!canDownload}
-          className="inline-flex items-center gap-2 self-start rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed transition"
-        >
-          {isDownloading ? (
-            <>
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-              Загрузка…
-            </>
-          ) : (
-            <>
-              <svg
-                aria-hidden
-                viewBox="0 0 20 20"
-                className="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M10 3v9m0 0l-3-3m3 3l3-3M4 15h12"
-                />
+      <div className="space-y-2">
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+          Пассажиры
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {group.items.map(({ ticket, passengerName }) => (
+            <div
+              key={String(ticket.id)}
+              className="inline-flex items-center gap-2 rounded-lg bg-slate-50 border border-slate-100 px-3 py-1.5"
+            >
+              <svg aria-hidden viewBox="0 0 16 16" className="h-3.5 w-3.5 text-slate-400" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <circle cx="8" cy="5" r="3" />
+                <path strokeLinecap="round" d="M2 14c0-2.5 2.7-4.5 6-4.5s6 2 6 4.5" />
               </svg>
-              Скачать PDF
-            </>
-          )}
-        </button>
-        {!email && (
-          <p className="text-xs text-slate-400">
-            Email не указан — скачивание недоступно
-          </p>
-        )}
-        {downloadError && (
-          <p className="text-sm text-red-600">{downloadError}</p>
-        )}
+              <span className="text-sm text-slate-700">{passengerName}</span>
+              {ticket.seat_num !== null && ticket.seat_num !== undefined && (
+                <span className="text-xs font-semibold text-sky-600 bg-sky-50 rounded-full px-1.5 py-0.5">
+                  место {ticket.seat_num}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -253,9 +244,22 @@ function PaidView({
   purchaseView: PurchaseView;
   purchaseId: string;
 }) {
+  const [isDownloadingAll, setIsDownloadingAll] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+
   const tickets = Array.isArray(purchaseView.tickets) ? purchaseView.tickets : [];
   const passengers = Array.isArray(purchaseView.passengers) ? purchaseView.passengers : [];
+  const trips = Array.isArray(purchaseView.trips) ? purchaseView.trips : [];
   const customer = purchaseView.customer ?? null;
+  const paxCount = purchaseView.totals?.pax_count ?? passengers.length;
+
+  const passengerNameById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const p of passengers) {
+      map.set(String(p.id), p.name);
+    }
+    return map;
+  }, [passengers]);
 
   const passengerEmailById = useMemo(() => {
     const map = new Map<string, string>();
@@ -274,6 +278,104 @@ function PaidView({
       ""
     );
   };
+
+  const getPassengerName = (ticket: PurchaseTicket): string => {
+    return passengerNameById.get(String(ticket.passenger_id)) ?? "Пассажир";
+  };
+
+  const customerName = customer?.name ?? passengers[0]?.name ?? null;
+
+  // Build ticket groups by direction
+  const ticketGroups = useMemo((): TicketGroup[] => {
+    const ticketById = new Map<string, PurchaseTicket>();
+    for (const t of tickets) {
+      ticketById.set(String(t.id), t);
+    }
+
+    const groups: TicketGroup[] = [];
+    const usedTicketIds = new Set<string>();
+
+    for (const trip of trips) {
+      const direction = trip.direction;
+      const tripTicketIds = Array.isArray(trip.tickets)
+        ? trip.tickets.map(String)
+        : [];
+      const tripTickets = tripTicketIds
+        .map((id) => ticketById.get(id))
+        .filter((t): t is PurchaseTicket => t !== undefined);
+
+      if (tripTickets.length === 0) continue;
+
+      const firstTicket = tripTickets[0];
+      const details = getTicketDetails(firstTicket);
+
+      const items: TicketWithPassenger[] = tripTickets.map((ticket) => ({
+        ticket,
+        passengerName: getPassengerName(ticket),
+        email: getEmail(ticket),
+      }));
+
+      groups.push({
+        direction,
+        label: direction === "outbound" ? "Туда" : "Обратно",
+        routeName: details.routeName,
+        date: details.date,
+        from: details.fromName,
+        to: details.toName,
+        departureTime: details.departureTime,
+        arrivalTime: details.arrivalTime,
+        items,
+      });
+
+      for (const id of tripTicketIds) {
+        usedTicketIds.add(id);
+      }
+    }
+
+    // Handle tickets not in any trip
+    const ungrouped = tickets.filter((t) => !usedTicketIds.has(String(t.id)));
+    if (ungrouped.length > 0) {
+      const firstTicket = ungrouped[0];
+      const details = getTicketDetails(firstTicket);
+      groups.push({
+        direction: "outbound",
+        label: "Туда",
+        routeName: details.routeName,
+        date: details.date,
+        from: details.fromName,
+        to: details.toName,
+        departureTime: details.departureTime,
+        arrivalTime: details.arrivalTime,
+        items: ungrouped.map((ticket) => ({
+          ticket,
+          passengerName: getPassengerName(ticket),
+          email: getEmail(ticket),
+        })),
+      });
+    }
+
+    return groups;
+  }, [tickets, trips, passengerNameById, passengerEmailById, customer]);
+
+  const hasEmail = tickets.some((t) => Boolean(getEmail(t)));
+
+  const handleDownloadAll = async () => {
+    setIsDownloadingAll(true);
+    setDownloadError(null);
+    try {
+      for (const ticket of tickets) {
+        const email = getEmail(ticket);
+        if (!email) continue;
+        await downloadTicketPdf({ ticketId: ticket.id, purchaseId, email });
+      }
+    } catch {
+      setDownloadError("Не удалось скачать некоторые билеты. Попробуйте позже.");
+    } finally {
+      setIsDownloadingAll(false);
+    }
+  };
+
+  const isRoundTrip = ticketGroups.some((g: TicketGroup) => g.direction === "return");
 
   return (
     <main className="mx-auto w-full max-w-2xl space-y-6 px-4 py-10">
@@ -296,20 +398,90 @@ function PaidView({
         <h1 className="text-2xl font-semibold text-slate-900">
           Оплата прошла успешно!
         </h1>
+        {customerName && (
+          <p className="text-lg text-slate-700">
+            {customerName}
+          </p>
+        )}
         <p className="text-slate-600">
           Ваши билеты готовы. Копия также будет отправлена вам на email.
         </p>
       </div>
 
+      {/* Summary badges */}
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        <div className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-600">
+          <svg aria-hidden viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <circle cx="8" cy="5" r="3" />
+            <path strokeLinecap="round" d="M2 14c0-2.5 2.7-4.5 6-4.5s6 2 6 4.5" />
+          </svg>
+          {paxCount} {paxCount === 1 ? "пассажир" : paxCount < 5 ? "пассажира" : "пассажиров"}
+        </div>
+        <div className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-600">
+          <svg aria-hidden viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <rect x="2" y="3" width="12" height="10" rx="1.5" />
+            <path d="M2 7h12" />
+          </svg>
+          {tickets.length} {tickets.length === 1 ? "билет" : tickets.length < 5 ? "билета" : "билетов"}
+        </div>
+        {isRoundTrip && (
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-violet-50 border border-violet-100 px-3 py-1 text-sm text-violet-600">
+            <svg aria-hidden viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path strokeLinecap="round" d="M3 5h10M13 5l-3-3M13 11H3M3 11l3 3" />
+            </svg>
+            туда и обратно
+          </div>
+        )}
+      </div>
+
+      {/* Ticket groups */}
       <div className="space-y-4">
-        {tickets.map((ticket) => (
-          <TicketCard
-            key={String(ticket.id)}
-            ticket={ticket}
-            purchaseId={purchaseId}
-            email={getEmail(ticket)}
-          />
+        {ticketGroups.map((group: TicketGroup, idx: number) => (
+          <TicketGroupCard key={`${group.direction}-${idx}`} group={group} />
         ))}
+      </div>
+
+      {/* Download all button */}
+      <div className="flex flex-col items-center gap-2">
+        <button
+          type="button"
+          onClick={handleDownloadAll}
+          disabled={!hasEmail || isDownloadingAll}
+          className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-md hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed transition"
+        >
+          {isDownloadingAll ? (
+            <>
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              Загрузка билетов…
+            </>
+          ) : (
+            <>
+              <svg
+                aria-hidden
+                viewBox="0 0 20 20"
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M10 3v9m0 0l-3-3m3 3l3-3M4 15h12"
+                />
+              </svg>
+              Скачать все билеты ({tickets.length} PDF)
+            </>
+          )}
+        </button>
+        {!hasEmail && (
+          <p className="text-xs text-slate-400">
+            Email не указан — скачивание недоступно
+          </p>
+        )}
+        {downloadError && (
+          <p className="text-sm text-red-600">{downloadError}</p>
+        )}
       </div>
     </main>
   );
