@@ -9,6 +9,9 @@ import { fetchWithInclude } from "@/utils/fetchWithInclude";
 import { downloadTicketPdf } from "@/utils/ticketPdf";
 import { LIQPAY_LAST_ORDER_ID_KEY, clearLastLiqPayOrderId } from "@/utils/liqpayCheckout";
 import type { PurchaseView, PurchaseTicket } from "@/types/purchase";
+import { useLanguage } from "@/components/common/LanguageProvider";
+import { returnTranslations, dateLocaleMap } from "@/translations/return";
+import type { Lang } from "@/components/common/LanguageProvider";
 
 // ========== Types ==========
 
@@ -26,11 +29,11 @@ type ResolvePayload = {
 };
 
 type PageState =
-  | { kind: "checking"; attempt: number; message: string }
+  | { kind: "checking"; attempt: number }
   | { kind: "paid"; purchaseView: PurchaseView; purchaseId: string }
   | { kind: "paid_no_details" }
   | { kind: "pending_timeout" }
-  | { kind: "failed"; message: string };
+  | { kind: "failed"; reason: "no_order" | "http_error" | "declined"; httpStatus?: number };
 
 // ========== Constants ==========
 
@@ -101,10 +104,10 @@ const resolveStatus = (
   return "unknown";
 };
 
-const formatDate = (dateStr: string): string => {
+const formatDate = (dateStr: string, locale: string): string => {
   const date = new Date(dateStr);
   if (Number.isNaN(date.getTime())) return dateStr;
-  return date.toLocaleDateString("ru-RU", {
+  return date.toLocaleDateString(locale, {
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -121,7 +124,6 @@ type TicketWithPassenger = {
 
 type TicketGroup = {
   direction: "outbound" | "return";
-  label: string;
   routeName: string;
   date: string;
   from: string;
@@ -131,7 +133,7 @@ type TicketGroup = {
   items: TicketWithPassenger[];
 };
 
-function getTicketDetails(ticket: PurchaseTicket) {
+function getTicketDetails(ticket: PurchaseTicket, locale: string) {
   const departure = ticket.segment_details?.departure ?? null;
   const arrival = ticket.segment_details?.arrival ?? null;
   const segments = Array.isArray(ticket.segments) ? ticket.segments : [];
@@ -141,13 +143,15 @@ function getTicketDetails(ticket: PurchaseTicket) {
   const toName = arrival?.name ?? toSegment?.stop_name ?? "—";
   const routeName =
     ticket.tour?.route_name ?? ticket.route?.name ?? `${fromName} - ${toName}`;
-  const date = ticket.tour?.date ? formatDate(ticket.tour.date) : "—";
+  const date = ticket.tour?.date ? formatDate(ticket.tour.date, locale) : "—";
   return { fromName, toName, routeName, date, departureTime: departure?.time, arrivalTime: arrival?.time };
 }
 
 // ========== Ticket group card ==========
 
-function TicketGroupCard({ group }: { group: TicketGroup }) {
+function TicketGroupCard({ group, lang }: { group: TicketGroup; lang: Lang }) {
+  const t = returnTranslations[lang];
+
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
       <div className="flex items-center gap-2 mb-1">
@@ -165,14 +169,14 @@ function TicketGroupCard({ group }: { group: TicketGroup }) {
               <path strokeLinecap="round" strokeLinejoin="round" d="M13 8H3m0 0l4-4M3 8l4 4" />
             </svg>
           )}
-          {group.label}
+          {group.direction === "outbound" ? t.outbound : t.returnDir}
         </span>
       </div>
 
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="space-y-1 min-w-0">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-            Маршрут
+            {t.route}
           </p>
           <p className="text-base font-semibold text-slate-900 truncate">
             {group.routeName}
@@ -180,7 +184,7 @@ function TicketGroupCard({ group }: { group: TicketGroup }) {
         </div>
         <div className="text-right shrink-0 space-y-1">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-            Дата
+            {t.date}
           </p>
           <p className="text-sm font-medium text-slate-700">{group.date}</p>
         </div>
@@ -189,7 +193,7 @@ function TicketGroupCard({ group }: { group: TicketGroup }) {
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-xl bg-slate-50 p-3 space-y-1">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-            Откуда
+            {t.from}
           </p>
           <p className="text-sm font-semibold text-slate-900">{group.from}</p>
           {group.departureTime && (
@@ -198,7 +202,7 @@ function TicketGroupCard({ group }: { group: TicketGroup }) {
         </div>
         <div className="rounded-xl bg-slate-50 p-3 space-y-1">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-            Куда
+            {t.to}
           </p>
           <p className="text-sm font-semibold text-slate-900">{group.to}</p>
           {group.arrivalTime && (
@@ -209,7 +213,7 @@ function TicketGroupCard({ group }: { group: TicketGroup }) {
 
       <div className="space-y-2">
         <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-          Пассажиры
+          {t.passengers}
         </p>
         <div className="flex flex-wrap gap-2">
           {group.items.map(({ ticket, passengerName }) => (
@@ -224,7 +228,7 @@ function TicketGroupCard({ group }: { group: TicketGroup }) {
               <span className="text-sm text-slate-700">{passengerName}</span>
               {ticket.seat_num !== null && ticket.seat_num !== undefined && (
                 <span className="text-xs font-semibold text-sky-600 bg-sky-50 rounded-full px-1.5 py-0.5">
-                  место {ticket.seat_num}
+                  {t.seat} {ticket.seat_num}
                 </span>
               )}
             </div>
@@ -240,10 +244,15 @@ function TicketGroupCard({ group }: { group: TicketGroup }) {
 function PaidView({
   purchaseView,
   purchaseId,
+  lang,
 }: {
   purchaseView: PurchaseView;
   purchaseId: string;
+  lang: Lang;
 }) {
+  const t = returnTranslations[lang];
+  const locale = dateLocaleMap[lang];
+
   const [isDownloadingAll, setIsDownloadingAll] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
 
@@ -280,7 +289,7 @@ function PaidView({
   };
 
   const getPassengerName = (ticket: PurchaseTicket): string => {
-    return passengerNameById.get(String(ticket.passenger_id)) ?? "Пассажир";
+    return passengerNameById.get(String(ticket.passenger_id)) ?? t.defaultPassengerName;
   };
 
   const customerName = customer?.name ?? passengers[0]?.name ?? null;
@@ -288,8 +297,8 @@ function PaidView({
   // Build ticket groups by direction
   const ticketGroups = useMemo((): TicketGroup[] => {
     const ticketById = new Map<string, PurchaseTicket>();
-    for (const t of tickets) {
-      ticketById.set(String(t.id), t);
+    for (const tk of tickets) {
+      ticketById.set(String(tk.id), tk);
     }
 
     const groups: TicketGroup[] = [];
@@ -302,12 +311,12 @@ function PaidView({
         : [];
       const tripTickets = tripTicketIds
         .map((id) => ticketById.get(id))
-        .filter((t): t is PurchaseTicket => t !== undefined);
+        .filter((tk): tk is PurchaseTicket => tk !== undefined);
 
       if (tripTickets.length === 0) continue;
 
       const firstTicket = tripTickets[0];
-      const details = getTicketDetails(firstTicket);
+      const details = getTicketDetails(firstTicket, locale);
 
       const items: TicketWithPassenger[] = tripTickets.map((ticket) => ({
         ticket,
@@ -317,7 +326,6 @@ function PaidView({
 
       groups.push({
         direction,
-        label: direction === "outbound" ? "Туда" : "Обратно",
         routeName: details.routeName,
         date: details.date,
         from: details.fromName,
@@ -333,13 +341,12 @@ function PaidView({
     }
 
     // Handle tickets not in any trip
-    const ungrouped = tickets.filter((t) => !usedTicketIds.has(String(t.id)));
+    const ungrouped = tickets.filter((tk) => !usedTicketIds.has(String(tk.id)));
     if (ungrouped.length > 0) {
       const firstTicket = ungrouped[0];
-      const details = getTicketDetails(firstTicket);
+      const details = getTicketDetails(firstTicket, locale);
       groups.push({
         direction: "outbound",
-        label: "Туда",
         routeName: details.routeName,
         date: details.date,
         from: details.fromName,
@@ -355,9 +362,9 @@ function PaidView({
     }
 
     return groups;
-  }, [tickets, trips, passengerNameById, passengerEmailById, customer]);
+  }, [tickets, trips, passengerNameById, passengerEmailById, customer, locale]);
 
-  const hasEmail = tickets.some((t) => Boolean(getEmail(t)));
+  const hasEmail = tickets.some((tk) => Boolean(getEmail(tk)));
 
   const handleDownloadAll = async () => {
     setIsDownloadingAll(true);
@@ -369,7 +376,7 @@ function PaidView({
         await downloadTicketPdf({ ticketId: ticket.id, purchaseId, email });
       }
     } catch {
-      setDownloadError("Не удалось скачать некоторые билеты. Попробуйте позже.");
+      setDownloadError(t.downloadError);
     } finally {
       setIsDownloadingAll(false);
     }
@@ -396,7 +403,7 @@ function PaidView({
           </svg>
         </div>
         <h1 className="text-2xl font-semibold text-slate-900">
-          Оплата прошла успешно!
+          {t.paymentSuccess}
         </h1>
         {customerName && (
           <p className="text-lg text-slate-700">
@@ -404,7 +411,7 @@ function PaidView({
           </p>
         )}
         <p className="text-slate-600">
-          Ваши билеты готовы. Копия также будет отправлена вам на email.
+          {t.ticketsReady}
         </p>
       </div>
 
@@ -415,21 +422,21 @@ function PaidView({
             <circle cx="8" cy="5" r="3" />
             <path strokeLinecap="round" d="M2 14c0-2.5 2.7-4.5 6-4.5s6 2 6 4.5" />
           </svg>
-          {paxCount} {paxCount === 1 ? "пассажир" : paxCount < 5 ? "пассажира" : "пассажиров"}
+          {t.passengerCount(paxCount)}
         </div>
         <div className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-600">
           <svg aria-hidden viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.5">
             <rect x="2" y="3" width="12" height="10" rx="1.5" />
             <path d="M2 7h12" />
           </svg>
-          {tickets.length} {tickets.length === 1 ? "билет" : tickets.length < 5 ? "билета" : "билетов"}
+          {t.ticketCount(tickets.length)}
         </div>
         {isRoundTrip && (
           <div className="inline-flex items-center gap-1.5 rounded-full bg-violet-50 border border-violet-100 px-3 py-1 text-sm text-violet-600">
             <svg aria-hidden viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path strokeLinecap="round" d="M3 5h10M13 5l-3-3M13 11H3M3 11l3 3" />
             </svg>
-            туда и обратно
+            {t.roundTrip}
           </div>
         )}
       </div>
@@ -437,7 +444,7 @@ function PaidView({
       {/* Ticket groups */}
       <div className="space-y-4">
         {ticketGroups.map((group: TicketGroup, idx: number) => (
-          <TicketGroupCard key={`${group.direction}-${idx}`} group={group} />
+          <TicketGroupCard key={`${group.direction}-${idx}`} group={group} lang={lang} />
         ))}
       </div>
 
@@ -452,7 +459,7 @@ function PaidView({
           {isDownloadingAll ? (
             <>
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-              Загрузка билетов…
+              {t.downloadingTickets}
             </>
           ) : (
             <>
@@ -470,13 +477,13 @@ function PaidView({
                   d="M10 3v9m0 0l-3-3m3 3l3-3M4 15h12"
                 />
               </svg>
-              Скачать все билеты ({tickets.length} PDF)
+              {t.downloadAllTickets(tickets.length)}
             </>
           )}
         </button>
         {!hasEmail && (
           <p className="text-xs text-slate-400">
-            Email не указан — скачивание недоступно
+            {t.noEmailWarning}
           </p>
         )}
         {downloadError && (
@@ -493,11 +500,12 @@ function ReturnPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const runIdRef = useRef(0);
+  const { lang } = useLanguage();
+  const t = returnTranslations[lang];
 
   const [pageState, setPageState] = useState<PageState>({
     kind: "checking",
     attempt: 0,
-    message: "Проверяем оплату…",
   });
 
   const queryPurchaseId = useMemo(() => {
@@ -550,7 +558,7 @@ function ReturnPageContent() {
     if (!orderId) {
       setPageState({
         kind: "failed",
-        message: "Не удалось определить номер заказа.",
+        reason: "no_order",
       });
       return;
     }
@@ -562,10 +570,6 @@ function ReturnPageContent() {
         setPageState({
           kind: "checking",
           attempt: index + 1,
-          message:
-            index === 0
-              ? "Проверяем оплату…"
-              : "Ожидаем подтверждение платежа…",
         });
 
         try {
@@ -585,7 +589,8 @@ function ReturnPageContent() {
               if (isCurrentRun()) {
                 setPageState({
                   kind: "failed",
-                  message: `Ошибка запроса (HTTP ${response.status}). Попробуйте позже или обратитесь в поддержку.`,
+                  reason: "http_error",
+                  httpStatus: response.status,
                 });
               }
               return;
@@ -682,7 +687,7 @@ function ReturnPageContent() {
           if (status === "failed") {
             setPageState({
               kind: "failed",
-              message: "Платёж отклонён или отменён. Попробуйте оплатить ещё раз.",
+              reason: "declined",
             });
             return;
           }
@@ -725,6 +730,7 @@ function ReturnPageContent() {
       <PaidView
         purchaseView={pageState.purchaseView}
         purchaseId={pageState.purchaseId}
+        lang={lang}
       />
     );
   }
@@ -749,18 +755,17 @@ function ReturnPageContent() {
           </svg>
         </div>
         <h1 className="text-2xl font-semibold text-slate-900">
-          Оплата прошла успешно!
+          {t.paymentSuccess}
         </h1>
         <p className="text-slate-600 max-w-sm">
-          Билеты будут отправлены на ваш email. Если вы не получите их в течение
-          нескольких минут, проверьте папку «Спам» или обратитесь в поддержку.
+          {t.paidNoDetailsMessage}
         </p>
         <button
           type="button"
           className="rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white hover:bg-slate-700 transition"
           onClick={() => router.push("/")}
         >
-          На главную
+          {t.goHome}
         </button>
       </main>
     );
@@ -786,18 +791,17 @@ function ReturnPageContent() {
           </svg>
         </div>
         <h1 className="text-2xl font-semibold text-slate-900">
-          Оплата обрабатывается
+          {t.paymentProcessing}
         </h1>
         <p className="text-slate-600 max-w-sm">
-          Подтверждение от платёжной системы ещё не пришло. Билеты будут
-          отправлены на ваш email, как только оплата будет подтверждена.
+          {t.pendingTimeoutMessage}
         </p>
         <button
           type="button"
           className="rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white hover:bg-slate-700 transition"
           onClick={() => router.push("/")}
         >
-          На главную
+          {t.goHome}
         </button>
       </main>
     );
@@ -805,6 +809,13 @@ function ReturnPageContent() {
 
   // ── Failed ──────────────────────────────────────────────────────────────
   if (pageState.kind === "failed") {
+    const failedMessage =
+      pageState.reason === "no_order"
+        ? t.orderNotFound
+        : pageState.reason === "http_error"
+          ? t.httpError(pageState.httpStatus ?? 0)
+          : t.failedMessage;
+
     return (
       <main className="mx-auto flex min-h-[70vh] w-full max-w-xl flex-col items-center justify-center gap-5 p-6 text-center">
         <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-red-100 text-red-600">
@@ -823,15 +834,15 @@ function ReturnPageContent() {
           </svg>
         </div>
         <h1 className="text-2xl font-semibold text-slate-900">
-          Ошибка оплаты
+          {t.paymentError}
         </h1>
-        <p className="text-slate-600">{pageState.message}</p>
+        <p className="text-slate-600">{failedMessage}</p>
         <button
           type="button"
           className="rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white hover:bg-slate-700 transition"
           onClick={handleRetryPayment}
         >
-          Вернуться к оформлению
+          {t.retryPayment}
         </button>
       </main>
     );
@@ -842,12 +853,14 @@ function ReturnPageContent() {
     <main className="mx-auto flex min-h-[70vh] w-full max-w-xl flex-col items-center justify-center gap-5 p-6 text-center">
       <div className="h-12 w-12 animate-spin rounded-full border-[3px] border-sky-200 border-t-sky-600" />
       <h1 className="text-2xl font-semibold text-slate-900">
-        Возврат после оплаты
+        {t.checkingTitle}
       </h1>
-      <p className="text-slate-600">{pageState.message}</p>
+      <p className="text-slate-600">
+        {pageState.attempt <= 1 ? t.checkingPayment : t.awaitingConfirmation}
+      </p>
       {pageState.attempt > 3 && (
         <p className="text-xs text-slate-400">
-          Попытка {pageState.attempt} / {MAX_ATTEMPTS}
+          {t.attemptCounter(pageState.attempt, MAX_ATTEMPTS)}
         </p>
       )}
     </main>
@@ -860,10 +873,6 @@ export default function ReturnPage() {
       fallback={
         <main className="mx-auto flex min-h-[70vh] w-full max-w-xl flex-col items-center justify-center gap-5 p-6 text-center">
           <div className="h-12 w-12 animate-spin rounded-full border-[3px] border-sky-200 border-t-sky-600" />
-          <h1 className="text-2xl font-semibold text-slate-900">
-            Возврат после оплаты
-          </h1>
-          <p className="text-slate-600">Проверяем оплату…</p>
         </main>
       }
     >
