@@ -196,17 +196,35 @@ function RoutePanel({
 }
 
 function StopsList({ stops, lang = "ru" }: { stops: Stop[]; lang?: Lang }) {
+  const L = routesTranslations[lang];
+  const visibleByDefault = 4;
+  const [expanded, setExpanded] = useState(false);
+  const shouldCollapse = stops.length > visibleByDefault;
+  const visibleStops = shouldCollapse && !expanded ? stops.slice(0, visibleByDefault) : stops;
+
   return (
-    <div className={styles.routeCardStops}>
-      {stops.map((stop, i) => (
-        <StopRow
-          key={`${stop.id}-${i}`}
-          stop={stop}
-          index={i + 1}
-          isLast={i === stops.length - 1}
-          lang={lang}
-        />
-      ))}
+    <div className={styles.routeCardStopsWrap}>
+      <div className={styles.routeCardStops}>
+        {visibleStops.map((stop, i) => (
+          <StopRow
+            key={`${stop.id}-${i}`}
+            stop={stop}
+            index={i + 1}
+            isLast={i === visibleStops.length - 1}
+            lang={lang}
+          />
+        ))}
+      </div>
+      {shouldCollapse && (
+        <button
+          type="button"
+          className={styles.routeStopsToggle}
+          onClick={() => setExpanded((prev) => !prev)}
+          aria-expanded={expanded}
+        >
+          {expanded ? L.showLess : L.showAll}
+        </button>
+      )}
     </div>
   );
 }
