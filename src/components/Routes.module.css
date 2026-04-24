@@ -91,10 +91,31 @@
   font-weight: 700;
 }
 
+.routeCardStopsWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .routeCardStops {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.routeStopsToggle {
+  align-self: flex-start;
+  border: none;
+  background: transparent;
+  color: #0f172a;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 2px 0;
+}
+
+.routeStopsToggle:hover {
+  text-decoration: underline;
 }
 
 .routeStop {
