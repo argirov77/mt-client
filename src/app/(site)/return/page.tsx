@@ -15,6 +15,8 @@ import type { Lang } from "@/components/common/LanguageProvider";
 
 // ========== Types ==========
 
+type FiscalStatus = "pending" | "processing" | "done" | "failed" | null;
+
 type ResolvePayload = {
   paid?: boolean;
   status?: string;
@@ -26,6 +28,9 @@ type ResolvePayload = {
     id?: string | number | null;
     opaque?: string | null;
   } | null;
+  fiscal_status?: FiscalStatus | string | null;
+  fiscal_receipt_url?: string | null;
+  checkbox_fiscal_code?: string | null;
 };
 
 type PageState =
@@ -245,16 +250,25 @@ function PaidView({
   purchaseView,
   purchaseId,
   lang,
+  orderId,
 }: {
   purchaseView: PurchaseView;
   purchaseId: string;
   lang: Lang;
+  orderId: string;
 }) {
   const t = returnTranslations[lang];
   const locale = dateLocaleMap[lang];
 
   const [isDownloadingAll, setIsDownloadingAll] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
+  const [fiscalStatus, setFiscalStatus] = useState<FiscalStatus>(null);
+  const [fiscalReceiptUrl, setFiscalReceiptUrl] = useState<string | null>(null);
+  const [fiscalError, setFiscalError] = useState<string | null>(null);
+  const [isFiscalPolling, setIsFiscalPolling] = useState(false);
+  const [fiscalPollingAttempts, setFiscalPollingAttempts] = useState(0);
+  const [fiscalPollingTimedOut, setFiscalPollingTimedOut] = useState(false);
+  const [fiscalPublishingAttempts, setFiscalPublishingAttempts] = useState(0);
 
   const tickets = Array.isArray(purchaseView.tickets) ? purchaseView.tickets : [];
   const passengers = Array.isArray(purchaseView.passengers) ? purchaseView.passengers : [];
@@ -383,6 +397,90 @@ function PaidView({
   };
 
   const isRoundTrip = ticketGroups.some((g: TicketGroup) => g.direction === "return");
+  useEffect(() => {
+    let cancelled = false;
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+    const startedAt = Date.now();
+
+    const fetchPaymentState = async (manual = false) => {
+      if (!orderId) return;
+      if (!manual) setIsFiscalPolling(true);
+      setFiscalPollingAttempts((prev) => prev + 1);
+      try {
+        const params = new URLSearchParams({ order_id: orderId });
+        const response = await fetchWithInclude(`${API}/public/payments/resolve?${params.toString()}`, { method: "GET", cache: "no-store" });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const payload = (await response.json()) as ResolvePayload;
+        const nextStatus = (payload.fiscal_status ?? null) as FiscalStatus;
+        const nextUrl = payload.fiscal_receipt_url?.trim() ? payload.fiscal_receipt_url.trim() : null;
+        if (cancelled) return;
+        setFiscalStatus(nextStatus);
+        setFiscalReceiptUrl(nextUrl);
+        setFiscalError(null);
+
+        if (nextStatus === "failed") {
+          setIsFiscalPolling(false);
+          if (intervalId) clearInterval(intervalId);
+          return;
+        }
+
+        if (nextStatus === "done" && nextUrl) {
+          setIsFiscalPolling(false);
+          if (intervalId) clearInterval(intervalId);
+          return;
+        }
+
+        if (nextStatus === "done" && !nextUrl) {
+          setFiscalPublishingAttempts((prev) => {
+            const next = prev + 1;
+            if (next >= 3 && intervalId) {
+              clearInterval(intervalId);
+              setIsFiscalPolling(false);
+            }
+            return next;
+          });
+        } else {
+          setFiscalPublishingAttempts(0);
+        }
+      } catch {
+        if (cancelled) return;
+        setFiscalError(t.fiscalReceiptSoftError);
+      }
+
+      if (Date.now() - startedAt >= 90000) {
+        setFiscalPollingTimedOut(true);
+        setIsFiscalPolling(false);
+        if (intervalId) clearInterval(intervalId);
+      }
+    };
+
+    void fetchPaymentState();
+    intervalId = setInterval(() => {
+      void fetchPaymentState();
+    }, 5000);
+
+    return () => {
+      cancelled = true;
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [orderId, t.fiscalReceiptSoftError]);
+
+  const retryFiscalCheck = async () => {
+    setFiscalPollingTimedOut(false);
+    setFiscalError(null);
+    setFiscalPublishingAttempts(0);
+    try {
+      const params = new URLSearchParams({ order_id: orderId });
+      const response = await fetchWithInclude(`${API}/public/payments/resolve?${params.toString()}`, { method: "GET", cache: "no-store" });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const payload = (await response.json()) as ResolvePayload;
+      setFiscalStatus((payload.fiscal_status ?? null) as FiscalStatus);
+      setFiscalReceiptUrl(payload.fiscal_receipt_url?.trim() ? payload.fiscal_receipt_url.trim() : null);
+    } catch {
+      setFiscalError(t.fiscalReceiptSoftError);
+    }
+  };
+
 
   return (
     <main className="mx-auto w-full max-w-2xl space-y-6 px-4 py-10">
@@ -447,6 +545,42 @@ function PaidView({
           <TicketGroupCard key={`${group.direction}-${idx}`} group={group} lang={lang} />
         ))}
       </div>
+
+      {/* Fiscal receipt */}
+      {fiscalStatus !== null && (
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-3">
+          <h2 className="text-base font-semibold text-slate-900">{t.fiscalReceiptTitle}</h2>
+          {(fiscalStatus === "pending" || fiscalStatus === "processing") && (
+            <div className="flex items-center gap-2 text-slate-600 text-sm">
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-sky-200 border-t-sky-600" />
+              <span>{t.fiscalReceiptPending}</span>
+            </div>
+          )}
+          {fiscalStatus === "done" && fiscalReceiptUrl && (
+            <div className="space-y-2 text-sm">
+              <p className="text-emerald-700">{t.fiscalReceiptReady}</p>
+              <a href={fiscalReceiptUrl} target="_blank" rel="noopener noreferrer" className="inline-flex rounded-full bg-slate-900 px-4 py-2 text-white font-semibold hover:bg-slate-700 transition">{t.fiscalReceiptOpen}</a>
+            </div>
+          )}
+          {fiscalStatus === "done" && !fiscalReceiptUrl && (
+            <p className="text-sm text-slate-600">{t.fiscalReceiptPublishing}</p>
+          )}
+          {fiscalStatus === "failed" && (
+            <div className="space-y-2 text-sm">
+              <p className="text-red-600">{t.fiscalReceiptFailed}</p>
+              <button type="button" onClick={retryFiscalCheck} className="inline-flex rounded-full bg-slate-900 px-4 py-2 text-white font-semibold hover:bg-slate-700 transition">{t.fiscalReceiptRetry}</button>
+            </div>
+          )}
+          {fiscalPollingTimedOut && fiscalStatus !== "done" && fiscalStatus !== "failed" && (
+            <div className="space-y-2 text-sm">
+              <p className="text-amber-700">{t.fiscalReceiptTimeout}</p>
+              <button type="button" onClick={retryFiscalCheck} className="inline-flex rounded-full bg-slate-900 px-4 py-2 text-white font-semibold hover:bg-slate-700 transition">{t.fiscalReceiptRetry}</button>
+            </div>
+          )}
+          {fiscalError && <p className="text-xs text-amber-700">{fiscalError}</p>}
+          {isFiscalPolling && <p className="text-xs text-slate-400">{t.attemptCounter(fiscalPollingAttempts, 18)}</p>}
+        </div>
+      )}
 
       {/* Download all button */}
       <div className="flex flex-col items-center gap-2">
@@ -731,6 +865,7 @@ function ReturnPageContent() {
         purchaseView={pageState.purchaseView}
         purchaseId={pageState.purchaseId}
         lang={lang}
+        orderId={orderId}
       />
     );
   }

@@ -47,6 +47,16 @@ type ReturnPageCopy = {
 
   goHome: string;
   retryPayment: string;
+
+  fiscalReceiptTitle: string;
+  fiscalReceiptPending: string;
+  fiscalReceiptReady: string;
+  fiscalReceiptOpen: string;
+  fiscalReceiptFailed: string;
+  fiscalReceiptRetry: string;
+  fiscalReceiptTimeout: string;
+  fiscalReceiptSoftError: string;
+  fiscalReceiptPublishing: string;
 };
 
 function slavicPlural(n: number, one: string, few: string, many: string): string {
@@ -101,6 +111,16 @@ export const returnTranslations: Record<Lang, ReturnPageCopy> = {
 
     goHome: "На главную",
     retryPayment: "Вернуться к оформлению",
+
+    fiscalReceiptTitle: "Фискальный чек",
+    fiscalReceiptPending: "Чек формируется, подождите…",
+    fiscalReceiptReady: "Чек готов",
+    fiscalReceiptOpen: "Открыть чек",
+    fiscalReceiptFailed: "Не удалось сформировать чек. Попробуйте обновить статус позже.",
+    fiscalReceiptRetry: "Проверить снова",
+    fiscalReceiptTimeout: "Чек может появиться чуть позже",
+    fiscalReceiptSoftError: "Не удалось обновить статус чека. Повторим автоматически.",
+    fiscalReceiptPublishing: "Чек готовится к публикации, попробуйте через несколько секунд",
   },
 
   en: {
@@ -145,6 +165,16 @@ export const returnTranslations: Record<Lang, ReturnPageCopy> = {
 
     goHome: "Go to home page",
     retryPayment: "Back to checkout",
+
+    fiscalReceiptTitle: "Fiscal receipt",
+    fiscalReceiptPending: "Receipt is being generated, please wait…",
+    fiscalReceiptReady: "Receipt is ready",
+    fiscalReceiptOpen: "Open receipt",
+    fiscalReceiptFailed: "Could not generate receipt. Please try checking again later.",
+    fiscalReceiptRetry: "Check again",
+    fiscalReceiptTimeout: "The receipt may appear a little later",
+    fiscalReceiptSoftError: "Could not refresh receipt status. We will retry automatically.",
+    fiscalReceiptPublishing: "Receipt is being published, please try again in a few seconds",
   },
 
   bg: {
@@ -189,6 +219,16 @@ export const returnTranslations: Record<Lang, ReturnPageCopy> = {
 
     goHome: "Към началната страница",
     retryPayment: "Обратно към плащане",
+
+    fiscalReceiptTitle: "Фискален бон",
+    fiscalReceiptPending: "Бонът се генерира, моля изчакайте…",
+    fiscalReceiptReady: "Бонът е готов",
+    fiscalReceiptOpen: "Отвори бона",
+    fiscalReceiptFailed: "Неуспешно генериране на бона. Опитайте да обновите статуса по-късно.",
+    fiscalReceiptRetry: "Провери отново",
+    fiscalReceiptTimeout: "Бонът може да се появи малко по-късно",
+    fiscalReceiptSoftError: "Не успяхме да обновим статуса на бона. Ще опитаме автоматично отново.",
+    fiscalReceiptPublishing: "Бонът се подготвя за публикуване, опитайте след няколко секунди",
   },
 
   ua: {
@@ -233,5 +273,15 @@ export const returnTranslations: Record<Lang, ReturnPageCopy> = {
 
     goHome: "На головну",
     retryPayment: "Повернутися до оформлення",
+
+    fiscalReceiptTitle: "Фіскальний чек",
+    fiscalReceiptPending: "Чек формується, зачекайте…",
+    fiscalReceiptReady: "Чек готовий",
+    fiscalReceiptOpen: "Відкрити чек",
+    fiscalReceiptFailed: "Не вдалося сформувати чек. Спробуйте оновити статус пізніше.",
+    fiscalReceiptRetry: "Перевірити знову",
+    fiscalReceiptTimeout: "Чек може з’явитися трохи пізніше",
+    fiscalReceiptSoftError: "Не вдалося оновити статус чека. Повторимо автоматично.",
+    fiscalReceiptPublishing: "Чек готується до публікації, спробуйте за кілька секунд",
   },
 };
