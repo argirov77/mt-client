@@ -26,6 +26,9 @@ type ResolvePayload = {
     id?: string | number | null;
     opaque?: string | null;
   } | null;
+  fiscal_status?: "pending" | "processing" | "done" | "failed" | null;
+  fiscal_receipt_url?: string | null;
+  checkbox_fiscal_code?: string | null;
 };
 
 type PageState =
@@ -131,6 +134,13 @@ type TicketGroup = {
   departureTime?: string;
   arrivalTime?: string;
   items: TicketWithPassenger[];
+};
+
+type FiscalState = {
+  status: "idle" | "pending" | "processing" | "done" | "failed" | "timeout" | "error";
+  receiptUrl: string | null;
+  fiscalCode: string | null;
+  message: string | null;
 };
 
 function getTicketDetails(ticket: PurchaseTicket, locale: string) {
@@ -244,10 +254,12 @@ function TicketGroupCard({ group, lang }: { group: TicketGroup; lang: Lang }) {
 function PaidView({
   purchaseView,
   purchaseId,
+  orderId,
   lang,
 }: {
   purchaseView: PurchaseView;
   purchaseId: string;
+  orderId: string;
   lang: Lang;
 }) {
   const t = returnTranslations[lang];
@@ -255,6 +267,13 @@ function PaidView({
 
   const [isDownloadingAll, setIsDownloadingAll] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
+  const [fiscalState, setFiscalState] = useState<FiscalState>({
+    status: "idle",
+    receiptUrl: null,
+    fiscalCode: null,
+    message: null,
+  });
+  const [isFiscalRefreshing, setIsFiscalRefreshing] = useState(false);
 
   const tickets = Array.isArray(purchaseView.tickets) ? purchaseView.tickets : [];
   const passengers = Array.isArray(purchaseView.passengers) ? purchaseView.passengers : [];
@@ -384,6 +403,94 @@ function PaidView({
 
   const isRoundTrip = ticketGroups.some((g: TicketGroup) => g.direction === "return");
 
+  const resolveFiscal = async (opts?: { manual?: boolean }): Promise<FiscalState["status"]> => {
+    if (opts?.manual) setIsFiscalRefreshing(true);
+    try {
+      const params = new URLSearchParams({ order_id: orderId });
+      const response = await fetchWithInclude(
+        `${API}/public/payments/resolve?${params.toString()}`,
+        { method: "GET", cache: "no-store" }
+      );
+      if (!response.ok) {
+        const isInvalidOrder = response.status === 400 || response.status === 404;
+        setFiscalState((prev) => ({
+          ...prev,
+          status: "error",
+          message: isInvalidOrder ? t.fiscalInvalidOrder : t.fiscalResolveError(response.status),
+        }));
+        return "error";
+      }
+      const payload = (await response.json()) as ResolvePayload;
+      const status = payload.fiscal_status ?? "pending";
+      const receiptUrl = payload.fiscal_receipt_url?.trim() || null;
+      const fiscalCode = payload.checkbox_fiscal_code?.trim() || null;
+      const nextState: FiscalState["status"] = status;
+      setFiscalState({
+        status,
+        receiptUrl,
+        fiscalCode,
+        message: null,
+      });
+      return nextState;
+    } catch {
+      setFiscalState((prev) => ({
+        ...prev,
+        status: "error",
+        message: t.fiscalNetworkError,
+      }));
+      return "error";
+    } finally {
+      if (opts?.manual) setIsFiscalRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    let isActive = true;
+    let timeoutId: number | null = null;
+    const startedAt = Date.now();
+    const POLL_DELAY_MS = 4000;
+    const MAX_POLL_MS = 180000;
+
+    const run = async () => {
+      if (!isActive) return;
+      const status = await resolveFiscal();
+      if (!isActive) return;
+
+      const shouldPoll =
+        status === "idle" || status === "pending" || status === "processing";
+
+      if (!shouldPoll) return;
+
+      if (Date.now() - startedAt >= MAX_POLL_MS) {
+        setFiscalState((prev) => ({ ...prev, status: "timeout" }));
+        return;
+      }
+      timeoutId = window.setTimeout(run, POLL_DELAY_MS);
+    };
+
+    void run();
+    return () => {
+      isActive = false;
+      if (timeoutId) window.clearTimeout(timeoutId);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderId]);
+
+  const handleReceiptClick = () => {
+    if (!fiscalState.receiptUrl) return;
+    if (typeof window !== "undefined") {
+      const analyticsWindow = window as Window & {
+        dataLayer?: Array<Record<string, unknown>>;
+      };
+      analyticsWindow.dataLayer?.push?.({
+        event: "fiscal_receipt_download_click",
+        order_id: orderId,
+        purchase_id: purchaseId,
+      });
+      window.open(fiscalState.receiptUrl, "_blank", "noopener,noreferrer");
+    }
+  };
+
   return (
     <main className="mx-auto w-full max-w-2xl space-y-6 px-4 py-10">
       <div className="text-center space-y-3">
@@ -490,6 +597,32 @@ function PaidView({
           <p className="text-sm text-red-600">{downloadError}</p>
         )}
       </div>
+
+      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h2 className="text-base font-semibold text-slate-900">{t.fiscalTitle}</h2>
+        {(fiscalState.status === "idle" || fiscalState.status === "pending" || fiscalState.status === "processing") && (
+          <p className="mt-2 text-sm text-slate-600">{t.fiscalProcessing}</p>
+        )}
+        {fiscalState.status === "timeout" && (
+          <p className="mt-2 text-sm text-amber-700">{t.fiscalTimeout}</p>
+        )}
+        {fiscalState.status === "done" && fiscalState.receiptUrl && (
+          <div className="mt-3 flex flex-col items-start gap-2">
+            <button type="button" onClick={handleReceiptClick} className="rounded-full bg-sky-600 px-5 py-2 text-sm font-semibold text-white hover:bg-sky-700 transition">
+              {t.downloadFiscalReceipt}
+            </button>
+            {fiscalState.fiscalCode && <p className="text-xs text-slate-500">{t.fiscalCodeLabel}: {fiscalState.fiscalCode}</p>}
+          </div>
+        )}
+        {(fiscalState.status === "failed" || fiscalState.status === "error") && (
+          <div className="mt-3 space-y-2">
+            <p className="text-sm text-red-600">{fiscalState.message ?? t.fiscalUnavailable}</p>
+            <button type="button" onClick={() => void resolveFiscal({ manual: true })} className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition disabled:opacity-60" disabled={isFiscalRefreshing}>
+              {isFiscalRefreshing ? t.refreshing : t.refreshStatus}
+            </button>
+          </div>
+        )}
+      </div>
     </main>
   );
 }
@@ -522,6 +655,7 @@ function ReturnPageContent() {
     const queryOrderId = (direct ?? fallback ?? "").trim();
 
     if (queryOrderId) return queryOrderId;
+    if (queryPurchaseId) return `purchase-${queryPurchaseId}`;
 
     if (typeof window === "undefined") return "";
 
@@ -530,7 +664,7 @@ function ReturnPageContent() {
       localStorage.getItem(LIQPAY_LAST_ORDER_ID_KEY) ??
       ""
     ).trim();
-  }, [searchParams]);
+  }, [queryPurchaseId, searchParams]);
 
   const queryOpaque = useMemo(() => {
     return (
@@ -730,6 +864,7 @@ function ReturnPageContent() {
       <PaidView
         purchaseView={pageState.purchaseView}
         purchaseId={pageState.purchaseId}
+        orderId={orderId}
         lang={lang}
       />
     );

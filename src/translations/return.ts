@@ -34,6 +34,17 @@ type ReturnPageCopy = {
   downloadingTickets: string;
   downloadError: string;
   noEmailWarning: string;
+  fiscalTitle: string;
+  fiscalProcessing: string;
+  fiscalTimeout: string;
+  downloadFiscalReceipt: string;
+  fiscalCodeLabel: string;
+  fiscalUnavailable: string;
+  refreshStatus: string;
+  refreshing: string;
+  fiscalInvalidOrder: string;
+  fiscalResolveError: (status: number) => string;
+  fiscalNetworkError: string;
 
   paidNoDetailsMessage: string;
 
@@ -86,6 +97,17 @@ export const returnTranslations: Record<Lang, ReturnPageCopy> = {
     downloadingTickets: "Загрузка билетов…",
     downloadError: "Не удалось скачать некоторые билеты. Попробуйте позже.",
     noEmailWarning: "Email не указан — скачивание недоступно",
+    fiscalTitle: "Фискальный чек",
+    fiscalProcessing: "Формируем чек…",
+    fiscalTimeout: "Чек ещё формируется. Обновите статус чуть позже.",
+    downloadFiscalReceipt: "Скачать чек",
+    fiscalCodeLabel: "Фискальный код",
+    fiscalUnavailable: "Чек временно недоступен, попробуйте позже",
+    refreshStatus: "Обновить",
+    refreshing: "Обновляем…",
+    fiscalInvalidOrder: "Некорректный номер заказа для получения чека.",
+    fiscalResolveError: (s) => `Не удалось получить статус чека (HTTP ${s}).`,
+    fiscalNetworkError: "Ошибка сети при получении статуса чека.",
 
     paidNoDetailsMessage:
       "Билеты будут отправлены на ваш email. Если вы не получите их в течение нескольких минут, проверьте папку «Спам» или обратитесь в поддержку.",
@@ -130,6 +152,17 @@ export const returnTranslations: Record<Lang, ReturnPageCopy> = {
     downloadingTickets: "Downloading tickets…",
     downloadError: "Failed to download some tickets. Please try again later.",
     noEmailWarning: "No email provided — download unavailable",
+    fiscalTitle: "Fiscal receipt",
+    fiscalProcessing: "Generating receipt…",
+    fiscalTimeout: "Receipt is still being generated. Please refresh status later.",
+    downloadFiscalReceipt: "Download receipt",
+    fiscalCodeLabel: "Fiscal code",
+    fiscalUnavailable: "Receipt is temporarily unavailable, please try again later",
+    refreshStatus: "Refresh",
+    refreshing: "Refreshing…",
+    fiscalInvalidOrder: "Invalid order number for receipt lookup.",
+    fiscalResolveError: (s) => `Failed to get receipt status (HTTP ${s}).`,
+    fiscalNetworkError: "Network error while getting receipt status.",
 
     paidNoDetailsMessage:
       "Tickets will be sent to your email. If you don't receive them within a few minutes, check your Spam folder or contact support.",
@@ -174,6 +207,17 @@ export const returnTranslations: Record<Lang, ReturnPageCopy> = {
     downloadingTickets: "Изтегляне на билети…",
     downloadError: "Неуспешно изтегляне на някои билети. Моля, опитайте по-късно.",
     noEmailWarning: "Имейлът не е посочен — изтеглянето не е възможно",
+    fiscalTitle: "Фискална касова бележка",
+    fiscalProcessing: "Създаваме бележката…",
+    fiscalTimeout: "Бележката все още се създава. Обновете статуса по-късно.",
+    downloadFiscalReceipt: "Изтегли бележката",
+    fiscalCodeLabel: "Фискален код",
+    fiscalUnavailable: "Бележката е временно недостъпна, опитайте по-късно",
+    refreshStatus: "Обнови",
+    refreshing: "Обновяване…",
+    fiscalInvalidOrder: "Невалиден номер на поръчка за проверка на бележката.",
+    fiscalResolveError: (s) => `Неуспешно получаване на статус на бележката (HTTP ${s}).`,
+    fiscalNetworkError: "Мрежова грешка при получаване на статуса на бележката.",
 
     paidNoDetailsMessage:
       "Билетите ще бъдат изпратени на вашия имейл. Ако не ги получите в рамките на няколко минути, проверете папка \u201EСпам\u201C или се свържете с поддръжката.",
@@ -218,6 +262,17 @@ export const returnTranslations: Record<Lang, ReturnPageCopy> = {
     downloadingTickets: "Завантаження квитків…",
     downloadError: "Не вдалося завантажити деякі квитки. Спробуйте пізніше.",
     noEmailWarning: "Email не вказано — завантаження недоступне",
+    fiscalTitle: "Фіскальний чек",
+    fiscalProcessing: "Формуємо чек…",
+    fiscalTimeout: "Чек ще формується. Оновіть статус трохи пізніше.",
+    downloadFiscalReceipt: "Завантажити чек",
+    fiscalCodeLabel: "Фіскальний код",
+    fiscalUnavailable: "Чек тимчасово недоступний, спробуйте пізніше",
+    refreshStatus: "Оновити",
+    refreshing: "Оновлюємо…",
+    fiscalInvalidOrder: "Некоректний номер замовлення для отримання чека.",
+    fiscalResolveError: (s) => `Не вдалося отримати статус чека (HTTP ${s}).`,
+    fiscalNetworkError: "Помилка мережі під час отримання статусу чека.",
 
     paidNoDetailsMessage:
       "Квитки будуть надіслані на ваш email. Якщо ви не отримаєте їх протягом кількох хвилин, перевірте папку «Спам» або зверніться до підтримки.",
