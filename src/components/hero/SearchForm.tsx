@@ -196,6 +196,10 @@ export default function SearchForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    window.gtag?.("event", "form_submit", {
+      event_category: "conversion",
+      event_label: window.location.pathname,
+    });
     if (!fromId || !toId || !departDate) return;
     const fromName =
       departureStops.find((s) => s.id === fromId)?.stop_name || '';
