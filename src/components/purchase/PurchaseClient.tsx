@@ -2493,12 +2493,6 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
   };
 
   const cancelButtonDisabled = isActionDisabled || cancelSelectionCount === 0;
-  const trackPhoneClick = (phone: string) => {
-    window.gtag?.("event", "phone_click", { event_category: "conversion", event_label: phone });
-  };
-  const trackEmailClick = (email: string) => {
-    window.gtag?.("event", "email_click", { event_category: "conversion", event_label: email });
-  };
 
 
   return (
@@ -2519,26 +2513,16 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
             <div className={styles.contactWho}>
               <b>{customer?.name ?? "Покупатель не указан"}</b>
               <div className={styles.contactLine}>
-                {customer?.phone
-                  ? (() => {
-                      const phone = customer.phone;
-                      return (
-                        <a className={styles.contactPill} href={`tel:${phone}`} onClick={() => trackPhoneClick(phone)}>
-                          📞 {phone}
-                        </a>
-                      );
-                    })()
-                  : null}
-                {customer?.email
-                  ? (() => {
-                      const email = customer.email;
-                      return (
-                        <a className={styles.contactPill} href={`mailto:${email}`} onClick={() => trackEmailClick(email)}>
-                          ✉ {email}
-                        </a>
-                      );
-                    })()
-                  : null}
+                {customer?.phone ? (
+                  <a className={styles.contactPill} href={`tel:${customer.phone}`}>
+                    📞 {customer.phone}
+                  </a>
+                ) : null}
+                {customer?.email ? (
+                  <a className={styles.contactPill} href={`mailto:${customer.email}`}>
+                    ✉ {customer.email}
+                  </a>
+                ) : null}
                 {!customer?.phone && !customer?.email ? (
                   <span className={styles.contactPlaceholder}>Контакты не указаны</span>
                 ) : null}
