@@ -40,6 +40,12 @@ export default function AboutSection({
   const buildViberLink = (phone: string) =>
     `viber://chat?number=%2B${formatPhoneDigits(phone)}`;
   const buildTelegramLink = (phone: string) => `https://t.me/+${formatPhoneDigits(phone)}`;
+  const trackPhoneClick = (phone: string) => {
+    window.gtag?.("event", "phone_click", { event_category: "conversion", event_label: phone });
+  };
+  const trackMessengerClick = (messenger: "whatsapp" | "viber" | "telegram") => {
+    window.gtag?.("event", "messenger_click", { event_category: "conversion", event_label: messenger });
+  };
 
   useEffect(() => {
     setActiveMediaIndex(0);
@@ -153,12 +159,14 @@ export default function AboutSection({
                             <div className="flex flex-wrap items-center justify-between gap-2">
                               <a
                                 href={`tel:${phone}`}
+                                onClick={() => trackPhoneClick(phone)}
                                 className="text-sm font-semibold text-slate-800 hover:text-orange-600"
                               >
                                 {phone}
                               </a>
                               <a
                                 href={`tel:${phone}`}
+                                onClick={() => trackPhoneClick(phone)}
                                 className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-bold uppercase tracking-wide text-slate-700"
                               >
                                 Позвонить
@@ -171,6 +179,7 @@ export default function AboutSection({
                               <div className="flex items-center gap-2">
                                 <a
                                   href={buildViberLink(phone)}
+                                  onClick={() => trackMessengerClick("viber")}
                                   className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-purple-200 bg-white text-purple-700 transition hover:border-purple-400"
                                   target="_blank"
                                   rel="noreferrer"
@@ -186,6 +195,7 @@ export default function AboutSection({
                                 </a>
                                 <a
                                   href={buildWhatsAppLink(phone)}
+                                  onClick={() => trackMessengerClick("whatsapp")}
                                   className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-emerald-200 bg-white text-emerald-700 transition hover:border-emerald-400"
                                   target="_blank"
                                   rel="noreferrer"
@@ -201,6 +211,7 @@ export default function AboutSection({
                                 </a>
                                 <a
                                   href={buildTelegramLink(phone)}
+                                  onClick={() => trackMessengerClick("telegram")}
                                   className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-sky-200 bg-white text-sky-700 transition hover:border-sky-400"
                                   target="_blank"
                                   rel="noreferrer"
