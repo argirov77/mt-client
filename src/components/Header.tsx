@@ -144,14 +144,6 @@ export default function Header() {
     return `tg://resolve?phone=${digits}`;
   };
 
-  const trackContactClick = (phone: string) => {
-    if (method === "call") {
-      window.gtag?.("event", "phone_click", { event_category: "conversion", event_label: phone });
-      return;
-    }
-    window.gtag?.("event", "messenger_click", { event_category: "conversion", event_label: method });
-  };
-
   return (
     <header className="bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 sticky top-0 z-30 border-b border-slate-200">
       <nav className="container mx-auto flex max-w-6xl flex-nowrap items-center gap-2 px-4 py-2 md:h-14 md:gap-3">
@@ -344,7 +336,6 @@ export default function Header() {
                     </div>
                     <a
                       href={linkFor(entry.phone)}
-                      onClick={() => trackContactClick(entry.phone)}
                       aria-label={`${actionLabel[method]} ${entry.phone}`}
                       title={actionLabel[method]}
                       className="inline-flex h-9 w-9 items-center justify-center rounded-[14px] border border-slate-200 bg-slate-50 text-slate-700 transition hover:-translate-y-0.5 hover:shadow-md"
