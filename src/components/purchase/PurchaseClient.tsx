@@ -2493,6 +2493,12 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
   };
 
   const cancelButtonDisabled = isActionDisabled || cancelSelectionCount === 0;
+  const trackPhoneClick = (phone: string) => {
+    window.gtag?.("event", "phone_click", { event_category: "conversion", event_label: phone });
+  };
+  const trackEmailClick = (email: string) => {
+    window.gtag?.("event", "email_click", { event_category: "conversion", event_label: email });
+  };
 
 
   return (
@@ -2514,12 +2520,12 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
               <b>{customer?.name ?? "Покупатель не указан"}</b>
               <div className={styles.contactLine}>
                 {customer?.phone ? (
-                  <a className={styles.contactPill} href={`tel:${customer.phone}`}>
+                  <a className={styles.contactPill} href={`tel:${customer.phone}`} onClick={() => trackPhoneClick(customer.phone)}>
                     📞 {customer.phone}
                   </a>
                 ) : null}
                 {customer?.email ? (
-                  <a className={styles.contactPill} href={`mailto:${customer.email}`}>
+                  <a className={styles.contactPill} href={`mailto:${customer.email}`} onClick={() => trackEmailClick(customer.email)}>
                     ✉ {customer.email}
                   </a>
                 ) : null}
