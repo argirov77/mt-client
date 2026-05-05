@@ -353,7 +353,13 @@ export default function BookingPanel({
       {renderSeatOverview()}
 
       <form
-        onSubmit={(e) => e.preventDefault()}
+        onSubmit={(e) => {
+          window.gtag?.("event", "form_submit", {
+            event_category: "conversion",
+            event_label: window.location.pathname,
+          });
+          e.preventDefault();
+        }}
         className="mt-2 flex w-full max-w-[640px] flex-col gap-3 rounded-none bg-transparent p-0 shadow-none ring-0 sm:rounded-xl sm:bg-white/70 sm:p-4 sm:shadow-sm sm:ring-1 sm:ring-slate-200"
       >
         <div className="text-base font-semibold text-slate-900">{t.passengersTitle}</div>

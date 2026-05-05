@@ -93,6 +93,12 @@ export default function ContactsAndPaymentStep({
   canPay,
   onDownloadTicket,
 }: Props) {
+  const trackPurchaseClick = () => {
+    window.gtag?.("event", "purchase_click", {
+      event_category: "conversion",
+      event_label: `${fromName} → ${toName}`.trim() || window.location.pathname,
+    });
+  };
   const badgeTone = "inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold";
 
   const setBaggageValue = (idx: number, direction: "outbound" | "return", value: boolean) => {
@@ -314,14 +320,20 @@ export default function ContactsAndPaymentStep({
       <div className="flex flex-wrap gap-3">
         <button
           type="button"
-          onClick={() => handleAction("book")}
+          onClick={() => {
+            trackPurchaseClick();
+            handleAction("book");
+          }}
           className="rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-800 shadow-sm transition hover:-translate-y-px hover:border-slate-300 hover:shadow"
         >
           {t.book}
         </button>
         <button
           type="button"
-          onClick={() => handleAction("purchase")}
+          onClick={() => {
+            trackPurchaseClick();
+            handleAction("purchase");
+          }}
           className="rounded-full bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow hover:bg-emerald-700"
         >
           {t.buy}

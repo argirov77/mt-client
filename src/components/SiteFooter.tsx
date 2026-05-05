@@ -51,6 +51,14 @@ export default function SiteFooter() {
       )}`
     : "";
 
+  const trackPhoneClick = (phone: string) => {
+    window.gtag?.("event", "phone_click", { event_category: "conversion", event_label: phone });
+  };
+
+  const trackEmailClick = (email: string) => {
+    window.gtag?.("event", "email_click", { event_category: "conversion", event_label: email });
+  };
+
   return (
     <footer className="bg-slate-900 py-10 text-slate-100">
       <div className="container mx-auto grid gap-8 px-4 text-sm md:grid-cols-3">
@@ -63,17 +71,17 @@ export default function SiteFooter() {
           <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-200">{t.contacts}</h3>
           <ul className="space-y-2 text-slate-300">
             <li>
-              <a className="transition hover:text-white hover:underline" href="tel:+380930004636">
+              <a className="transition hover:text-white hover:underline" href="tel:+380930004636" onClick={() => trackPhoneClick("+380930004636")}>
                 +380930004636
               </a>
             </li>
             <li>
-              <a className="transition hover:text-white hover:underline" href="tel:+359894290356">
+              <a className="transition hover:text-white hover:underline" href="tel:+359894290356" onClick={() => trackPhoneClick("+359894290356")}>
                 +359894290356
               </a>
             </li>
             <li>
-              <a className="transition hover:text-white hover:underline" href="mailto:Avroraiko@gmail.com">
+              <a className="transition hover:text-white hover:underline" href="mailto:Avroraiko@gmail.com" onClick={() => trackEmailClick("Avroraiko@gmail.com")}>
                 Avroraiko@gmail.com
               </a>
             </li>
