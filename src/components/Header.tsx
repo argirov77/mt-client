@@ -206,6 +206,16 @@ export default function Header() {
               <li key={item.href} className={item.href === "#about" ? "hidden md:block" : undefined}>
                 <Link
                   href={item.href}
+                  onClick={
+                    item.isPrimary
+                      ? () => {
+                          window.gtag?.("event", "purchase_click", {
+                            event_category: "conversion",
+                            event_label: "header_ticket",
+                          });
+                        }
+                      : undefined
+                  }
                   className={
                     item.isPrimary
                       ? "flex items-center gap-2 whitespace-nowrap rounded-[14px] border border-orange-200 bg-orange-50 px-4 py-2 text-[11px] font-black uppercase tracking-wide text-orange-700 shadow-md transition hover:-translate-y-0.5 hover:shadow-lg sm:text-xs"
@@ -336,6 +346,19 @@ export default function Header() {
                     </div>
                     <a
                       href={linkFor(entry.phone)}
+                      onClick={() => {
+                        if (method === "call") {
+                          window.gtag?.("event", "phone_click", {
+                            event_category: "conversion",
+                            event_label: entry.phone,
+                          });
+                        } else {
+                          window.gtag?.("event", "messenger_click", {
+                            event_category: "conversion",
+                            event_label: method,
+                          });
+                        }
+                      }}
                       aria-label={`${actionLabel[method]} ${entry.phone}`}
                       title={actionLabel[method]}
                       className="inline-flex h-9 w-9 items-center justify-center rounded-[14px] border border-slate-200 bg-slate-50 text-slate-700 transition hover:-translate-y-0.5 hover:shadow-md"

@@ -2514,12 +2514,30 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
               <b>{customer?.name ?? "Покупатель не указан"}</b>
               <div className={styles.contactLine}>
                 {customer?.phone ? (
-                  <a className={styles.contactPill} href={`tel:${customer.phone}`}>
+                  <a
+                    className={styles.contactPill}
+                    href={`tel:${customer.phone}`}
+                    onClick={() => {
+                      window.gtag?.("event", "phone_click", {
+                        event_category: "conversion",
+                        event_label: customer.phone ?? "",
+                      });
+                    }}
+                  >
                     📞 {customer.phone}
                   </a>
                 ) : null}
                 {customer?.email ? (
-                  <a className={styles.contactPill} href={`mailto:${customer.email}`}>
+                  <a
+                    className={styles.contactPill}
+                    href={`mailto:${customer.email}`}
+                    onClick={() => {
+                      window.gtag?.("event", "email_click", {
+                        event_category: "conversion",
+                        event_label: customer.email ?? "",
+                      });
+                    }}
+                  >
                     ✉ {customer.email}
                   </a>
                 ) : null}

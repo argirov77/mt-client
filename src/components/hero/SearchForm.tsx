@@ -201,6 +201,10 @@ export default function SearchForm({
       departureStops.find((s) => s.id === fromId)?.stop_name || '';
     const toName =
       arrivalStops.find((s) => s.id === toId)?.stop_name || '';
+    window.gtag?.('event', 'form_submit', {
+      event_category: 'conversion',
+      event_label: `search:${fromName} → ${toName}`,
+    });
     onSearch({
       from: String(fromId),
       to: String(toId),

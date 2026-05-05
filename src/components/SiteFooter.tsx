@@ -63,17 +63,44 @@ export default function SiteFooter() {
           <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-200">{t.contacts}</h3>
           <ul className="space-y-2 text-slate-300">
             <li>
-              <a className="transition hover:text-white hover:underline" href="tel:+380930004636">
+              <a
+                className="transition hover:text-white hover:underline"
+                href="tel:+380930004636"
+                onClick={() => {
+                  window.gtag?.("event", "phone_click", {
+                    event_category: "conversion",
+                    event_label: "+380930004636",
+                  });
+                }}
+              >
                 +380930004636
               </a>
             </li>
             <li>
-              <a className="transition hover:text-white hover:underline" href="tel:+359894290356">
+              <a
+                className="transition hover:text-white hover:underline"
+                href="tel:+359894290356"
+                onClick={() => {
+                  window.gtag?.("event", "phone_click", {
+                    event_category: "conversion",
+                    event_label: "+359894290356",
+                  });
+                }}
+              >
                 +359894290356
               </a>
             </li>
             <li>
-              <a className="transition hover:text-white hover:underline" href="mailto:Avroraiko@gmail.com">
+              <a
+                className="transition hover:text-white hover:underline"
+                href="mailto:Avroraiko@gmail.com"
+                onClick={() => {
+                  window.gtag?.("event", "email_click", {
+                    event_category: "conversion",
+                    event_label: "Avroraiko@gmail.com",
+                  });
+                }}
+              >
                 Avroraiko@gmail.com
               </a>
             </li>

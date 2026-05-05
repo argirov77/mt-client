@@ -39,6 +39,12 @@ export default function HeroSection({ lang = "ru" }: Props) {
               <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
                 <Link
                   href="#booking"
+                  onClick={() => {
+                    window.gtag?.("event", "purchase_click", {
+                      event_category: "conversion",
+                      event_label: "hero_cta",
+                    });
+                  }}
                   className="inline-flex w-full items-center justify-center rounded-2xl border border-white/20 bg-sky-600 px-5 py-3 text-sm font-extrabold text-white shadow-[0_16px_40px_rgba(11,108,255,0.3)] transition hover:-translate-y-0.5 hover:shadow-[0_22px_54px_rgba(0,0,0,0.25)] sm:w-auto"
                 >
                   {t.primaryCta}
