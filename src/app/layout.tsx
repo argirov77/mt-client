@@ -92,6 +92,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="ru">
       <head>
+        <link rel="canonical" href="https://maximovtours.com/" />
+        <link rel="alternate" hrefLang="en" href="https://maximovtours.com/en/" />
+        <link rel="alternate" hrefLang="ru" href="https://maximovtours.com/ru/" />
+        <link rel="alternate" hrefLang="uk" href="https://maximovtours.com/uk/" />
+        <link rel="alternate" hrefLang="bg" href="https://maximovtours.com/bg/" />
+        <link rel="alternate" hrefLang="x-default" href="https://maximovtours.com/" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
