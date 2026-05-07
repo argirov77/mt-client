@@ -10,3 +10,53 @@ from = "/api/*"
 to = "http://38.79.154.248/api/:splat"
 status = 200
 force = true
+
+# Force HTTPS
+[[redirects]]
+from = "http://maximovtours.com/*"
+to = "https://maximovtours.com/:splat"
+status = 301
+force = true
+
+[[redirects]]
+from = "http://www.maximovtours.com/*"
+to = "https://maximovtours.com/:splat"
+status = 301
+force = true
+
+# Legacy URL cleanup (301)
+[[redirects]]
+from = "/home"
+to = "/"
+status = 301
+force = true
+
+[[redirects]]
+from = "/home/*"
+to = "/"
+status = 301
+force = true
+
+[[redirects]]
+from = "/shop"
+to = "/"
+status = 301
+force = true
+
+[[redirects]]
+from = "/shop/*"
+to = "/"
+status = 301
+force = true
+
+[[redirects]]
+from = "/cart/yo"
+to = "/"
+status = 301
+force = true
+
+[[redirects]]
+from = "/cart/yo/*"
+to = "/"
+status = 301
+force = true
