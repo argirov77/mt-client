@@ -10,6 +10,8 @@ import {
   type ReactNode,
 } from "react";
 
+import { captureUtm, setUserProperties } from "@/lib/analytics";
+
 export type Lang = "ru" | "bg" | "en" | "ua";
 
 const SUPPORTED_LANGS: Lang[] = ["ru", "bg", "en", "ua"];
@@ -38,6 +40,8 @@ export function LanguageProvider({ initialLang = "ru", children }: ProviderProps
   useEffect(() => {
     if (typeof window === "undefined") return;
 
+    captureUtm();
+
     const stored = normalize(window.localStorage.getItem("mt-lang"));
     if (stored) {
       setLangState(stored);
@@ -49,6 +53,17 @@ export function LanguageProvider({ initialLang = "ru", children }: ProviderProps
       setLangState(fromNavigator);
     }
   }, []);
+
+  useEffect(() => {
+    setUserProperties({
+      preferred_language: lang,
+      device_type:
+        typeof navigator !== "undefined" &&
+        /mobile|android|iphone|ipad/i.test(navigator.userAgent)
+          ? "mobile"
+          : "desktop",
+    });
+  }, [lang]);
 
   const setLang = useCallback((next: Lang) => {
     setLangState(next);
