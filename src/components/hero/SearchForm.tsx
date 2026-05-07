@@ -8,6 +8,7 @@ import PassengersInput from './PassengersInput';
 import apiClient from '@/lib/apiClient';
 import { useLockBodyScroll } from '@/utils/useLockBodyScroll';
 import { useModalVisibility } from '@/utils/useModalVisibility';
+import { trackEvent, buildRouteCategory } from '@/lib/analytics';
 
 type Stop = { id: number; stop_name: string };
 
@@ -205,6 +206,21 @@ export default function SearchForm({
       departureStops.find((s) => s.id === fromId)?.stop_name || '';
     const toName =
       arrivalStops.find((s) => s.id === toId)?.stop_name || '';
+    trackEvent('search', {
+      search_term: `${fromName} → ${toName}`,
+      origin: fromName,
+      destination: toName,
+      route: buildRouteCategory(
+        { id: fromId, name: fromName },
+        { id: toId, name: toName },
+      ),
+      departure_date: departDate,
+      return_date: returnDate || undefined,
+      trip_type: returnDate ? 'roundtrip' : 'oneway',
+      passenger_count: passengers.adults + passengers.discount,
+      adult_count: passengers.adults,
+      discount_count: passengers.discount,
+    });
     onSearch({
       from: String(fromId),
       to: String(toId),

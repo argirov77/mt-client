@@ -10,6 +10,12 @@ import { downloadTicketPdf } from "@/utils/ticketPdf";
 import { LIQPAY_LAST_ORDER_ID_KEY, clearLastLiqPayOrderId } from "@/utils/liqpayCheckout";
 import type { PurchaseView, PurchaseTicket } from "@/types/purchase";
 import { useLanguage } from "@/components/common/LanguageProvider";
+import {
+  trackEvent,
+  buildRouteCategory,
+  daysUntil,
+  FALLBACK_CURRENCY,
+} from "@/lib/analytics";
 import { returnTranslations, dateLocaleMap } from "@/translations/return";
 import type { Lang } from "@/components/common/LanguageProvider";
 
@@ -392,7 +398,12 @@ function PaidView({
       for (const ticket of tickets) {
         const email = getEmail(ticket);
         if (!email) continue;
-        await downloadTicketPdf({ ticketId: ticket.id, purchaseId, email });
+        await downloadTicketPdf({
+          ticketId: ticket.id,
+          purchaseId,
+          email,
+          source: "return_page",
+        });
       }
     } catch {
       setDownloadError(t.downloadError);
@@ -641,6 +652,110 @@ function ReturnPageContent() {
     attempt: 0,
   });
 
+  const abandonedFiredRef = useRef(false);
+
+  const fireAbandoned = (
+    reason: string,
+    extra: Record<string, unknown> = {},
+  ) => {
+    if (abandonedFiredRef.current) return;
+    abandonedFiredRef.current = true;
+
+    let timeSpentSeconds: number | undefined;
+    let storedPurchaseId: string | null = null;
+    if (typeof window !== "undefined") {
+      const startTs = sessionStorage.getItem("ga_checkout_start_ts");
+      if (startTs) {
+        timeSpentSeconds = Math.floor((Date.now() - Number(startTs)) / 1000);
+      }
+      storedPurchaseId = sessionStorage.getItem("ga_checkout_purchase_id");
+    }
+
+    const isFastReturn = timeSpentSeconds !== undefined && timeSpentSeconds < 30;
+    const finalReason = isFastReturn ? "fast_return" : reason;
+    const transactionId = extra.transaction_id ?? storedPurchaseId ?? undefined;
+
+    trackEvent("checkout_abandoned", {
+      reason: finalReason,
+      transaction_id: transactionId,
+      time_spent_seconds: timeSpentSeconds,
+      ...extra,
+    });
+
+    if (isFastReturn) {
+      trackEvent("payment_window_closed", {
+        transaction_id: transactionId,
+        time_spent_seconds: timeSpentSeconds,
+      });
+    }
+
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("ga_checkout_start_ts");
+      sessionStorage.removeItem("ga_checkout_purchase_id");
+    }
+  };
+
+  const firePurchaseEvent = (purchaseView: PurchaseView, purchaseId: string) => {
+    if (typeof window === "undefined") return;
+    const firedKey = `ga_purchase_fired_${purchaseId}`;
+    if (sessionStorage.getItem(firedKey)) return;
+
+    const tickets = purchaseView.tickets ?? [];
+    const trips = purchaseView.trips ?? [];
+    const directionByTicketId = new Map<string, string>();
+    for (const trip of trips) {
+      for (const ticketId of trip.tickets ?? []) {
+        directionByTicketId.set(String(ticketId), trip.direction);
+      }
+    }
+    const isRoundtrip =
+      new Set(trips.map((trip) => trip.direction).filter(Boolean)).size > 1;
+
+    const departureTimes = tickets
+      .map((ticket) => {
+        const raw = ticket.segment_details?.departure?.time;
+        if (!raw) return null;
+        const ts = new Date(raw).getTime();
+        return Number.isFinite(ts) ? ts : null;
+      })
+      .filter((value): value is number => value !== null);
+    const earliestDeparture = departureTimes.length
+      ? Math.min(...departureTimes)
+      : null;
+    const daysUntilDeparture = daysUntil(earliestDeparture);
+
+    trackEvent("purchase", {
+      transaction_id: String(purchaseView.purchase.id ?? purchaseId),
+      value: purchaseView.totals?.paid ?? purchaseView.purchase.amount_due,
+      currency: purchaseView.purchase.currency ?? FALLBACK_CURRENCY,
+      items: tickets.map((ticket) => {
+        const direction = directionByTicketId.get(String(ticket.id));
+        const departureName = ticket.segment_details?.departure?.name ?? "";
+        const arrivalName = ticket.segment_details?.arrival?.name ?? "";
+        return {
+          item_id: String(ticket.id),
+          item_name: `${departureName} → ${arrivalName}`,
+          item_category: isRoundtrip ? "roundtrip" : "oneway",
+          item_category2: buildRouteCategory(
+            { id: ticket.segment_details?.departure?.id, name: departureName },
+            { id: ticket.segment_details?.arrival?.id, name: arrivalName },
+          ),
+          item_variant: direction,
+          price: ticket.pricing?.price ?? 0,
+          quantity: 1,
+        };
+      }),
+      passenger_count: tickets.length,
+      trip_type: isRoundtrip ? "roundtrip" : "oneway",
+      days_until_departure: daysUntilDeparture,
+      payment_method: "liqpay",
+    });
+
+    sessionStorage.setItem(firedKey, "1");
+    sessionStorage.removeItem("ga_checkout_start_ts");
+    sessionStorage.removeItem("ga_checkout_purchase_id");
+  };
+
   const queryPurchaseId = useMemo(() => {
     return (
       searchParams.get("purchase_id") ??
@@ -793,6 +908,7 @@ function ReturnPageContent() {
                   Array.isArray(purchaseView.tickets) &&
                   purchaseView.tickets.length > 0
                 ) {
+                  firePurchaseEvent(purchaseView, targetPurchaseId);
                   setPageState({
                     kind: "paid",
                     purchaseView,
@@ -819,6 +935,10 @@ function ReturnPageContent() {
           }
 
           if (status === "failed") {
+            fireAbandoned("payment_failed", {
+              transaction_id: resolvedPurchaseId || undefined,
+              payment_status: payload.status ?? null,
+            });
             setPageState({
               kind: "failed",
               reason: "declined",
@@ -839,6 +959,9 @@ function ReturnPageContent() {
 
       // Reached max attempts without confirmation
       if (isCurrentRun()) {
+        fireAbandoned("polling_timeout", {
+          transaction_id: resolvedPurchaseId || undefined,
+        });
         setPageState({ kind: "pending_timeout" });
       }
     };

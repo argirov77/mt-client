@@ -1,12 +1,22 @@
 import { API_BASE } from "@/lib/apiBase";
 import { fetchWithInclude } from "@/utils/fetchWithInclude";
+import { trackEvent } from "@/lib/analytics";
 
 const LOCAL_HOSTNAMES = new Set(["localhost", "127.0.0.1"]);
+
+export type TicketDownloadSource =
+  | "post_purchase"
+  | "cabinet_single"
+  | "cabinet_all"
+  | "cabinet_bulk"
+  | "return_page"
+  | "unknown";
 
 type DownloadTicketPdfParams = {
   ticketId: string | number;
   purchaseId: string | number;
   email: string;
+  source?: TicketDownloadSource;
 };
 
 const buildTicketPdfUrl = ({
@@ -30,6 +40,7 @@ export const downloadTicketPdf = async ({
   ticketId,
   purchaseId,
   email,
+  source = "unknown",
 }: DownloadTicketPdfParams): Promise<void> => {
   if (typeof window === "undefined") {
     return;
@@ -63,4 +74,11 @@ export const downloadTicketPdf = async ({
   document.body.removeChild(link);
 
   URL.revokeObjectURL(objectUrl);
+
+  trackEvent("download_ticket", {
+    transaction_id: String(purchaseId),
+    ticket_id: String(ticketId),
+    format: "pdf",
+    download_source: source,
+  });
 };

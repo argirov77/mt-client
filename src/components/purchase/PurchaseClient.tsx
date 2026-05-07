@@ -9,6 +9,7 @@ import Calendar from "@/components/Calendar";
 import SeatClient, { type SeatSelectionDetail } from "@/components/SeatClient";
 import { API } from "@/config";
 import { downloadTicketPdf } from "@/utils/ticketPdf";
+import { trackEvent, FALLBACK_CURRENCY } from "@/lib/analytics";
 import type {
   BaggageQuote,
   CancelPreview,
@@ -1095,6 +1096,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
             ticketId: ticket.id,
             purchaseId: data.purchase.id,
             email: contactEmail,
+            source: "cabinet_all",
           });
         } catch (error) {
           console.error(error);
@@ -1122,6 +1124,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
           ticketId,
           purchaseId: data.purchase.id,
           email: contactEmail,
+          source: "cabinet_single",
         });
       } catch (error) {
         console.error(error);
@@ -1151,6 +1154,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
             ticketId: originalId,
             purchaseId: data.purchase.id,
             email: contactEmail,
+            source: "cabinet_bulk",
           });
         } catch (bulkError) {
           console.error(bulkError);
@@ -1614,6 +1618,16 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
         throw new Error(`HTTP ${response.status}`);
       }
 
+      trackEvent("cancel_request", {
+        transaction_id: String(purchaseId),
+        value: cancelPreview?.total_refund ?? 0,
+        currency:
+          cancelPreview?.currency ||
+          data.purchase.currency ||
+          FALLBACK_CURRENCY,
+        ticket_count: identifiers.length || cancelTickets.length,
+      });
+
       await fetchPurchase();
       setCancelPreview(null);
       setCancelSelected([]);
@@ -1629,6 +1643,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
     }
   }, [
     allTicketIds,
+    cancelPreview,
     cancelSelectionCount,
     cancelTickets,
     data,
