@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { API } from '@/config';
+import StopCombobox, { type StopComboboxHandle } from './StopCombobox';
 
 type Lang = 'ru' | 'bg' | 'en' | 'ua';
 
@@ -25,24 +26,28 @@ const T = {
     to: 'Куда',
     swap: 'Поменять направление',
     loading: 'Загрузка…',
+    noMatches: 'Ничего не найдено',
   },
   bg: {
     from: 'Откуда',
     to: 'Куда',
     swap: 'Смяна на посоката',
     loading: 'Зареждане…',
+    noMatches: 'Няма съвпадения',
   },
   en: {
     from: 'From',
     to: 'To',
     swap: 'Swap direction',
     loading: 'Loading…',
+    noMatches: 'No matches',
   },
   ua: {
     from: 'Звідки',
     to: 'Куди',
     swap: 'Поміняти напрям',
     loading: 'Завантаження…',
+    noMatches: 'Нічого не знайдено',
   },
 };
 
@@ -65,8 +70,8 @@ export default function DirectionSelect({
   const [arrivals, setArrivals] = useState<Stop[]>([]);
 
   // refs для авто-перехода фокуса from → to
-  const fromRef = useRef<HTMLSelectElement | null>(null);
-  const toRef = useRef<HTMLSelectElement | null>(null);
+  const fromRef = useRef<StopComboboxHandle | null>(null);
+  const toRef = useRef<StopComboboxHandle | null>(null);
 
   // Загрузка отправных остановок
   useEffect(() => {
@@ -168,43 +173,19 @@ export default function DirectionSelect({
         <label className="text-white/90 text-sm mb-1 block select-none">
           {t.from}
         </label>
-        <div className="relative">
-          <select
-            ref={fromRef}
-            className="w-full h-11 px-4 pr-9 bg-white rounded-xl border border-transparent hover:border-blue-300 transition appearance-none text-gray-900"
-            value={from}
-            onChange={(e) => {
-              const val = e.target.value;
-              setFrom(val);
-
-              // после выбора from — автоматически фокусируем to
-              if (val && toRef.current) {
-                setTimeout(() => {
-                  toRef.current && toRef.current.focus();
-                }, 0);
-              }
-            }}
-          >
-            <option value="">{depLoading ? t.loading : t.from}</option>
-            {departures.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.stop_name}
-              </option>
-            ))}
-          </select>
-          {/* caret */}
-          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M6 9l6 6 6-6"
-                stroke="#6b7280"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </span>
-        </div>
+        <StopCombobox
+          ref={fromRef}
+          stops={departures}
+          value={from}
+          onChange={setFrom}
+          onSelect={(val) => {
+            if (val) setTimeout(() => toRef.current?.focus(), 0);
+          }}
+          placeholder={depLoading ? t.loading : t.from}
+          ariaLabel={t.from}
+          inputClassName="w-full h-11 px-4 bg-white rounded-xl border border-transparent hover:border-blue-300 transition text-gray-900 focus:outline-none focus:border-blue-300"
+          noOptionsText={t.noMatches}
+        />
       </div>
 
       {/* SWAP — одна кнопка */}
@@ -237,33 +218,17 @@ export default function DirectionSelect({
         <label className="text-white/90 text-sm mb-1 block select-none">
           {t.to}
         </label>
-        <div className="relative">
-          <select
-            ref={toRef}
-            className="w-full h-11 px-4 pr-9 bg-white rounded-xl border border-transparent hover:border-blue-300 transition appearance-none text-gray-900 disabled:opacity-60"
-            value={to}
-            onChange={(e) => setTo(e.target.value)}
-            disabled={!from}
-          >
-            <option value="">{arrLoading ? t.loading : t.to}</option>
-            {arrivals.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.stop_name}
-              </option>
-            ))}
-          </select>
-          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M6 9l6 6 6-6"
-                stroke="#6b7280"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </span>
-        </div>
+        <StopCombobox
+          ref={toRef}
+          stops={arrivals}
+          value={to}
+          onChange={setTo}
+          disabled={!from}
+          placeholder={arrLoading ? t.loading : t.to}
+          ariaLabel={t.to}
+          inputClassName="w-full h-11 px-4 bg-white rounded-xl border border-transparent hover:border-blue-300 transition text-gray-900 disabled:opacity-60 focus:outline-none focus:border-blue-300"
+          noOptionsText={t.noMatches}
+        />
       </div>
     </div>
   );

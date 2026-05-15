@@ -5,6 +5,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Calendar from '../Calendar';
 import DateInput from './DateInput';
 import PassengersInput from './PassengersInput';
+import StopCombobox, { type StopComboboxHandle } from './StopCombobox';
 import apiClient from '@/lib/apiClient';
 import { useLockBodyScroll } from '@/utils/useLockBodyScroll';
 import { useModalVisibility } from '@/utils/useModalVisibility';
@@ -41,6 +42,7 @@ const L = {
     back: 'Обратно',
     search: 'Поиск',
     swapTitle: 'Поменять местами',
+    noMatches: 'Ничего не найдено',
   },
   en: {
     from: 'From',
@@ -49,6 +51,7 @@ const L = {
     back: 'Return',
     search: 'Search',
     swapTitle: 'Swap',
+    noMatches: 'No matches',
   },
   bg: {
     from: 'Откъде',
@@ -57,6 +60,7 @@ const L = {
     back: 'Обратно',
     search: 'Търсене',
     swapTitle: 'Размени',
+    noMatches: 'Няма съвпадения',
   },
   ua: {
     from: 'Звідки',
@@ -65,6 +69,7 @@ const L = {
     back: 'Назад',
     search: 'Пошук',
     swapTitle: 'Поміняти місцями',
+    noMatches: 'Нічого не знайдено',
   },
 };
 
@@ -113,8 +118,8 @@ export default function SearchForm({
   const toId = useMemo(() => Number(to) || 0, [to]);
 
   // refs для авто-переходов внутри формы
-  const fromSelectRef = useRef<HTMLSelectElement | null>(null);
-  const toSelectRef = useRef<HTMLSelectElement | null>(null);
+  const fromSelectRef = useRef<StopComboboxHandle | null>(null);
+  const toSelectRef = useRef<StopComboboxHandle | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -245,34 +250,21 @@ export default function SearchForm({
       <div className="relative grid gap-4 md:grid-cols-[1fr_auto_1fr] md:items-end">
         <div className="flex flex-col gap-2">
           <span className={labelStyles}>{t.from}</span>
-          <div className="relative">
-            <select
-              ref={fromSelectRef}
-              aria-label={t.from}
-              className={`${baseFieldStyles} pr-12 appearance-none`}
-              value={from}
-              onChange={(e) => {
-                const val = e.target.value;
-                setFrom(val);
-
-                if (val && toSelectRef.current) {
-                  setTimeout(() => {
-                    toSelectRef.current?.focus();
-                  }, 0);
-                }
-              }}
-            >
-              <option value="">{t.from}</option>
-              {departureStops.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.stop_name}
-                </option>
-              ))}
-            </select>
-            <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
-              ▼
-            </span>
-          </div>
+          <StopCombobox
+            ref={fromSelectRef}
+            stops={departureStops}
+            value={from}
+            onChange={setFrom}
+            onSelect={(val) => {
+              if (val) {
+                setTimeout(() => toSelectRef.current?.focus(), 0);
+              }
+            }}
+            placeholder={t.from}
+            ariaLabel={t.from}
+            inputClassName={`${baseFieldStyles} pr-4`}
+            noOptionsText={t.noMatches}
+          />
         </div>
 
         <div className="absolute left-1/2 top-1/2 z-10 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center md:static md:translate-x-0 md:translate-y-0 md:pb-1">
@@ -290,33 +282,20 @@ export default function SearchForm({
 
         <div className="flex flex-col gap-2">
           <span className={labelStyles}>{t.to}</span>
-          <div className="relative">
-            <select
-              ref={toSelectRef}
-              aria-label={t.to}
-              className={`${baseFieldStyles} pr-12 appearance-none disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400`}
-              value={to}
-              onChange={(e) => {
-                const val = e.target.value;
-                setTo(val);
-
-                if (val && fromId) {
-                  handleDepartOpen();
-                }
-              }}
-              disabled={!fromId}
-            >
-              <option value="">{t.to}</option>
-              {arrivalStops.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.stop_name}
-                </option>
-              ))}
-            </select>
-            <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
-              ▼
-            </span>
-          </div>
+          <StopCombobox
+            ref={toSelectRef}
+            stops={arrivalStops}
+            value={to}
+            onChange={setTo}
+            onSelect={(val) => {
+              if (val && fromId) handleDepartOpen();
+            }}
+            disabled={!fromId}
+            placeholder={t.to}
+            ariaLabel={t.to}
+            inputClassName={`${baseFieldStyles} pr-4 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400`}
+            noOptionsText={t.noMatches}
+          />
         </div>
       </div>
 
