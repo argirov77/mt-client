@@ -1,118 +1,77 @@
-"use client";
+import type { Metadata } from "next";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-
-import HeroSection from "@/components/hero/HeroSection";
-import Routes from "@/components/Routes";
-import Schedule from "@/components/Schedule";
-import About from "@/components/About";
-import BookingCard from "@/components/booking/BookingCard";
-import ParcelSection from "@/components/ParcelSection";
-import UiAlert from "@/components/common/Alert";
 import PurchaseClient from "@/components/purchase/PurchaseClient";
-import { useLanguage } from "@/components/common/LanguageProvider";
-import {
-  sectionDescriptionClass,
-  sectionEyebrowClass,
-  sectionTitleClass,
-} from "@/components/common/designGuide";
-import { bookingTranslations } from "@/translations/home";
+import MarketingHome from "@/components/home/MarketingHome";
+import PaymentBanner from "@/components/home/PaymentBanner";
 
-const PAYMENT_BANNER: Record<string, { type: "info" | "success" | "error"; message: string }> = {
-  success: {
-    type: "success",
-    message: "Оплата подтверждена.",
+export const metadata: Metadata = {
+  title: "Максимов Турс — автобусные билеты по Болгарии и Европе",
+  description:
+    "Прямые автобусные рейсы между Украиной и Болгарией с 1992 года. Билеты онлайн на маршруты Одесса — Варна — Бургас, удобные автобусы Setra, Neoplan, Mercedes.",
+  alternates: {
+    canonical: "https://maximovtours.com/",
+    languages: {
+      ru: "https://maximovtours.com/ru/",
+      en: "https://maximovtours.com/en/",
+      uk: "https://maximovtours.com/uk/",
+      bg: "https://maximovtours.com/bg/",
+      "x-default": "https://maximovtours.com/",
+    },
   },
-  pending: {
-    type: "info",
-    message: "Оплата обрабатывается.",
+  openGraph: {
+    title: "Максимов Турс — автобусные билеты по Болгарии и Европе",
+    description:
+      "Прямые автобусные рейсы Одесса — Варна — Бургас. Онлайн-бронирование, оплата картой, электронные билеты.",
+    url: "https://maximovtours.com/",
+    siteName: "Maximov Tours",
+    type: "website",
+    locale: "ru_RU",
   },
-  failed: {
-    type: "error",
-    message: "Оплата не прошла. Попробуйте еще раз.",
+  twitter: {
+    card: "summary_large_image",
+    title: "Максимов Турс — автобусные билеты по Болгарии и Европе",
+    description:
+      "Прямые автобусные рейсы Одесса — Варна — Бургас. Онлайн-бронирование, оплата картой, электронные билеты.",
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 
-function HomeContent() {
-  const { lang } = useLanguage();
-  const bookingCopy = bookingTranslations[lang];
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+type RawParam = string | string[] | undefined;
 
-  const [resolvedPurchaseId, setResolvedPurchaseId] = useState<string | null>(null);
-  const [resolvedPaymentStatus, setResolvedPaymentStatus] = useState<string>("");
+const firstString = (value: RawParam): string => {
+  if (Array.isArray(value)) return (value[0] ?? "").trim();
+  return (value ?? "").trim();
+};
 
-  const queryPurchaseId = useMemo(() => {
-    const direct = searchParams.get("purchase_id");
-    const fallback = searchParams.get("purchaseId");
-    return (direct ?? fallback ?? "").trim();
-  }, [searchParams]);
+type SearchParams = Promise<Record<string, RawParam>>;
 
-  const queryPaymentStatus = useMemo(() => {
-    return (searchParams.get("payment") ?? "").trim().toLowerCase();
-  }, [searchParams]);
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
+  const params = await searchParams;
 
-  useEffect(() => {
-    if (queryPurchaseId) {
-      setResolvedPurchaseId(queryPurchaseId);
-    }
-    if (queryPaymentStatus) {
-      setResolvedPaymentStatus(queryPaymentStatus);
-    }
+  const purchaseId =
+    firstString(params.purchase_id) || firstString(params.purchaseId);
+  const paymentStatus = firstString(params.payment).toLowerCase();
 
-    if (!queryPurchaseId && !queryPaymentStatus) {
-      return;
-    }
-
-    router.replace(pathname || "/", { scroll: false });
-  }, [pathname, queryPaymentStatus, queryPurchaseId, router]);
-
-  const activePurchaseId = resolvedPurchaseId || queryPurchaseId;
-  const activePaymentStatus = resolvedPaymentStatus || queryPaymentStatus;
-  const paymentBanner = PAYMENT_BANNER[activePaymentStatus] ?? null;
-
-  if (activePurchaseId) {
+  if (purchaseId) {
     return (
       <main className="min-h-screen bg-slate-50 py-6">
         <div className="mx-auto w-full max-w-6xl space-y-4 px-4">
-          {paymentBanner ? <UiAlert type={paymentBanner.type}>{paymentBanner.message}</UiAlert> : null}
-          <PurchaseClient purchaseId={activePurchaseId} />
+          <PaymentBanner
+            initialStatus={paymentStatus}
+            shouldCleanUrl={Boolean(paymentStatus || purchaseId)}
+          />
+          <PurchaseClient purchaseId={purchaseId} />
         </div>
       </main>
     );
   }
 
-  return (
-    <main className="min-h-screen">
-      <section id="hero">
-        <HeroSection lang={lang} />
-      </section>
-
-      <section id="booking" className="-mt-12 bg-slate-50 py-12">
-        <div className="mx-auto w-full max-w-6xl px-4">
-          <div className="mb-6 flex flex-col gap-2 text-center">
-            <p className={sectionEyebrowClass}>{bookingCopy.eyebrow}</p>
-            <h2 className={sectionTitleClass}>{bookingCopy.title}</h2>
-            <p className={sectionDescriptionClass}>{bookingCopy.description}</p>
-          </div>
-          <BookingCard />
-        </div>
-      </section>
-
-      <About />
-      <ParcelSection />
-      <Routes />
-      <Schedule lang={lang} />
-    </main>
-  );
-}
-
-export default function Page() {
-  return (
-    <Suspense fallback={<main className="min-h-screen" />}>
-      <HomeContent />
-    </Suspense>
-  );
+  return <MarketingHome />;
 }

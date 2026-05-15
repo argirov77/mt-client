@@ -1,15 +1,30 @@
 import "./globals.css";
 import type { ReactNode } from "react";
+import type { Metadata } from "next";
 import Script from "next/script";
 
 import { LanguageProvider } from "@/components/common/LanguageProvider";
 const GA_MEASUREMENT_ID = "G-N3PVQB5J6S";
 
-export const metadata = {
-  title: "Максимов Турc",
-  description: "Продажа автобусных билетов по Болгарии и Европе",
+export const metadata: Metadata = {
+  metadataBase: new URL("https://maximovtours.com"),
+  title: {
+    default: "Максимов Турс — автобусные билеты по Болгарии и Европе",
+    template: "%s · Максимов Турс",
+  },
+  description:
+    "Прямые автобусные рейсы между Украиной и Болгарией с 1992 года. Билеты онлайн на маршруты Одесса — Варна — Бургас.",
+  applicationName: "Maximov Tours",
   icons: {
     icon: "/icons/favicon.ico",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+    },
   },
 };
 
@@ -92,12 +107,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="ru">
       <head>
-        <link rel="canonical" href="https://maximovtours.com/" />
-        <link rel="alternate" hrefLang="en" href="https://maximovtours.com/en/" />
-        <link rel="alternate" hrefLang="ru" href="https://maximovtours.com/ru/" />
-        <link rel="alternate" hrefLang="uk" href="https://maximovtours.com/uk/" />
-        <link rel="alternate" hrefLang="bg" href="https://maximovtours.com/bg/" />
-        <link rel="alternate" hrefLang="x-default" href="https://maximovtours.com/" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
