@@ -13,7 +13,7 @@ type Props = {
   onChange: (v: PassengerValue) => void;          // вернём оба значения
   className?: string;                             // контейнер
   pillClass?: string;                             // стиль кнопки-триггера (пилюля)
-  minAdults?: number;                             // по умолчанию 1
+  minAdults?: number;                             // по умолчанию 0
   maxTotal?: number;                              // по умолчанию 9
   lang?: "ru" | "bg" | "en" | "ua";
 };
@@ -23,28 +23,28 @@ const L = {
     passengers: "Пассажиры",
     adults: "Взрослый",
     discount: "Льготный",
-    tip: "Дети, студенты, пенсионеры",
+    tip: "Льготный: дети, студенты и пенсионеры",
     done: "Готово",
   },
   en: {
     passengers: "Passengers",
     adults: "Adult",
     discount: "Discounted",
-    tip: "Children, students, seniors",
+    tip: "Discounted: children, students, and seniors",
     done: "Done",
   },
   bg: {
     passengers: "Пътници",
     adults: "Възрастен",
     discount: "С намаление",
-    tip: "Деца, студенти, пенсионери",
+    tip: "С намаление: деца, студенти и пенсионери",
     done: "Готово",
   },
   ua: {
     passengers: "Пасажири",
     adults: "Дорослий",
     discount: "Пільговий",
-    tip: "Діти, студенти, пенсіонери",
+    tip: "Пільговий: діти, студенти та пенсіонери",
     done: "Готово",
   },
 };
@@ -54,12 +54,13 @@ export default function PassengersInput({
   onChange,
   className = "",
   pillClass = "h-12 px-3 rounded-2xl bg-white/90 hover:bg-white text-slate-800 shadow ring-1 ring-black/5",
-  minAdults = 1,
+  minAdults = 0,
   maxTotal = 9,
   lang = "ru",
 }: Props) {
   const t = L[lang];
   const [open, setOpen] = useState(false);
+  const [showDiscountTip, setShowDiscountTip] = useState(false);
   const [local, setLocal] = useState<PassengerValue>(value);
 
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -82,12 +83,14 @@ export default function PassengersInput({
         !btnRef.current.contains(e.target as Node)
       ) {
         setOpen(false);
+        setShowDiscountTip(false);
         onChange(local);
       }
     };
     const onEsc = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setOpen(false);
+        setShowDiscountTip(false);
         onChange(local);
       }
     };
@@ -194,15 +197,22 @@ export default function PassengersInput({
             {/* Льготный + подсказка */}
             <Row
               label={
-                <div className="inline-flex items-center gap-1">
+                <div className="relative inline-flex items-center gap-1">
                   {t.discount}
-                  <span
-                    className="group relative"
+                  <button
+                    type="button"
+                    className="inline-flex items-center"
                     aria-label={t.tip}
                     title={t.tip}
+                    onClick={() => setShowDiscountTip((prev) => !prev)}
                   >
-                    <HelpCircle className="h-4 w-4 text-slate-400 group-hover:text-slate-600" />
-                  </span>
+                    <HelpCircle className="h-4 w-4 text-slate-400 hover:text-slate-600" />
+                  </button>
+                  {showDiscountTip && (
+                    <span className="absolute left-0 top-6 z-10 w-56 rounded-lg bg-slate-900 px-2 py-1 text-xs font-normal text-white shadow-lg">
+                      {t.tip}
+                    </span>
+                  )}
                 </div>
               }
               value={local.discount}
@@ -309,4 +319,3 @@ function IconButton({
     </button>
   );
 }
-
