@@ -10,6 +10,7 @@ import FullText from "@/components/seo/FullText";
 import LeadText from "@/components/seo/LeadText";
 import RelatedTrips from "@/components/seo/RelatedTrips";
 import type { Lang } from "@/lib/locale";
+import { buildBusTripLD, buildHubTouristTripLD } from "@/lib/jsonld";
 import { buildTripMetadata, isLocale } from "@/lib/seo";
 import {
   buildHubStopLinks,
@@ -50,9 +51,16 @@ export default async function TripPage({
   if (!data) notFound();
   const isHub = key === "route";
   const hubLinks = isHub ? buildHubStopLinks(lang) : undefined;
+  const tripLd = isHub ? buildHubTouristTripLD(lang) : buildBusTripLD(key, lang);
 
   return (
     <main className="min-h-screen">
+      {tripLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(tripLd) }}
+        />
+      )}
       <HeroSection
         lang={lang}
         heroTitle={data.h1}

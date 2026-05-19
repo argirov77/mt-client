@@ -9,6 +9,7 @@ import ParcelSection from "@/components/ParcelSection";
 import Routes from "@/components/Routes";
 import Schedule from "@/components/Schedule";
 import { buildHomeMetadata, isLocale } from "@/lib/seo";
+import { buildOrganizationLD } from "@/lib/jsonld";
 import type { Lang } from "@/lib/locale";
 
 type Params = { locale: string };
@@ -31,9 +32,14 @@ export default async function HomePage({
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
   const lang = locale as Lang;
+  const organizationLd = buildOrganizationLD(lang);
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationLd) }}
+      />
       <PurchaseReturnView />
       <main className="min-h-screen">
         <HeroSection lang={lang} />

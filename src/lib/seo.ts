@@ -23,6 +23,13 @@ export {
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "") ?? "https://maximovtours.com";
 
+export const OG_IMAGE = {
+  url: `${SITE_URL}/og-image.jpg`,
+  width: 1200,
+  height: 630,
+  alt: "Maximov Tours — bus Ukraine, Romania, Bulgaria since 1991",
+};
+
 export function buildPath(locale: Lang, path: string = "/"): string {
   const prefix = localeToPathPrefix(locale);
   if (!path || path === "/") return prefix || "/";
@@ -110,6 +117,13 @@ export function buildHomeMetadata(locale: Lang): Metadata {
       siteName: "Maximov Tours",
       locale: toHtmlLang(locale),
       type: "website",
+      images: [OG_IMAGE],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: meta.title,
+      description: meta.description,
+      images: [OG_IMAGE.url],
     },
   };
 }
@@ -131,6 +145,13 @@ export function buildTripMetadata(tripKey: string, locale: Lang): Metadata | nul
       siteName: "Maximov Tours",
       locale: toHtmlLang(locale),
       type: "website",
+      images: [OG_IMAGE],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: data.title,
+      description: data.description,
+      images: [OG_IMAGE.url],
     },
   };
 }
