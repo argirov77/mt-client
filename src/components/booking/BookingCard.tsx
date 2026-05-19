@@ -2,10 +2,15 @@
 
 import BookingFlow from "@/components/booking/BookingFlow";
 
-export default function BookingCard() {
+type Props = {
+  forcedFromId?: number;
+  forcedToId?: number;
+};
+
+export default function BookingCard({ forcedFromId, forcedToId }: Props) {
   return (
     <div className="mx-auto w-full max-w-6xl">
-      <BookingFlow />
+      <BookingFlow forcedFromId={forcedFromId} forcedToId={forcedToId} />
     </div>
   );
 }

@@ -1,7 +1,10 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import apiClient from '@/lib/apiClient';
+import { findTripKeyForStopPair, tripsData } from '@/lib/tripsData';
+import { buildPath } from '@/lib/seo';
 import { scheduleTranslations } from '@/translations/home';
 import {
   sectionBgMuted,
@@ -80,23 +83,37 @@ export default function PriceListCompact({ lang = 'ru' }: { lang?: Lang }) {
 
         {!loading && !err && list.length > 0 && (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {list.map((r, i) => (
-              <article
-                key={`${r.departure_stop_id}-${r.arrival_stop_id}-${i}`}
-                className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200/60 bg-white px-5 py-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(15,23,42,0.1)]"
-              >
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 text-base font-semibold text-slate-900">
-                    <span className="truncate">{r.departure_name.trim()}</span>
-                    <span className="text-slate-400">→</span>
-                    <span className="truncate">{r.arrival_name.trim()}</span>
+            {list.map((r, i) => {
+              const tripKey = findTripKeyForStopPair(r.departure_stop_id, r.arrival_stop_id);
+              const slug = tripKey ? tripsData[tripKey]?.i18n[lang]?.slug : null;
+              const href = slug ? buildPath(lang, `/${slug}`) : null;
+              const cardClass =
+                "flex items-center justify-between gap-4 rounded-2xl border border-slate-200/60 bg-white px-5 py-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(15,23,42,0.1)]";
+              const inner = (
+                <>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 text-base font-semibold text-slate-900">
+                      <span className="truncate">{r.departure_name.trim()}</span>
+                      <span className="text-slate-400">→</span>
+                      <span className="truncate">{r.arrival_name.trim()}</span>
+                    </div>
                   </div>
-                </div>
-                <span className="shrink-0 rounded-full bg-orange-100 px-3 py-1 text-sm font-semibold text-orange-700">
-                  {formatPrice(r.price, t.currency)}
-                </span>
-              </article>
-            ))}
+                  <span className="shrink-0 rounded-full bg-orange-100 px-3 py-1 text-sm font-semibold text-orange-700">
+                    {formatPrice(r.price, t.currency)}
+                  </span>
+                </>
+              );
+              const key = `${r.departure_stop_id}-${r.arrival_stop_id}-${i}`;
+              return href ? (
+                <Link key={key} href={href} className={cardClass}>
+                  {inner}
+                </Link>
+              ) : (
+                <article key={key} className={cardClass}>
+                  {inner}
+                </article>
+              );
+            })}
           </div>
         )}
       </div>

@@ -2,6 +2,7 @@ import QrExchangeClient from "@/components/ticket/QrExchangeClient";
 
 interface QrExchangePageProps {
   params: Promise<{
+    locale: string;
     opaque: string;
   }>;
 }

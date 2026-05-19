@@ -2,6 +2,7 @@ import PurchaseClient from "@/components/purchase/PurchaseClient";
 
 interface TicketPageProps {
   params: Promise<{
+    locale: string;
     id: string;
   }>;
 }

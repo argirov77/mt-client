@@ -24,7 +24,12 @@ export type Criteria = {
   discountCount: number;
 };
 
-export default function BookingFlow() {
+type BookingFlowProps = {
+  forcedFromId?: number;
+  forcedToId?: number;
+};
+
+export default function BookingFlow({ forcedFromId, forcedToId }: BookingFlowProps = {}) {
   const { lang } = useLanguage();
   const [criteria, setCriteria] = useState<Criteria | null>(null);
   const resultsRef = useRef<HTMLDivElement | null>(null);
@@ -54,6 +59,8 @@ export default function BookingFlow() {
           <SearchForm
             lang={lang}
             embedded
+            initialFromId={forcedFromId}
+            initialToId={forcedToId}
             onSearch={(params) => setCriteria(params)}
           />
         </div>
