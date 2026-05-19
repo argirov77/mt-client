@@ -5,9 +5,13 @@ import Link from "next/link";
 import { heroTranslations } from "@/translations/home";
 import type { Lang } from "@/components/common/LanguageProvider";
 
-type Props = { lang?: Lang };
+type Props = {
+  lang?: Lang;
+  heroTitle?: string;
+  heroSubtitle?: string;
+};
 
-export default function HeroSection({ lang = "ru" }: Props) {
+export default function HeroSection({ lang = "ru", heroTitle, heroSubtitle }: Props) {
   const t = heroTranslations[lang];
 
   return (
@@ -31,10 +35,10 @@ export default function HeroSection({ lang = "ru" }: Props) {
                 {t.since}
               </span>
               <h1 className="mt-3 text-[clamp(34px,5vw,56px)] font-black leading-[1.05] tracking-[-0.03em]">
-                {t.title}
+                {heroTitle ?? t.title}
               </h1>
               <p className="mt-2 text-sm font-semibold text-white/90">
-                {t.route}
+                {heroSubtitle ?? t.route}
               </p>
               <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
                 <Link

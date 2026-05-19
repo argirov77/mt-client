@@ -1,6 +1,7 @@
 // src/components/routes/Routes.tsx
 "use client";
 
+import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { API } from "@/config";
 import { useLanguage, type Lang } from "@/components/common/LanguageProvider";
@@ -66,8 +67,14 @@ const reverseIfEqual = (f?: Route | null, b?: Route | null): Route | null => {
 
 /* ===================== Component ===================== */
 
-export default function Routes() {
-  const { lang } = useLanguage();
+type RoutesProps = {
+  lang?: Lang;
+  hubLinks?: Record<string, string>;
+};
+
+export default function Routes({ lang: langProp, hubLinks }: RoutesProps = {}) {
+  const { lang: ctxLang } = useLanguage();
+  const lang = langProp ?? ctxLang;
   const L = routesTranslations[lang];
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -128,6 +135,7 @@ export default function Routes() {
                 subtitle={L.forward}
                 route={forward}
                 lang={lang}
+                hubLinks={hubLinks}
               />
             )}
             {backward && (
@@ -136,6 +144,7 @@ export default function Routes() {
                 subtitle={L.backward}
                 route={backward}
                 lang={lang}
+                hubLinks={hubLinks}
               />
             )}
           </div>
@@ -169,11 +178,13 @@ function RoutePanel({
   subtitle,
   route,
   lang = "ru",
+  hubLinks,
 }: {
   title: string;
   subtitle: string;
   route: Route;
   lang?: Lang;
+  hubLinks?: Record<string, string>;
 }) {
   const L = routesTranslations[lang];
   const count = route.stops?.length ?? 0;
@@ -190,12 +201,20 @@ function RoutePanel({
         </div>
       </div>
 
-      <StopsList stops={route.stops || []} lang={lang} />
+      <StopsList stops={route.stops || []} lang={lang} hubLinks={hubLinks} />
     </article>
   );
 }
 
-function StopsList({ stops, lang = "ru" }: { stops: Stop[]; lang?: Lang }) {
+function StopsList({
+  stops,
+  lang = "ru",
+  hubLinks,
+}: {
+  stops: Stop[];
+  lang?: Lang;
+  hubLinks?: Record<string, string>;
+}) {
   const L = routesTranslations[lang];
   const visibleByDefault = 4;
   const [expanded, setExpanded] = useState(false);
@@ -212,6 +231,7 @@ function StopsList({ stops, lang = "ru" }: { stops: Stop[]; lang?: Lang }) {
             index={i + 1}
             isLast={i === visibleStops.length - 1}
             lang={lang}
+            hubLinks={hubLinks}
           />
         ))}
       </div>
@@ -234,11 +254,13 @@ function StopRow({
   index,
   isLast,
   lang = "ru",
+  hubLinks,
 }: {
   stop: Stop;
   index: number;
   isLast: boolean;
   lang?: Lang;
+  hubLinks?: Record<string, string>;
 }) {
   const L = routesTranslations[lang];
   const dotClasses = [styles.routeStopDot];
@@ -251,6 +273,9 @@ function StopRow({
     dotClasses.push(styles.routeStopDotEnd);
   }
 
+  const stopName = stop.name?.trim() ?? "";
+  const stopHref = hubLinks?.[stopName];
+
   return (
     <div className={styles.routeStop}>
       <div className={styles.routeStopLine}>
@@ -260,7 +285,15 @@ function StopRow({
       <div className={styles.routeStopCard}>
         <div className={styles.routeStopTop}>
           <div>
-            <div className={styles.routeStopCity}>{stop.name}</div>
+            <div className={styles.routeStopCity}>
+              {stopHref ? (
+                <Link href={stopHref} className="hover:underline">
+                  {stop.name}
+                </Link>
+              ) : (
+                stop.name
+              )}
+            </div>
             {stop.description && (
               <div className={styles.routeStopPlace}>{stop.description}</div>
             )}

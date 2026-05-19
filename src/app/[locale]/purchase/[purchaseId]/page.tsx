@@ -2,6 +2,7 @@ import PurchaseClient from "@/components/purchase/PurchaseClient";
 
 interface PurchasePageProps {
   params: Promise<{
+    locale: string;
     purchaseId: string;
   }>;
 }

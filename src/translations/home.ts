@@ -286,6 +286,40 @@ export const parcelTranslations: Record<Lang, ParcelCopy> = {
   },
 };
 
+type TripPageCopy = {
+  reverseLabel: string;
+  hubLabel: string;
+  relatedLabel: string;
+  blockTitle: string;
+};
+
+export const tripPageTranslations: Record<Lang, TripPageCopy> = {
+  ru: {
+    reverseLabel: "Обратный рейс",
+    hubLabel: "Полный маршрут",
+    relatedLabel: "Похожие направления",
+    blockTitle: "Связанные направления",
+  },
+  ua: {
+    reverseLabel: "Зворотний рейс",
+    hubLabel: "Повний маршрут",
+    relatedLabel: "Схожі напрямки",
+    blockTitle: "Пов'язані напрямки",
+  },
+  en: {
+    reverseLabel: "Return trip",
+    hubLabel: "Full route",
+    relatedLabel: "Related directions",
+    blockTitle: "Related directions",
+  },
+  bg: {
+    reverseLabel: "Обратен курс",
+    hubLabel: "Пълен маршрут",
+    relatedLabel: "Подобни посоки",
+    blockTitle: "Свързани посоки",
+  },
+};
+
 export const aboutTranslations: Record<Lang, AboutCopy> = {
   ru: {
     kicker: "О компании",

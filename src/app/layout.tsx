@@ -1,17 +1,12 @@
 import "./globals.css";
 import type { ReactNode } from "react";
+import { headers } from "next/headers";
 import Script from "next/script";
 
 import { LanguageProvider } from "@/components/common/LanguageProvider";
-const GA_MEASUREMENT_ID = "G-N3PVQB5J6S";
+import { DEFAULT_LOCALE, HOME_META, isLocale, toHtmlLang } from "@/lib/seo";
 
-export const metadata = {
-  title: "Максимов Турc",
-  description: "Продажа автобусных билетов по Болгарии и Европе",
-  icons: {
-    icon: "/icons/favicon.ico",
-  },
-};
+const GA_MEASUREMENT_ID = "G-N3PVQB5J6S";
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -88,16 +83,23 @@ const jsonLd = {
   ],
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export const metadata = {
+  title: HOME_META[DEFAULT_LOCALE].title,
+  description: HOME_META[DEFAULT_LOCALE].description,
+  icons: {
+    icon: "/icons/favicon.ico",
+  },
+};
+
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const headerStore = await headers();
+  const headerLocale = headerStore.get("x-locale");
+  const locale = isLocale(headerLocale) ? headerLocale : DEFAULT_LOCALE;
+  const htmlLang = toHtmlLang(locale);
+
   return (
-    <html lang="ru">
+    <html lang={htmlLang}>
       <head>
-        <link rel="canonical" href="https://maximovtours.com/" />
-        <link rel="alternate" hrefLang="en" href="https://maximovtours.com/en/" />
-        <link rel="alternate" hrefLang="ru" href="https://maximovtours.com/ru/" />
-        <link rel="alternate" hrefLang="uk" href="https://maximovtours.com/uk/" />
-        <link rel="alternate" hrefLang="bg" href="https://maximovtours.com/bg/" />
-        <link rel="alternate" hrefLang="x-default" href="https://maximovtours.com/" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -116,7 +118,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         </Script>
       </head>
       <body className="min-h-screen antialiased bg-slate-50 text-slate-900">
-        <LanguageProvider>{children}</LanguageProvider>
+        <LanguageProvider initialLang={locale}>{children}</LanguageProvider>
       </body>
     </html>
   );
