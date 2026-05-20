@@ -12,6 +12,7 @@ import type { PurchaseView, PurchaseTicket } from "@/types/purchase";
 import { useLanguage } from "@/components/common/LanguageProvider";
 import {
   trackEvent,
+  trackPurchase,
   buildRouteCategory,
   daysUntil,
   FALLBACK_CURRENCY,
@@ -697,8 +698,6 @@ function ReturnPageContent() {
 
   const firePurchaseEvent = (purchaseView: PurchaseView, purchaseId: string) => {
     if (typeof window === "undefined") return;
-    const firedKey = `ga_purchase_fired_${purchaseId}`;
-    if (sessionStorage.getItem(firedKey)) return;
 
     const tickets = purchaseView.tickets ?? [];
     const trips = purchaseView.trips ?? [];
@@ -724,36 +723,54 @@ function ReturnPageContent() {
       : null;
     const daysUntilDeparture = daysUntil(earliestDeparture);
 
-    trackEvent("purchase", {
-      transaction_id: String(purchaseView.purchase.id ?? purchaseId),
-      value: purchaseView.totals?.paid ?? purchaseView.purchase.amount_due,
-      currency: purchaseView.purchase.currency ?? FALLBACK_CURRENCY,
-      items: tickets.map((ticket) => {
-        const direction = directionByTicketId.get(String(ticket.id));
-        const departureName = ticket.segment_details?.departure?.name ?? "";
-        const arrivalName = ticket.segment_details?.arrival?.name ?? "";
-        return {
-          item_id: String(ticket.id),
-          item_name: `${departureName} → ${arrivalName}`,
-          item_category: isRoundtrip ? "roundtrip" : "oneway",
-          item_category2: buildRouteCategory(
-            { id: ticket.segment_details?.departure?.id, name: departureName },
-            { id: ticket.segment_details?.arrival?.id, name: arrivalName },
-          ),
-          item_variant: direction,
-          price: ticket.pricing?.price ?? 0,
-          quantity: 1,
-        };
-      }),
-      passenger_count: tickets.length,
-      trip_type: isRoundtrip ? "roundtrip" : "oneway",
-      days_until_departure: daysUntilDeparture,
-      payment_method: "liqpay",
+    const transactionId = String(
+      purchaseView.purchase.id ?? purchaseId,
+    );
+
+    const uniqueTickets = Array.from(
+      new Map(tickets.map((ticket) => [String(ticket.id), ticket])).values(),
+    );
+
+    const items = uniqueTickets.map((ticket) => {
+      const direction = directionByTicketId.get(String(ticket.id));
+      const departureName = ticket.segment_details?.departure?.name ?? "";
+      const arrivalName = ticket.segment_details?.arrival?.name ?? "";
+      return {
+        item_id: String(ticket.id),
+        item_name: `${departureName} → ${arrivalName}`,
+        item_category: isRoundtrip ? "roundtrip" : "oneway",
+        item_category2: buildRouteCategory(
+          { id: ticket.segment_details?.departure?.id, name: departureName },
+          { id: ticket.segment_details?.arrival?.id, name: arrivalName },
+        ),
+        item_variant: direction,
+        price: ticket.pricing?.price,
+        quantity: 1,
+      };
     });
 
-    sessionStorage.setItem(firedKey, "1");
-    sessionStorage.removeItem("ga_checkout_start_ts");
-    sessionStorage.removeItem("ga_checkout_purchase_id");
+    const fired = trackPurchase({
+      transactionId,
+      items,
+      currency: purchaseView.purchase.currency ?? FALLBACK_CURRENCY,
+      valueOverride:
+        purchaseView.totals?.paid ?? purchaseView.purchase.amount_due,
+      extra: {
+        passenger_count: uniqueTickets.length,
+        trip_type: isRoundtrip ? "roundtrip" : "oneway",
+        days_until_departure: daysUntilDeparture,
+        payment_method: "liqpay",
+      },
+    });
+
+    if (fired) {
+      try {
+        sessionStorage.removeItem("ga_checkout_start_ts");
+        sessionStorage.removeItem("ga_checkout_purchase_id");
+      } catch {
+        /* ignore */
+      }
+    }
   };
 
   const queryPurchaseId = useMemo(() => {

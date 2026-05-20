@@ -100,3 +100,195 @@ export const daysUntil = (futureMs: number | null | undefined): number | undefin
   if (!futureMs || !Number.isFinite(futureMs)) return undefined;
   return Math.max(0, Math.floor((futureMs - Date.now()) / 86400000));
 };
+
+export const toFiniteNumber = (value: unknown): number | null => {
+  if (value === null || value === undefined) return null;
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : null;
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    const cleaned = trimmed.replace(/[\s ]/g, "");
+    const lastComma = cleaned.lastIndexOf(",");
+    const lastDot = cleaned.lastIndexOf(".");
+    let normalized = cleaned;
+    if (lastComma > lastDot) {
+      normalized = normalized.replace(/\./g, "").replace(",", ".");
+    } else if (lastDot > lastComma) {
+      normalized = normalized.replace(/,/g, "");
+    } else if (lastComma >= 0) {
+      normalized = normalized.replace(",", ".");
+    }
+    const parsed = Number(normalized);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : null;
+};
+
+export type PurchaseEventItem = {
+  item_id: string;
+  item_name?: string;
+  item_category?: string;
+  item_category2?: string;
+  item_variant?: string;
+  price?: number | string | null;
+  quantity?: number | string | null;
+  [extra: string]: unknown;
+};
+
+export type TrackPurchaseParams = {
+  transactionId: string | number | null | undefined;
+  items: PurchaseEventItem[];
+  currency?: string | null;
+  valueOverride?: number | string | null;
+  extra?: GtagParams;
+};
+
+const PURCHASE_FIRED_KEY_PREFIX = "ga_purchase_fired_";
+const MAX_REASONABLE_PURCHASE_VALUE = 1_000_000;
+
+const isDev = () => process.env.NODE_ENV !== "production";
+
+const safeStorageGet = (key: string): string | null => {
+  try {
+    return (
+      window.sessionStorage?.getItem(key) ??
+      window.localStorage?.getItem(key) ??
+      null
+    );
+  } catch {
+    return null;
+  }
+};
+
+const safeStorageSet = (key: string, value: string) => {
+  try {
+    window.sessionStorage?.setItem(key, value);
+  } catch {
+    /* ignore */
+  }
+  try {
+    window.localStorage?.setItem(key, value);
+  } catch {
+    /* ignore */
+  }
+};
+
+export const trackPurchase = (params: TrackPurchaseParams): boolean => {
+  if (typeof window === "undefined") return false;
+
+  const transactionId =
+    params.transactionId !== null && params.transactionId !== undefined
+      ? String(params.transactionId).trim()
+      : "";
+  if (!transactionId) {
+    if (isDev()) {
+      console.error(
+        "[Analytics] purchase event skipped: missing transactionId",
+      );
+    }
+    return false;
+  }
+
+  const items = Array.isArray(params.items) ? params.items : [];
+  const normalizedItems = items.map((item) => {
+    const price = toFiniteNumber(item.price);
+    const quantity = toFiniteNumber(item.quantity);
+    const safePrice = price !== null && price > 0 ? Number(price.toFixed(2)) : 0;
+    const safeQty = quantity !== null && quantity > 0 ? quantity : 1;
+    return {
+      ...item,
+      item_id: String(item.item_id ?? ""),
+      price: safePrice,
+      quantity: safeQty,
+    };
+  });
+
+  const itemsValue = normalizedItems.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0,
+  );
+
+  const overrideValue = toFiniteNumber(params.valueOverride);
+  const value =
+    itemsValue > 0
+      ? itemsValue
+      : overrideValue !== null && overrideValue > 0
+        ? overrideValue
+        : 0;
+
+  if (!Number.isFinite(value) || value <= 0) {
+    if (isDev()) {
+      console.error("[Analytics] purchase event skipped: invalid value", {
+        transactionId,
+        value,
+        itemsValue,
+        valueOverride: params.valueOverride,
+        items: normalizedItems,
+      });
+    }
+    return false;
+  }
+
+  if (
+    overrideValue !== null &&
+    itemsValue > 0 &&
+    Math.abs(overrideValue - itemsValue) > Math.max(1, itemsValue * 0.05)
+  ) {
+    if (isDev()) {
+      console.warn(
+        "[Analytics] purchase value mismatch (items vs override)",
+        {
+          transactionId,
+          itemsValue,
+          overrideValue,
+        },
+      );
+    }
+  }
+
+  if (value > MAX_REASONABLE_PURCHASE_VALUE) {
+    if (isDev()) {
+      console.warn("[Analytics] purchase value is unusually high", {
+        transactionId,
+        value,
+      });
+    }
+  }
+
+  const firedKey = `${PURCHASE_FIRED_KEY_PREFIX}${transactionId}`;
+  if (safeStorageGet(firedKey)) {
+    if (isDev()) {
+      console.debug("[Analytics] purchase event skipped: already fired", {
+        transactionId,
+      });
+    }
+    return false;
+  }
+
+  const roundedValue = Number(value.toFixed(2));
+  const payload: GtagParams = {
+    transaction_id: transactionId,
+    value: roundedValue,
+    currency: params.currency || FALLBACK_CURRENCY,
+    items: normalizedItems,
+    ...(params.extra ?? {}),
+  };
+
+  trackEvent("purchase", payload);
+  safeStorageSet(firedKey, String(Date.now()));
+
+  if (isDev()) {
+    console.log("[Analytics] purchase event fired", {
+      transactionId,
+      value: roundedValue,
+      itemsCount: normalizedItems.length,
+      itemsValue,
+      currency: payload.currency,
+    });
+  }
+
+  return true;
+};
