@@ -7,6 +7,7 @@ import { LanguageProvider } from "@/components/common/LanguageProvider";
 import { DEFAULT_LOCALE, HOME_META, OG_IMAGE, SITE_URL, isLocale, toHtmlLang } from "@/lib/seo";
 
 const GA_MEASUREMENT_ID = "G-N3PVQB5J6S";
+const GA_DEBUG_MODE = process.env.NODE_ENV !== "production";
 
 export const metadata = {
   metadataBase: new URL(SITE_URL),
@@ -44,7 +45,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', '${GA_MEASUREMENT_ID}');
+            gtag('config', '${GA_MEASUREMENT_ID}'${GA_DEBUG_MODE ? ", { debug_mode: true }" : ""});
           `}
         </Script>
       </head>
