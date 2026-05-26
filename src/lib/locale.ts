@@ -26,3 +26,14 @@ export function toHreflang(locale: Lang): string {
 export function toHtmlLang(locale: Lang): string {
   return HREFLANG_MAP[locale];
 }
+
+const OG_LOCALE_MAP: Record<Lang, string> = {
+  ru: "ru_RU",
+  ua: "uk_UA",
+  en: "en_US",
+  bg: "bg_BG",
+};
+
+export function toOgLocale(locale: Lang): string {
+  return OG_LOCALE_MAP[locale];
+}

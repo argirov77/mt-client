@@ -8,6 +8,7 @@ import {
   localeToPathPrefix,
   toHreflang,
   toHtmlLang,
+  toOgLocale,
 } from "@/lib/locale";
 import { tripsData, type Trip } from "@/lib/tripsData";
 
@@ -115,7 +116,8 @@ export function buildHomeMetadata(locale: Lang): Metadata {
       description: meta.description,
       url: alternates.canonical,
       siteName: "Maximov Tours",
-      locale: toHtmlLang(locale),
+      locale: toOgLocale(locale),
+      alternateLocale: LOCALES.filter((l) => l !== locale).map(toOgLocale),
       type: "website",
       images: [OG_IMAGE],
     },
@@ -143,7 +145,8 @@ export function buildTripMetadata(tripKey: string, locale: Lang): Metadata | nul
       description: data.description,
       url: alternates.canonical,
       siteName: "Maximov Tours",
-      locale: toHtmlLang(locale),
+      locale: toOgLocale(locale),
+      alternateLocale: LOCALES.filter((l) => l !== locale).map(toOgLocale),
       type: "website",
       images: [OG_IMAGE],
     },
