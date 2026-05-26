@@ -18,6 +18,7 @@ import StepThree from "./steps/StepThree";
 import { downloadTicketPdf } from "@/utils/ticketPdf";
 import {
   trackEvent,
+  trackBooking,
   buildRouteCategory,
   FALLBACK_CURRENCY,
 } from "@/lib/analytics";
@@ -534,6 +535,16 @@ export default function SearchResults({
             ).toFixed(2)}`
       );
       setMsgType("success");
+
+      if (action === "book") {
+        trackBooking({
+          purchaseId: pId,
+          tripFrom: fromName,
+          tripTo: toName,
+          value: Number(total),
+          currency: FALLBACK_CURRENCY,
+        });
+      }
 
       if (action === "purchase" && !isTwoStepPurchaseFallback) {
         const checkoutData =
