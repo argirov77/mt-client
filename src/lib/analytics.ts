@@ -292,3 +292,63 @@ export const trackPurchase = (params: TrackPurchaseParams): boolean => {
 
   return true;
 };
+
+const BOOKING_FIRED_KEY_PREFIX = "ga_booking_fired_";
+
+export type TrackBookingParams = {
+  purchaseId: string | number | null | undefined;
+  tripFrom: string;
+  tripTo: string;
+  value?: number | string | null;
+  currency?: string | null;
+};
+
+export const trackBooking = (params: TrackBookingParams): boolean => {
+  if (typeof window === "undefined") return false;
+
+  const purchaseId =
+    params.purchaseId !== null && params.purchaseId !== undefined
+      ? String(params.purchaseId).trim()
+      : "";
+  if (!purchaseId) {
+    if (isDev()) {
+      console.error("[Analytics] booking_success skipped: missing purchaseId");
+    }
+    return false;
+  }
+
+  const firedKey = `${BOOKING_FIRED_KEY_PREFIX}${purchaseId}`;
+  if (safeStorageGet(firedKey)) {
+    if (isDev()) {
+      console.debug("[Analytics] booking_success skipped: already fired", {
+        purchaseId,
+      });
+    }
+    return false;
+  }
+
+  const payload: GtagParams = {
+    transaction_id: purchaseId,
+    trip_from: params.tripFrom,
+    trip_to: params.tripTo,
+    currency: params.currency || FALLBACK_CURRENCY,
+  };
+
+  const numericValue = toFiniteNumber(params.value);
+  if (numericValue !== null && numericValue > 0) {
+    payload.value = Number(numericValue.toFixed(2));
+  }
+
+  trackEvent("booking_success", payload);
+  safeStorageSet(firedKey, String(Date.now()));
+
+  if (isDev()) {
+    console.log("[Analytics] booking_success event fired", {
+      purchaseId,
+      value: payload.value,
+      currency: payload.currency,
+    });
+  }
+
+  return true;
+};
