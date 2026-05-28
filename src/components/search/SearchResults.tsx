@@ -140,7 +140,7 @@ export default function SearchResults({
   const [selectedReturnTour, setSelectedReturnTour] = useState<SearchTour | null>(null);
 
   // Обратный билет с открытой датой (сценарий C): обратный рейс не выбирается,
-  // бэкенд выпускает предоплаченную открытую обратку (−15%).
+  // бэкенд выпускает предоплаченный открытый обратный билет (−15%).
   const [openReturn, setOpenReturn] = useState(Boolean(openReturnInitial));
 
   // Итоговая сумма считается на бэкенде (quote), фронт её только отображает.

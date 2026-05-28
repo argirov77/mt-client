@@ -260,7 +260,7 @@ export default function OpenReturnsSection({ purchaseId, onActivated }: Props) {
                           onClick={() => void handleActivate()}
                           className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                          {activating ? "Бронируем…" : "Забронировать обратку"}
+                          {activating ? "Бронируем…" : "Забронировать обратный билет"}
                         </button>
                         <button
                           type="button"

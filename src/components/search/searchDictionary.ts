@@ -123,7 +123,7 @@ const dict: Record<Lang, Dict> = {
     openReturnHint:
       "Дату и место обратного рейса вы выберете позже в личном кабинете по QR-коду.",
     openReturnSummaryLabel: "Обратно (открытая дата)",
-    returnDiscountNote: "обратка −15%",
+    returnDiscountNote: "обратный −15%",
   },
   en: {
     noResults: "No trips found",
