@@ -24,6 +24,7 @@ import type {
 } from "@/types/purchase";
 import { fetchWithInclude } from "@/utils/fetchWithInclude";
 import { buildPublicPurchaseEndpoint, buildPublicPurchasePayEndpoint } from "@/utils/publicPurchasePayEndpoint";
+import OpenReturnsSection from "./OpenReturnsSection";
 import {
   normalizePublicPayResponse,
   persistLastLiqPayOrderId,
@@ -2584,6 +2585,8 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
         {showReturnTickets
           ? renderTicketSection("Билеты обратно", returnTickets, "tickets:return")
           : null}
+
+        <OpenReturnsSection purchaseId={purchaseId} onActivated={() => void fetchPurchase()} />
 
         {activePanel === "reschedule" ? (
           <section className={`${styles.card} ${styles.panel}`}>

@@ -47,7 +47,6 @@ type Props = {
   discountCount: number;
 };
 
-const DISCOUNT_RATE = 0.05;
 type StepNavigationItem = {
   id: Step;
   label: string;
@@ -137,6 +136,14 @@ export default function SearchResults({
     null
   );
   const [selectedReturnTour, setSelectedReturnTour] = useState<SearchTour | null>(null);
+
+  // Обратный билет с открытой датой (сценарий C): обратный рейс не выбирается,
+  // бэкенд выпускает предоплаченную открытую обратку (−15%).
+  const [openReturn, setOpenReturn] = useState(false);
+
+  // Итоговая сумма считается на бэкенде (quote), фронт её только отображает.
+  const [quoteAmount, setQuoteAmount] = useState<number | null>(null);
+  const [quoteLoading, setQuoteLoading] = useState(false);
 
   // Выбор мест
   const [selectedOutboundSeats, setSelectedOutboundSeats] = useState<number[]>(
@@ -317,15 +324,15 @@ export default function SearchResults({
   // когда выбран(ы) рейс(ы) — автоматически переходим к шагу 2
   useEffect(() => {
     if (!selectedOutboundTour) return;
-    if (hasReturnSection && !selectedReturnTour) return;
+    if (hasReturnSection && !openReturn && !selectedReturnTour) return;
     // все нужные рейсы выбраны → шаг 2
     setActiveStep((prev) => (prev < 2 ? 2 : prev));
-  }, [selectedOutboundTour, selectedReturnTour, hasReturnSection]);
+  }, [selectedOutboundTour, selectedReturnTour, hasReturnSection, openReturn]);
 
   // ====== ACTIONS: бронь / покупка ======
   const handleAction = async (action: "book" | "purchase") => {
     try {
-      if (!selectedOutboundTour || (returnDate && !selectedReturnTour)) {
+      if (!selectedOutboundTour || (returnDate && !openReturn && !selectedReturnTour)) {
         setMsg("Сначала выберите рейсы");
         setMsgType("error");
         return;
@@ -450,6 +457,8 @@ export default function SearchResults({
         tour_id: selectedOutboundTour.id,
         departure_stop_id: fromId,
         arrival_stop_id: toId,
+        // Сценарий C: выпустить открытую обратку для каждого пассажира.
+        ...(openReturn ? { open_return: true } : {}),
       });
 
       let total = outRes.data.amount_due;
@@ -457,8 +466,8 @@ export default function SearchResults({
       let ticketNumbers = extractTicketNumbers(outRes.data);
       let finalPurchaseResponse = outRes.data;
 
-      // обратно
-      if (selectedReturnTour) {
+      // обратно (конкретная дата) — круговая скидка −15% применяется бэкендом по is_return_leg
+      if (selectedReturnTour && !openReturn) {
         const retRes = await apiClient.post<PublicPurchaseResponse>(`/${endpoint}`, {
           ...basePayload,
           seat_nums: selectedReturnSeats,
@@ -467,6 +476,7 @@ export default function SearchResults({
           departure_stop_id: toId,
           arrival_stop_id: fromId,
           purchase_id: pId,
+          is_return_leg: true,
         });
         total = retRes.data.amount_due;
         pId = Number(retRes.data.purchase_id);
@@ -568,7 +578,7 @@ export default function SearchResults({
           currency: FALLBACK_CURRENCY,
           payment_type: "liqpay",
           passenger_count: safeSeatCount,
-          trip_type: selectedReturnTour ? "roundtrip" : "oneway",
+          trip_type: tripTypeLabel,
         });
         if (typeof window !== "undefined") {
           sessionStorage.setItem("ga_checkout_start_ts", String(Date.now()));
@@ -624,7 +634,7 @@ export default function SearchResults({
         currency: FALLBACK_CURRENCY,
         payment_type: "liqpay",
         passenger_count: safeSeatCount,
-        trip_type: selectedReturnTour ? "roundtrip" : "oneway",
+        trip_type: tripTypeLabel,
       });
       if (typeof window !== "undefined") {
         sessionStorage.setItem("ga_checkout_start_ts", String(Date.now()));
@@ -727,7 +737,12 @@ export default function SearchResults({
 
   // ====== РЕЗЮМЕ ДЛЯ ХЕДЕРОВ ШАГОВ ======
 
-  const returnRequired = Boolean(returnDate && hasReturnSection);
+  const returnRequired = Boolean(returnDate && hasReturnSection && !openReturn);
+  const tripTypeLabel = openReturn
+    ? "open_return"
+    : selectedReturnTour
+      ? "roundtrip"
+      : "oneway";
   const seatsDone =
     selectedOutboundSeats.length === safeSeatCount &&
     (!returnRequired || selectedReturnSeats.length === safeSeatCount);
@@ -834,6 +849,15 @@ export default function SearchResults({
     setActiveStep(1);
   };
 
+  const handleReturnModeChange = (open: boolean) => {
+    setOpenReturn(open);
+    if (open) {
+      setSelectedReturnTour(null);
+      setSelectedReturnSeats([]);
+      setExtraBaggageReturn(Array(safeSeatCount).fill(false));
+    }
+  };
+
   const handleReadyForContacts = () => {
     setActiveStep(3);
   };
@@ -856,17 +880,7 @@ export default function SearchResults({
 
   const formatPrice = useCallback((value: number) => `${value.toFixed(2)} ₴`, []);
 
-  const calculateTotal = useCallback(
-    (tour: SearchTour | null) => {
-      if (!tour) return 0;
-      const adults = Math.max(0, safeSeatCount - safeDiscountCount);
-      const adultSum = adults * tour.price;
-      const discSum = safeDiscountCount * tour.price * (1 - DISCOUNT_RATE);
-      return adultSum + discSum;
-    },
-    [safeDiscountCount, safeSeatCount]
-  );
-
+  // Информационная цена за место багажа (+10%); используется только как подпись в шаге 3.
   const calculateBaggagePrice = useCallback((tour: SearchTour | null) => {
     if (!tour) return null;
 
@@ -874,11 +888,6 @@ export default function SearchResults({
     return Math.round(rawPrice * 100) / 100;
   }, []);
 
-  const outboundTotal = useMemo(
-    () => calculateTotal(selectedOutboundTour),
-    [calculateTotal, selectedOutboundTour]
-  );
-  const returnTotal = useMemo(() => calculateTotal(selectedReturnTour), [calculateTotal, selectedReturnTour]);
   const baggageCounts = useMemo(
     () => ({
       outbound: extraBaggageOutbound.filter(Boolean).length,
@@ -886,33 +895,79 @@ export default function SearchResults({
     }),
     [extraBaggageOutbound, extraBaggageReturn, returnRequired]
   );
-  const baggageTotals = useMemo(() => {
-    const outboundPrice = calculateBaggagePrice(selectedOutboundTour) ?? 0;
-    const returnPrice = calculateBaggagePrice(selectedReturnTour) ?? 0;
-    const outboundTotal = baggageCounts.outbound * outboundPrice;
-    const returnTotal = baggageCounts.return * returnPrice;
 
-    return {
-      outboundCount: baggageCounts.outbound,
-      outboundPrice,
-      returnCount: baggageCounts.return,
-      returnPrice,
-      total: outboundTotal + returnTotal,
+  // Итог считает бэкенд: запрашиваем предварительную сумму (quote) по выбранным ногам.
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!selectedOutboundTour) {
+      setQuoteAmount(null);
+      return;
+    }
+
+    const run = async () => {
+      setQuoteLoading(true);
+      try {
+        const adultCount = safeSeatCount - safeDiscountCount;
+        const legs: Record<string, unknown>[] = [
+          {
+            tour_id: selectedOutboundTour.id,
+            departure_stop_id: fromId,
+            arrival_stop_id: toId,
+            adult_count: adultCount,
+            discount_count: safeDiscountCount,
+            extra_baggage_count: baggageCounts.outbound,
+            ...(openReturn ? { open_return: true } : {}),
+          },
+        ];
+        if (selectedReturnTour && !openReturn) {
+          legs.push({
+            tour_id: selectedReturnTour.id,
+            departure_stop_id: toId,
+            arrival_stop_id: fromId,
+            adult_count: adultCount,
+            discount_count: safeDiscountCount,
+            extra_baggage_count: baggageCounts.return,
+            is_return_leg: true,
+          });
+        }
+
+        let sum = 0;
+        for (const leg of legs) {
+          const res = await apiClient.post<{ amount_due?: unknown }>(
+            "/public/purchase/quote",
+            leg
+          );
+          sum += Number(res.data?.amount_due ?? 0);
+        }
+        if (!cancelled) setQuoteAmount(sum);
+      } catch {
+        if (!cancelled) setQuoteAmount(null);
+      } finally {
+        if (!cancelled) setQuoteLoading(false);
+      }
+    };
+
+    void run();
+    return () => {
+      cancelled = true;
     };
   }, [
     baggageCounts.outbound,
     baggageCounts.return,
-    calculateBaggagePrice,
+    fromId,
+    openReturn,
+    safeDiscountCount,
+    safeSeatCount,
     selectedOutboundTour,
     selectedReturnTour,
+    toId,
   ]);
-  const overallTotal = useMemo(
-    () => outboundTotal + returnTotal + baggageTotals.total,
-    [baggageTotals.total, outboundTotal, returnTotal]
-  );
+
+  const overallTotal = quoteAmount ?? 0;
 
   const buildCheckoutItems = useCallback(() => {
-    const tripType = selectedReturnTour ? "roundtrip" : "oneway";
+    const tripType = openReturn ? "open_return" : selectedReturnTour ? "roundtrip" : "oneway";
     const route = buildRouteCategory(
       { id: fromId, name: fromName },
       { id: toId, name: toName },
@@ -944,6 +999,7 @@ export default function SearchResults({
   }, [
     fromId,
     fromName,
+    openReturn,
     safeSeatCount,
     selectedOutboundTour,
     selectedReturnTour,
@@ -955,7 +1011,7 @@ export default function SearchResults({
   useEffect(() => {
     if (activeStep !== 2) return;
     if (!selectedOutboundTour) return;
-    if (returnDate && !selectedReturnTour) return;
+    if (returnDate && !openReturn && !selectedReturnTour) return;
     if (viewItemFiredRef.current) return;
     viewItemFiredRef.current = true;
     const { items, tripType, route } = buildCheckoutItems();
@@ -970,6 +1026,7 @@ export default function SearchResults({
   }, [
     activeStep,
     buildCheckoutItems,
+    openReturn,
     overallTotal,
     returnDate,
     safeSeatCount,
@@ -1025,12 +1082,13 @@ export default function SearchResults({
 
   const orderSummaryTotals = useMemo(
     () => ({
-      outbound: outboundTotal,
-      return: returnTotal,
-      overall: overallTotal,
-      baggage: baggageTotals,
+      overall: quoteAmount,
+      baggage: {
+        outboundCount: baggageCounts.outbound,
+        returnCount: baggageCounts.return,
+      },
     }),
-    [baggageTotals, outboundTotal, overallTotal, returnTotal]
+    [quoteAmount, baggageCounts.outbound, baggageCounts.return]
   );
   const showStepNavigation = Boolean(selectedOutboundTour);
   const stepCounterLabel = t.stepCounter(activeStep, stepNavigation.length);
@@ -1085,6 +1143,39 @@ export default function SearchResults({
               discountCount={safeDiscountCount}
               t={t}
             />
+          )}
+
+          {returnDate && selectedOutboundTour && (
+            <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3 sm:p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                {t.returnModeTitle}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleReturnModeChange(false)}
+                  className={`rounded-lg border px-3 py-2 text-sm ${
+                    !openReturn
+                      ? "border-emerald-500 bg-emerald-50 text-emerald-700"
+                      : "border-slate-300 text-slate-700 hover:bg-slate-100"
+                  }`}
+                >
+                  {t.returnModeFixed}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleReturnModeChange(true)}
+                  className={`rounded-lg border px-3 py-2 text-sm ${
+                    openReturn
+                      ? "border-emerald-500 bg-emerald-50 text-emerald-700"
+                      : "border-slate-300 text-slate-700 hover:bg-slate-100"
+                  }`}
+                >
+                  {t.returnModeOpen}
+                </button>
+              </div>
+              {openReturn && <p className="text-xs text-slate-600">{t.openReturnHint}</p>}
+            </div>
           )}
 
           {returnListVisible && (
@@ -1286,6 +1377,8 @@ export default function SearchResults({
               outboundTour={selectedOutboundTour as SearchTour}
               returnTour={selectedReturnTour}
               returnRequired={returnRequired}
+              openReturn={openReturn}
+              priceLoading={quoteLoading}
               passengerSummaries={passengerSummaries}
               seatCount={seatCount}
               phone={phone}

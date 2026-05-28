@@ -117,6 +117,13 @@ const dict: Record<Lang, Dict> = {
     removeBagAria: "Убрать багаж",
     baggageSummaryOutbound: "Доп. багаж (Туда)",
     baggageSummaryReturn: "Доп. багаж (Обратно)",
+    returnModeTitle: "Обратный билет",
+    returnModeFixed: "Конкретная дата",
+    returnModeOpen: "Открытая дата (−15%)",
+    openReturnHint:
+      "Дату и место обратного рейса вы выберете позже в личном кабинете по QR-коду.",
+    openReturnSummaryLabel: "Обратно (открытая дата)",
+    returnDiscountNote: "обратка −15%",
   },
   en: {
     noResults: "No trips found",
@@ -232,6 +239,13 @@ const dict: Record<Lang, Dict> = {
     removeBagAria: "Remove bag",
     baggageSummaryOutbound: "Extra baggage (Outbound)",
     baggageSummaryReturn: "Extra baggage (Return)",
+    returnModeTitle: "Return ticket",
+    returnModeFixed: "Fixed date",
+    returnModeOpen: "Open date (−15%)",
+    openReturnHint:
+      "You will choose the return date and seat later in your account via the QR code.",
+    openReturnSummaryLabel: "Return (open date)",
+    returnDiscountNote: "return −15%",
   },
   bg: {
     noResults: "Няма намерени курсове",
@@ -348,6 +362,13 @@ const dict: Record<Lang, Dict> = {
     removeBagAria: "Премахни багаж",
     baggageSummaryOutbound: "Доп. багаж (Натам)",
     baggageSummaryReturn: "Доп. багаж (Обратно)",
+    returnModeTitle: "Обратен билет",
+    returnModeFixed: "Конкретна дата",
+    returnModeOpen: "Отворена дата (−15%)",
+    openReturnHint:
+      "Датата и мястото за обратния курс ще изберете по-късно в профила си чрез QR кода.",
+    openReturnSummaryLabel: "Обратно (отворена дата)",
+    returnDiscountNote: "обратно −15%",
   },
   ua: {
     noResults: "Рейси не знайдено",
@@ -464,6 +485,13 @@ const dict: Record<Lang, Dict> = {
     removeBagAria: "Прибрати багаж",
     baggageSummaryOutbound: "Додатковий багаж (Туди)",
     baggageSummaryReturn: "Додатковий багаж (Назад)",
+    returnModeTitle: "Зворотний квиток",
+    returnModeFixed: "Конкретна дата",
+    returnModeOpen: "Відкрита дата (−15%)",
+    openReturnHint:
+      "Дату та місце зворотного рейсу ви оберете пізніше в особистому кабінеті за QR-кодом.",
+    openReturnSummaryLabel: "Назад (відкрита дата)",
+    returnDiscountNote: "зворотний −15%",
   },
 };
 

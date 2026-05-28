@@ -125,4 +125,10 @@ export type Dict = {
   removeBagAria: string;
   baggageSummaryOutbound: string;
   baggageSummaryReturn: string;
+  returnModeTitle: string;
+  returnModeFixed: string;
+  returnModeOpen: string;
+  openReturnHint: string;
+  openReturnSummaryLabel: string;
+  returnDiscountNote: string;
 };

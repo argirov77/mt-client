@@ -125,6 +125,43 @@ export type CancelPreview = {
   currency: string;
 };
 
+export type OpenReturnStatus = "open" | "redeemed" | "cancelled" | "expired";
+
+export type OpenReturnStop = {
+  id?: number | string | null;
+  name?: string | null;
+};
+
+export type OpenReturnVoucher = {
+  id: number | string;
+  from_stop: OpenReturnStop | string | null;
+  to_stop: OpenReturnStop | string | null;
+  amount_paid: number;
+  currency: string;
+  expires_at: string;
+  status: OpenReturnStatus;
+};
+
+export type OpenReturnSeat = {
+  seat_id: number;
+  seat_num: number;
+  status: "available" | "occupied" | "blocked";
+};
+
+export type OpenReturnTour = {
+  tour_id: number;
+  date: string;
+  departure_time: string;
+  arrival_time: string;
+  layout_variant?: string | null;
+  seats?: OpenReturnSeat[];
+};
+
+export type OpenReturnActivateResponse = {
+  ticket_id: number | string;
+  deep_link?: string | null;
+};
+
 export type BaggageQuote = {
   can_apply: boolean;
   delta: number;
