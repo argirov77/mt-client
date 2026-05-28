@@ -442,11 +442,11 @@ export default function SearchForm({
               }}
               lang={lang}
             />
-            <div className="px-3 pb-3">
+            <div className="border-t border-gray-100 px-3 py-3">
               <button
                 type="button"
                 onClick={handleSelectOpenReturn}
-                className="w-full rounded-xl border border-emerald-500 px-4 py-2.5 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50"
+                className="w-full rounded-xl border border-[#0E63F4]/30 bg-[#0E63F4]/5 px-4 py-2.5 text-sm font-semibold text-[#0E63F4] transition hover:bg-[#0E63F4]/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
               >
                 {t.openDateBtn}
               </button>
