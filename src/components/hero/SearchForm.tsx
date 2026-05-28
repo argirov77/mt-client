@@ -29,6 +29,7 @@ type Props = {
     toName: string;
     date: string;
     returnDate?: string;
+    openReturn?: boolean;
     seatCount: number;
     discountCount: number;
   }) => void;
@@ -43,6 +44,8 @@ const L = {
     search: 'Поиск',
     swapTitle: 'Поменять местами',
     noMatches: 'Ничего не найдено',
+    openDate: 'Открытая дата',
+    openDateBtn: 'Билет с открытой датой',
   },
   en: {
     from: 'From',
@@ -52,6 +55,8 @@ const L = {
     search: 'Search',
     swapTitle: 'Swap',
     noMatches: 'No matches',
+    openDate: 'Open date',
+    openDateBtn: 'Open-date ticket',
   },
   bg: {
     from: 'Откъде',
@@ -61,6 +66,8 @@ const L = {
     search: 'Търсене',
     swapTitle: 'Размени',
     noMatches: 'Няма съвпадения',
+    openDate: 'Отворена дата',
+    openDateBtn: 'Билет с отворена дата',
   },
   ua: {
     from: 'Звідки',
@@ -70,6 +77,8 @@ const L = {
     search: 'Пошук',
     swapTitle: 'Поміняти місцями',
     noMatches: 'Нічого не знайдено',
+    openDate: 'Відкрита дата',
+    openDateBtn: 'Квиток з відкритою датою',
   },
 };
 
@@ -95,6 +104,8 @@ export default function SearchForm({
   const [returnDate, setReturnDate] = useState<string>(
     initialReturnDate ?? '',
   );
+  // Обратный билет с открытой датой (выбирается из календаря «Обратно»)
+  const [openReturn, setOpenReturn] = useState(false);
   const [passengers, setPassengers] = useState({
     adults: Math.max(1, initialSeats),
     discount: 0,
@@ -195,6 +206,13 @@ export default function SearchForm({
     setTo(from);
     setDepartDate('');
     setReturnDate('');
+    setOpenReturn(false);
+  };
+
+  const handleSelectOpenReturn = () => {
+    setOpenReturn(true);
+    setReturnDate('');
+    setShowReturn(false);
   };
 
   const handleDepartOpen = () => setShowDepart(true);
@@ -221,7 +239,7 @@ export default function SearchForm({
       ),
       departure_date: departDate,
       return_date: returnDate || undefined,
-      trip_type: returnDate ? 'roundtrip' : 'oneway',
+      trip_type: openReturn ? 'open_return' : returnDate ? 'roundtrip' : 'oneway',
       passenger_count: passengers.adults + passengers.discount,
       adult_count: passengers.adults,
       discount_count: passengers.discount,
@@ -232,7 +250,8 @@ export default function SearchForm({
       fromName,
       toName,
       date: departDate,
-      returnDate: returnDate || undefined,
+      returnDate: openReturn ? undefined : returnDate || undefined,
+      openReturn,
       seatCount,
       discountCount: passengers.discount,
     });
@@ -318,6 +337,7 @@ export default function SearchForm({
           lang={lang}
           disabled={!fromId || !toId}
           onOpen={handleReturnOpen}
+          displayText={openReturn ? t.openDate : undefined}
         />
 
         <PassengersInput
@@ -417,10 +437,20 @@ export default function SearchForm({
               selectedDate={returnDate}
               onSelect={(iso) => {
                 setReturnDate(iso);
+                setOpenReturn(false);
                 setShowReturn(false);
               }}
               lang={lang}
             />
+            <div className="px-3 pb-3">
+              <button
+                type="button"
+                onClick={handleSelectOpenReturn}
+                className="w-full rounded-xl border border-emerald-500 px-4 py-2.5 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50"
+              >
+                {t.openDateBtn}
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -43,6 +43,7 @@ type Props = {
   toName: string;
   date: string;
   returnDate?: string;
+  openReturn?: boolean;
   seatCount: number;
   discountCount: number;
 };
@@ -99,6 +100,7 @@ export default function SearchResults({
   toName,
   date,
   returnDate,
+  openReturn: openReturnInitial = false,
   seatCount,
   discountCount,
 }: Props) {
@@ -139,7 +141,7 @@ export default function SearchResults({
 
   // Обратный билет с открытой датой (сценарий C): обратный рейс не выбирается,
   // бэкенд выпускает предоплаченную открытую обратку (−15%).
-  const [openReturn, setOpenReturn] = useState(false);
+  const [openReturn, setOpenReturn] = useState(Boolean(openReturnInitial));
 
   // Итоговая сумма считается на бэкенде (quote), фронт её только отображает.
   const [quoteAmount, setQuoteAmount] = useState<number | null>(null);
@@ -1145,35 +1147,42 @@ export default function SearchResults({
             />
           )}
 
-          {returnDate && selectedOutboundTour && (
+          {(returnDate || openReturn) && selectedOutboundTour && (
             <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3 sm:p-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                 {t.returnModeTitle}
               </p>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleReturnModeChange(false)}
-                  className={`rounded-lg border px-3 py-2 text-sm ${
-                    !openReturn
-                      ? "border-emerald-500 bg-emerald-50 text-emerald-700"
-                      : "border-slate-300 text-slate-700 hover:bg-slate-100"
-                  }`}
-                >
-                  {t.returnModeFixed}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleReturnModeChange(true)}
-                  className={`rounded-lg border px-3 py-2 text-sm ${
-                    openReturn
-                      ? "border-emerald-500 bg-emerald-50 text-emerald-700"
-                      : "border-slate-300 text-slate-700 hover:bg-slate-100"
-                  }`}
-                >
-                  {t.returnModeOpen}
-                </button>
-              </div>
+              {returnDate && (
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleReturnModeChange(false)}
+                    className={`rounded-lg border px-3 py-2 text-sm ${
+                      !openReturn
+                        ? "border-emerald-500 bg-emerald-50 text-emerald-700"
+                        : "border-slate-300 text-slate-700 hover:bg-slate-100"
+                    }`}
+                  >
+                    {t.returnModeFixed}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleReturnModeChange(true)}
+                    className={`rounded-lg border px-3 py-2 text-sm ${
+                      openReturn
+                        ? "border-emerald-500 bg-emerald-50 text-emerald-700"
+                        : "border-slate-300 text-slate-700 hover:bg-slate-100"
+                    }`}
+                  >
+                    {t.returnModeOpen}
+                  </button>
+                </div>
+              )}
+              {openReturn && (
+                <p className="text-xs text-slate-600">
+                  {t.openReturnSummaryLabel} · {t.returnDiscountNote}
+                </p>
+              )}
               {openReturn && <p className="text-xs text-slate-600">{t.openReturnHint}</p>}
             </div>
           )}
