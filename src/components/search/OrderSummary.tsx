@@ -17,20 +17,17 @@ type OrderSummaryProps = {
   outboundTour: Tour;
   returnTour: Tour | null;
   returnRequired: boolean;
+  openReturn: boolean;
+  priceLoading: boolean;
   passengerSummaries: PassengerSummary[];
   seatCount: number;
   phone: string;
   email: string;
   totals: {
-    outbound: number;
-    return: number;
-    overall: number;
+    overall: number | null;
     baggage: {
       outboundCount: number;
-      outboundPrice: number;
       returnCount: number;
-      returnPrice: number;
-      total: number;
     };
   };
   formatDateLabel: (value: string) => string;
@@ -44,6 +41,8 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
   outboundTour,
   returnTour,
   returnRequired,
+  openReturn,
+  priceLoading,
   passengerSummaries,
   seatCount,
   phone,
@@ -55,27 +54,12 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
   const contactsProvided = Boolean(phone || email);
   const baggageLines = [
     totals.baggage.outboundCount > 0
-      ? {
-          label: t.baggageSummaryOutbound,
-          count: totals.baggage.outboundCount,
-          price: totals.baggage.outboundPrice,
-          total: totals.baggage.outboundCount * totals.baggage.outboundPrice,
-        }
+      ? { label: t.baggageSummaryOutbound, count: totals.baggage.outboundCount }
       : null,
     totals.baggage.returnCount > 0
-      ? {
-          label: t.baggageSummaryReturn,
-          count: totals.baggage.returnCount,
-          price: totals.baggage.returnPrice,
-          total: totals.baggage.returnCount * totals.baggage.returnPrice,
-        }
+      ? { label: t.baggageSummaryReturn, count: totals.baggage.returnCount }
       : null,
-  ].filter(Boolean) as Array<{
-    label: string;
-    count: number;
-    price: number;
-    total: number;
-  }>;
+  ].filter(Boolean) as Array<{ label: string; count: number }>;
 
   const renderRouteBlock = (
     title: string,
@@ -133,6 +117,18 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
               "bg-indigo-50 text-indigo-700 ring-indigo-100",
             )
           : null}
+
+        {openReturn ? (
+          <div className="rounded-none border-0 bg-slate-50/70 px-3 py-3 shadow-none sm:rounded-xl sm:border sm:border-slate-200 sm:bg-white sm:px-4 sm:py-3 sm:shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              {t.openReturnSummaryLabel}
+            </p>
+            <p className="mt-1 text-base font-semibold text-slate-900">{`${toName} → ${fromName}`}</p>
+            <span className="mt-1 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-100">
+              {t.returnDiscountNote}
+            </span>
+          </div>
+        ) : null}
 
         <div className="rounded-none border-0 bg-slate-50/70 px-3 py-3 shadow-none sm:rounded-xl sm:border sm:border-slate-200 sm:bg-white sm:px-4 sm:py-3 sm:shadow-sm">
           <div className="flex items-center justify-between">
@@ -209,7 +205,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
               {baggageLines.map((line) => (
                 <div key={line.label} className="flex items-center justify-between gap-3">
                   <span className="text-slate-600">
-                    {line.label}: {line.count} × {formatPrice(line.price)} = {formatPrice(line.total)}
+                    {line.label}: {line.count} ({t.extraBaggagePrice})
                   </span>
                 </div>
               ))}
@@ -220,8 +216,19 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
         <div className="rounded-none border-0 bg-slate-50/70 px-3 py-3 shadow-none sm:rounded-xl sm:border sm:border-slate-200 sm:bg-white sm:px-4 sm:py-4 sm:shadow-sm">
           <div className="flex items-center justify-between text-lg font-semibold text-slate-900">
             <span>{t.total}</span>
-            <span className="text-emerald-600">{formatPrice(totals.overall)}</span>
+            <span className="text-emerald-600">
+              {totals.overall != null
+                ? formatPrice(totals.overall)
+                : priceLoading
+                  ? t.loading
+                  : "—"}
+            </span>
           </div>
+          {(openReturn || returnRequired) && (
+            <p className="mt-1 text-right text-xs font-medium text-emerald-700">
+              {t.returnDiscountNote}
+            </p>
+          )}
         </div>
       </div>
     </aside>
