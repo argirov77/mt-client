@@ -21,6 +21,8 @@ type Props = {
   initialDate?: string;       // YYYY-MM-DD
   initialReturnDate?: string; // YYYY-MM-DD
   initialSeats?: number;
+  initialDiscount?: number;
+  initialOpenReturn?: boolean;
   embedded?: boolean;
   onSearch: (params: {
     from: string;
@@ -89,6 +91,8 @@ export default function SearchForm({
   initialDate,
   initialReturnDate,
   initialSeats = 1,
+  initialDiscount = 0,
+  initialOpenReturn = false,
   embedded = false,
   onSearch,
 }: Props) {
@@ -105,10 +109,10 @@ export default function SearchForm({
     initialReturnDate ?? '',
   );
   // Обратный билет с открытой датой (выбирается из календаря «Обратно»)
-  const [openReturn, setOpenReturn] = useState(false);
+  const [openReturn, setOpenReturn] = useState(initialOpenReturn);
   const [passengers, setPassengers] = useState({
     adults: Math.max(1, initialSeats),
-    discount: 0,
+    discount: Math.max(0, initialDiscount),
   });
   const seatCount = passengers.adults + passengers.discount;
 
