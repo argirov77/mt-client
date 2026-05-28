@@ -33,6 +33,8 @@ type BookingFlowProps = {
 export default function BookingFlow({ forcedFromId, forcedToId }: BookingFlowProps = {}) {
   const { lang } = useLanguage();
   const [criteria, setCriteria] = useState<Criteria | null>(null);
+  // запоминаем последний поиск, чтобы при возврате форма не была пустой
+  const [lastCriteria, setLastCriteria] = useState<Criteria | null>(null);
   const resultsRef = useRef<HTMLDivElement | null>(null);
 
   // после нового поиска скроллим к заголовку результатов с небольшим отступом
@@ -60,9 +62,21 @@ export default function BookingFlow({ forcedFromId, forcedToId }: BookingFlowPro
           <SearchForm
             lang={lang}
             embedded
-            initialFromId={forcedFromId}
-            initialToId={forcedToId}
-            onSearch={(params) => setCriteria(params)}
+            initialFromId={forcedFromId ?? lastCriteria?.from}
+            initialToId={forcedToId ?? lastCriteria?.to}
+            initialDate={lastCriteria?.date}
+            initialReturnDate={lastCriteria?.returnDate}
+            initialSeats={
+              lastCriteria
+                ? lastCriteria.seatCount - lastCriteria.discountCount
+                : undefined
+            }
+            initialDiscount={lastCriteria?.discountCount}
+            initialOpenReturn={lastCriteria?.openReturn}
+            onSearch={(params) => {
+              setCriteria(params);
+              setLastCriteria(params);
+            }}
           />
         </div>
       )}
