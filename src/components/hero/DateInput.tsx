@@ -12,6 +12,7 @@ type Props = {
   label?: string;                 // 🔹 подпись внутри пилюли: "Date" / "Return"
   lang?: "ru" | "bg" | "en" | "ua";
   onOpen?: () => void;            // если календарь внешне открывается
+  displayText?: string;          // переопределяет показываемое значение (напр. «Открытая дата»)
 };
 
 export default function DateInput({
@@ -23,9 +24,10 @@ export default function DateInput({
   label,
   lang = "ru", // eslint-disable-line @typescript-eslint/no-unused-vars
   onOpen,
+  displayText,
 }: Props) {
   // отображаемое значение (если пусто — покажем "— — —")
-  const human = value ? formatDate(value) : "— — —";
+  const human = displayText ?? (value ? formatDate(value) : "— — —");
 
   return (
     <button

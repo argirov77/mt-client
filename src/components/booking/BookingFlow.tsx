@@ -20,6 +20,7 @@ export type Criteria = {
   toName: string;
   date: string;
   returnDate?: string;
+  openReturn?: boolean;
   seatCount: number;
   discountCount: number;
 };
