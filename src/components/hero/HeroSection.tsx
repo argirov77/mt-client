@@ -22,7 +22,7 @@ export default function HeroSection({ lang = "ru", heroTitle, heroSubtitle }: Pr
           className="h-[82vh] min-h-[620px] overflow-hidden rounded-2xl border border-slate-200/70 shadow-[0_24px_80px_rgba(15,23,42,0.18)] sm:h-[80vh] sm:min-h-[560px]"
           style={{
             backgroundImage:
-              "linear-gradient(180deg, rgba(3,10,20,0.28) 0%, rgba(3,10,20,0.58) 55%, rgba(3,10,20,0.88) 100%), url('/images/hero.png')",
+              "linear-gradient(180deg, rgba(3,10,20,0.28) 0%, rgba(3,10,20,0.58) 55%, rgba(3,10,20,0.88) 100%), url('/images/hero-webp.webp')",
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}
