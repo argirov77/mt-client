@@ -5,11 +5,13 @@ import { createPortal } from "react-dom";
 
 import UiAlert from "@/components/common/Alert";
 import Loader from "@/components/common/Loader";
+import { useLanguage } from "@/components/common/LanguageProvider";
 import Calendar from "@/components/Calendar";
 import SeatClient, { type SeatSelectionDetail } from "@/components/SeatClient";
 import { API } from "@/config";
 import { downloadTicketPdf } from "@/utils/ticketPdf";
 import { trackEvent, FALLBACK_CURRENCY } from "@/lib/analytics";
+import { refundTranslations } from "@/translations/refund";
 import type {
   BaggageQuote,
   CancelPreview,
@@ -21,6 +23,8 @@ import type {
   PurchaseTrip,
   PurchaseView,
   PurchaseTotals,
+  RefundRequest,
+  RefundRequestStatus,
 } from "@/types/purchase";
 import { fetchWithInclude } from "@/utils/fetchWithInclude";
 import { buildPublicPurchaseEndpoint, buildPublicPurchasePayEndpoint } from "@/utils/publicPurchasePayEndpoint";
@@ -701,6 +705,37 @@ const normalizePurchasePayload = (payload: unknown): PurchaseView => {
     raw?.["id"] ??
     raw?.["purchase_id"];
 
+  const refundRequestRaw = isObject(rawPurchase?.refund_request)
+    ? (rawPurchase.refund_request as Record<string, unknown>)
+    : isObject(raw.refund_request)
+      ? (raw.refund_request as Record<string, unknown>)
+      : null;
+
+  const refundRequest: RefundRequest | null = refundRequestRaw
+    ? {
+        id: toNumberSafe(refundRequestRaw.id, 0),
+        status: String(refundRequestRaw.status ?? "pending") as RefundRequestStatus,
+        ticket_ids: Array.isArray(refundRequestRaw.ticket_ids)
+          ? (refundRequestRaw.ticket_ids as Array<number | string>)
+          : [],
+        amount_requested:
+          refundRequestRaw.amount_requested === undefined || refundRequestRaw.amount_requested === null
+            ? null
+            : Number(refundRequestRaw.amount_requested) || null,
+        amount_refunded:
+          refundRequestRaw.amount_refunded === undefined || refundRequestRaw.amount_refunded === null
+            ? null
+            : Number(refundRequestRaw.amount_refunded) || null,
+        requested_at: String(refundRequestRaw.requested_at ?? refundRequestRaw.created_at ?? ""),
+        reason: refundRequestRaw.reason as string | undefined,
+      }
+    : null;
+
+  const totalRefunded = toNumberSafe(
+    (rawPurchase?.total_refunded ?? raw.total_refunded) as unknown,
+    0,
+  );
+
   const purchaseSummary = {
     id: ensureStringOrNumber(purchaseIdCandidate, ""),
     status: (rawPurchase?.status ?? raw.status ?? "pending") as string,
@@ -708,6 +743,8 @@ const normalizePurchasePayload = (payload: unknown): PurchaseView => {
     amount_due: toNumberSafe(rawPurchase?.amount_due ?? raw.amount_due ?? totals.due, 0),
     currency: inferredCurrency ?? "",
     deadline: (rawPurchase?.deadline ?? rawPurchase?.payment_deadline ?? null) as string | null,
+    refund_request: refundRequest,
+    total_refunded: totalRefunded,
   } satisfies PurchaseSummary;
 
   const historySource = Array.isArray(raw.history)
@@ -864,6 +901,8 @@ const submitPaymentForm = (payload: PaymentPayload) => {
 };
 
 export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
+  const { lang } = useLanguage();
+  const refundT = refundTranslations[lang] ?? refundTranslations.ru;
   const [data, setData] = useState<PurchaseView | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -1325,7 +1364,16 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
 
   const selectAllCancel = () => {
     if (!data) return;
-    setCancelSelected(data.tickets.map((ticket) => String(ticket.id)));
+    const isPaidOrder = data.purchase.status === "paid";
+    setCancelSelected(
+      data.tickets
+        .filter((ticket) =>
+          isPaidOrder
+            ? !ACTION_DISABLED_STATUSES.has(String(ticket.status).toLowerCase())
+            : true,
+        )
+        .map((ticket) => String(ticket.id)),
+    );
   };
 
   const clearCancelSelection = () => {
@@ -1570,14 +1618,20 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
       return;
     }
 
+    const refundStatus = data?.purchase.refund_request?.status;
+    if (refundStatus === "pending" || refundStatus === "processing") {
+      return;
+    }
+
+    const isPaidOrder = data?.purchase.status === "paid";
+
     setCancelSelected(ticketIds);
     setCancelError(null);
+    setCancelPreview(null);
     setActivePanel("cancel");
     closeTicketMenu();
-    if (ticketIds.length > 0) {
+    if (!isPaidOrder && ticketIds.length > 0) {
       void submitCancelPreview(ticketIds);
-    } else {
-      setCancelPreview(null);
     }
   };
 
@@ -1651,6 +1705,59 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
     fetchPurchase,
     isActionDisabled,
     purchaseId,
+    toOriginalTicketIds,
+  ]);
+
+  const submitRefundRequest = useCallback(async () => {
+    if (!data) {
+      return;
+    }
+
+    if (cancelTickets.length === 0) {
+      setCancelError(refundT.selectTickets);
+      return;
+    }
+
+    setActionLoading("cancel");
+    setCancelError(null);
+
+    const identifiers = toOriginalTicketIds(cancelTickets);
+
+    try {
+      const response = await fetchWithInclude(
+        `${API}/public/purchase/${purchaseId}/refund-request`,
+        {
+          method: "POST",
+          body: JSON.stringify({ ticket_ids: identifiers }),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      trackEvent("refund_request_submitted", {
+        purchase_id: String(purchaseId),
+        ticket_count: identifiers.length,
+      });
+
+      await fetchPurchase();
+      setCancelPreview(null);
+      setCancelSelected([]);
+      setActivePanel(null);
+      setBanner({ type: "success", message: refundT.successBody });
+    } catch (refundError) {
+      console.error(refundError);
+      setCancelError(refundT.errorGeneric);
+    } finally {
+      setActionLoading(null);
+    }
+  }, [
+    cancelTickets,
+    data,
+    fetchPurchase,
+    purchaseId,
+    refundT,
     toOriginalTicketIds,
   ]);
 
@@ -2265,7 +2372,21 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
   const customer = data.customer ?? null;
   const totals = data.totals ? { ...DEFAULT_TOTALS, ...data.totals } : { ...DEFAULT_TOTALS };
   const isPaid = data.purchase.status === "paid";
-  const primaryActionLabel = isPaid ? "Оформить возврат" : "Оплатить";
+  const refundRequest = data.purchase.refund_request ?? null;
+  const refundPending =
+    refundRequest?.status === "pending" || refundRequest?.status === "processing";
+  const totalRefunded = toNumberSafe(data.purchase.total_refunded, 0);
+  const refundedTicketsCount = data.tickets.reduce(
+    (acc, ticket) =>
+      String(ticket.status).toLowerCase() === "canceled" ? acc + 1 : acc,
+    0,
+  );
+  const hasActiveTickets = data.tickets.some(
+    (ticket) => !ACTION_DISABLED_STATUSES.has(String(ticket.status).toLowerCase()),
+  );
+  const showPartialRefundBadge =
+    isPaid && !refundPending && totalRefunded > 0 && hasActiveTickets;
+  const primaryActionLabel = isPaid ? refundT.button : "Оплатить";
   const showReturnTickets = returnTickets.length > 0;
   const shouldShowDownloadAll = data.tickets.length > 1;
   const shouldShowBulkActions = bulkSelectionCount > 0;
@@ -2275,7 +2396,19 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
     }
     return sum + toNumberSafe(ticket.pricing?.price, 0);
   }, 0);
-  const primaryActionDisabled = isActionDisabled;
+  const selectedCancelTotal = data.tickets.reduce((sum, ticket) => {
+    const id = String(ticket.id);
+    if (!cancelTickets.includes(id)) {
+      return sum;
+    }
+    return sum + toNumberSafe(ticket.pricing?.price, 0);
+  }, 0);
+  const selectedCancelTotalText = formatCurrency(selectedCancelTotal, data.purchase.currency);
+  const refundRequestDate = refundRequest?.requested_at
+    ? formatDate(refundRequest.requested_at)
+    : "";
+  const totalRefundedText = formatCurrency(totalRefunded, data.purchase.currency);
+  const primaryActionDisabled = isActionDisabled || refundPending;
   const dueAmountText = formatCurrency(totals.due, data.purchase.currency);
   const selectedTicketsTotalText = formatCurrency(selectedTicketsTotal, data.purchase.currency);
   const totalAmountText = formatCurrency(data.purchase.amount_due, data.purchase.currency);
@@ -2376,20 +2509,24 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
                 data-placement={anchor?.placement}
                 style={floatingStyle}
               >
-                <button type="button" role="menuitem" onClick={() => handleTicketReschedule(ticketId)}>
-                  Перенести
-                </button>
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={() => handleTicketCancel(ticketId)}
-                  className={styles.menuDanger}
-                >
-                  Отмена
-                </button>
-                <button type="button" role="menuitem" onClick={handleOpenBaggagePanel}>
-                  Доп. багаж
-                </button>
+                {refundPending ? null : (
+                  <>
+                    <button type="button" role="menuitem" onClick={() => handleTicketReschedule(ticketId)}>
+                      Перенести
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => handleTicketCancel(ticketId)}
+                      className={styles.menuDanger}
+                    >
+                      {isPaid ? refundT.button : "Отмена"}
+                    </button>
+                    <button type="button" role="menuitem" onClick={handleOpenBaggagePanel}>
+                      Доп. багаж
+                    </button>
+                  </>
+                )}
                 <button
                   type="button"
                   role="menuitem"
@@ -2569,6 +2706,23 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
             </div>
           </div>
         </section>
+
+        {refundPending ? (
+          <div className={styles.alertWrap}>
+            <UiAlert type="info">{refundT.pendingBadge(refundRequestDate)}</UiAlert>
+          </div>
+        ) : null}
+
+        {showPartialRefundBadge ? (
+          <div className={styles.alertWrap}>
+            <UiAlert type="info">
+              {refundT.completedPartial({
+                amount: totalRefundedText,
+                ticketCount: refundedTicketsCount,
+              })}
+            </UiAlert>
+          </div>
+        ) : null}
 
         {banner ? (
           <div className={styles.alertWrap}>
@@ -2786,55 +2940,85 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
           <section className={`${styles.card} ${styles.panel}`}>
             <div className={styles.panelHeader}>
               <div>
-                <h3 className={styles.panelTitle}>{cancelActionLabel} билетов</h3>
-                <p className={styles.panelSubtitle}>Выбрано билетов: {cancelSelectionCount}</p>
+                <h3 className={styles.panelTitle}>
+                  {isPaid ? refundT.selectTickets : `${cancelActionLabel} билетов`}
+                </h3>
+                <p className={styles.panelSubtitle}>
+                  {isPaid ? refundT.partialNote : `Выбрано билетов: ${cancelSelectionCount}`}
+                </p>
               </div>
               <div className={styles.panelOptions}>
                 <button type="button" className={`${styles.btn} ${styles.btnPill}`} onClick={selectAllCancel}>
-                  Выбрать все
+                  {isPaid ? refundT.selectAll : "Выбрать все"}
                 </button>
                 <button type="button" className={`${styles.btn} ${styles.btnPillMuted}`} onClick={clearCancelSelection}>
-                  Сбросить
+                  {isPaid ? refundT.clear : "Сбросить"}
                 </button>
                 <button type="button" className={styles.linkButton} onClick={() => setActivePanel(null)}>
-                  Скрыть
+                  {isPaid ? refundT.hide : "Скрыть"}
                 </button>
               </div>
             </div>
             <div className={styles.panelBody}>
-              <div className={styles.panelButtons}>
-                <button
-                  type="button"
-                  className={`${styles.btn} ${styles.btnPrimary}`}
-                  onClick={() => void submitCancelPreview(cancelTickets)}
-                  disabled={cancelButtonDisabled}
-                >
-                  Рассчитать {cancelActionLabel.toLowerCase()}
-                </button>
-                {cancelLoading ? <span className={styles.panelNote}>Расчёт...</span> : null}
-              </div>
-              {cancelError ? <p className={styles.panelError}>{cancelError}</p> : null}
-              {cancelPreview ? (
-                <div className={`${styles.panelHighlight} ${styles.panelHighlightSuccess}`}>
-                  К возврату сейчас: {formatCurrency(cancelPreview.total_refund, cancelPreview.currency)}
-                </div>
+              {isPaid ? (
+                <>
+                  <p className={styles.panelNote}>Выбрано билетов: {cancelSelectionCount}</p>
+                  {cancelSelectionCount > 0 ? (
+                    <div className={`${styles.panelHighlight} ${styles.panelHighlightSuccess}`}>
+                      <p className={styles.panelHighlightTitle}>
+                        {refundT.estimateLabel}: {selectedCancelTotalText}
+                      </p>
+                    </div>
+                  ) : null}
+                  {cancelError ? <p className={styles.panelError}>{cancelError}</p> : null}
+                  <div className={styles.panelFooter}>
+                    <button
+                      type="button"
+                      onClick={() => void submitRefundRequest()}
+                      disabled={cancelButtonDisabled || actionLoading === "cancel"}
+                      className={`${styles.btn} ${styles.btnPrimary}`}
+                    >
+                      {actionLoading === "cancel" ? refundT.submitting : refundT.submit}
+                    </button>
+                  </div>
+                </>
               ) : (
-                cancelLoading ? null : (
-                  <p className={styles.panelNote}>
-                    Выберите билеты, чтобы рассчитать {cancelActionLabel.toLowerCase()}.
-                  </p>
-                )
+                <>
+                  <div className={styles.panelButtons}>
+                    <button
+                      type="button"
+                      className={`${styles.btn} ${styles.btnPrimary}`}
+                      onClick={() => void submitCancelPreview(cancelTickets)}
+                      disabled={cancelButtonDisabled}
+                    >
+                      Рассчитать {cancelActionLabel.toLowerCase()}
+                    </button>
+                    {cancelLoading ? <span className={styles.panelNote}>Расчёт...</span> : null}
+                  </div>
+                  {cancelError ? <p className={styles.panelError}>{cancelError}</p> : null}
+                  {cancelPreview ? (
+                    <div className={`${styles.panelHighlight} ${styles.panelHighlightSuccess}`}>
+                      К возврату сейчас: {formatCurrency(cancelPreview.total_refund, cancelPreview.currency)}
+                    </div>
+                  ) : (
+                    cancelLoading ? null : (
+                      <p className={styles.panelNote}>
+                        Выберите билеты, чтобы рассчитать {cancelActionLabel.toLowerCase()}.
+                      </p>
+                    )
+                  )}
+                  <div className={styles.panelFooter}>
+                    <button
+                      type="button"
+                      onClick={confirmCancel}
+                      disabled={cancelButtonDisabled || actionLoading === "cancel"}
+                      className={`${styles.btn} ${styles.btnDanger}`}
+                    >
+                      {cancelConfirmLabel}
+                    </button>
+                  </div>
+                </>
               )}
-              <div className={styles.panelFooter}>
-                <button
-                  type="button"
-                  onClick={confirmCancel}
-                  disabled={cancelButtonDisabled || actionLoading === "cancel"}
-                  className={`${styles.btn} ${styles.btnDanger}`}
-                >
-                  {cancelConfirmLabel}
-                </button>
-              </div>
             </div>
           </section>
         ) : null}
@@ -3008,30 +3192,34 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
                 </span>
               </div>
               <div className={styles.bulkBar} role="toolbar" aria-label="Групповые действия">
-                <button
-                  type="button"
-                  className={`${styles.btn} ${styles.btnGhost}`}
-                  onClick={handleBulkReschedule}
-                  disabled={isActionDisabled || bulkSelectionCount === 0}
-                >
-                  Перенести
-                </button>
-                <button
-                  type="button"
-                  className={`${styles.btn} ${styles.btnDanger}`}
-                  onClick={handleBulkCancel}
-                  disabled={isActionDisabled || bulkSelectionCount === 0}
-                >
-                  {cancelActionLabel}
-                </button>
-                <button
-                  type="button"
-                  className={`${styles.btn} ${styles.btnGhost}`}
-                  onClick={handleOpenBaggagePanel}
-                  disabled={isActionDisabled}
-                >
-                  Доп. багаж
-                </button>
+                {refundPending ? null : (
+                  <>
+                    <button
+                      type="button"
+                      className={`${styles.btn} ${styles.btnGhost}`}
+                      onClick={handleBulkReschedule}
+                      disabled={isActionDisabled || bulkSelectionCount === 0}
+                    >
+                      Перенести
+                    </button>
+                    <button
+                      type="button"
+                      className={`${styles.btn} ${styles.btnDanger}`}
+                      onClick={handleBulkCancel}
+                      disabled={isActionDisabled || bulkSelectionCount === 0}
+                    >
+                      {isPaid ? refundT.button : cancelActionLabel}
+                    </button>
+                    <button
+                      type="button"
+                      className={`${styles.btn} ${styles.btnGhost}`}
+                      onClick={handleOpenBaggagePanel}
+                      disabled={isActionDisabled}
+                    >
+                      Доп. багаж
+                    </button>
+                  </>
+                )}
                 <button
                   type="button"
                   className={`${styles.btn} ${styles.btnGhost}`}
@@ -3057,21 +3245,23 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
                   Скачать все PDF
                 </button>
               ) : null}
-              <button
-                type="button"
-                className={`${styles.btn} ${styles.btnPay}`}
-                onClick={handlePrimaryAction}
-                disabled={primaryActionDisabled}
-              >
-                {isPaid ? (
-                  primaryActionLabel
-                ) : (
-                  <>
-                    <span className={styles.payDot} aria-hidden="true" />
-                    Оплатить • <span className={styles.mono}>{dueAmountText}</span>
-                  </>
-                )}
-              </button>
+              {isPaid && refundPending ? null : (
+                <button
+                  type="button"
+                  className={`${styles.btn} ${styles.btnPay}`}
+                  onClick={handlePrimaryAction}
+                  disabled={primaryActionDisabled}
+                >
+                  {isPaid ? (
+                    primaryActionLabel
+                  ) : (
+                    <>
+                      <span className={styles.payDot} aria-hidden="true" />
+                      Оплатить • <span className={styles.mono}>{dueAmountText}</span>
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           </div>
         </section>
