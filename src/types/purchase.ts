@@ -1,5 +1,22 @@
 export type PurchaseStatus = "pending" | "paid" | "canceled" | "expired" | string;
 
+export type RefundRequestStatus =
+  | "pending"
+  | "processing"
+  | "completed"
+  | "failed"
+  | "rejected";
+
+export type RefundRequest = {
+  id: number;
+  status: RefundRequestStatus;
+  ticket_ids: Array<number | string>;
+  amount_requested: number | null;
+  amount_refunded: number | null;
+  requested_at: string;
+  reason?: string;
+};
+
 export type PurchaseSummary = {
   id: number | string;
   status: PurchaseStatus;
@@ -7,6 +24,8 @@ export type PurchaseSummary = {
   amount_due: number;
   currency: string;
   deadline?: string | null;
+  refund_request?: RefundRequest | null;
+  total_refunded?: number;
 };
 
 export type PurchasePassenger = {
