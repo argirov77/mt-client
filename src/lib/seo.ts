@@ -111,6 +111,7 @@ export function buildHomeMetadata(locale: Lang): Metadata {
     title: meta.title,
     description: meta.description,
     alternates,
+    ...(locale === "bg" ? { robots: { index: false, follow: true } } : {}),
     openGraph: {
       title: meta.title,
       description: meta.description,
@@ -140,6 +141,7 @@ export function buildTripMetadata(tripKey: string, locale: Lang): Metadata | nul
     title: data.title,
     description: data.description,
     alternates,
+    ...(locale === "bg" ? { robots: { index: false, follow: true } } : {}),
     openGraph: {
       title: data.title,
       description: data.description,
