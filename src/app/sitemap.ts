@@ -20,6 +20,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
   homeLanguages["x-default"] = buildUrl(DEFAULT_LOCALE, "/");
 
   for (const locale of LOCALES) {
+    // BG version is intentionally excluded from the sitemap (noindex).
+    // It stays reachable via direct link and manual language switch,
+    // and remains listed as an hreflang alternate above.
+    if (locale === "bg") continue;
     entries.push({
       url: buildUrl(locale, "/"),
       lastModified: now,
@@ -41,6 +45,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     const priority = key === "route" ? 0.9 : key.startsWith("odessa-") ? 0.9 : 0.7;
 
     for (const locale of LOCALES) {
+      // BG trip pages are excluded from the sitemap (noindex), but stay
+      // listed as hreflang alternates above.
+      if (locale === "bg") continue;
       const slug = trip.i18n[locale as Lang]?.slug;
       if (!slug) continue;
       entries.push({
