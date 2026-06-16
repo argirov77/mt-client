@@ -1659,7 +1659,11 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
     const identifiers = toOriginalTicketIds(cancelTickets);
     const body: Record<string, unknown> = {};
 
-    if (identifiers.length > 0 && cancelTickets.length !== allTicketIds.length) {
+    // The backend requires an explicit, non-empty ticket_ids list (it has no
+    // "empty means everything" shortcut). Always send the selected tickets,
+    // including when cancelling the whole booking — otherwise the request is
+    // rejected with 422 and the seats are never released.
+    if (identifiers.length > 0) {
       body.ticket_ids = identifiers;
     }
 
@@ -1697,7 +1701,6 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
       setActionLoading(null);
     }
   }, [
-    allTicketIds,
     cancelPreview,
     cancelSelectionCount,
     cancelTickets,
