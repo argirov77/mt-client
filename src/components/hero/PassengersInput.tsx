@@ -29,22 +29,22 @@ const L = {
   en: {
     passengers: "Passengers",
     adults: "Adult",
-    discount: "Discounted",
-    tip: "Discounted: children, students, and seniors",
+    discount: "Child",
+    tip: "children up to 13.99 years old",
     done: "Done",
   },
   bg: {
     passengers: "Пътници",
     adults: "Възрастен",
-    discount: "С намаление",
-    tip: "С намаление: деца, студенти и пенсионери",
+    discount: "Детски",
+    tip: "деца до 13.99 години",
     done: "Готово",
   },
   ua: {
     passengers: "Пасажири",
     adults: "Дорослий",
-    discount: "Пільговий",
-    tip: "Пільговий: діти, студенти та пенсіонери",
+    discount: "Дитячий",
+    tip: "діти до 13.99 років",
     done: "Готово",
   },
 };
