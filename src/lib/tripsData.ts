@@ -37,7 +37,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "odessa-varna",
         title: "Автобус Одесса → Варна | Расписание и билеты — Максимов Турс",
         description:
-          "Прямой автобус Одесса – Варна. Отправление от Привоза, в пути ~17 ч, Wi-Fi, кондиционер, USB. Билеты онлайн, фиксированное расписание с 1991 года.",
+          "Прямой автобус Одесса – Варна, ~17 ч в пути, от 2300 грн. Официальный перевозчик, отправление от Привоза. Билеты онлайн, опыт 30+ лет.",
         h1: "Автобус Одесса – Варна: расписание и билеты",
         heroSubtitle: "Прямой рейс Одесса • Болград • Констанца • Варна",
         leadText:
@@ -49,7 +49,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "odesa-varna",
         title: "Автобус Одеса → Варна | Розклад і квитки — Максимов Турс",
         description:
-          "Прямий автобус Одеса – Варна. Відправлення від Привозу, у дорозі ~17 год, Wi-Fi, кондиціонер, USB. Квитки онлайн, фіксований розклад з 1991 року.",
+          "Прямий автобус Одеса – Варна, ~17 год у дорозі, від 2300 грн. Офіційний перевізник, відправлення від Привозу. Квитки онлайн, досвід 30+ років.",
         h1: "Автобус Одеса – Варна: розклад і квитки",
         heroSubtitle: "Прямий рейс Одеса • Болград • Констанца • Варна",
         leadText:
@@ -61,7 +61,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "odessa-varna",
         title: "Odessa to Varna Bus | Schedule & Tickets — Maximov Tours",
         description:
-          "Direct bus Odessa – Varna. Departure from Privoz station, ~17h ride, Wi-Fi, AC, USB. Buy tickets online, fixed schedule since 1991.",
+          "Direct bus Odessa – Varna, ~17h ride, from €44. Licensed carrier, departure from Privoz. Online tickets, 30+ years of experience.",
         h1: "Odessa to Varna Bus: schedule and tickets",
         heroSubtitle: "Direct service Odessa • Bolgrad • Constanța • Varna",
         leadText:
@@ -73,7 +73,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "odesa-varna",
         title: "Автобус Одеса → Варна | Разписание и билети — Максимов Турс",
         description:
-          "Директен автобус Одеса – Варна. Тръгване от Привоз, ~17 ч път, Wi-Fi, климатик, USB. Билети онлайн, фиксирано разписание от 1991 г.",
+          "Директен автобус Одеса – Варна, ~17 ч път, от 44 €. Официален превозвач, тръгване от Привоз. Билети онлайн, опит 30+ години.",
         h1: "Автобус Одеса – Варна: разписание и билети",
         heroSubtitle: "Директен курс Одеса • Болград • Констанца • Варна",
         leadText:
@@ -96,7 +96,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "varna-odessa",
         title: "Автобус Варна → Одесса | Расписание и билеты — Максимов Турс",
         description:
-          "Прямой автобус Варна – Одесса. Отправление от центральной автостанции Варны, в пути ~17 ч, Wi-Fi, кондиционер. Билеты онлайн с 1991 года.",
+          "Прямой автобус Варна – Одесса, ~17 ч, от 2300 грн. Официальный перевозчик, отправление от автостанции Варны. Билеты онлайн, опыт 30+ лет.",
         h1: "Автобус Варна – Одесса: расписание и билеты",
         heroSubtitle: "Прямой рейс Варна • Констанца • Болград • Одесса",
         leadText:
@@ -108,7 +108,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "varna-odesa",
         title: "Автобус Варна → Одеса | Розклад і квитки — Максимов Турс",
         description:
-          "Прямий автобус Варна – Одеса. Відправлення з центральної автостанції Варни, у дорозі ~17 год, Wi-Fi, кондиціонер. Квитки онлайн з 1991 року.",
+          "Прямий автобус Варна – Одеса, ~17 год, від 2300 грн. Офіційний перевізник, відправлення від автостанції Варни. Квитки онлайн, досвід 30+ років.",
         h1: "Автобус Варна – Одеса: розклад і квитки",
         heroSubtitle: "Прямий рейс Варна • Констанца • Болград • Одеса",
         leadText:
@@ -120,7 +120,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "varna-odessa",
         title: "Varna to Odessa Bus | Schedule & Tickets — Maximov Tours",
         description:
-          "Direct bus Varna – Odessa. Departure from Varna's central bus station, ~17h ride, Wi-Fi, AC. Online tickets, on the line since 1991.",
+          "Direct bus Varna – Odessa, ~17h, from €44. Licensed carrier, departure from Varna bus station. Online tickets, 30+ years.",
         h1: "Varna to Odessa Bus: schedule and tickets",
         heroSubtitle: "Direct service Varna • Constanța • Bolgrad • Odessa",
         leadText:
@@ -132,7 +132,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "varna-odesa",
         title: "Автобус Варна → Одеса | Разписание и билети — Максимов Турс",
         description:
-          "Директен автобус Варна – Одеса. Тръгване от централна автогара Варна, ~17 ч път, Wi-Fi, климатик. Билети онлайн от 1991 г.",
+          "Директен автобус Варна – Одеса, ~17 ч, от 44 €. Официален превозвач, тръгване от автогара Варна. Билети онлайн, опит 30+ години.",
         h1: "Автобус Варна – Одеса: разписание и билети",
         heroSubtitle: "Директен курс Варна • Констанца • Болград • Одеса",
         leadText:
@@ -153,9 +153,9 @@ export const tripsData: Record<string, Trip> = {
     i18n: {
       ru: {
         slug: "odessa-burgas",
-        title: "Автобус Одесса → Бургас | Расписание и билеты — Максимов Турс",
+        title: "Автобус Одесса → Бургас | Расписание, билеты — Максимов Турс",
         description:
-          "Прямой автобус Одесса – Бургас через Варну и Солнечный берег. Wi-Fi, кондиционер, USB. Билеты онлайн, расписание с 1991 года.",
+          "Прямой автобус Одесса – Бургас через Варну, ~20 ч, от 3200 грн. Официальный перевозчик, билеты онлайн. Опыт 30+ лет.",
         h1: "Автобус Одесса – Бургас: расписание и билеты",
         heroSubtitle: "Прямой рейс Одесса • Констанца • Варна • Бургас",
         leadText:
@@ -167,7 +167,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "odesa-burhas",
         title: "Автобус Одеса → Бургас | Розклад і квитки — Максимов Турс",
         description:
-          "Прямий автобус Одеса – Бургас через Варну та Сонячний берег. Wi-Fi, кондиціонер, USB. Квитки онлайн, розклад з 1991 року.",
+          "Прямий автобус Одеса – Бургас через Варну, ~20 год, від 3200 грн. Офіційний перевізник, квитки онлайн. Досвід 30+ років.",
         h1: "Автобус Одеса – Бургас: розклад і квитки",
         heroSubtitle: "Прямий рейс Одеса • Констанца • Варна • Бургас",
         leadText:
@@ -179,7 +179,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "odessa-burgas",
         title: "Odessa to Burgas Bus | Schedule & Tickets — Maximov Tours",
         description:
-          "Direct bus Odessa – Burgas via Varna and Sunny Beach. Wi-Fi, AC, USB. Tickets online, fixed schedule since 1991.",
+          "Direct bus Odessa – Burgas via Varna, ~20h, from €61. Licensed carrier, online tickets. 30+ years of experience.",
         h1: "Odessa to Burgas Bus: schedule and tickets",
         heroSubtitle: "Direct service Odessa • Constanța • Varna • Burgas",
         leadText:
@@ -191,7 +191,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "odesa-burgas",
         title: "Автобус Одеса → Бургас | Разписание и билети — Максимов Турс",
         description:
-          "Директен автобус Одеса – Бургас през Варна и Слънчев бряг. Wi-Fi, климатик, USB. Билети онлайн, фиксирано разписание от 1991 г.",
+          "Директен автобус Одеса – Бургас през Варна, ~20 ч, от 61 €. Официален превозвач, билети онлайн. Опит 30+ години.",
         h1: "Автобус Одеса – Бургас: разписание и билети",
         heroSubtitle: "Директен курс Одеса • Констанца • Варна • Бургас",
         leadText:
@@ -212,9 +212,9 @@ export const tripsData: Record<string, Trip> = {
     i18n: {
       ru: {
         slug: "burgas-odessa",
-        title: "Автобус Бургас → Одесса | Расписание и билеты — Максимов Турс",
+        title: "Автобус Бургас → Одесса | Расписание, билеты — Максимов Турс",
         description:
-          "Прямой автобус Бургас – Одесса через Варну и Констанцу. Кондиционер, Wi-Fi, USB. Билеты онлайн, рейсы с 1991 года.",
+          "Прямой автобус Бургас – Одесса через Варну, ~20 ч, от 3200 грн. Официальный перевозчик, билеты онлайн. Опыт 30+ лет.",
         h1: "Автобус Бургас – Одесса: расписание и билеты",
         heroSubtitle: "Прямой рейс Бургас • Варна • Констанца • Одесса",
         leadText:
@@ -226,7 +226,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "burhas-odesa",
         title: "Автобус Бургас → Одеса | Розклад і квитки — Максимов Турс",
         description:
-          "Прямий автобус Бургас – Одеса через Варну та Констанцу. Кондиціонер, Wi-Fi, USB. Квитки онлайн, рейси з 1991 року.",
+          "Прямий автобус Бургас – Одеса через Варну, ~20 год, від 3200 грн. Офіційний перевізник, квитки онлайн. Досвід 30+ років.",
         h1: "Автобус Бургас – Одеса: розклад і квитки",
         heroSubtitle: "Прямий рейс Бургас • Варна • Констанца • Одеса",
         leadText:
@@ -238,7 +238,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "burgas-odessa",
         title: "Burgas to Odessa Bus | Schedule & Tickets — Maximov Tours",
         description:
-          "Direct bus Burgas – Odessa via Varna and Constanța. AC, Wi-Fi, USB. Online tickets, service since 1991.",
+          "Direct bus Burgas – Odessa via Varna, ~20h, from €61. Licensed carrier, online tickets. 30+ years of experience.",
         h1: "Burgas to Odessa Bus: schedule and tickets",
         heroSubtitle: "Direct service Burgas • Varna • Constanța • Odessa",
         leadText:
@@ -250,7 +250,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "burgas-odesa",
         title: "Автобус Бургас → Одеса | Разписание и билети — Максимов Турс",
         description:
-          "Директен автобус Бургас – Одеса през Варна и Констанца. Климатик, Wi-Fi, USB. Билети онлайн, курсове от 1991 г.",
+          "Директен автобус Бургас – Одеса през Варна, ~20 ч, от 61 €. Официален превозвач, билети онлайн. Опит 30+ години.",
         h1: "Автобус Бургас – Одеса: разписание и билети",
         heroSubtitle: "Директен курс Бургас • Варна • Констанца • Одеса",
         leadText:
@@ -273,7 +273,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "odessa-solnechniy-bereg",
         title: "Автобус Одесса → Солнечный берег | Билеты — Максимов Турс",
         description:
-          "Прямой автобус Одесса – Солнечный берег через Варну. Wi-Fi, кондиционер, USB. Расписание и билеты онлайн, рейсы с 1991 года.",
+          "Прямой автобус Одесса – Солнечный берег через Варну, ~19 ч, от 2800 грн. Официальный перевозчик, билеты онлайн. Опыт 30+ лет.",
         h1: "Автобус Одесса – Солнечный берег",
         heroSubtitle: "Прямой рейс Одесса • Констанца • Варна • Солнечный берег",
         leadText:
@@ -285,7 +285,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "odesa-sonyachniy-bereg",
         title: "Автобус Одеса → Сонячний берег | Квитки — Максимов Турс",
         description:
-          "Прямий автобус Одеса – Сонячний берег через Варну. Wi-Fi, кондиціонер, USB. Розклад і квитки онлайн, рейси з 1991 року.",
+          "Прямий автобус Одеса – Сонячний берег через Варну, ~19 год, від 2800 грн. Офіційний перевізник, квитки онлайн. Досвід 30+ років.",
         h1: "Автобус Одеса – Сонячний берег",
         heroSubtitle: "Прямий рейс Одеса • Констанца • Варна • Сонячний берег",
         leadText:
@@ -297,7 +297,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "odessa-sunny-beach",
         title: "Odessa to Sunny Beach Bus | Tickets — Maximov Tours",
         description:
-          "Direct bus Odessa – Sunny Beach via Varna. Wi-Fi, AC, USB. Online schedule and tickets, service since 1991.",
+          "Direct bus Odessa – Sunny Beach via Varna, ~19h, from €54. Licensed carrier, online tickets. 30+ years of experience.",
         h1: "Odessa to Sunny Beach Bus",
         heroSubtitle: "Direct service Odessa • Constanța • Varna • Sunny Beach",
         leadText:
@@ -309,7 +309,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "odesa-slanchev-bryag",
         title: "Автобус Одеса → Слънчев бряг | Билети — Максимов Турс",
         description:
-          "Директен автобус Одеса – Слънчев бряг през Варна. Wi-Fi, климатик, USB. Разписание и билети онлайн, курсове от 1991 г.",
+          "Директен автобус Одеса – Слънчев бряг през Варна, ~19 ч, от 54 €. Официален превозвач, билети онлайн. Опит 30+ години.",
         h1: "Автобус Одеса – Слънчев бряг",
         heroSubtitle: "Директен курс Одеса • Констанца • Варна • Слънчев бряг",
         leadText:
@@ -332,7 +332,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "solnechniy-bereg-odessa",
         title: "Автобус Солнечный берег → Одесса | Билеты — Максимов Турс",
         description:
-          "Прямой автобус Солнечный берег – Одесса через Варну. Wi-Fi, кондиционер, USB. Билеты и расписание онлайн, рейсы с 1991 года.",
+          "Прямой автобус Солнечный берег – Одесса через Варну, ~19 ч, от 2800 грн. Официальный перевозчик, билеты онлайн. Опыт 30+ лет.",
         h1: "Автобус Солнечный берег – Одесса",
         heroSubtitle: "Прямой рейс Солнечный берег • Варна • Констанца • Одесса",
         leadText:
@@ -344,7 +344,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "sonyachniy-bereg-odesa",
         title: "Автобус Сонячний берег → Одеса | Квитки — Максимов Турс",
         description:
-          "Прямий автобус Сонячний берег – Одеса через Варну. Wi-Fi, кондиціонер, USB. Квитки і розклад онлайн, рейси з 1991 року.",
+          "Прямий автобус Сонячний берег – Одеса через Варну, ~19 год, від 2800 грн. Офіційний перевізник, квитки онлайн. Досвід 30+ років.",
         h1: "Автобус Сонячний берег – Одеса",
         heroSubtitle: "Прямий рейс Сонячний берег • Варна • Констанца • Одеса",
         leadText:
@@ -356,7 +356,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "sunny-beach-odessa",
         title: "Sunny Beach to Odessa Bus | Tickets — Maximov Tours",
         description:
-          "Direct bus Sunny Beach – Odessa via Varna. Wi-Fi, AC, USB. Online tickets and schedule, service since 1991.",
+          "Direct bus Sunny Beach – Odessa via Varna, ~19h, from €54. Licensed carrier, online tickets. 30+ years of experience.",
         h1: "Sunny Beach to Odessa Bus",
         heroSubtitle: "Direct service Sunny Beach • Varna • Constanța • Odessa",
         leadText:
@@ -368,7 +368,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "slanchev-bryag-odesa",
         title: "Автобус Слънчев бряг → Одеса | Билети — Максимов Турс",
         description:
-          "Директен автобус Слънчев бряг – Одеса през Варна. Wi-Fi, климатик, USB. Билети и разписание онлайн, курсове от 1991 г.",
+          "Директен автобус Слънчев бряг – Одеса през Варна, ~19 ч, от 54 €. Официален превозвач, билети онлайн. Опит 30+ години.",
         h1: "Автобус Слънчев бряг – Одеса",
         heroSubtitle: "Директен курс Слънчев бряг • Варна • Констанца • Одеса",
         leadText:
@@ -391,7 +391,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "odessa-constanta",
         title: "Автобус Одесса → Констанца | Расписание — Максимов Турс",
         description:
-          "Прямой автобус Одесса – Констанца. Wi-Fi, кондиционер, USB. Расписание и билеты онлайн, регулярные рейсы с 1991 года.",
+          "Прямой автобус Одесса – Констанца, ~13 ч, от 2000 грн. Официальный перевозчик, билеты онлайн. Регулярные рейсы, опыт 30+ лет.",
         h1: "Автобус Одесса – Констанца: расписание и билеты",
         heroSubtitle: "Прямой рейс Одесса • Болград • Констанца",
         leadText:
@@ -403,7 +403,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "odesa-constanta",
         title: "Автобус Одеса → Констанца | Розклад — Максимов Турс",
         description:
-          "Прямий автобус Одеса – Констанца. Wi-Fi, кондиціонер, USB. Розклад і квитки онлайн, регулярні рейси з 1991 року.",
+          "Прямий автобус Одеса – Констанца, ~13 год, від 2000 грн. Офіційний перевізник, квитки онлайн. Регулярні рейси, досвід 30+ років.",
         h1: "Автобус Одеса – Констанца: розклад і квитки",
         heroSubtitle: "Прямий рейс Одеса • Болград • Констанца",
         leadText:
@@ -415,7 +415,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "odessa-constanta",
         title: "Odessa to Constanța Bus | Schedule — Maximov Tours",
         description:
-          "Direct bus Odessa – Constanța. Wi-Fi, AC, USB. Online schedule and tickets, regular service since 1991.",
+          "Direct bus Odessa – Constanța, ~13h, from €38. Licensed carrier, online tickets. Regular service, 30+ years.",
         h1: "Odessa to Constanța Bus: schedule and tickets",
         heroSubtitle: "Direct service Odessa • Bolgrad • Constanța",
         leadText:
@@ -427,7 +427,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "odesa-konstantsa",
         title: "Автобус Одеса → Констанца | Разписание — Максимов Турс",
         description:
-          "Директен автобус Одеса – Констанца. Wi-Fi, климатик, USB. Разписание и билети онлайн, редовни курсове от 1991 г.",
+          "Директен автобус Одеса – Констанца, ~13 ч, от 38 €. Официален превозвач, билети онлайн. Редовни курсове, опит 30+ години.",
         h1: "Автобус Одеса – Констанца: разписание и билети",
         heroSubtitle: "Директен курс Одеса • Болград • Констанца",
         leadText:
@@ -450,7 +450,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "constanta-odessa",
         title: "Автобус Констанца → Одесса | Расписание — Максимов Турс",
         description:
-          "Прямой автобус Констанца – Одесса. Wi-Fi, кондиционер, USB. Билеты онлайн, регулярные рейсы с 1991 года.",
+          "Прямой автобус Констанца – Одесса, ~13 ч, от 2000 грн. Официальный перевозчик, билеты онлайн. Регулярные рейсы, опыт 30+ лет.",
         h1: "Автобус Констанца – Одесса: расписание и билеты",
         heroSubtitle: "Прямой рейс Констанца • Болград • Одесса",
         leadText:
@@ -462,7 +462,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "constanta-odesa",
         title: "Автобус Констанца → Одеса | Розклад — Максимов Турс",
         description:
-          "Прямий автобус Констанца – Одеса. Wi-Fi, кондиціонер, USB. Квитки онлайн, регулярні рейси з 1991 року.",
+          "Прямий автобус Констанца – Одеса, ~13 год, від 2000 грн. Офіційний перевізник, квитки онлайн. Регулярні рейси, досвід 30+ років.",
         h1: "Автобус Констанца – Одеса: розклад і квитки",
         heroSubtitle: "Прямий рейс Констанца • Болград • Одеса",
         leadText:
@@ -474,7 +474,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "constanta-odessa",
         title: "Constanța to Odessa Bus | Schedule — Maximov Tours",
         description:
-          "Direct bus Constanța – Odessa. Wi-Fi, AC, USB. Online tickets, regular service since 1991.",
+          "Direct bus Constanța – Odessa, ~13h, from €38. Licensed carrier, online tickets. Regular service, 30+ years.",
         h1: "Constanța to Odessa Bus: schedule and tickets",
         heroSubtitle: "Direct service Constanța • Bolgrad • Odessa",
         leadText:
@@ -486,7 +486,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "konstantsa-odesa",
         title: "Автобус Констанца → Одеса | Разписание — Максимов Турс",
         description:
-          "Директен автобус Констанца – Одеса. Wi-Fi, климатик, USB. Билети онлайн, редовни курсове от 1991 г.",
+          "Директен автобус Констанца – Одеса, ~13 ч, от 38 €. Официален превозвач, билети онлайн. Редовни курсове, опит 30+ години.",
         h1: "Автобус Констанца – Одеса: разписание и билети",
         heroSubtitle: "Директен курс Констанца • Болград • Одеса",
         leadText:
@@ -509,7 +509,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "constanta-varna",
         title: "Автобус Констанца → Варна | Расписание — Максимов Турс",
         description:
-          "Прямой автобус Констанца – Варна. Кондиционер, Wi-Fi, USB. Билеты онлайн, рейсы по фиксированному расписанию с 1991 года.",
+          "Прямой автобус Констанца – Варна. Официальный перевозчик, Wi-Fi, кондиционер, USB. Билеты онлайн. Опыт 30+ лет.",
         h1: "Автобус Констанца – Варна",
         heroSubtitle: "Прямой рейс Констанца • Варна",
         leadText:
@@ -521,7 +521,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "constanta-varna",
         title: "Автобус Констанца → Варна | Розклад — Максимов Турс",
         description:
-          "Прямий автобус Констанца – Варна. Кондиціонер, Wi-Fi, USB. Квитки онлайн, рейси за фіксованим розкладом з 1991 року.",
+          "Прямий автобус Констанца – Варна. Офіційний перевізник, Wi-Fi, кондиціонер, USB. Квитки онлайн. Досвід 30+ років.",
         h1: "Автобус Констанца – Варна",
         heroSubtitle: "Прямий рейс Констанца • Варна",
         leadText:
@@ -533,7 +533,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "constanta-varna",
         title: "Constanța to Varna Bus | Schedule — Maximov Tours",
         description:
-          "Direct bus Constanța – Varna. AC, Wi-Fi, USB. Online tickets, fixed schedule, in service since 1991.",
+          "Direct bus Constanța – Varna. Licensed carrier, Wi-Fi, AC, USB. Online tickets. 30+ years of experience.",
         h1: "Constanța to Varna Bus",
         heroSubtitle: "Direct service Constanța • Varna",
         leadText:
@@ -545,7 +545,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "konstantsa-varna",
         title: "Автобус Констанца → Варна | Разписание — Максимов Турс",
         description:
-          "Директен автобус Констанца – Варна. Климатик, Wi-Fi, USB. Билети онлайн, фиксирано разписание, в експлоатация от 1991 г.",
+          "Директен автобус Констанца – Варна. Официален превозвач, Wi-Fi, климатик, USB. Билети онлайн. Опит 30+ години.",
         h1: "Автобус Констанца – Варна",
         heroSubtitle: "Директен курс Констанца • Варна",
         leadText:
@@ -568,7 +568,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "varna-constanta",
         title: "Автобус Варна → Констанца | Расписание — Максимов Турс",
         description:
-          "Прямой автобус Варна – Констанца. Wi-Fi, кондиционер, USB. Билеты онлайн, фиксированное расписание с 1991 года.",
+          "Прямой автобус Варна – Констанца. Официальный перевозчик, Wi-Fi, кондиционер, USB. Билеты онлайн. Опыт 30+ лет.",
         h1: "Автобус Варна – Констанца",
         heroSubtitle: "Прямой рейс Варна • Констанца",
         leadText:
@@ -580,7 +580,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "varna-constanta",
         title: "Автобус Варна → Констанца | Розклад — Максимов Турс",
         description:
-          "Прямий автобус Варна – Констанца. Wi-Fi, кондиціонер, USB. Квитки онлайн, фіксований розклад з 1991 року.",
+          "Прямий автобус Варна – Констанца. Офіційний перевізник, Wi-Fi, кондиціонер, USB. Квитки онлайн. Досвід 30+ років.",
         h1: "Автобус Варна – Констанца",
         heroSubtitle: "Прямий рейс Варна • Констанца",
         leadText:
@@ -592,7 +592,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "varna-constanta",
         title: "Varna to Constanța Bus | Schedule — Maximov Tours",
         description:
-          "Direct bus Varna – Constanța. Wi-Fi, AC, USB. Online tickets, fixed schedule since 1991.",
+          "Direct bus Varna – Constanța. Licensed carrier, Wi-Fi, AC, USB. Online tickets. 30+ years of experience.",
         h1: "Varna to Constanța Bus",
         heroSubtitle: "Direct service Varna • Constanța",
         leadText:
@@ -604,7 +604,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "varna-konstantsa",
         title: "Автобус Варна → Констанца | Разписание — Максимов Турс",
         description:
-          "Директен автобус Варна – Констанца. Wi-Fi, климатик, USB. Билети онлайн, фиксирано разписание от 1991 г.",
+          "Директен автобус Варна – Констанца. Официален превозвач, Wi-Fi, климатик, USB. Билети онлайн. Опит 30+ години.",
         h1: "Автобус Варна – Констанца",
         heroSubtitle: "Директен курс Варна • Констанца",
         leadText:
@@ -627,7 +627,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "constanta-burgas",
         title: "Автобус Констанца → Бургас | Расписание — Максимов Турс",
         description:
-          "Прямой автобус Констанца – Бургас через Варну. Wi-Fi, кондиционер, USB. Билеты онлайн, рейсы с 1991 года.",
+          "Прямой автобус Констанца – Бургас через Варну. Официальный перевозчик, Wi-Fi, кондиционер, USB. Билеты онлайн. Опыт 30+ лет.",
         h1: "Автобус Констанца – Бургас",
         heroSubtitle: "Прямой рейс Констанца • Варна • Бургас",
         leadText:
@@ -639,7 +639,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "constanta-burhas",
         title: "Автобус Констанца → Бургас | Розклад — Максимов Турс",
         description:
-          "Прямий автобус Констанца – Бургас через Варну. Wi-Fi, кондиціонер, USB. Квитки онлайн, рейси з 1991 року.",
+          "Прямий автобус Констанца – Бургас через Варну. Офіційний перевізник, Wi-Fi, кондиціонер, USB. Квитки онлайн. Досвід 30+ років.",
         h1: "Автобус Констанца – Бургас",
         heroSubtitle: "Прямий рейс Констанца • Варна • Бургас",
         leadText:
@@ -651,7 +651,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "constanta-burgas",
         title: "Constanța to Burgas Bus | Schedule — Maximov Tours",
         description:
-          "Direct bus Constanța – Burgas via Varna. Wi-Fi, AC, USB. Online tickets, service since 1991.",
+          "Direct bus Constanța – Burgas via Varna. Licensed carrier, Wi-Fi, AC, USB. Online tickets. 30+ years of experience.",
         h1: "Constanța to Burgas Bus",
         heroSubtitle: "Direct service Constanța • Varna • Burgas",
         leadText:
@@ -663,7 +663,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "konstantsa-burgas",
         title: "Автобус Констанца → Бургас | Разписание — Максимов Турс",
         description:
-          "Директен автобус Констанца – Бургас през Варна. Wi-Fi, климатик, USB. Билети онлайн, курсове от 1991 г.",
+          "Директен автобус Констанца – Бургас през Варна. Официален превозвач, Wi-Fi, климатик, USB. Билети онлайн. Опит 30+ години.",
         h1: "Автобус Констанца – Бургас",
         heroSubtitle: "Директен курс Констанца • Варна • Бургас",
         leadText:
@@ -686,7 +686,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "burgas-constanta",
         title: "Автобус Бургас → Констанца | Расписание — Максимов Турс",
         description:
-          "Прямой автобус Бургас – Констанца через Варну. Wi-Fi, кондиционер, USB. Билеты онлайн, рейсы с 1991 года.",
+          "Прямой автобус Бургас – Констанца через Варну. Официальный перевозчик, Wi-Fi, кондиционер, USB. Билеты онлайн. Опыт 30+ лет.",
         h1: "Автобус Бургас – Констанца",
         heroSubtitle: "Прямой рейс Бургас • Варна • Констанца",
         leadText:
@@ -698,7 +698,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "burhas-constanta",
         title: "Автобус Бургас → Констанца | Розклад — Максимов Турс",
         description:
-          "Прямий автобус Бургас – Констанца через Варну. Wi-Fi, кондиціонер, USB. Квитки онлайн, рейси з 1991 року.",
+          "Прямий автобус Бургас – Констанца через Варну. Офіційний перевізник, Wi-Fi, кондиціонер, USB. Квитки онлайн. Досвід 30+ років.",
         h1: "Автобус Бургас – Констанца",
         heroSubtitle: "Прямий рейс Бургас • Варна • Констанца",
         leadText:
@@ -710,7 +710,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "burgas-constanta",
         title: "Burgas to Constanța Bus | Schedule — Maximov Tours",
         description:
-          "Direct bus Burgas – Constanța via Varna. Wi-Fi, AC, USB. Online tickets, service since 1991.",
+          "Direct bus Burgas – Constanța via Varna. Licensed carrier, Wi-Fi, AC, USB. Online tickets. 30+ years of experience.",
         h1: "Burgas to Constanța Bus",
         heroSubtitle: "Direct service Burgas • Varna • Constanța",
         leadText:
@@ -722,7 +722,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "burgas-konstantsa",
         title: "Автобус Бургас → Констанца | Разписание — Максимов Турс",
         description:
-          "Директен автобус Бургас – Констанца през Варна. Wi-Fi, климатик, USB. Билети онлайн, курсове от 1991 г.",
+          "Директен автобус Бургас – Констанца през Варна. Официален превозвач, Wi-Fi, климатик, USB. Билети онлайн. Опит 30+ години.",
         h1: "Автобус Бургас – Констанца",
         heroSubtitle: "Директен курс Бургас • Варна • Констанца",
         leadText:
@@ -749,7 +749,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "marshrut",
         title: "Маршрут Одесса – Болгария | Все остановки — Максимов Турс",
         description:
-          "Полный маршрут Одесса – Болгария: Привоз, Болград, Констанца, Варна, Солнечный берег, Бургас. Расписание, остановки, билеты онлайн.",
+          "Официальный перевозчик Одесса – Болгария. Остановки: Привоз, Болград, Констанца, Варна, Солнечный берег, Бургас. Расписание, билеты онлайн.",
         h1: "Маршрут Одесса – Болгария: остановки и стоянки",
         heroSubtitle: "Одесса • Болград • Констанца • Варна • Солнечный берег • Бургас",
         leadText:
@@ -761,7 +761,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "marshrut",
         title: "Маршрут Одеса – Болгарія | Усі зупинки — Максимов Турс",
         description:
-          "Повний маршрут Одеса – Болгарія: Привоз, Болград, Констанца, Варна, Сонячний берег, Бургас. Розклад, зупинки, квитки онлайн.",
+          "Офіційний перевізник Одеса – Болгарія. Зупинки: Привоз, Болград, Констанца, Варна, Сонячний берег, Бургас. Розклад, квитки онлайн.",
         h1: "Маршрут Одеса – Болгарія: зупинки та стоянки",
         heroSubtitle: "Одеса • Болград • Констанца • Варна • Сонячний берег • Бургас",
         leadText:
@@ -773,7 +773,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "route",
         title: "Route Odessa – Bulgaria | All Stops — Maximov Tours",
         description:
-          "Full route Odessa – Bulgaria: Privoz, Bolgrad, Constanța, Varna, Sunny Beach, Burgas. Schedule, stops, online tickets.",
+          "Licensed carrier Odessa – Bulgaria. Stops: Privoz, Bolgrad, Constanța, Varna, Sunny Beach, Burgas. Schedule and online tickets.",
         h1: "Route Odessa – Bulgaria: stops and waypoints",
         heroSubtitle: "Odessa • Bolgrad • Constanța • Varna • Sunny Beach • Burgas",
         leadText:
@@ -785,7 +785,7 @@ export const tripsData: Record<string, Trip> = {
         slug: "marshrut",
         title: "Маршрут Одеса – България | Всички спирки — Максимов Турс",
         description:
-          "Пълен маршрут Одеса – България: Привоз, Болград, Констанца, Варна, Слънчев бряг, Бургас. Разписание, спирки, билети онлайн.",
+          "Официален превозвач Одеса – България. Спирки: Привоз, Болград, Констанца, Варна, Слънчев бряг, Бургас. Разписание, билети онлайн.",
         h1: "Маршрут Одеса – България: спирки и стоянки",
         heroSubtitle: "Одеса • Болград • Констанца • Варна • Слънчев бряг • Бургас",
         leadText:
