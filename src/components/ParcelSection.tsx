@@ -9,17 +9,19 @@ import {
   sectionEyebrowClass,
   sectionTitleClass,
 } from "@/components/common/designGuide";
+import { useSectionView } from "@/utils/useSectionView";
 
 export default function ParcelSection() {
   const { lang } = useLanguage();
   const t = parcelTranslations[lang];
+  const sectionRef = useSectionView<HTMLElement>("parcel");
 
   const handleClick = () => {
     window.dispatchEvent(new Event("open-contact-modal"));
   };
 
   return (
-    <section id="parcel" className={`${sectionBgMuted} py-16`}>
+    <section id="parcel" ref={sectionRef} className={`${sectionBgMuted} py-16`}>
       <div className="mx-auto w-full max-w-6xl px-4">
         <div className="text-center">
           <p className={sectionEyebrowClass}>{t.kicker}</p>

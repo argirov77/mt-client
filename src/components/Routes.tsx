@@ -8,6 +8,7 @@ import { useLanguage, type Lang } from "@/components/common/LanguageProvider";
 import { routesTranslations } from "@/translations/home";
 import styles from "./Routes.module.css";
 import { sectionEyebrowClass, sectionTitleClass } from "./common/designGuide";
+import { useSectionView } from "@/utils/useSectionView";
 
 /* ===================== Types ===================== */
 
@@ -76,6 +77,7 @@ export default function Routes({ lang: langProp, hubLinks }: RoutesProps = {}) {
   const { lang: ctxLang } = useLanguage();
   const lang = langProp ?? ctxLang;
   const L = routesTranslations[lang];
+  const sectionRef = useSectionView<HTMLElement>("marshrut");
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -114,7 +116,7 @@ export default function Routes({ lang: langProp, hubLinks }: RoutesProps = {}) {
   const hasAny = !!forward || !!backward;
 
   return (
-    <section id="routes" className={styles.routes}>
+    <section id="routes" ref={sectionRef} className={styles.routes}>
       <div className={styles.routesInner}>
         <header className={styles.routesHeader}>
           <p className={sectionEyebrowClass}>{L.eyebrow}</p>

@@ -10,6 +10,7 @@ import {
   sectionBgMuted,
 } from './common/designGuide';
 import type { Lang } from './common/LanguageProvider';
+import { useSectionView } from '@/utils/useSectionView';
 
 type PriceItem = {
   departure_stop_id: number;
@@ -29,6 +30,7 @@ export default function PriceListCompact({ lang = 'ru' }: { lang?: Lang }) {
   const [list, setList] = useState<PriceItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState(false);
+  const sectionRef = useSectionView<HTMLElement>('prices');
 
   useEffect(() => {
     let cancelled = false;
@@ -49,7 +51,7 @@ export default function PriceListCompact({ lang = 'ru' }: { lang?: Lang }) {
   }, [lang]);
 
   return (
-    <section id="prices" className={`${sectionBgMuted} py-16`}>
+    <section id="prices" ref={sectionRef} className={`${sectionBgMuted} py-16`}>
       <div className="mx-auto w-full max-w-6xl px-4">
         <div className="mb-10 text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
