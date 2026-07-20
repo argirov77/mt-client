@@ -10,7 +10,7 @@ import Calendar from "@/components/Calendar";
 import SeatClient, { type SeatSelectionDetail } from "@/components/SeatClient";
 import { API } from "@/config";
 import { downloadTicketPdf } from "@/utils/ticketPdf";
-import { trackEvent, FALLBACK_CURRENCY } from "@/lib/analytics";
+import { trackEvent, trackContact, getCurrencyForLocale } from "@/lib/analytics";
 import { refundTranslations } from "@/translations/refund";
 import type {
   BaggageQuote,
@@ -1683,7 +1683,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
         currency:
           cancelPreview?.currency ||
           data.purchase.currency ||
-          FALLBACK_CURRENCY,
+          getCurrencyForLocale(lang),
         ticket_count: identifiers.length || cancelTickets.length,
       });
 
@@ -1707,6 +1707,7 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
     data,
     fetchPurchase,
     isActionDisabled,
+    lang,
     purchaseId,
     toOriginalTicketIds,
   ]);
@@ -2650,10 +2651,10 @@ export default function PurchaseClient({ purchaseId }: PurchaseClientProps) {
 
   const cancelButtonDisabled = isActionDisabled || cancelSelectionCount === 0;
   const trackPhoneClick = (phone: string) => {
-    window.gtag?.("event", "phone_click", { event_category: "conversion", event_label: phone });
+    trackContact({ method: "phone", source: "purchase_detail", label: phone });
   };
   const trackEmailClick = (email: string) => {
-    window.gtag?.("event", "email_click", { event_category: "conversion", event_label: email });
+    trackContact({ method: "email", source: "purchase_detail", label: email });
   };
 
 

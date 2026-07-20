@@ -15,7 +15,7 @@ import {
   trackPurchase,
   buildRouteCategory,
   daysUntil,
-  FALLBACK_CURRENCY,
+  getCurrencyForLocale,
 } from "@/lib/analytics";
 import { returnTranslations, dateLocaleMap } from "@/translations/return";
 import type { Lang } from "@/components/common/LanguageProvider";
@@ -731,6 +731,11 @@ function ReturnPageContent() {
       new Map(tickets.map((ticket) => [String(ticket.id), ticket])).values(),
     );
 
+    // Источник цены purchase.value (per-ticket fare): ticket.pricing.price —
+    // та же цена билета в основных единицах валюты, которую PurchaseClient
+    // рендерит через formatCurrency и суммирует как ticketsSubtotal. Каждый
+    // билет = 1 место (quantity: 1), поэтому value = Σ(цена билета × 1) =
+    // «реальная цена билета текущей транзакции × количество».
     const items = uniqueTickets.map((ticket) => {
       const direction = directionByTicketId.get(String(ticket.id));
       const departureName = ticket.segment_details?.departure?.name ?? "";
@@ -749,12 +754,32 @@ function ReturnPageContent() {
       };
     });
 
+    // Резерв для value, когда бэкенд не отдал per-ticket pricing. Порядок:
+    //  1) ga_checkout_value — сумма квоты, сохранённая на add_payment_info
+    //     (funnel-consistent, совпадает с суммой, которую видел пользователь);
+    //  2) totals.paid / amount_due — раньше именно этот резерв улетал в ~72 373.
+    // trackPurchase всегда предпочитает сумму по items (per-ticket fare) и
+    // берёт valueOverride ТОЛЬКО если у билетов нет цены.
+    let checkoutValueFallback: number | null = null;
+    try {
+      const stored = sessionStorage.getItem("ga_checkout_value");
+      if (stored) {
+        const parsed = Number(stored);
+        if (Number.isFinite(parsed) && parsed > 0) checkoutValueFallback = parsed;
+      }
+    } catch {
+      /* ignore */
+    }
+
     const fired = trackPurchase({
       transactionId,
       items,
-      currency: purchaseView.purchase.currency ?? FALLBACK_CURRENCY,
+      locale: lang,
+      currency: purchaseView.purchase.currency ?? getCurrencyForLocale(lang),
       valueOverride:
-        purchaseView.totals?.paid ?? purchaseView.purchase.amount_due,
+        checkoutValueFallback ??
+        purchaseView.totals?.paid ??
+        purchaseView.purchase.amount_due,
       extra: {
         passenger_count: uniqueTickets.length,
         trip_type: isRoundtrip ? "roundtrip" : "oneway",
@@ -767,6 +792,7 @@ function ReturnPageContent() {
       try {
         sessionStorage.removeItem("ga_checkout_start_ts");
         sessionStorage.removeItem("ga_checkout_purchase_id");
+        sessionStorage.removeItem("ga_checkout_value");
       } catch {
         /* ignore */
       }

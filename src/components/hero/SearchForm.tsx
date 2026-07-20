@@ -9,7 +9,7 @@ import StopCombobox, { type StopComboboxHandle } from './StopCombobox';
 import apiClient from '@/lib/apiClient';
 import { useLockBodyScroll } from '@/utils/useLockBodyScroll';
 import { useModalVisibility } from '@/utils/useModalVisibility';
-import { trackEvent, buildRouteCategory } from '@/lib/analytics';
+import { trackSearch, trackSearchIntent, buildRouteCategory } from '@/lib/analytics';
 
 type Stop = { id: number; stop_name: string };
 
@@ -205,6 +205,40 @@ export default function SearchForm({
     };
   }, [fromId, toId, seatCount]);
 
+  // ─── search_intent (намерение без результата, Фаза 3) ───────────────────
+  // Оба направления выбраны, но клик «Поиск» не сделан → шлём один раз за
+  // сессию, с задержкой (не на каждый клик/раскрытие дропдауна). Микро-действия
+  // (открытие departure/arrival/date) не трекаем.
+  const searchIntentSentRef = useRef(false);
+  const searchIntentNamesRef = useRef({ fromName: '', toName: '' });
+
+  useEffect(() => {
+    const fromName =
+      departureStops.find((s) => s.id === fromId)?.stop_name || '';
+    const toName = arrivalStops.find((s) => s.id === toId)?.stop_name || '';
+    searchIntentNamesRef.current = { fromName, toName };
+  }, [fromId, toId, departureStops, arrivalStops]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (searchIntentSentRef.current) return;
+    if (!fromId || !toId) return;
+    const timer = window.setTimeout(() => {
+      if (searchIntentSentRef.current) return;
+      const { fromName, toName } = searchIntentNamesRef.current;
+      const sent = trackSearchIntent({
+        locale: lang,
+        departure: fromName || String(fromId),
+        arrival: toName || String(toId),
+        // reached_date_step: дошёл ли до выбора даты (выбрана дата отправления),
+        // чтобы различать «бросил на направлении» vs «даты не подошли».
+        reachedDateStep: Boolean(departDate),
+      });
+      if (sent) searchIntentSentRef.current = true;
+    }, 12000);
+    return () => window.clearTimeout(timer);
+  }, [fromId, toId, departDate, lang]);
+
   const handleSwap = () => {
     setFrom(to);
     setTo(from);
@@ -224,29 +258,28 @@ export default function SearchForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    window.gtag?.("event", "form_submit", {
-      event_category: "conversion",
-      event_label: window.location.pathname,
-    });
     if (!fromId || !toId || !departDate) return;
     const fromName =
       departureStops.find((s) => s.id === fromId)?.stop_name || '';
     const toName =
       arrivalStops.find((s) => s.id === toId)?.stop_name || '';
-    trackEvent('search', {
-      search_term: `${fromName} → ${toName}`,
+    // Завершённый поиск — это не «намерение без результата»: гасим search_intent.
+    searchIntentSentRef.current = true;
+    // Завершённое действие поиска. form_submit удалён как дубль без нагрузки.
+    trackSearch({
+      locale: lang,
       origin: fromName,
       destination: toName,
       route: buildRouteCategory(
         { id: fromId, name: fromName },
         { id: toId, name: toName },
       ),
-      departure_date: departDate,
-      return_date: returnDate || undefined,
-      trip_type: openReturn ? 'open_return' : returnDate ? 'roundtrip' : 'oneway',
-      passenger_count: passengers.adults + passengers.discount,
-      adult_count: passengers.adults,
-      discount_count: passengers.discount,
+      departureDate: departDate,
+      returnDate: returnDate || undefined,
+      tripType: openReturn ? 'open_return' : returnDate ? 'roundtrip' : 'oneway',
+      passengerCount: passengers.adults + passengers.discount,
+      adultCount: passengers.adults,
+      discountCount: passengers.discount,
     });
     onSearch({
       from: String(fromId),

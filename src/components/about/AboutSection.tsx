@@ -9,6 +9,7 @@ import {
 } from "../common/designGuide";
 import { aboutContent, type Lang } from "./content";
 import { aboutTranslations } from "@/translations/home";
+import { trackContact } from "@/lib/analytics";
 
 type Props = {
   lang?: Lang;
@@ -41,10 +42,10 @@ export default function AboutSection({
     `viber://chat?number=%2B${formatPhoneDigits(phone)}`;
   const buildTelegramLink = (phone: string) => `https://t.me/+${formatPhoneDigits(phone)}`;
   const trackPhoneClick = (phone: string) => {
-    window.gtag?.("event", "phone_click", { event_category: "conversion", event_label: phone });
+    trackContact({ method: "phone", source: "about_section", label: phone });
   };
   const trackMessengerClick = (messenger: "whatsapp" | "viber" | "telegram") => {
-    window.gtag?.("event", "messenger_click", { event_category: "conversion", event_label: messenger });
+    trackContact({ method: messenger, source: "about_section", label: messenger });
   };
 
   useEffect(() => {

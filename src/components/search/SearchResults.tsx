@@ -17,10 +17,14 @@ import StepThree from "./steps/StepThree";
 
 import { downloadTicketPdf } from "@/utils/ticketPdf";
 import {
-  trackEvent,
-  trackBooking,
+  trackViewItemList,
+  trackSelectItem,
+  trackAddToCart,
+  trackBeginCheckout,
+  trackAddPaymentInfo,
+  trackReservation,
   buildRouteCategory,
-  FALLBACK_CURRENCY,
+  type EcommerceItem,
 } from "@/lib/analytics";
 import { getPublicOfferUrl } from "@/utils/publicOffer";
 import {
@@ -275,8 +279,9 @@ export default function SearchResults({
 
   // Выбор рейсов
   const onSelectOutbound = (tour: SearchTour) => {
-    trackEvent("select_item", {
-      item_list_name: "search_results_outbound",
+    trackSelectItem({
+      locale: lang,
+      listName: "search_results_outbound",
       items: [
         {
           item_id: String(tour.id),
@@ -288,9 +293,11 @@ export default function SearchResults({
           ),
           price: tour.price,
           item_variant: tour.date,
+          departure: fromName,
+          arrival: toName,
+          travel_date: tour.date,
         },
       ],
-      currency: FALLBACK_CURRENCY,
       value: tour.price,
     });
     setSelectedOutboundTour(tour);
@@ -300,8 +307,9 @@ export default function SearchResults({
   };
 
   const onSelectReturn = (tour: SearchTour) => {
-    trackEvent("select_item", {
-      item_list_name: "search_results_return",
+    trackSelectItem({
+      locale: lang,
+      listName: "search_results_return",
       items: [
         {
           item_id: String(tour.id),
@@ -313,9 +321,11 @@ export default function SearchResults({
           ),
           price: tour.price,
           item_variant: tour.date,
+          departure: toName,
+          arrival: fromName,
+          travel_date: tour.date,
         },
       ],
-      currency: FALLBACK_CURRENCY,
       value: tour.price,
     });
     setSelectedReturnTour(tour);
@@ -376,16 +386,9 @@ export default function SearchResults({
       setMsg(action === "purchase" ? "Покупка…" : "Бронирование…");
       setMsgType("info");
 
-      const checkoutItems = buildCheckoutItems();
-      trackEvent("begin_checkout", {
-        value: overallTotal,
-        currency: FALLBACK_CURRENCY,
-        items: checkoutItems.items,
-        passenger_count: safeSeatCount,
-        trip_type: checkoutItems.tripType,
-        route: checkoutItems.route,
-        checkout_type: action,
-      });
+      // begin_checkout больше НЕ шлётся здесь: он отправляется один раз при
+      // попадании на экран оформления (ContactsAndPaymentStep), до развилки
+      // book/purchase. purchase_click удалён.
 
       const isTwoStepPurchaseFallback =
         action === "purchase" && ENABLE_TWO_STEP_PURCHASE_FALLBACK;
@@ -551,12 +554,22 @@ export default function SearchResults({
       setMsgType("success");
 
       if (action === "book") {
-        trackBooking({
+        // reservation срабатывает ТОЛЬКО на пути «book» (бронь без онлайн-оплаты).
+        // На пути «purchase» этот блок недостижим, поэтому reservation не может
+        // выстрелить на purchase-ветке и не задваивается с purchase.
+        const reservationItems = buildCheckoutItems();
+        trackReservation({
           purchaseId: pId,
+          locale: lang,
+          items: reservationItems.items,
+          value: Number(total),
           tripFrom: fromName,
           tripTo: toName,
-          value: Number(total),
-          currency: FALLBACK_CURRENCY,
+          extra: {
+            passenger_count: safeSeatCount,
+            trip_type: reservationItems.tripType,
+            route: reservationItems.route,
+          },
         });
       }
 
@@ -576,17 +589,25 @@ export default function SearchResults({
 
         const checkoutPayload = normalizePublicPayResponse(finalPurchaseResponse);
         persistLastLiqPayOrderId(checkoutPayload.orderId);
-        trackEvent("add_payment_info", {
-          transaction_id: String(pId),
+        const paymentItems = buildCheckoutItems();
+        trackAddPaymentInfo({
+          locale: lang,
+          transactionId: String(pId),
+          items: paymentItems.items,
           value: Number(total),
-          currency: FALLBACK_CURRENCY,
-          payment_type: "liqpay",
-          passenger_count: safeSeatCount,
-          trip_type: tripTypeLabel,
+          paymentType: "liqpay",
+          extra: {
+            passenger_count: safeSeatCount,
+            trip_type: tripTypeLabel,
+            route: paymentItems.route,
+          },
         });
         if (typeof window !== "undefined") {
           sessionStorage.setItem("ga_checkout_start_ts", String(Date.now()));
           sessionStorage.setItem("ga_checkout_purchase_id", String(pId));
+          // Funnel-consistent резерв для purchase.value на /return, если бэкенд
+          // не вернёт per-ticket pricing (см. return/page.tsx).
+          sessionStorage.setItem("ga_checkout_value", String(Number(total)));
         }
         setMsg("Перенаправляем на страницу оплаты…");
         setMsgType("info");
@@ -632,17 +653,24 @@ export default function SearchResults({
 
       const checkoutPayload = normalizePublicPayResponse(response.data);
       persistLastLiqPayOrderId(checkoutPayload.orderId);
-      trackEvent("add_payment_info", {
-        transaction_id: String(purchaseId),
+      const paymentItems = buildCheckoutItems();
+      trackAddPaymentInfo({
+        locale: lang,
+        transactionId: String(purchaseId),
+        items: paymentItems.items,
         value: overallTotal,
-        currency: FALLBACK_CURRENCY,
-        payment_type: "liqpay",
-        passenger_count: safeSeatCount,
-        trip_type: tripTypeLabel,
+        paymentType: "liqpay",
+        extra: {
+          passenger_count: safeSeatCount,
+          trip_type: tripTypeLabel,
+          route: paymentItems.route,
+        },
       });
       if (typeof window !== "undefined") {
         sessionStorage.setItem("ga_checkout_start_ts", String(Date.now()));
         sessionStorage.setItem("ga_checkout_purchase_id", String(purchaseId));
+        // Funnel-consistent резерв для purchase.value на /return.
+        sessionStorage.setItem("ga_checkout_value", String(overallTotal));
       }
       submitLiqPayCheckout(
         checkoutPayload.checkoutFormUrl,
@@ -976,7 +1004,7 @@ export default function SearchResults({
       { id: fromId, name: fromName },
       { id: toId, name: toName },
     );
-    const items: Record<string, unknown>[] = [];
+    const items: EcommerceItem[] = [];
     if (selectedOutboundTour) {
       items.push({
         item_id: String(selectedOutboundTour.id),
@@ -1011,36 +1039,103 @@ export default function SearchResults({
     toName,
   ]);
 
-  const viewItemFiredRef = useRef(false);
+  // view_item_list: отрисован список рейсов (после загрузки туров). Один раз
+  // на поисковый запрос.
+  const viewItemListFiredRef = useRef(false);
   useEffect(() => {
-    if (activeStep !== 2) return;
-    if (!selectedOutboundTour) return;
-    if (returnDate && !openReturn && !selectedReturnTour) return;
-    if (viewItemFiredRef.current) return;
-    viewItemFiredRef.current = true;
-    const { items, tripType, route } = buildCheckoutItems();
-    trackEvent("view_item", {
-      items,
-      value: overallTotal,
-      currency: FALLBACK_CURRENCY,
-      trip_type: tripType,
-      route,
-      passenger_count: safeSeatCount,
-    });
-  }, [
-    activeStep,
-    buildCheckoutItems,
-    openReturn,
-    overallTotal,
-    returnDate,
-    safeSeatCount,
-    selectedOutboundTour,
-    selectedReturnTour,
-  ]);
+    viewItemListFiredRef.current = false;
+  }, [fromId, toId, date, returnDate, safeSeatCount]);
 
   useEffect(() => {
-    if (!selectedOutboundTour) viewItemFiredRef.current = false;
-  }, [selectedOutboundTour]);
+    if (loading) return;
+    if (!outboundTours.length) return;
+    if (viewItemListFiredRef.current) return;
+    viewItemListFiredRef.current = true;
+    const route = buildRouteCategory(
+      { id: fromId, name: fromName },
+      { id: toId, name: toName },
+    );
+    trackViewItemList({
+      locale: lang,
+      listId: "search_results_outbound",
+      listName: "search_results_outbound",
+      items: outboundTours.map((tour) => ({
+        item_id: String(tour.id),
+        item_name: `${fromName} → ${toName}`,
+        item_category: returnDate ? "roundtrip" : "oneway",
+        item_category2: route,
+        item_variant: tour.date,
+        price: tour.price,
+      })),
+      extra: { item_count: outboundTours.length, route },
+    });
+  }, [loading, outboundTours, fromName, toName, returnDate, fromId, toId, lang]);
+
+  // add_to_cart: рейс + место зафиксированы (бывший view_item). Один раз на
+  // текущий выбор рейсов; сбрасывается при смене рейса.
+  const addToCartFiredRef = useRef(false);
+  const beginCheckoutFiredRef = useRef(false);
+  useEffect(() => {
+    addToCartFiredRef.current = false;
+    beginCheckoutFiredRef.current = false;
+  }, [selectedOutboundTour?.id, selectedReturnTour?.id]);
+
+  useEffect(() => {
+    if (!selectedOutboundTour) return;
+    if (returnRequired && !selectedReturnTour) return;
+    if (!seatsDone) return;
+    if (addToCartFiredRef.current) return;
+    addToCartFiredRef.current = true;
+    const { items, tripType, route } = buildCheckoutItems();
+    trackAddToCart({
+      locale: lang,
+      items,
+      value: overallTotal,
+      extra: {
+        trip_type: tripType,
+        route,
+        passenger_count: safeSeatCount,
+        seats_outbound: [...selectedOutboundSeats],
+        ...(selectedReturnTour ? { seats_return: [...selectedReturnSeats] } : {}),
+      },
+    });
+  }, [
+    seatsDone,
+    returnRequired,
+    selectedOutboundTour,
+    selectedReturnTour,
+    selectedOutboundSeats,
+    selectedReturnSeats,
+    buildCheckoutItems,
+    overallTotal,
+    safeSeatCount,
+    lang,
+  ]);
+
+  // begin_checkout: попадание на экран оформления (ContactsAndPaymentStep),
+  // ОДИН раз, до развилки book/purchase.
+  useEffect(() => {
+    if (ticket) return;
+    if (activeStep !== 3) return;
+    if (!step2Complete) return;
+    if (beginCheckoutFiredRef.current) return;
+    beginCheckoutFiredRef.current = true;
+    const { items, tripType, route } = buildCheckoutItems();
+    trackBeginCheckout({
+      locale: lang,
+      items,
+      value: overallTotal,
+      extra: { trip_type: tripType, route, passenger_count: safeSeatCount },
+    });
+  }, [
+    ticket,
+    activeStep,
+    step2Complete,
+    buildCheckoutItems,
+    overallTotal,
+    safeSeatCount,
+    lang,
+  ]);
 
   const baggagePriceLabels = useMemo(
     () => ({
