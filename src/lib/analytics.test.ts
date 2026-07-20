@@ -4,7 +4,12 @@ import * as assert from "node:assert/strict";
 import {
   toFiniteNumber,
   trackPurchase,
-  FALLBACK_CURRENCY,
+  trackReservation,
+  getCurrencyForLocale,
+  trackContact,
+  trackViewSection,
+  trackSearchIntent,
+  RESERVATION_WEIGHT,
 } from "./analytics";
 
 type GtagCall = { event: string; params: Record<string, unknown> };
@@ -196,13 +201,23 @@ test("trackPurchase prevents duplicate events with same transactionId", () => {
   assert.equal(ctx.calls.length, 1);
 });
 
-test("trackPurchase applies fallback currency when not provided", () => {
+test("trackPurchase defaults currency to UAH when locale is not provided", () => {
   trackPurchase({
     transactionId: "tx-cur",
     items: [{ item_id: "a", price: 2600 }],
   });
 
-  assert.equal(ctx.calls[0]?.params.currency, FALLBACK_CURRENCY);
+  assert.equal(ctx.calls[0]?.params.currency, "UAH");
+});
+
+test("trackPurchase derives currency from locale (EUR for en/bg)", () => {
+  trackPurchase({
+    transactionId: "tx-cur-en",
+    items: [{ item_id: "a", price: 2600 }],
+    locale: "en",
+  });
+
+  assert.equal(ctx.calls[0]?.params.currency, "EUR");
 });
 
 test("trackPurchase normalizes invalid quantity to 1", () => {
@@ -235,4 +250,129 @@ test("trackPurchase rounds value to 2 decimals", () => {
 
   const value = ctx.calls[0]?.params.value as number;
   assert.equal(value, 301.71);
+});
+
+// ─────────────────────── getCurrencyForLocale ───────────────────────────
+
+test("getCurrencyForLocale maps ru/ua to UAH and en/bg to EUR", () => {
+  assert.equal(getCurrencyForLocale("ru"), "UAH");
+  assert.equal(getCurrencyForLocale("ua"), "UAH");
+  assert.equal(getCurrencyForLocale("en"), "EUR");
+  assert.equal(getCurrencyForLocale("bg"), "EUR");
+});
+
+test("getCurrencyForLocale accepts Intl locale strings", () => {
+  assert.equal(getCurrencyForLocale("ru-RU"), "UAH");
+  assert.equal(getCurrencyForLocale("uk-UA"), "UAH");
+  assert.equal(getCurrencyForLocale("en-US"), "EUR");
+  assert.equal(getCurrencyForLocale("bg-BG"), "EUR");
+});
+
+test("getCurrencyForLocale defaults to UAH for unknown/empty locale", () => {
+  assert.equal(getCurrencyForLocale(undefined), "UAH");
+  assert.equal(getCurrencyForLocale(null), "UAH");
+  assert.equal(getCurrencyForLocale(""), "UAH");
+  assert.equal(getCurrencyForLocale("zz"), "UAH");
+});
+
+// ───────────────────────── trackReservation ─────────────────────────────
+
+test("trackReservation applies RESERVATION_WEIGHT to value", () => {
+  const fired = trackReservation({
+    purchaseId: "res-1",
+    items: [{ item_id: "a", price: 2600, quantity: 1 }],
+  });
+
+  assert.equal(fired, true);
+  assert.equal(ctx.calls.length, 1);
+  const call = ctx.calls[0];
+  assert.equal(call.event, "reservation");
+  assert.equal(call.params.value, 2600 * RESERVATION_WEIGHT);
+  assert.equal(call.params.reservation_value_full, 2600);
+  assert.equal(call.params.reservation_weight, RESERVATION_WEIGHT);
+  assert.equal(call.params.transaction_id, "res-1");
+});
+
+test("trackReservation uses explicit value over items when provided", () => {
+  trackReservation({
+    purchaseId: "res-2",
+    value: 5000,
+    items: [{ item_id: "a", price: 2600, quantity: 1 }],
+    currency: "UAH",
+  });
+
+  assert.equal(ctx.calls[0]?.params.value, 5000 * RESERVATION_WEIGHT);
+});
+
+test("trackReservation derives currency from locale", () => {
+  trackReservation({
+    purchaseId: "res-cur",
+    value: 1000,
+    locale: "bg",
+  });
+
+  assert.equal(ctx.calls[0]?.params.currency, "EUR");
+});
+
+test("trackReservation prevents duplicate events with same purchaseId", () => {
+  const first = trackReservation({ purchaseId: "res-dup", value: 1000 });
+  const second = trackReservation({ purchaseId: "res-dup", value: 1000 });
+
+  assert.equal(first, true);
+  assert.equal(second, false);
+  assert.equal(ctx.calls.length, 1);
+});
+
+test("trackReservation skips when purchaseId is missing", () => {
+  const fired = trackReservation({ purchaseId: "", value: 1000 });
+  assert.equal(fired, false);
+  assert.equal(ctx.calls.length, 0);
+});
+
+// ─────────────────────────── trackContact ───────────────────────────────
+
+test("trackContact emits a single parameterized contact event", () => {
+  trackContact({ method: "phone", source: "footer", label: "+380930004636" });
+
+  assert.equal(ctx.calls.length, 1);
+  const call = ctx.calls[0];
+  assert.equal(call.event, "contact");
+  assert.equal(call.params.method, "phone");
+  assert.equal(call.params.source, "footer");
+  assert.equal(call.params.event_label, "+380930004636");
+});
+
+// ────────────────── trackViewSection / trackSearchIntent ─────────────────
+
+test("trackViewSection fires once per section per session", () => {
+  const first = trackViewSection("parcel");
+  const second = trackViewSection("parcel");
+  const other = trackViewSection("prices");
+
+  assert.equal(first, true);
+  assert.equal(second, false);
+  assert.equal(other, true);
+  assert.equal(ctx.calls.length, 2);
+  assert.equal(ctx.calls[0]?.event, "view_section");
+  assert.equal(ctx.calls[0]?.params.section, "parcel");
+});
+
+test("trackSearchIntent fires once per session with reached_date_step", () => {
+  const first = trackSearchIntent({
+    departure: "Odessa",
+    arrival: "Varna",
+    reachedDateStep: true,
+  });
+  const second = trackSearchIntent({
+    departure: "Odessa",
+    arrival: "Kyiv",
+    reachedDateStep: false,
+  });
+
+  assert.equal(first, true);
+  assert.equal(second, false);
+  assert.equal(ctx.calls.length, 1);
+  assert.equal(ctx.calls[0]?.event, "search_intent");
+  assert.equal(ctx.calls[0]?.params.departure, "Odessa");
+  assert.equal(ctx.calls[0]?.params.reached_date_step, true);
 });

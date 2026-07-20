@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 import { useLanguage } from "@/components/common/LanguageProvider";
 import { getPublicOfferUrl } from "@/utils/publicOffer";
+import { trackContact } from "@/lib/analytics";
 
 // src/components/SiteFooter.tsx
 const translations = {
@@ -52,11 +53,11 @@ export default function SiteFooter() {
     : "";
 
   const trackPhoneClick = (phone: string) => {
-    window.gtag?.("event", "phone_click", { event_category: "conversion", event_label: phone });
+    trackContact({ method: "phone", source: "footer", label: phone });
   };
 
   const trackEmailClick = (email: string) => {
-    window.gtag?.("event", "email_click", { event_category: "conversion", event_label: email });
+    trackContact({ method: "email", source: "footer", label: email });
   };
 
   return (

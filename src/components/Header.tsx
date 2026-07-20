@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useLanguage, type Lang } from "@/components/common/LanguageProvider";
+import { trackContact } from "@/lib/analytics";
 
 type MenuLabel = Record<Lang, string>;
 
@@ -114,6 +115,9 @@ export default function Header() {
   const { lang: current, setLang } = useLanguage();
   const [isContactOpen, setIsContactOpen] = useState(false);
   const [method, setMethod] = useState<"telegram" | "viber" | "whatsapp" | "call">("telegram");
+  // Один и тот же модал контактов открывается из топбара и из секции «Посылка»
+  // (событие open-contact-modal). source определяем по точке открытия.
+  const [contactSource, setContactSource] = useState<"topbar" | "parcel_section">("topbar");
   const t = contactTranslations[current];
 
   const handleChange = (v: Lang) => {
@@ -121,7 +125,10 @@ export default function Header() {
   };
 
   useEffect(() => {
-    const handler = () => setIsContactOpen(true);
+    const handler = () => {
+      setContactSource("parcel_section");
+      setIsContactOpen(true);
+    };
     window.addEventListener("open-contact-modal", handler);
 
     return () => window.removeEventListener("open-contact-modal", handler);
@@ -145,11 +152,11 @@ export default function Header() {
   };
 
   const trackContactClick = (phone: string) => {
-    if (method === "call") {
-      window.gtag?.("event", "phone_click", { event_category: "conversion", event_label: phone });
-      return;
-    }
-    window.gtag?.("event", "messenger_click", { event_category: "conversion", event_label: method });
+    trackContact({
+      method: method === "call" ? "phone" : method,
+      source: contactSource,
+      label: method === "call" ? phone : method,
+    });
   };
 
   return (
@@ -186,7 +193,10 @@ export default function Header() {
                 <li key="contacts">
                   <button
                     type="button"
-                    onClick={() => setIsContactOpen(true)}
+                    onClick={() => {
+                      setContactSource("topbar");
+                      setIsContactOpen(true);
+                    }}
                     className="inline-flex h-11 w-11 items-center justify-center rounded-[14px] border border-slate-200 bg-white text-slate-700 transition hover:-translate-y-0.5 hover:shadow-lg"
                     aria-label={item.label[current]}
                     title={item.label[current]}

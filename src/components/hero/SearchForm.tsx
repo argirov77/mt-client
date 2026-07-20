@@ -9,7 +9,7 @@ import StopCombobox, { type StopComboboxHandle } from './StopCombobox';
 import apiClient from '@/lib/apiClient';
 import { useLockBodyScroll } from '@/utils/useLockBodyScroll';
 import { useModalVisibility } from '@/utils/useModalVisibility';
-import { trackEvent, buildRouteCategory } from '@/lib/analytics';
+import { trackSearch, buildRouteCategory } from '@/lib/analytics';
 
 type Stop = { id: number; stop_name: string };
 
@@ -224,29 +224,26 @@ export default function SearchForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    window.gtag?.("event", "form_submit", {
-      event_category: "conversion",
-      event_label: window.location.pathname,
-    });
     if (!fromId || !toId || !departDate) return;
     const fromName =
       departureStops.find((s) => s.id === fromId)?.stop_name || '';
     const toName =
       arrivalStops.find((s) => s.id === toId)?.stop_name || '';
-    trackEvent('search', {
-      search_term: `${fromName} → ${toName}`,
+    // Завершённое действие поиска. form_submit удалён как дубль без нагрузки.
+    trackSearch({
+      locale: lang,
       origin: fromName,
       destination: toName,
       route: buildRouteCategory(
         { id: fromId, name: fromName },
         { id: toId, name: toName },
       ),
-      departure_date: departDate,
-      return_date: returnDate || undefined,
-      trip_type: openReturn ? 'open_return' : returnDate ? 'roundtrip' : 'oneway',
-      passenger_count: passengers.adults + passengers.discount,
-      adult_count: passengers.adults,
-      discount_count: passengers.discount,
+      departureDate: departDate,
+      returnDate: returnDate || undefined,
+      tripType: openReturn ? 'open_return' : returnDate ? 'roundtrip' : 'oneway',
+      passengerCount: passengers.adults + passengers.discount,
+      adultCount: passengers.adults,
+      discountCount: passengers.discount,
     });
     onSearch({
       from: String(fromId),

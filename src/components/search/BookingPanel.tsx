@@ -354,10 +354,7 @@ export default function BookingPanel({
 
       <form
         onSubmit={(e) => {
-          window.gtag?.("event", "form_submit", {
-            event_category: "conversion",
-            event_label: window.location.pathname,
-          });
+          // form_submit удалён как дубль search без полезной нагрузки.
           e.preventDefault();
         }}
         className="mt-2 flex w-full max-w-[640px] flex-col gap-3 rounded-none bg-transparent p-0 shadow-none ring-0 sm:rounded-xl sm:bg-white/70 sm:p-4 sm:shadow-sm sm:ring-1 sm:ring-slate-200"
