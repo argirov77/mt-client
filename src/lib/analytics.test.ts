@@ -9,6 +9,8 @@ import {
   trackContact,
   trackViewSection,
   trackSearchIntent,
+  syncGa4DebugModeFromUrl,
+  isGa4DebugMode,
   RESERVATION_WEIGHT,
 } from "./analytics";
 
@@ -375,4 +377,51 @@ test("trackSearchIntent fires once per session with reached_date_step", () => {
   assert.equal(ctx.calls[0]?.event, "search_intent");
   assert.equal(ctx.calls[0]?.params.departure, "Odessa");
   assert.equal(ctx.calls[0]?.params.reached_date_step, true);
+});
+
+// ─────────────────────────── GA4 debug mode ─────────────────────────────
+
+const setSearch = (search: string) => {
+  (globalThis as Record<string, unknown>).window = {
+    ...((globalThis as Record<string, unknown>).window as object),
+    location: { search },
+  };
+};
+
+test("syncGa4DebugModeFromUrl enables debug via ?debug_mode=1", () => {
+  setSearch("?debug_mode=1");
+  assert.equal(syncGa4DebugModeFromUrl(), true);
+  assert.equal(isGa4DebugMode(), true);
+  setSearch("");
+});
+
+test("debug mode persists across navigation once enabled", () => {
+  setSearch("?debug_mode=1");
+  syncGa4DebugModeFromUrl();
+  // Query param disappears on Next.js navigation — sessionStorage keeps it.
+  setSearch("");
+  assert.equal(syncGa4DebugModeFromUrl(), true);
+  assert.equal(isGa4DebugMode(), true);
+});
+
+test("?debug_mode=0 disables debug mode", () => {
+  setSearch("?debug_mode=1");
+  syncGa4DebugModeFromUrl();
+  setSearch("?debug_mode=0");
+  assert.equal(syncGa4DebugModeFromUrl(), false);
+  assert.equal(isGa4DebugMode(), false);
+  setSearch("");
+});
+
+test("trackEvent adds debug_mode: true only when enabled", () => {
+  setSearch("?debug_mode=1");
+  syncGa4DebugModeFromUrl();
+  setSearch("");
+  trackContact({ method: "phone", source: "footer" });
+  assert.equal(ctx.calls[0]?.params.debug_mode, true);
+});
+
+test("trackEvent omits debug_mode entirely when disabled", () => {
+  trackContact({ method: "phone", source: "footer" });
+  assert.equal("debug_mode" in (ctx.calls[0]?.params ?? {}), false);
 });
