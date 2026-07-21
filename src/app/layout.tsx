@@ -45,7 +45,19 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', '${GA_MEASUREMENT_ID}'${GA_DEBUG_MODE ? ", { debug_mode: true }" : ""});
+            (function () {
+              var DEBUG_KEY = 'ga4_debug_mode';
+              var debugMode = ${GA_DEBUG_MODE ? "true" : "false"};
+              try {
+                var value = new URLSearchParams(window.location.search).get('debug_mode');
+                if (value === '1') sessionStorage.setItem(DEBUG_KEY, '1');
+                else if (value === '0') sessionStorage.removeItem(DEBUG_KEY);
+                if (sessionStorage.getItem(DEBUG_KEY) === '1') debugMode = true;
+              } catch (e) {}
+              // debug_mode передаём только когда режим включён; false не шлём.
+              var config = debugMode ? { debug_mode: true } : {};
+              gtag('config', '${GA_MEASUREMENT_ID}', config);
+            })();
           `}
         </Script>
       </head>

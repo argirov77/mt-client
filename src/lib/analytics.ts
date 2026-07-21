@@ -1,5 +1,49 @@
 type GtagParams = Record<string, unknown>;
 
+export const GA_MEASUREMENT_ID = "G-N3PVQB5J6S";
+
+// ───────────────────────── GA4 debug mode ─────────────────────────────────
+//
+// Debug mode включается по URL-параметру ?debug_mode=1 и живёт в sessionStorage
+// (только текущая вкладка/сессия), потому что query-параметр теряется при
+// Next.js-навигации. ?debug_mode=0 выключает. Параметр debug_mode отправляется
+// в GA4 ТОЛЬКО когда режим включён — при выключенном режиме он полностью
+// исключается (никогда не шлём debug_mode: false), чтобы обычные production-
+// посетители не попадали в DebugView.
+
+const DEBUG_STORAGE_KEY = "ga4_debug_mode";
+
+/**
+ * Синхронизирует GA4 debug mode из URL в sessionStorage и возвращает текущее
+ * состояние. ?debug_mode=1 → включить, ?debug_mode=0 → выключить, без параметра
+ * → сохранить ранее выбранное состояние. Вызывать один раз при инициализации.
+ */
+export const syncGa4DebugModeFromUrl = (): boolean => {
+  if (typeof window === "undefined") return false;
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const value = params.get("debug_mode");
+    if (value === "1") {
+      window.sessionStorage.setItem(DEBUG_STORAGE_KEY, "1");
+    } else if (value === "0") {
+      window.sessionStorage.removeItem(DEBUG_STORAGE_KEY);
+    }
+    return window.sessionStorage.getItem(DEBUG_STORAGE_KEY) === "1";
+  } catch {
+    return false;
+  }
+};
+
+/** Текущее состояние GA4 debug mode (из sessionStorage). */
+export const isGa4DebugMode = (): boolean => {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.sessionStorage.getItem(DEBUG_STORAGE_KEY) === "1";
+  } catch {
+    return false;
+  }
+};
+
 const UTM_KEYS = [
   "utm_source",
   "utm_medium",
@@ -65,13 +109,24 @@ export const trackEvent = (eventName: string, params?: GtagParams) => {
   if (typeof window === "undefined") return;
   const w = window as unknown as { gtag?: (...args: unknown[]) => void };
   if (typeof w.gtag !== "function") return;
+  const debugMode = isGa4DebugMode();
   const enriched = {
     ...(params ?? {}),
     ...getUtm(),
     device_type: getDeviceType(),
+    // debug_mode шлём только когда режим включён; false никогда не отправляем.
+    ...(debugMode ? { debug_mode: true } : {}),
   };
   try {
     w.gtag("event", eventName, enriched);
+    if (debugMode) {
+      console.debug("[GA4]", {
+        eventName,
+        params: enriched,
+        debugMode,
+        measurementId: GA_MEASUREMENT_ID,
+      });
+    }
     if (process.env.NODE_ENV !== "production") {
       console.debug("[Analytics]", eventName, enriched);
     }
