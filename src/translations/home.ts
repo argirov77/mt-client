@@ -63,28 +63,28 @@ type ParcelCopy = {
 
 export const heroTranslations: Record<Lang, HeroCopy> = {
   ru: {
-    since: "на линии с 1991 года",
+    since: "на линии с 1992 года",
     title: "Украина - Румыния - Болгария",
     route: "Одесса • Болград • Констанца • Варна • Солнечный берег • Бургас",
     primaryCta: "Купить билет",
     secondaryCta: "Отправить посылку",
   },
   bg: {
-    since: "на линия от 1991 г.",
+    since: "на линия от 1992 г.",
     title: "Украйна - Румъния - България",
     route: "Одеса • Болград • Констанца • Варна • Слънчев бряг • Бургас",
     primaryCta: "Купете билет",
     secondaryCta: "Изпратете пратка",
   },
   en: {
-    since: "on the line since 1991",
+    since: "on the line since 1992",
     title: "Ukraine - Romania - Bulgaria",
     route: "Odessa • Bolgrad • Constanța • Varna • Sunny Beach • Burgas",
     primaryCta: "Buy a ticket",
     secondaryCta: "Send a parcel",
   },
   ua: {
-    since: "на лінії з 1991 року",
+    since: "на лінії з 1992 року",
     title: "Україна - Румунія - Болгарія",
     route: "Одеса • Болград • Констанца • Варна • Сонячний берег • Бургас",
     primaryCta: "Купити квиток",

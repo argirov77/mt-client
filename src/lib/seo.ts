@@ -28,7 +28,7 @@ export const OG_IMAGE = {
   url: `${SITE_URL}/og-image.jpg`,
   width: 1200,
   height: 630,
-  alt: "Maximov Tours — bus Ukraine, Romania, Bulgaria since 1991",
+  alt: "Maximov Tours — bus Ukraine, Romania, Bulgaria since 1992",
 };
 
 export function buildPath(locale: Lang, path: string = "/"): string {
