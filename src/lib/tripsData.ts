@@ -43,7 +43,7 @@ export const tripsData: Record<string, Trip> = {
         leadText:
           "Покупайте билет на прямой автобус Одесса – Варна онлайн. Отправление от автостанции «Привоз», прибытие в центр Варны.",
         fullText:
-          "Маршрут Одесса – Варна — главное направление Максимов Турс с 1991 года. Автобус отправляется от автостанции «Привоз» в Одессе и следует через Болград и Констанцу к центральной автостанции Варны.\n\nВ дороге примерно 17 часов с учётом пограничного контроля. Рейсы выполняются по фиксированному расписанию несколько раз в неделю — точные даты доступны при выборе направления в форме бронирования.\n\nВ салоне Setra, Neoplan и Mercedes: мягкие кресла с регулируемой спинкой, климат-контроль, Wi-Fi, USB-розетки и санузел. Все рейсы прямые: на пересадки и доплаты времени уходить не будет.\n\nКроме пассажирских перевозок мы доставляем посылки между Украиной и Болгарией в обе стороны — это удобно, если нужно отправить документы или передачу родным.\n\nЦена базового билета — 2300 ₴, скидки доступны для детей и пенсионеров. Бронирование бесплатное, оплата онлайн или при посадке.",
+          "Маршрут Одесса – Варна — главное направление Максимов Турс с 1992 года. Автобус отправляется от автостанции «Привоз» в Одессе и следует через Болград и Констанцу к центральной автостанции Варны.\n\nВ дороге примерно 17 часов с учётом пограничного контроля. Рейсы выполняются по фиксированному расписанию несколько раз в неделю — точные даты доступны при выборе направления в форме бронирования.\n\nВ салоне Setra, Neoplan и Mercedes: мягкие кресла с регулируемой спинкой, климат-контроль, Wi-Fi, USB-розетки и санузел. Все рейсы прямые: на пересадки и доплаты времени уходить не будет.\n\nКроме пассажирских перевозок мы доставляем посылки между Украиной и Болгарией в обе стороны — это удобно, если нужно отправить документы или передачу родным.\n\nЦена базового билета — 2300 ₴, скидки доступны для детей и пенсионеров. Бронирование бесплатное, оплата онлайн или при посадке.",
       },
       ua: {
         slug: "odesa-varna",
@@ -55,7 +55,7 @@ export const tripsData: Record<string, Trip> = {
         leadText:
           "Купуйте квиток на прямий автобус Одеса – Варна онлайн. Відправлення з автостанції «Привоз», прибуття в центр Варни.",
         fullText:
-          "Маршрут Одеса – Варна — головний напрямок Максимов Турс з 1991 року. Автобус вирушає з автостанції «Привоз» в Одесі та прямує через Болград і Констанцу до центральної автостанції Варни.\n\nУ дорозі приблизно 17 годин з урахуванням прикордонного контролю. Рейси виконуються за фіксованим розкладом кілька разів на тиждень — точні дати доступні під час вибору напрямку у формі бронювання.\n\nУ салоні Setra, Neoplan і Mercedes: м'які крісла з регульованою спинкою, клімат-контроль, Wi-Fi, USB-розетки та туалет. Усі рейси прямі: на пересадки та доплати часу не доведеться витрачати.\n\nКрім пасажирських перевезень, ми доставляємо посилки між Україною та Болгарією в обидва боки — це зручно, якщо потрібно надіслати документи чи передачу рідним.\n\nЦіна базового квитка — 2300 ₴, знижки доступні для дітей і пенсіонерів. Бронювання безкоштовне, оплата онлайн або при посадці.",
+          "Маршрут Одеса – Варна — головний напрямок Максимов Турс з 1992 року. Автобус вирушає з автостанції «Привоз» в Одесі та прямує через Болград і Констанцу до центральної автостанції Варни.\n\nУ дорозі приблизно 17 годин з урахуванням прикордонного контролю. Рейси виконуються за фіксованим розкладом кілька разів на тиждень — точні дати доступні під час вибору напрямку у формі бронювання.\n\nУ салоні Setra, Neoplan і Mercedes: м'які крісла з регульованою спинкою, клімат-контроль, Wi-Fi, USB-розетки та туалет. Усі рейси прямі: на пересадки та доплати часу не доведеться витрачати.\n\nКрім пасажирських перевезень, ми доставляємо посилки між Україною та Болгарією в обидва боки — це зручно, якщо потрібно надіслати документи чи передачу рідним.\n\nЦіна базового квитка — 2300 ₴, знижки доступні для дітей і пенсіонерів. Бронювання безкоштовне, оплата онлайн або при посадці.",
       },
       en: {
         slug: "odessa-varna",
@@ -67,7 +67,7 @@ export const tripsData: Record<string, Trip> = {
         leadText:
           "Buy a ticket for the direct Odessa – Varna bus online. Departure from Privoz bus station, arrival in central Varna.",
         fullText:
-          "The Odessa – Varna route is Maximov Tours' flagship line, running since 1991. The bus departs from Privoz bus station in Odessa and runs through Bolgrad and Constanța to Varna's central bus station.\n\nThe journey takes about 17 hours including border control. Departures follow a fixed schedule multiple times a week — exact dates are available when you pick the direction in the booking form.\n\nOnboard the Setra, Neoplan, and Mercedes coaches: reclining seats, climate control, Wi-Fi, USB sockets, and a toilet. All trips are direct — no transfers, no extra fees.\n\nIn addition to passenger transport, we deliver parcels between Ukraine and Bulgaria in both directions — handy for documents or care packages.\n\nThe base ticket price is 2300 UAH; discounts are available for children and pensioners. Booking is free, with online payment or pay at boarding.",
+          "The Odessa – Varna route is Maximov Tours' flagship line, running since 1992. The bus departs from Privoz bus station in Odessa and runs through Bolgrad and Constanța to Varna's central bus station.\n\nThe journey takes about 17 hours including border control. Departures follow a fixed schedule multiple times a week — exact dates are available when you pick the direction in the booking form.\n\nOnboard the Setra, Neoplan, and Mercedes coaches: reclining seats, climate control, Wi-Fi, USB sockets, and a toilet. All trips are direct — no transfers, no extra fees.\n\nIn addition to passenger transport, we deliver parcels between Ukraine and Bulgaria in both directions — handy for documents or care packages.\n\nThe base ticket price is 2300 UAH; discounts are available for children and pensioners. Booking is free, with online payment or pay at boarding.",
       },
       bg: {
         slug: "odesa-varna",
@@ -79,7 +79,7 @@ export const tripsData: Record<string, Trip> = {
         leadText:
           "Купи билет за директния автобус Одеса – Варна онлайн. Тръгване от автогара Привоз, пристигане в центъра на Варна.",
         fullText:
-          "Маршрутът Одеса – Варна е основната линия на Максимов Турс от 1991 г. Автобусът тръгва от автогара „Привоз“ в Одеса и преминава през Болград и Констанца до централната автогара във Варна.\n\nПътуването е около 17 часа с граничен контрол. Курсовете са по фиксирано разписание няколко пъти седмично — конкретните дати се показват при избор на посока във формата за резервация.\n\nВ салоните на Setra, Neoplan и Mercedes: меки седалки с регулируема облегалка, климатик, Wi-Fi, USB и тоалетна. Всички курсове са директни — без прекачвания и допълнителни такси.\n\nОсвен пътници, превозваме и пратки между Украйна и България в двете посоки — удобно за документи или колет до близки.\n\nЦената на стандартния билет е 2300 грн; има отстъпки за деца и пенсионери. Резервацията е безплатна, с плащане онлайн или при качване.",
+          "Маршрутът Одеса – Варна е основната линия на Максимов Турс от 1992 г. Автобусът тръгва от автогара „Привоз“ в Одеса и преминава през Болград и Констанца до централната автогара във Варна.\n\nПътуването е около 17 часа с граничен контрол. Курсовете са по фиксирано разписание няколко пъти седмично — конкретните дати се показват при избор на посока във формата за резервация.\n\nВ салоните на Setra, Neoplan и Mercedes: меки седалки с регулируема облегалка, климатик, Wi-Fi, USB и тоалетна. Всички курсове са директни — без прекачвания и допълнителни такси.\n\nОсвен пътници, превозваме и пратки между Украйна и България в двете посоки — удобно за документи или колет до близки.\n\nЦената на стандартния билет е 2300 грн; има отстъпки за деца и пенсионери. Резервацията е безплатна, с плащане онлайн или при качване.",
       },
     },
   },
@@ -279,7 +279,7 @@ export const tripsData: Record<string, Trip> = {
         leadText:
           "Прямой автобус Одесса – Солнечный берег: посадка у Привоза, высадка прямо на курорте. Идеально для летнего отдыха.",
         fullText:
-          "Солнечный берег — крупнейший пляжный курорт Болгарии. Максимов Турс возит туда напрямую из Одессы каждый сезон с 1991 года.\n\nМаршрут проходит через Болград, Констанцу и Варну, время в пути — около 18 часов. Расписание уплотняется летом — даты доступны в форме поиска.\n\nАвтобусы Setra, Neoplan и Mercedes с климат-контролем, Wi-Fi, USB и санузлом. Все рейсы прямые.\n\nПрибытие на Солнечный берег — на главной автостанции курорта; от неё легко добраться до отелей пешком или местным транспортом.\n\nЦена базового билета 2300 ₴, есть детские скидки. Заранее бронируйте на пиковые даты — летом мест мало.",
+          "Солнечный берег — крупнейший пляжный курорт Болгарии. Максимов Турс возит туда напрямую из Одессы каждый сезон с 1992 года.\n\nМаршрут проходит через Болград, Констанцу и Варну, время в пути — около 18 часов. Расписание уплотняется летом — даты доступны в форме поиска.\n\nАвтобусы Setra, Neoplan и Mercedes с климат-контролем, Wi-Fi, USB и санузлом. Все рейсы прямые.\n\nПрибытие на Солнечный берег — на главной автостанции курорта; от неё легко добраться до отелей пешком или местным транспортом.\n\nЦена базового билета 2300 ₴, есть детские скидки. Заранее бронируйте на пиковые даты — летом мест мало.",
       },
       ua: {
         slug: "odesa-sonyachniy-bereg",
@@ -291,7 +291,7 @@ export const tripsData: Record<string, Trip> = {
         leadText:
           "Прямий автобус Одеса – Сонячний берег: посадка біля Привозу, висадка прямо на курорті. Ідеально для літнього відпочинку.",
         fullText:
-          "Сонячний берег — найбільший пляжний курорт Болгарії. Максимов Турс возить туди прямо з Одеси кожен сезон з 1991 року.\n\nМаршрут проходить через Болград, Констанцу і Варну, час у дорозі — близько 18 годин. Розклад ущільнюється влітку — дати доступні у формі пошуку.\n\nАвтобуси Setra, Neoplan і Mercedes з клімат-контролем, Wi-Fi, USB і туалетом. Усі рейси прямі.\n\nПрибуття на Сонячний берег — на головній автостанції курорту; з неї легко дістатися до готелів пішки або місцевим транспортом.\n\nЦіна базового квитка 2300 ₴, є дитячі знижки. Заздалегідь бронюйте на пікові дати — влітку місць мало.",
+          "Сонячний берег — найбільший пляжний курорт Болгарії. Максимов Турс возить туди прямо з Одеси кожен сезон з 1992 року.\n\nМаршрут проходить через Болград, Констанцу і Варну, час у дорозі — близько 18 годин. Розклад ущільнюється влітку — дати доступні у формі пошуку.\n\nАвтобуси Setra, Neoplan і Mercedes з клімат-контролем, Wi-Fi, USB і туалетом. Усі рейси прямі.\n\nПрибуття на Сонячний берег — на головній автостанції курорту; з неї легко дістатися до готелів пішки або місцевим транспортом.\n\nЦіна базового квитка 2300 ₴, є дитячі знижки. Заздалегідь бронюйте на пікові дати — влітку місць мало.",
       },
       en: {
         slug: "odessa-sunny-beach",
@@ -303,7 +303,7 @@ export const tripsData: Record<string, Trip> = {
         leadText:
           "Direct Odessa – Sunny Beach bus: boarding at Privoz, drop-off right at the resort. Perfect for the summer holiday.",
         fullText:
-          "Sunny Beach is Bulgaria's largest seaside resort. Maximov Tours has been running direct trips there from Odessa every season since 1991.\n\nThe route goes via Bolgrad, Constanța, and Varna, with a travel time of around 18 hours. The summer timetable is denser — exact dates appear in the search form.\n\nSetra, Neoplan, and Mercedes coaches with climate control, Wi-Fi, USB, and a toilet. All trips are direct.\n\nDrop-off in Sunny Beach is at the resort's main bus station; hotels are an easy walk or short local-transport ride away.\n\nBase ticket price 2300 UAH; child discounts available. Book peak summer dates in advance — seats sell out.",
+          "Sunny Beach is Bulgaria's largest seaside resort. Maximov Tours has been running direct trips there from Odessa every season since 1992.\n\nThe route goes via Bolgrad, Constanța, and Varna, with a travel time of around 18 hours. The summer timetable is denser — exact dates appear in the search form.\n\nSetra, Neoplan, and Mercedes coaches with climate control, Wi-Fi, USB, and a toilet. All trips are direct.\n\nDrop-off in Sunny Beach is at the resort's main bus station; hotels are an easy walk or short local-transport ride away.\n\nBase ticket price 2300 UAH; child discounts available. Book peak summer dates in advance — seats sell out.",
       },
       bg: {
         slug: "odesa-slanchev-bryag",
@@ -315,7 +315,7 @@ export const tripsData: Record<string, Trip> = {
         leadText:
           "Директен автобус Одеса – Слънчев бряг: качване при Привоз, слизане направо на курорта. Идеално за лятна почивка.",
         fullText:
-          "Слънчев бряг е най-големият плажен курорт в България. Максимов Турс прави директни курсове до там от Одеса всеки сезон от 1991 г.\n\nМаршрутът минава през Болград, Констанца и Варна; пътуването е около 18 часа. През лятото разписанието е по-плътно — конкретните дати са във формата за търсене.\n\nАвтобуси Setra, Neoplan и Mercedes с климатик, Wi-Fi, USB и тоалетна. Всички курсове са директни.\n\nПристигането в Слънчев бряг е на главната автогара на курорта; от там до хотелите се стига пеша или с местен транспорт.\n\nЦената на стандартния билет е 2300 грн; има детски отстъпки. Резервирайте пиковите летни дати рано — местата свършват.",
+          "Слънчев бряг е най-големият плажен курорт в България. Максимов Турс прави директни курсове до там от Одеса всеки сезон от 1992 г.\n\nМаршрутът минава през Болград, Констанца и Варна; пътуването е около 18 часа. През лятото разписанието е по-плътно — конкретните дати са във формата за търсене.\n\nАвтобуси Setra, Neoplan и Mercedes с климатик, Wi-Fi, USB и тоалетна. Всички курсове са директни.\n\nПристигането в Слънчев бряг е на главната автогара на курорта; от там до хотелите се стига пеша или с местен транспорт.\n\nЦената на стандартния билет е 2300 грн; има детски отстъпки. Резервирайте пиковите летни дати рано — местата свършват.",
       },
     },
   },
@@ -338,7 +338,7 @@ export const tripsData: Record<string, Trip> = {
         leadText:
           "Возвращайтесь домой удобно: прямой автобус Солнечный берег – Одесса с остановкой в Варне.",
         fullText:
-          "Прямой рейс с курорта домой — посадка на главной автостанции Солнечного берега, далее через Варну, Констанцу и Болград в Одессу.\n\nВремя в пути — около 18 часов с пограничным контролем. Расписание фиксированное; летом — несколько рейсов в неделю.\n\nКомфорт прежний: автобусы Setra/Neoplan/Mercedes, Wi-Fi, климат-контроль, USB, санузел.\n\nЕсли купили сувениры или передачу — можно отправить с тем же рейсом. Посылочная служба работает между Болгарией и Украиной с 1991 года.\n\nОплата онлайн или при посадке. Бронируйте обратный билет заранее — обратные рейсы в конце сезона расходятся быстрее.",
+          "Прямой рейс с курорта домой — посадка на главной автостанции Солнечного берега, далее через Варну, Констанцу и Болград в Одессу.\n\nВремя в пути — около 18 часов с пограничным контролем. Расписание фиксированное; летом — несколько рейсов в неделю.\n\nКомфорт прежний: автобусы Setra/Neoplan/Mercedes, Wi-Fi, климат-контроль, USB, санузел.\n\nЕсли купили сувениры или передачу — можно отправить с тем же рейсом. Посылочная служба работает между Болгарией и Украиной с 1992 года.\n\nОплата онлайн или при посадке. Бронируйте обратный билет заранее — обратные рейсы в конце сезона расходятся быстрее.",
       },
       ua: {
         slug: "sonyachniy-bereg-odesa",
@@ -350,7 +350,7 @@ export const tripsData: Record<string, Trip> = {
         leadText:
           "Повертайтеся додому зручно: прямий автобус Сонячний берег – Одеса з зупинкою у Варні.",
         fullText:
-          "Прямий рейс з курорту додому — посадка на головній автостанції Сонячного берега, далі через Варну, Констанцу і Болград до Одеси.\n\nЧас у дорозі — близько 18 годин з прикордонним контролем. Розклад фіксований; влітку — кілька рейсів на тиждень.\n\nКомфорт колишній: автобуси Setra/Neoplan/Mercedes, Wi-Fi, клімат-контроль, USB, туалет.\n\nЯкщо купили сувеніри чи передачу — можна відправити з тим самим рейсом. Посилкова служба працює між Болгарією та Україною з 1991 року.\n\nОплата онлайн або при посадці. Бронюйте зворотний квиток заздалегідь — зворотні рейси в кінці сезону розходяться швидше.",
+          "Прямий рейс з курорту додому — посадка на головній автостанції Сонячного берега, далі через Варну, Констанцу і Болград до Одеси.\n\nЧас у дорозі — близько 18 годин з прикордонним контролем. Розклад фіксований; влітку — кілька рейсів на тиждень.\n\nКомфорт колишній: автобуси Setra/Neoplan/Mercedes, Wi-Fi, клімат-контроль, USB, туалет.\n\nЯкщо купили сувеніри чи передачу — можна відправити з тим самим рейсом. Посилкова служба працює між Болгарією та Україною з 1992 року.\n\nОплата онлайн або при посадці. Бронюйте зворотний квиток заздалегідь — зворотні рейси в кінці сезону розходяться швидше.",
       },
       en: {
         slug: "sunny-beach-odessa",
@@ -362,7 +362,7 @@ export const tripsData: Record<string, Trip> = {
         leadText:
           "Easy ride home: direct Sunny Beach – Odessa coach with a stop in Varna.",
         fullText:
-          "Direct route from the resort to home — boarding at Sunny Beach's main bus station, then through Varna, Constanța, and Bolgrad to Odessa.\n\nThe trip takes around 18 hours including border control. The schedule is fixed; summer runs several departures per week.\n\nSame comfort: Setra/Neoplan/Mercedes coaches, Wi-Fi, climate control, USB, toilet.\n\nIf you've picked up souvenirs or care parcels, they can travel on the same coach. The parcel service between Bulgaria and Ukraine has been running since 1991.\n\nPay online or at boarding. Book the return early — end-of-season return seats sell faster.",
+          "Direct route from the resort to home — boarding at Sunny Beach's main bus station, then through Varna, Constanța, and Bolgrad to Odessa.\n\nThe trip takes around 18 hours including border control. The schedule is fixed; summer runs several departures per week.\n\nSame comfort: Setra/Neoplan/Mercedes coaches, Wi-Fi, climate control, USB, toilet.\n\nIf you've picked up souvenirs or care parcels, they can travel on the same coach. The parcel service between Bulgaria and Ukraine has been running since 1992.\n\nPay online or at boarding. Book the return early — end-of-season return seats sell faster.",
       },
       bg: {
         slug: "slanchev-bryag-odesa",
@@ -374,7 +374,7 @@ export const tripsData: Record<string, Trip> = {
         leadText:
           "Връщайте се удобно: директен автобус Слънчев бряг – Одеса със спирка във Варна.",
         fullText:
-          "Директен курс от курорта до вкъщи — качване на главната автогара на Слънчев бряг, после през Варна, Констанца и Болград до Одеса.\n\nПътуването е около 18 часа с граничен контрол. Разписанието е фиксирано; през лятото — няколко курса седмично.\n\nСъщият комфорт: автобуси Setra/Neoplan/Mercedes, Wi-Fi, климатик, USB, тоалетна.\n\nАко сте купили сувенири или пратки — могат да пътуват със същия курс. Услугата за пратки между България и Украйна работи от 1991 г.\n\nПлащане онлайн или при качване. Резервирайте обратния билет рано — местата в края на сезона свършват по-бързо.",
+          "Директен курс от курорта до вкъщи — качване на главната автогара на Слънчев бряг, после през Варна, Констанца и Болград до Одеса.\n\nПътуването е около 18 часа с граничен контрол. Разписанието е фиксирано; през лятото — няколко курса седмично.\n\nСъщият комфорт: автобуси Setra/Neoplan/Mercedes, Wi-Fi, климатик, USB, тоалетна.\n\nАко сте купили сувенири или пратки — могат да пътуват със същия курс. Услугата за пратки между България и Украйна работи от 1992 г.\n\nПлащане онлайн или при качване. Резервирайте обратния билет рано — местата в края на сезона свършват по-бързо.",
       },
     },
   },

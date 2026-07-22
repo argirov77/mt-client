@@ -21,10 +21,10 @@ const ORG_NAME_BY_LOCALE: Record<Lang, string> = {
 };
 
 const ORG_DESCRIPTION_BY_LOCALE: Record<Lang, string> = {
-  ru: "Международный автобусный перевозчик между Украиной и Болгарией с 1991 года. Прямые рейсы Одесса – Варна – Бургас.",
-  ua: "Міжнародний автобусний перевізник між Україною та Болгарією з 1991 року. Прямі рейси Одеса – Варна – Бургас.",
-  bg: "Международен автобусен превозвач между Украйна и България от 1991 г. Директни курсове Одеса – Варна – Бургас.",
-  en: "International bus carrier between Ukraine and Bulgaria since 1991. Direct routes Odessa – Varna – Burgas on comfortable coaches.",
+  ru: "Международный автобусный перевозчик между Украиной и Болгарией с 1992 года. Прямые рейсы Одесса – Варна – Бургас.",
+  ua: "Міжнародний автобусний перевізник між Україною та Болгарією з 1992 року. Прямі рейси Одеса – Варна – Бургас.",
+  bg: "Международен автобусен превозвач между Украйна и България от 1992 г. Директни курсове Одеса – Варна – Бургас.",
+  en: "International bus carrier between Ukraine and Bulgaria since 1992. Direct routes Odessa – Varna – Burgas on comfortable coaches.",
 };
 
 type StopInfo = {
@@ -129,7 +129,7 @@ export function buildOrganizationLD(locale: Lang) {
         },
         image: OFFICE_IMAGE,
         description: ORG_DESCRIPTION_BY_LOCALE[locale],
-        foundingDate: "1991",
+        foundingDate: "1992",
         email: "avroraiko@gmail.com",
         telephone: ORG_TELEPHONES,
         address: HEAD_OFFICE_ADDRESS,
