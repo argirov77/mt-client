@@ -5,7 +5,11 @@ import {
   toFiniteNumber,
   trackPurchase,
   trackReservation,
+  trackAddToCart,
+  trackBeginCheckout,
+  trackAddPaymentInfo,
   getCurrencyForLocale,
+  BOOKING_CURRENCY,
   trackContact,
   trackViewSection,
   trackSearchIntent,
@@ -203,23 +207,48 @@ test("trackPurchase prevents duplicate events with same transactionId", () => {
   assert.equal(ctx.calls.length, 1);
 });
 
-test("trackPurchase defaults currency to UAH when locale is not provided", () => {
+test("trackPurchase defaults currency to BOOKING_CURRENCY when none provided", () => {
   trackPurchase({
     transactionId: "tx-cur",
     items: [{ item_id: "a", price: 2600 }],
   });
 
-  assert.equal(ctx.calls[0]?.params.currency, "UAH");
+  assert.equal(ctx.calls[0]?.params.currency, BOOKING_CURRENCY);
 });
 
-test("trackPurchase derives currency from locale (EUR for en/bg)", () => {
+test("trackPurchase uses the transaction currency, NOT the locale", () => {
+  // Регрессия: раньше currency выводилась из локали (en/bg → EUR), из-за чего
+  // цена в UAH метилась чужой валютой. Теперь локаль не влияет на валюту, а
+  // фактическая валюта транзакции (ticket.pricing.currency) передаётся явно.
   trackPurchase({
     transactionId: "tx-cur-en",
     items: [{ item_id: "a", price: 2600 }],
     locale: "en",
+    currency: "UAH",
+  });
+
+  assert.equal(ctx.calls[0]?.params.currency, "UAH");
+});
+
+test("trackPurchase honors an explicit non-UAH transaction currency", () => {
+  trackPurchase({
+    transactionId: "tx-cur-eur",
+    items: [{ item_id: "a", price: 40 }],
+    locale: "ru",
+    currency: "EUR",
   });
 
   assert.equal(ctx.calls[0]?.params.currency, "EUR");
+});
+
+test("trackPurchase ignores locale entirely for currency (bg stays UAH by default)", () => {
+  trackPurchase({
+    transactionId: "tx-cur-bg",
+    items: [{ item_id: "a", price: 2600 }],
+    locale: "bg",
+  });
+
+  assert.equal(ctx.calls[0]?.params.currency, BOOKING_CURRENCY);
 });
 
 test("trackPurchase normalizes invalid quantity to 1", () => {
@@ -306,11 +335,22 @@ test("trackReservation uses explicit value over items when provided", () => {
   assert.equal(ctx.calls[0]?.params.value, 5000 * RESERVATION_WEIGHT);
 });
 
-test("trackReservation derives currency from locale", () => {
+test("trackReservation defaults currency to BOOKING_CURRENCY, not locale", () => {
   trackReservation({
     purchaseId: "res-cur",
     value: 1000,
     locale: "bg",
+  });
+
+  assert.equal(ctx.calls[0]?.params.currency, BOOKING_CURRENCY);
+});
+
+test("trackReservation honors an explicit transaction currency", () => {
+  trackReservation({
+    purchaseId: "res-cur-eur",
+    value: 1000,
+    locale: "ru",
+    currency: "EUR",
   });
 
   assert.equal(ctx.calls[0]?.params.currency, "EUR");
@@ -329,6 +369,34 @@ test("trackReservation skips when purchaseId is missing", () => {
   const fired = trackReservation({ purchaseId: "", value: 1000 });
   assert.equal(fired, false);
   assert.equal(ctx.calls.length, 0);
+});
+
+// ─────────────────── funnel currency (no locale mapping) ────────────────
+
+test("funnel events default to BOOKING_CURRENCY regardless of locale", () => {
+  // Регрессия: en/bg локали давали EUR, хотя booking-flow считается в UAH (₴).
+  trackAddToCart({ locale: "en", items: [{ item_id: "a", price: 2600 }] });
+  trackBeginCheckout({ locale: "bg", items: [{ item_id: "a", price: 2600 }] });
+  trackAddPaymentInfo({
+    locale: "en",
+    transactionId: "tx",
+    items: [{ item_id: "a", price: 2600 }],
+  });
+
+  assert.equal(ctx.calls.length, 3);
+  for (const call of ctx.calls) {
+    assert.equal(call.params.currency, BOOKING_CURRENCY);
+  }
+});
+
+test("funnel events honor an explicit currency override", () => {
+  trackAddToCart({
+    locale: "ru",
+    items: [{ item_id: "a", price: 40 }],
+    currency: "EUR",
+  });
+
+  assert.equal(ctx.calls[0]?.params.currency, "EUR");
 });
 
 // ─────────────────────────── trackContact ───────────────────────────────

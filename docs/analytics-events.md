@@ -5,9 +5,12 @@
 поэтому UTM-атрибуция (прикрепляется в `trackEvent`) теперь попадает во **все**
 события.
 
-- **Валюта по локали:** `getCurrencyForLocale(locale)` → `UAH` для `ru`/`ua`,
-  `EUR` для `en`/`bg`. Жёсткая константа `FALLBACK_CURRENCY = "UAH"` удалена;
-  валюта везде выводится из локали.
+- **Валюта одна — гривна (UAH), с локалью не связана.** Во всех событиях
+  `currency` = `BOOKING_CURRENCY` (`"UAH"`), единая константа в `analytics.ts`.
+  Ни бэкенд-поле `purchase.currency` (отдавало мусорный `BGN`), ни
+  `getCurrencyForLocale(locale)` (давала `EUR` для `en`/`bg`) валюту событий
+  больше НЕ определяют. `getCurrencyForLocale` оставлена только для UI-фолбэка
+  сумм возврата/переноса в `PurchaseClient`.
 - **`value`** во всех событиях воронки — в основных единицах валюты (гривны/евро,
   не копейки/центы).
 - **Единый `items[]`** через всю воронку (item_id `<departure>-<arrival>` там, где
@@ -139,9 +142,19 @@ DebugView было видно, откуда взялось значение. Е�
 хранятся в `sessionStorage` + `localStorage` (`ga_purchase_fired_<id>`). Повторный
 вызов с тем же id — no-op.
 
-### 3. Валюта по локали
+### 3. Валюта транзакции (фикс рассинхрона value/currency)
 
-`currency = purchaseView.purchase.currency ?? getCurrencyForLocale(lang)`.
+Валюта в проекте одна — **гривна (UAH)**, с языком интерфейса она не связана.
+Поэтому `currency` во всех событиях = `BOOKING_CURRENCY` (`"UAH"`), единая
+константа в `analytics.ts`.
+
+**Было (баг):** `currency = purchaseView.purchase.currency ?? getCurrencyForLocale(lang)`
+— поле `purchase.currency` из бэкенда приходило `BGN` на гривневых оплатах
+(гео-артефакт), из-за чего 4 750 UAH метились как BGN и GA4 конвертировал сумму
+в ~27×. Локаль тоже не годится (давала `EUR` для `en`/`bg`). Поэтому валюта из
+бэкенд-полей и из локали больше **не** выводится — всегда `BOOKING_CURRENCY`.
+Параметр `currency` у `trackPurchase`/`trackReservation` и у событий воронки
+оставлен опциональным — задел на будущее, если появится вторая валюта.
 
 ### Вес `reservation`
 
@@ -196,8 +209,9 @@ Next.js-навигацию, при которой query-параметр тер�
 7. Нажать **«Purchase»** → `add_payment_info` (`transaction_id`, `value`,
    `payment_type: liqpay`), затем редирект на LiqPay.
 8. Оплатить → возврат на `/return` → `purchase` с корректными
-   `value` (реальная цена билета × кол-во, **не ~72 373**), `currency` (UAH для
-   ru/ua, EUR для en/bg), уникальным `transaction_id`, `items[]`.
+   `value` (реальная цена билета × кол-во, **не ~72 373**), `currency` = `UAH`
+   (**не** `BGN`, **не** зависит от локали), уникальным `transaction_id`,
+   `items[]`.
 9. Обновить `/return` (F5) → `purchase` **повторно не** отправляется (дедуп).
 10. Проверить, что у всех событий шага 2–8 присутствуют UTM (`source`, `medium`).
 

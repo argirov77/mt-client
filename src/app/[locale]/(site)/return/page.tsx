@@ -15,7 +15,7 @@ import {
   trackPurchase,
   buildRouteCategory,
   daysUntil,
-  getCurrencyForLocale,
+  BOOKING_CURRENCY,
 } from "@/lib/analytics";
 import { returnTranslations, dateLocaleMap } from "@/translations/return";
 import type { Lang } from "@/components/common/LanguageProvider";
@@ -775,7 +775,10 @@ function ReturnPageContent() {
       transactionId,
       items,
       locale: lang,
-      currency: purchaseView.purchase.currency ?? getCurrencyForLocale(lang),
+      // Единственная валюта — гривна. Поле purchase.currency из бэкенда НЕ
+      // используется: оно отдавало мусорный BGN на гривневых оплатах и завышало
+      // выручку в GA4 в ~27×. Локаль на валюту тоже не влияет.
+      currency: BOOKING_CURRENCY,
       valueOverride:
         checkoutValueFallback ??
         purchaseView.totals?.paid ??
