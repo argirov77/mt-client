@@ -15,7 +15,7 @@ import {
   trackPurchase,
   buildRouteCategory,
   daysUntil,
-  getCurrencyForLocale,
+  BOOKING_CURRENCY,
 } from "@/lib/analytics";
 import { returnTranslations, dateLocaleMap } from "@/translations/return";
 import type { Lang } from "@/components/common/LanguageProvider";
@@ -771,11 +771,22 @@ function ReturnPageContent() {
       /* ignore */
     }
 
+    // Валюта транзакции — из того же источника, что и value: per-ticket
+    // ticket.pricing.currency (та же пара price/currency, которую PurchaseClient
+    // рендерит через formatCurrency). НЕ purchase.currency (оно приходило BGN на
+    // гривневых оплатах — рассинхрон с ценами билетов) и НЕ локаль. purchase.currency
+    // используется как фолбэк только когда у билетов нет pricing (тогда value тоже
+    // падает на amount_due, валюта которого = purchase.currency).
+    const transactionCurrency =
+      uniqueTickets.find((ticket) => ticket.pricing?.currency)?.pricing?.currency ??
+      purchaseView.purchase.currency ??
+      BOOKING_CURRENCY;
+
     const fired = trackPurchase({
       transactionId,
       items,
       locale: lang,
-      currency: purchaseView.purchase.currency ?? getCurrencyForLocale(lang),
+      currency: transactionCurrency,
       valueOverride:
         checkoutValueFallback ??
         purchaseView.totals?.paid ??

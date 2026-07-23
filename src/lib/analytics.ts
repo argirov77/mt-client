@@ -146,19 +146,29 @@ export const setUserProperties = (props: GtagParams) => {
   }
 };
 
-// ───────────────────────── Currency by locale ─────────────────────────────
+// ───────────────────────── Currency ───────────────────────────────────────
 
 export type Locale = string | null | undefined;
 
 /**
- * Валюта отчётности по локали:
- *   ru / ua (uk) → "UAH"
- *   en / bg      → "EUR"
- * Принимает как коды приложения ("ru", "ua", "en", "bg"), так и Intl-локали
- * ("ru-RU", "uk-UA", "en-US", "bg-BG"). Дефолт — UAH (основной рынок).
+ * Валюта расчёта в booking/checkout-потоке. Оплата всегда проходит через LiqPay
+ * (украинский провайдер) и отображается пользователю в гривнах (₴), поэтому
+ * пред-purchase-события воронки (search … add_payment_info) считаются в UAH.
  *
- * Заменяет жёсткую константу FALLBACK_CURRENCY: валюта теперь всегда выводится
- * из локали, а не хардкодится по месту.
+ * ВАЖНО: валюта НИКОГДА не выводится из локали интерфейса или гео — это давало
+ * рассинхрон value/currency (напр. цену в UAH метили как EUR для en/bg локалей).
+ * Единая точка правки: когда booking-flow станет мультивалютным и бэкенд начнёт
+ * отдавать валюту цены в /tours/search и /public/purchase/quote, её нужно
+ * пробросить в параметр `currency` соответствующих событий; фолбэк — здесь.
+ */
+export const BOOKING_CURRENCY = "UAH";
+
+/**
+ * @deprecated Валюта событий больше НЕ выводится из локали (это порождало
+ * рассинхрон value/currency). Функция сохранена только для UI-фолбэка отображения
+ * сумм возврата/переноса в PurchaseClient и для обратной совместимости тестов.
+ * Для GA4-событий используйте фактическую валюту транзакции (ticket.pricing.currency)
+ * либо BOOKING_CURRENCY.
  */
 export const getCurrencyForLocale = (locale?: Locale): "UAH" | "EUR" => {
   const base = String(locale ?? "")
@@ -322,6 +332,7 @@ export type TrackSearchParams = {
   passengerCount?: number;
   adultCount?: number;
   discountCount?: number;
+  currency?: string | null;
   extra?: GtagParams;
 };
 
@@ -337,7 +348,7 @@ export const trackSearch = (params: TrackSearchParams) => {
     passenger_count: params.passengerCount,
     adult_count: params.adultCount,
     discount_count: params.discountCount,
-    currency: getCurrencyForLocale(params.locale),
+    currency: params.currency ?? BOOKING_CURRENCY,
     ...(params.extra ?? {}),
   });
 };
@@ -348,6 +359,7 @@ export type TrackViewItemListParams = {
   listId?: string;
   listName?: string;
   items: EcommerceItem[];
+  currency?: string | null;
   extra?: GtagParams;
 };
 
@@ -355,7 +367,7 @@ export const trackViewItemList = (params: TrackViewItemListParams) => {
   trackEvent("view_item_list", {
     item_list_id: params.listId,
     item_list_name: params.listName,
-    currency: getCurrencyForLocale(params.locale),
+    currency: params.currency ?? BOOKING_CURRENCY,
     items: normalizeItems(params.items),
     ...(params.extra ?? {}),
   });
@@ -367,6 +379,7 @@ export type TrackSelectItemParams = {
   listName?: string;
   items: EcommerceItem[];
   value?: number | string | null;
+  currency?: string | null;
   extra?: GtagParams;
 };
 
@@ -375,7 +388,7 @@ export const trackSelectItem = (params: TrackSelectItemParams) => {
   trackEvent("select_item", {
     item_list_name: params.listName,
     items,
-    currency: getCurrencyForLocale(params.locale),
+    currency: params.currency ?? BOOKING_CURRENCY,
     value: resolveValue(items, params.value),
     ...(params.extra ?? {}),
   });
@@ -386,6 +399,7 @@ export type TrackAddToCartParams = {
   locale?: Locale;
   items: EcommerceItem[];
   value?: number | string | null;
+  currency?: string | null;
   extra?: GtagParams;
 };
 
@@ -393,7 +407,7 @@ export const trackAddToCart = (params: TrackAddToCartParams) => {
   const items = normalizeItems(params.items);
   trackEvent("add_to_cart", {
     items,
-    currency: getCurrencyForLocale(params.locale),
+    currency: params.currency ?? BOOKING_CURRENCY,
     value: resolveValue(items, params.value),
     ...(params.extra ?? {}),
   });
@@ -404,6 +418,7 @@ export type TrackBeginCheckoutParams = {
   locale?: Locale;
   items: EcommerceItem[];
   value?: number | string | null;
+  currency?: string | null;
   extra?: GtagParams;
 };
 
@@ -411,7 +426,7 @@ export const trackBeginCheckout = (params: TrackBeginCheckoutParams) => {
   const items = normalizeItems(params.items);
   trackEvent("begin_checkout", {
     items,
-    currency: getCurrencyForLocale(params.locale),
+    currency: params.currency ?? BOOKING_CURRENCY,
     value: resolveValue(items, params.value),
     ...(params.extra ?? {}),
   });
@@ -424,6 +439,7 @@ export type TrackAddPaymentInfoParams = {
   items?: EcommerceItem[];
   value?: number | string | null;
   paymentType?: string;
+  currency?: string | null;
   extra?: GtagParams;
 };
 
@@ -433,7 +449,7 @@ export const trackAddPaymentInfo = (params: TrackAddPaymentInfoParams) => {
     transaction_id:
       params.transactionId != null ? String(params.transactionId) : undefined,
     ...(items.length ? { items } : {}),
-    currency: getCurrencyForLocale(params.locale),
+    currency: params.currency ?? BOOKING_CURRENCY,
     value: resolveValue(items, params.value),
     payment_type: params.paymentType ?? "liqpay",
     ...(params.extra ?? {}),
@@ -539,7 +555,10 @@ export const trackPurchase = (params: TrackPurchaseParams): boolean => {
   const payload: GtagParams = {
     transaction_id: transactionId,
     value: roundedValue,
-    currency: params.currency || getCurrencyForLocale(params.locale),
+    // Валюта транзакции берётся из фактической валюты билетов
+    // (ticket.pricing.currency, тот же источник, что и value), которую передаёт
+    // вызывающий код. Локаль/гео здесь НЕ участвуют. BOOKING_CURRENCY — фолбэк.
+    currency: params.currency || BOOKING_CURRENCY,
     items: normalizedItems,
     ...(params.extra ?? {}),
   };
@@ -608,7 +627,7 @@ export const trackReservation = (params: TrackReservationParams): boolean => {
 
   const payload: GtagParams = {
     transaction_id: purchaseId,
-    currency: params.currency || getCurrencyForLocale(params.locale),
+    currency: params.currency || BOOKING_CURRENCY,
     value: weightedValue,
     reservation_weight: RESERVATION_WEIGHT,
     reservation_value_full: baseValue,
@@ -704,6 +723,7 @@ export type TrackSearchIntentParams = {
   arrival: string;
   /** Дошёл ли пользователь до шага выбора даты. */
   reachedDateStep: boolean;
+  currency?: string | null;
   extra?: GtagParams;
 };
 
@@ -726,7 +746,7 @@ export const trackSearchIntent = (params: TrackSearchIntentParams): boolean => {
     departure: params.departure,
     arrival: params.arrival,
     reached_date_step: params.reachedDateStep,
-    currency: getCurrencyForLocale(params.locale),
+    currency: params.currency ?? BOOKING_CURRENCY,
     ...(params.extra ?? {}),
   });
   return true;

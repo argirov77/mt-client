@@ -5,9 +5,14 @@
 поэтому UTM-атрибуция (прикрепляется в `trackEvent`) теперь попадает во **все**
 события.
 
-- **Валюта по локали:** `getCurrencyForLocale(locale)` → `UAH` для `ru`/`ua`,
-  `EUR` для `en`/`bg`. Жёсткая константа `FALLBACK_CURRENCY = "UAH"` удалена;
-  валюта везде выводится из локали.
+- **Валюта — из фактической валюты транзакции, НЕ из локали.** `value` и
+  `currency` обязаны быть в одной валюте. Для `purchase`/`reservation` валюта
+  берётся из `ticket.pricing.currency` (тот же источник, что и `value =
+  Σ ticket.pricing.price`); для пред-purchase событий воронки — из
+  `BOOKING_CURRENCY` (`UAH`: checkout/оплата всегда идёт через LiqPay и
+  отображается в ₴). `getCurrencyForLocale(locale)` больше НЕ определяет валюту
+  событий (она давала рассинхрон: цену в UAH метила `EUR` для `en`/`bg`); функция
+  оставлена только для UI-фолбэка сумм возврата/переноса в `PurchaseClient`.
 - **`value`** во всех событиях воронки — в основных единицах валюты (гривны/евро,
   не копейки/центы).
 - **Единый `items[]`** через всю воронку (item_id `<departure>-<arrival>` там, где
@@ -139,9 +144,25 @@ DebugView было видно, откуда взялось значение. Е�
 хранятся в `sessionStorage` + `localStorage` (`ga_purchase_fired_<id>`). Повторный
 вызов с тем же id — no-op.
 
-### 3. Валюта по локали
+### 3. Валюта транзакции (фикс рассинхрона value/currency)
 
-`currency = purchaseView.purchase.currency ?? getCurrencyForLocale(lang)`.
+`purchase.currency` и `value` обязаны быть в одной валюте. `value` считается как
+`Σ ticket.pricing.price`, поэтому валюта берётся из **того же источника** — из
+per-ticket `ticket.pricing.currency` (та же пара price/currency, которую
+`PurchaseClient` рендерит через `formatCurrency`):
+
+```
+currency =
+  uniqueTickets.find(t => t.pricing?.currency)?.pricing?.currency   // основной
+  ?? purchaseView.purchase.currency                                 // фолбэк: когда у билетов нет pricing и value падает на amount_due
+  ?? BOOKING_CURRENCY                                               // последний резерв (UAH-расчёт), НЕ локаль
+```
+
+**Было (баг):** `currency = purchaseView.purchase.currency ?? getCurrencyForLocale(lang)`
+— поле `purchase.currency` приходило `BGN` на гривневых оплатах (гео-артефакт
+бэкенда), из-за чего 4 750 UAH метились как BGN и GA4 конвертировал сумму в ~27×.
+Локаль тоже не годится: она давала `EUR` для `en`/`bg`. Теперь валюта всегда из
+фактической валюты билета.
 
 ### Вес `reservation`
 
@@ -196,8 +217,10 @@ Next.js-навигацию, при которой query-параметр тер�
 7. Нажать **«Purchase»** → `add_payment_info` (`transaction_id`, `value`,
    `payment_type: liqpay`), затем редирект на LiqPay.
 8. Оплатить → возврат на `/return` → `purchase` с корректными
-   `value` (реальная цена билета × кол-во, **не ~72 373**), `currency` (UAH для
-   ru/ua, EUR для en/bg), уникальным `transaction_id`, `items[]`.
+   `value` (реальная цена билета × кол-во, **не ~72 373**), `currency` (фактическая
+   валюта транзакции из `ticket.pricing.currency` — та же, что и `value`; **не**
+   зависит от локали и **не** `BGN` на гривневой оплате), уникальным
+   `transaction_id`, `items[]`.
 9. Обновить `/return` (F5) → `purchase` **повторно не** отправляется (дедуп).
 10. Проверить, что у всех событий шага 2–8 присутствуют UTM (`source`, `medium`).
 
