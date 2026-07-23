@@ -771,22 +771,14 @@ function ReturnPageContent() {
       /* ignore */
     }
 
-    // Валюта транзакции — из того же источника, что и value: per-ticket
-    // ticket.pricing.currency (та же пара price/currency, которую PurchaseClient
-    // рендерит через formatCurrency). НЕ purchase.currency (оно приходило BGN на
-    // гривневых оплатах — рассинхрон с ценами билетов) и НЕ локаль. purchase.currency
-    // используется как фолбэк только когда у билетов нет pricing (тогда value тоже
-    // падает на amount_due, валюта которого = purchase.currency).
-    const transactionCurrency =
-      uniqueTickets.find((ticket) => ticket.pricing?.currency)?.pricing?.currency ??
-      purchaseView.purchase.currency ??
-      BOOKING_CURRENCY;
-
     const fired = trackPurchase({
       transactionId,
       items,
       locale: lang,
-      currency: transactionCurrency,
+      // Единственная валюта — гривна. Поле purchase.currency из бэкенда НЕ
+      // используется: оно отдавало мусорный BGN на гривневых оплатах и завышало
+      // выручку в GA4 в ~27×. Локаль на валюту тоже не влияет.
+      currency: BOOKING_CURRENCY,
       valueOverride:
         checkoutValueFallback ??
         purchaseView.totals?.paid ??
