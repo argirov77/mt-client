@@ -123,7 +123,7 @@ const dict: Record<Lang, Dict> = {
     openReturnHint:
       "Дату и место обратного рейса вы выберете позже в личном кабинете по QR-коду.",
     openReturnSummaryLabel: "Обратно (открытая дата)",
-    returnDiscountNote: "−15% на обратный билет при покупке туда-обратно",
+    returnDiscountNote: "−10% на обратный билет при покупке туда-обратно",
   },
   en: {
     noResults: "No trips found",
@@ -245,7 +245,7 @@ const dict: Record<Lang, Dict> = {
     openReturnHint:
       "You will choose the return date and seat later in your account via the QR code.",
     openReturnSummaryLabel: "Return (open date)",
-    returnDiscountNote: "15% off the return ticket with a round trip",
+    returnDiscountNote: "10% off the return ticket with a round trip",
   },
   bg: {
     noResults: "Няма намерени курсове",
@@ -368,7 +368,7 @@ const dict: Record<Lang, Dict> = {
     openReturnHint:
       "Датата и мястото за обратния курс ще изберете по-късно в профила си чрез QR кода.",
     openReturnSummaryLabel: "Обратно (отворена дата)",
-    returnDiscountNote: "−15% за обратния билет при двупосочно пътуване",
+    returnDiscountNote: "−10% за обратния билет при двупосочно пътуване",
   },
   ua: {
     noResults: "Рейси не знайдено",
@@ -491,7 +491,7 @@ const dict: Record<Lang, Dict> = {
     openReturnHint:
       "Дату та місце зворотного рейсу ви оберете пізніше в особистому кабінеті за QR-кодом.",
     openReturnSummaryLabel: "Назад (відкрита дата)",
-    returnDiscountNote: "−15% на зворотний квиток при купівлі туди й назад",
+    returnDiscountNote: "−10% на зворотний квиток при купівлі туди й назад",
   },
 };
 

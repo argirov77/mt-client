@@ -145,7 +145,7 @@ export default function SearchResults({
 
   // Обратный билет с открытой датой (сценарий C): обратный рейс не выбирается,
   // бэкенд выпускает предоплаченный открытый обратный билет.
-  // Скидка −15% относится к обратному билету при покупке туда-обратно.
+  // Скидка −10% относится к обратному билету при покупке туда-обратно.
   const [openReturn, setOpenReturn] = useState(Boolean(openReturnInitial));
 
   // Итоговая сумма считается на бэкенде (quote), фронт её только отображает.
@@ -473,7 +473,7 @@ export default function SearchResults({
       let ticketNumbers = extractTicketNumbers(outRes.data);
       let finalPurchaseResponse = outRes.data;
 
-      // обратно (конкретная дата) — скидка −15% на обратный билет применяется бэкендом по is_return_leg
+      // обратно (конкретная дата) — скидка −10% на обратный билет применяется бэкендом по is_return_leg
       if (selectedReturnTour && !openReturn) {
         const retRes = await apiClient.post<PublicPurchaseResponse>(`/${endpoint}`, {
           ...basePayload,
