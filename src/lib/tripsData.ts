@@ -24,13 +24,26 @@ const COMMON = {
   brand: "Максимов Турс",
 };
 
+// Реальные stop.id из справочника остановок бэкенда — та же таблица `stop`,
+// что отдают /search/departures и /search/arrivals для выпадающих списков формы.
+// Используются для предзаполнения направления (From/To) на посадочных страницах.
+// НЕ выдуманные: значения взяты из справочника, что использует форма.
+const STOP = {
+  odessa: 4,
+  bolgrad: 5,
+  constanta: 7,
+  varna: 10,
+  sunnyBeach: 14,
+  burgas: 15,
+} as const;
+
 export const tripsData: Record<string, Trip> = {
   "odessa-varna": {
     fromSlug: "odessa",
     toSlug: "varna",
     reverseKey: "varna-odessa",
-    fromStopId: undefined,
-    toStopId: undefined,
+    fromStopId: STOP.odessa,
+    toStopId: STOP.varna,
     related: ["odessa-burgas", "odessa-sunny-beach"],
     i18n: {
       ru: {
@@ -88,8 +101,8 @@ export const tripsData: Record<string, Trip> = {
     fromSlug: "varna",
     toSlug: "odessa",
     reverseKey: "odessa-varna",
-    fromStopId: undefined,
-    toStopId: undefined,
+    fromStopId: STOP.varna,
+    toStopId: STOP.odessa,
     related: ["burgas-odessa", "sunny-beach-odessa"],
     i18n: {
       ru: {
@@ -147,8 +160,8 @@ export const tripsData: Record<string, Trip> = {
     fromSlug: "odessa",
     toSlug: "burgas",
     reverseKey: "burgas-odessa",
-    fromStopId: undefined,
-    toStopId: undefined,
+    fromStopId: STOP.odessa,
+    toStopId: STOP.burgas,
     related: ["odessa-varna", "odessa-sunny-beach"],
     i18n: {
       ru: {
@@ -206,8 +219,8 @@ export const tripsData: Record<string, Trip> = {
     fromSlug: "burgas",
     toSlug: "odessa",
     reverseKey: "odessa-burgas",
-    fromStopId: undefined,
-    toStopId: undefined,
+    fromStopId: STOP.burgas,
+    toStopId: STOP.odessa,
     related: ["varna-odessa", "sunny-beach-odessa"],
     i18n: {
       ru: {
@@ -265,8 +278,8 @@ export const tripsData: Record<string, Trip> = {
     fromSlug: "odessa",
     toSlug: "sunny-beach",
     reverseKey: "sunny-beach-odessa",
-    fromStopId: undefined,
-    toStopId: undefined,
+    fromStopId: STOP.odessa,
+    toStopId: STOP.sunnyBeach,
     related: ["odessa-burgas", "odessa-varna"],
     i18n: {
       ru: {
@@ -324,8 +337,8 @@ export const tripsData: Record<string, Trip> = {
     fromSlug: "sunny-beach",
     toSlug: "odessa",
     reverseKey: "odessa-sunny-beach",
-    fromStopId: undefined,
-    toStopId: undefined,
+    fromStopId: STOP.sunnyBeach,
+    toStopId: STOP.odessa,
     related: ["burgas-odessa", "varna-odessa"],
     i18n: {
       ru: {
@@ -383,8 +396,8 @@ export const tripsData: Record<string, Trip> = {
     fromSlug: "odessa",
     toSlug: "constanta",
     reverseKey: "constanta-odessa",
-    fromStopId: undefined,
-    toStopId: undefined,
+    fromStopId: STOP.odessa,
+    toStopId: STOP.constanta,
     related: ["constanta-varna", "constanta-burgas"],
     i18n: {
       ru: {
@@ -442,8 +455,8 @@ export const tripsData: Record<string, Trip> = {
     fromSlug: "constanta",
     toSlug: "odessa",
     reverseKey: "odessa-constanta",
-    fromStopId: undefined,
-    toStopId: undefined,
+    fromStopId: STOP.constanta,
+    toStopId: STOP.odessa,
     related: ["varna-odessa", "burgas-odessa"],
     i18n: {
       ru: {
@@ -501,8 +514,8 @@ export const tripsData: Record<string, Trip> = {
     fromSlug: "constanta",
     toSlug: "varna",
     reverseKey: "varna-constanta",
-    fromStopId: undefined,
-    toStopId: undefined,
+    fromStopId: STOP.constanta,
+    toStopId: STOP.varna,
     related: ["constanta-burgas", "odessa-varna"],
     i18n: {
       ru: {
@@ -560,8 +573,8 @@ export const tripsData: Record<string, Trip> = {
     fromSlug: "varna",
     toSlug: "constanta",
     reverseKey: "constanta-varna",
-    fromStopId: undefined,
-    toStopId: undefined,
+    fromStopId: STOP.varna,
+    toStopId: STOP.constanta,
     related: ["varna-odessa", "burgas-constanta"],
     i18n: {
       ru: {
@@ -619,8 +632,8 @@ export const tripsData: Record<string, Trip> = {
     fromSlug: "constanta",
     toSlug: "burgas",
     reverseKey: "burgas-constanta",
-    fromStopId: undefined,
-    toStopId: undefined,
+    fromStopId: STOP.constanta,
+    toStopId: STOP.burgas,
     related: ["constanta-varna", "odessa-burgas"],
     i18n: {
       ru: {
@@ -678,8 +691,8 @@ export const tripsData: Record<string, Trip> = {
     fromSlug: "burgas",
     toSlug: "constanta",
     reverseKey: "constanta-burgas",
-    fromStopId: undefined,
-    toStopId: undefined,
+    fromStopId: STOP.burgas,
+    toStopId: STOP.constanta,
     related: ["varna-constanta", "burgas-odessa"],
     i18n: {
       ru: {
