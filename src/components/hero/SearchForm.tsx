@@ -24,6 +24,10 @@ type Props = {
   initialDiscount?: number;
   initialOpenReturn?: boolean;
   embedded?: boolean;
+  // Направление предзаполнено программно (посадочная страница маршрута), а не
+  // выбрано пользователем. Используется, чтобы НЕ слать search_intent до тех
+  // пор, пока пользователь реально не тронет форму (см. эффект ниже).
+  prefilled?: boolean;
   onSearch: (params: {
     from: string;
     to: string;
@@ -94,6 +98,7 @@ export default function SearchForm({
   initialDiscount = 0,
   initialOpenReturn = false,
   embedded = false,
+  prefilled = false,
   onSearch,
 }: Props) {
   const t = L[lang];
@@ -135,6 +140,15 @@ export default function SearchForm({
   // refs для авто-переходов внутри формы
   const fromSelectRef = useRef<StopComboboxHandle | null>(null);
   const toSelectRef = useRef<StopComboboxHandle | null>(null);
+
+  // Тронул ли пользователь форму руками. При программном предзаполнении
+  // (prefilled) остаётся false до первого реального действия — это гасит
+  // search_intent, чтобы автозаполнение направления не считалось намерением
+  // пользователя (аналитика не должна засоряться ложными событиями).
+  const userInteractedRef = useRef(false);
+  const markInteracted = () => {
+    userInteractedRef.current = true;
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -223,6 +237,10 @@ export default function SearchForm({
     if (typeof window === 'undefined') return;
     if (searchIntentSentRef.current) return;
     if (!fromId || !toId) return;
+    // Предзаполненное направление само по себе — не намерение пользователя.
+    // Ждём реального действия (смена «Откуда»/«Куда», работа с датой и т.п.),
+    // иначе search_intent улетал бы при простом заходе на посадочную страницу.
+    if (prefilled && !userInteractedRef.current) return;
     const timer = window.setTimeout(() => {
       if (searchIntentSentRef.current) return;
       const { fromName, toName } = searchIntentNamesRef.current;
@@ -237,9 +255,10 @@ export default function SearchForm({
       if (sent) searchIntentSentRef.current = true;
     }, 12000);
     return () => window.clearTimeout(timer);
-  }, [fromId, toId, departDate, lang]);
+  }, [fromId, toId, departDate, lang, prefilled]);
 
   const handleSwap = () => {
+    markInteracted();
     setFrom(to);
     setTo(from);
     setDepartDate('');
@@ -248,13 +267,20 @@ export default function SearchForm({
   };
 
   const handleSelectOpenReturn = () => {
+    markInteracted();
     setOpenReturn(true);
     setReturnDate('');
     setShowReturn(false);
   };
 
-  const handleDepartOpen = () => setShowDepart(true);
-  const handleReturnOpen = () => setShowReturn(true);
+  const handleDepartOpen = () => {
+    markInteracted();
+    setShowDepart(true);
+  };
+  const handleReturnOpen = () => {
+    markInteracted();
+    setShowReturn(true);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -310,7 +336,10 @@ export default function SearchForm({
             ref={fromSelectRef}
             stops={departureStops}
             value={from}
-            onChange={setFrom}
+            onChange={(val) => {
+              markInteracted();
+              setFrom(val);
+            }}
             onSelect={(val) => {
               if (val) {
                 setTimeout(() => toSelectRef.current?.focus(), 0);
@@ -342,7 +371,10 @@ export default function SearchForm({
             ref={toSelectRef}
             stops={arrivalStops}
             value={to}
-            onChange={setTo}
+            onChange={(val) => {
+              markInteracted();
+              setTo(val);
+            }}
             onSelect={(val) => {
               if (val && fromId) handleDepartOpen();
             }}
@@ -379,7 +411,10 @@ export default function SearchForm({
 
         <PassengersInput
           value={passengers}
-          onChange={setPassengers}
+          onChange={(val) => {
+            markInteracted();
+            setPassengers(val);
+          }}
           pillClass="h-14 w-full rounded-xl bg-slate-50 px-3 text-slate-800 ring-1 ring-slate-200 inline-flex items-center gap-2 transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
         />
 

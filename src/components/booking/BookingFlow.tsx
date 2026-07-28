@@ -62,6 +62,7 @@ export default function BookingFlow({ forcedFromId, forcedToId }: BookingFlowPro
           <SearchForm
             lang={lang}
             embedded
+            prefilled={Boolean(forcedFromId && forcedToId)}
             initialFromId={forcedFromId ?? lastCriteria?.from}
             initialToId={forcedToId ?? lastCriteria?.to}
             initialDate={lastCriteria?.date}
