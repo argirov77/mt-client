@@ -17,8 +17,14 @@ import {
   findTripByLocaleSlug,
   getAllStaticParams,
 } from "@/lib/tripsData";
+import { fetchSelectedPricelist, fetchSelectedRoute } from "@/lib/serverData";
 
 type Params = { locale: string; trip: string };
+
+// Ревалидация задана на уровне страницы, а не на fetch: /selected_route и
+// /selected_pricelist — POST-запросы, а Data Cache в Next кэширует только GET,
+// и опция next.revalidate на самом фетче была бы молча проигнорирована.
+export const revalidate = 600;
 
 export function generateStaticParams() {
   return getAllStaticParams();
@@ -53,6 +59,11 @@ export default async function TripPage({
   const hubLinks = isHub ? buildHubStopLinks(lang) : undefined;
   const tripLd = isHub ? buildHubTouristTripLD(lang) : buildBusTripLD(key, lang);
 
+  const [routesData, prices] = await Promise.all([
+    fetchSelectedRoute(lang),
+    fetchSelectedPricelist(lang),
+  ]);
+
   return (
     <main className="min-h-screen">
       {tripLd && (
@@ -74,8 +85,8 @@ export default async function TripPage({
       />
       <About />
       <FullText text={data.fullText} />
-      <Routes lang={lang} hubLinks={hubLinks} />
-      <Schedule lang={lang} />
+      <Routes lang={lang} hubLinks={hubLinks} initialData={routesData} />
+      <Schedule lang={lang} initialPrices={prices} />
       <RelatedTrips
         currentKey={key}
         locale={lang}

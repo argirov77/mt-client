@@ -25,20 +25,46 @@ function formatPrice(n: number, curr: string) {
   return `${Number(n).toFixed(0)} ${curr}`;
 }
 
-export default function PriceListCompact({ lang = 'ru' }: { lang?: Lang }) {
+type PriceListProps = {
+  lang?: Lang;
+  /** Данные, отрендеренные на сервере. Пусто — компонент догрузит их сам. */
+  initialPrices?: PriceItem[] | null;
+};
+
+export default function PriceListCompact({ lang = 'ru', initialPrices }: PriceListProps) {
   const t = scheduleTranslations[lang];
-  const [list, setList] = useState<PriceItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const hasInitial = Array.isArray(initialPrices) && initialPrices.length > 0;
+  const [list, setList] = useState<PriceItem[]>(hasInitial ? initialPrices : []);
+  const [loading, setLoading] = useState(!hasInitial);
   const [err, setErr] = useState(false);
+  // Локаль, которой соответствуют текущие данные. null — данных нет.
+  const [dataLang, setDataLang] = useState<Lang | null>(hasInitial ? lang : null);
   const sectionRef = useSectionView<HTMLElement>('prices');
 
+  // Пришли серверные данные для другой локали (переключение языка) — принимаем
+  // их сразу, без похода в сеть. Штатный приём React для синхронизации стейта
+  // с пропсами; повтора не будет, потому что dataLang сразу становится lang.
+  if (hasInitial && dataLang !== lang) {
+    setList(initialPrices);
+    setDataLang(lang);
+    setErr(false);
+    setLoading(false);
+  }
+
+  // Клиентский фетч остаётся фолбэком: если серверные пропсы пришли пустыми,
+  // компонент догружает данные в браузере, как делал раньше.
   useEffect(() => {
+    if (dataLang === lang) return;
     let cancelled = false;
     (async () => {
       try {
         setLoading(true);
+        setErr(false);
         const { data } = await apiClient.post('/selected_pricelist', { lang });
-        if (!cancelled) setList(data?.prices || []);
+        if (!cancelled) {
+          setList(data?.prices || []);
+          setDataLang(lang);
+        }
       } catch {
         if (!cancelled) setErr(true);
       } finally {
@@ -48,7 +74,7 @@ export default function PriceListCompact({ lang = 'ru' }: { lang?: Lang }) {
     return () => {
       cancelled = true;
     };
-  }, [lang]);
+  }, [lang, dataLang]);
 
   return (
     <section id="prices" ref={sectionRef} className={`${sectionBgMuted} py-16`}>

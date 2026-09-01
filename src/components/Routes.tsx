@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { API } from "@/config";
 import { useLanguage, type Lang } from "@/components/common/LanguageProvider";
 import { routesTranslations } from "@/translations/home";
@@ -71,20 +71,52 @@ const reverseIfEqual = (f?: Route | null, b?: Route | null): Route | null => {
 type RoutesProps = {
   lang?: Lang;
   hubLinks?: Record<string, string>;
+  /** Данные, отрендеренные на сервере. Пусто — компонент догрузит их сам. */
+  initialData?: ApiResponse | null;
 };
 
-export default function Routes({ lang: langProp, hubLinks }: RoutesProps = {}) {
+/** Ответ бэкенда → пара панелей. Одна логика для сервера и для браузера. */
+function normalizeRoutes(data?: ApiResponse | null) {
+  if (!data) return null;
+  const forward = shallowClone(data.forward);
+  const backward = reverseIfEqual(forward, data.backward ? shallowClone(data.backward) : null);
+  if (!forward && !backward) return null;
+  return { forward, backward };
+}
+
+export default function Routes({ lang: langProp, hubLinks, initialData }: RoutesProps = {}) {
   const { lang: ctxLang } = useLanguage();
   const lang = langProp ?? ctxLang;
   const L = routesTranslations[lang];
   const sectionRef = useSectionView<HTMLElement>("marshrut");
-  const [loading, setLoading] = useState(false);
+  const initial = useMemo(() => normalizeRoutes(initialData), [initialData]);
+
+  // Пока данных нет — скелетон, а не «маршруты не найдены»: noData оставлен
+  // для случая, когда ответ пришёл и он действительно пуст.
+  const [loading, setLoading] = useState(!initial);
   const [err, setErr] = useState<string | null>(null);
 
-  const [forward, setForward] = useState<Route | null>(null);
-  const [backward, setBackward] = useState<Route | null>(null);
+  const [forward, setForward] = useState<Route | null>(initial?.forward ?? null);
+  const [backward, setBackward] = useState<Route | null>(initial?.backward ?? null);
+  // Локаль, которой соответствуют текущие данные. null — данных нет.
+  const [dataLang, setDataLang] = useState<Lang | null>(initial ? lang : null);
 
+  // Пришли серверные данные для другой локали (переключение языка) — принимаем
+  // их сразу, без похода в сеть. Штатный приём React для синхронизации стейта
+  // с пропсами; повтора не будет, потому что dataLang сразу становится lang.
+  if (initial && dataLang !== lang) {
+    setForward(initial.forward);
+    setBackward(initial.backward);
+    setDataLang(lang);
+    setErr(null);
+    setLoading(false);
+  }
+
+  // Клиентский фетч остаётся фолбэком: если серверные пропсы пришли пустыми,
+  // компонент догружает данные в браузере, как делал раньше.
   useEffect(() => {
+    if (dataLang === lang) return;
+
     let cancelled = false;
     setLoading(true);
     setErr(null);
@@ -100,10 +132,10 @@ export default function Routes({ lang: langProp, hubLinks }: RoutesProps = {}) {
       })
       .then((data) => {
         if (cancelled) return;
-        const f = shallowClone(data.forward);
-        const b = reverseIfEqual(f, data.backward ? shallowClone(data.backward) : null);
-        setForward(f);
-        setBackward(b);
+        const next = normalizeRoutes(data);
+        setForward(next?.forward ?? null);
+        setBackward(next?.backward ?? null);
+        setDataLang(lang);
       })
       .catch((e) => !cancelled && setErr(String(e?.message || e)))
       .finally(() => !cancelled && setLoading(false));
@@ -111,7 +143,7 @@ export default function Routes({ lang: langProp, hubLinks }: RoutesProps = {}) {
     return () => {
       cancelled = true;
     };
-  }, [lang]);
+  }, [lang, dataLang]);
 
   const hasAny = !!forward || !!backward;
 
