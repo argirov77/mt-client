@@ -11,8 +11,14 @@ import Schedule from "@/components/Schedule";
 import { buildHomeMetadata, isLocale } from "@/lib/seo";
 import { buildOrganizationLD } from "@/lib/jsonld";
 import type { Lang } from "@/lib/locale";
+import { fetchSelectedPricelist, fetchSelectedRoute } from "@/lib/serverData";
 
 type Params = { locale: string };
+
+// Ревалидация задана на уровне страницы, а не на fetch: /selected_route и
+// /selected_pricelist — POST-запросы, а Data Cache в Next кэширует только GET,
+// и опция next.revalidate на самом фетче была бы молча проигнорирована.
+export const revalidate = 600;
 
 export async function generateMetadata({
   params,
@@ -34,6 +40,11 @@ export default async function HomePage({
   const lang = locale as Lang;
   const organizationLd = buildOrganizationLD(lang);
 
+  const [routesData, prices] = await Promise.all([
+    fetchSelectedRoute(lang),
+    fetchSelectedPricelist(lang),
+  ]);
+
   return (
     <>
       <script
@@ -46,8 +57,8 @@ export default async function HomePage({
         <BookingSection lang={lang} />
         <About />
         <ParcelSection />
-        <Routes lang={lang} />
-        <Schedule lang={lang} />
+        <Routes lang={lang} initialData={routesData} />
+        <Schedule lang={lang} initialPrices={prices} />
       </main>
     </>
   );
