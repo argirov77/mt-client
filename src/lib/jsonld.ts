@@ -110,37 +110,59 @@ function busStopLD(stopKey: string, locale: Lang) {
   return node;
 }
 
-export function buildOrganizationLD(locale: Lang) {
+// Единственное определение узла организации. Все страницы берут имя, url и @id
+// отсюда: на главной — целиком, на остальных 52 — сокращённой ссылкой
+// (buildOrganizationRefLD). Литералы не дублируются, поэтому правка телефона
+// или названия не может развести копии.
+function organizationNode(locale: Lang) {
   const sameAsLanguages = LOCALES.filter((l) => l !== locale).map((l) => buildUrl(l, "/"));
+
+  return {
+    "@type": "Organization",
+    "@id": ORGANIZATION_ID,
+    name: ORG_NAME_BY_LOCALE[locale],
+    alternateName: "Maximov Tours",
+    url: SITE_URL,
+    logo: {
+      "@type": "ImageObject",
+      url: OFFICE_LOGO,
+    },
+    image: OFFICE_IMAGE,
+    description: ORG_DESCRIPTION_BY_LOCALE[locale],
+    foundingDate: "1992",
+    email: "avroraiko@gmail.com",
+    telephone: ORG_TELEPHONES,
+    address: HEAD_OFFICE_ADDRESS,
+    sameAs: [...ORG_SAME_AS, ...sameAsLanguages],
+    contactPoint: ORG_TELEPHONES.map((phone) => ({
+      "@type": "ContactPoint",
+      telephone: phone,
+      contactType: "customer service",
+      availableLanguage: ["ru", "uk", "en", "bg"],
+    })),
+  };
+}
+
+// Сокращённый узел организации для страниц, где полное определение не нужно:
+// он лишь разрешает ссылку provider: { "@id": ORGANIZATION_ID } в пределах той
+// же страницы — Google резолвит @id только внутри одного документа.
+export function buildOrganizationRefLD(locale: Lang) {
+  const org = organizationNode(locale);
+  return {
+    "@type": org["@type"],
+    "@id": org["@id"],
+    name: org.name,
+    url: org.url,
+  };
+}
+
+export function buildOrganizationLD(locale: Lang) {
   const homeUrl = buildUrl(locale, "/");
 
   return {
     "@context": "https://schema.org",
     "@graph": [
-      {
-        "@type": "Organization",
-        "@id": ORGANIZATION_ID,
-        name: ORG_NAME_BY_LOCALE[locale],
-        alternateName: "Maximov Tours",
-        url: SITE_URL,
-        logo: {
-          "@type": "ImageObject",
-          url: OFFICE_LOGO,
-        },
-        image: OFFICE_IMAGE,
-        description: ORG_DESCRIPTION_BY_LOCALE[locale],
-        foundingDate: "1992",
-        email: "avroraiko@gmail.com",
-        telephone: ORG_TELEPHONES,
-        address: HEAD_OFFICE_ADDRESS,
-        sameAs: [...ORG_SAME_AS, ...sameAsLanguages],
-        contactPoint: ORG_TELEPHONES.map((phone) => ({
-          "@type": "ContactPoint",
-          telephone: phone,
-          contactType: "customer service",
-          availableLanguage: ["ru", "uk", "en", "bg"],
-        })),
-      },
+      organizationNode(locale),
       {
         "@type": "LocalBusiness",
         "@id": LOCAL_BUSINESS_ID,
@@ -197,7 +219,7 @@ function tripPriceForKey(tripKey: string): { price: number; currency: string } {
   return map[tripKey] ?? { price: 2300, currency: "UAH" };
 }
 
-export function buildBusTripLD(tripKey: string, locale: Lang) {
+function busTripNode(tripKey: string, locale: Lang) {
   const trip = tripsData[tripKey];
   if (!trip) return null;
   const data = trip.i18n[locale];
@@ -216,7 +238,6 @@ export function buildBusTripLD(tripKey: string, locale: Lang) {
   };
 
   return {
-    "@context": "https://schema.org",
     "@type": "BusTrip",
     name: data.title,
     description: data.description,
@@ -225,6 +246,16 @@ export function buildBusTripLD(tripKey: string, locale: Lang) {
     ...(departureStop ? { departureBusStop: departureStop } : {}),
     ...(arrivalStop ? { arrivalBusStop: arrivalStop } : {}),
     offers: offerNode,
+  };
+}
+
+export function buildBusTripLD(tripKey: string, locale: Lang) {
+  const busTrip = busTripNode(tripKey, locale);
+  if (!busTrip) return null;
+
+  return {
+    "@context": "https://schema.org",
+    "@graph": [busTrip, buildOrganizationRefLD(locale)],
   };
 }
 
@@ -251,12 +282,12 @@ export function buildHubTouristTripLD(locale: Lang) {
     name: data.h1,
     numberOfItems: HUB_TRIP_KEYS.length,
     itemListElement: HUB_TRIP_KEYS.map((tripKey, index) => {
-      const busTrip = buildBusTripLD(tripKey, locale);
+      const busTrip = busTripNode(tripKey, locale);
       if (!busTrip) return null;
       return {
         "@type": "ListItem",
         position: index + 1,
-        item: busTrip,
+        item: { "@context": "https://schema.org", ...busTrip },
       };
     }).filter(Boolean),
   };
@@ -288,6 +319,7 @@ export function buildHubTouristTripLD(locale: Lang) {
         },
       },
       itemList,
+      buildOrganizationRefLD(locale),
     ],
   };
 }
