@@ -3,9 +3,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLanguage, type Lang } from "@/components/common/LanguageProvider";
 import { trackContact } from "@/lib/analytics";
+import { buildLocaleAlternates, toHreflang, toHtmlLang } from "@/lib/seo";
 
 type MenuLabel = Record<Lang, string>;
 
@@ -111,18 +113,62 @@ const contacts: { city: ContactCity; phone: string }[] = [
 
 const normalizePhoneDigits = (phone: string) => phone.replace(/[^\d]/g, "");
 
+const langLabel: Record<Lang, string> = {
+  ru: "RU",
+  bg: "BG",
+  en: "EN",
+  ua: "UA",
+};
+
+// Полные названия — для скринридеров: «RU» вслух читается непонятно.
+const langName: Record<Lang, string> = {
+  ru: "Русский",
+  bg: "Български",
+  en: "English",
+  ua: "Українська",
+};
+
 export default function Header() {
-  const { lang: current, setLang } = useLanguage();
+  const { lang: current } = useLanguage();
+  const pathname = usePathname();
   const [isContactOpen, setIsContactOpen] = useState(false);
+  const [isLangOpen, setIsLangOpen] = useState(false);
+  const langRef = useRef<HTMLDetailsElement>(null);
+  const langSummaryRef = useRef<HTMLElement>(null);
   const [method, setMethod] = useState<"telegram" | "viber" | "whatsapp" | "call">("telegram");
   // Один и тот же модал контактов открывается из топбара и из секции «Посылка»
   // (событие open-contact-modal). source определяем по точке открытия.
   const [contactSource, setContactSource] = useState<"topbar" | "parcel_section">("topbar");
   const t = contactTranslations[current];
 
-  const handleChange = (v: Lang) => {
-    setLang(v);
-  };
+  // Ссылки строятся из того же маппинга слагов, что и hreflang в <head>,
+  // и попадают в серверную разметку: краулер видит настоящие <a href>,
+  // а не <option value>, по которым он не переходит.
+  const localeLinks = useMemo(() => buildLocaleAlternates(pathname || "/"), [pathname]);
+
+  // Нативный <details> не закрывается ни по клику снаружи, ни по Escape.
+  useEffect(() => {
+    if (!isLangOpen) return;
+
+    const handlePointerDown = (event: MouseEvent | TouchEvent) => {
+      if (!langRef.current?.contains(event.target as Node)) setIsLangOpen(false);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setIsLangOpen(false);
+      langSummaryRef.current?.focus();
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("touchstart", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("touchstart", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isLangOpen]);
 
   useEffect(() => {
     const handler = () => {
@@ -240,22 +286,66 @@ export default function Header() {
           })}
         </ul>
 
-        {/* Селектор языка */}
-        <label className="order-3 ml-auto inline-flex items-center gap-2 md:order-none md:ml-4">
-          <span className="sr-only">Выбор языка</span>
-          <select
-            aria-label="Язык"
-            value={current}
-            onChange={(e) => handleChange(e.target.value as Lang)}
-            className="h-9 rounded-md border border-slate-300 bg-white/90 px-2 text-sm text-slate-800
-                       hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/30"
+        {/* Переключатель языка: выпадающий список из настоящих ссылок */}
+        <div
+          role="group"
+          aria-label="Выбор языка"
+          className="order-3 ml-auto inline-flex items-center md:order-none md:ml-4"
+        >
+          <details
+            ref={langRef}
+            open={isLangOpen}
+            onToggle={(event) => setIsLangOpen(event.currentTarget.open)}
+            className="relative"
           >
-            <option value="ru">RU</option>
-            <option value="bg">BG</option>
-            <option value="en">EN</option>
-            <option value="ua">UA</option>
-          </select>
-        </label>
+            <summary
+              ref={langSummaryRef}
+              aria-label="Язык"
+              title={langName[current]}
+              className="flex h-9 cursor-pointer list-none items-center gap-1 rounded-md border border-slate-300
+                         bg-white/90 px-2 text-sm text-slate-800 select-none
+                         hover:border-slate-400 focus-visible:outline-none focus-visible:ring-2
+                         focus-visible:ring-primary/30 [&::-webkit-details-marker]:hidden"
+            >
+              <span aria-hidden="true">{langLabel[current]}</span>
+              <span className="sr-only">{langName[current]}</span>
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                className="h-3.5 w-3.5 text-slate-500"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 9l6 6 6-6" />
+              </svg>
+            </summary>
+
+            <ul className="absolute right-0 z-40 mt-1 min-w-[7rem] overflow-hidden rounded-md border border-slate-200 bg-white py-1 shadow-lg">
+              {localeLinks.map(({ locale, href }) => (
+                <li key={locale}>
+                  <Link
+                    href={href}
+                    hrefLang={toHreflang(locale)}
+                    lang={toHtmlLang(locale)}
+                    aria-current={locale === current ? "true" : undefined}
+                    onClick={() => setIsLangOpen(false)}
+                    className={
+                      locale === current
+                        ? "flex items-center gap-2 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-900"
+                        : "flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
+                    }
+                  >
+                    <span aria-hidden="true" className="w-6 shrink-0 font-black tracking-wide">
+                      {langLabel[locale]}
+                    </span>
+                    <span className="whitespace-nowrap">{langName[locale]}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </details>
+        </div>
       </nav>
       {isContactOpen ? (
         <div

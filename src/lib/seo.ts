@@ -10,7 +10,7 @@ import {
   toHtmlLang,
   toOgLocale,
 } from "@/lib/locale";
-import { tripsData, type Trip } from "@/lib/tripsData";
+import { findTripByLocaleSlug, tripsData, type Trip } from "@/lib/tripsData";
 
 export {
   DEFAULT_LOCALE,
@@ -161,28 +161,68 @@ export function buildTripMetadata(tripKey: string, locale: Lang): Metadata | nul
   };
 }
 
-const PREFIXED_LOCALES: ReadonlyArray<string> = ["ua", "en", "bg"];
-
-export function mapPathToLocale(pathname: string, nextLocale: Lang): string {
+// Разбор пути на локаль и остаток. Префикс `ru` тоже снимаем: proxy переписывает
+// беспрефиксные RU-адреса в /ru/..., и на сервере usePathname() отдаёт уже
+// переписанный путь, тогда как в браузере — исходный. Обе формы должны давать
+// один и тот же результат, иначе SSR и гидратация разойдутся.
+function splitLocalePath(pathname: string): { locale: Lang; tail: string[] } {
   const segments = (pathname || "/").split("/").filter(Boolean);
   const first = (segments[0] ?? "").toLowerCase();
-  const hadPrefix = PREFIXED_LOCALES.includes(first);
-  const tail = hadPrefix ? segments.slice(1) : segments;
+  if (isLocale(first)) {
+    return { locale: first, tail: segments.slice(1) };
+  }
+  return { locale: DEFAULT_LOCALE, tail: segments };
+}
+
+/**
+ * Адреса текущей страницы во всех локалях. Источник тот же, что у hreflang в
+ * <head>, — переведённые слаги из tripsData.i18n[locale].slug: конкатенацией
+ * префикса такие слаги не получить (/odessa-solnechniy-bereg →
+ * /ua/odesa-sonyachniy-bereg → /en/odessa-sunny-beach).
+ *
+ * Локали, которых у страницы нет, в результат не попадают — ссылок на
+ * несуществующие URL быть не должно.
+ */
+export function localePathsForPath(pathname: string): Partial<Record<Lang, string>> {
+  const { locale: currentLocale, tail } = splitLocalePath(pathname);
+  const paths: Partial<Record<Lang, string>> = {};
 
   if (tail.length === 1) {
-    const slug = tail[0];
-    const currentLocale = (hadPrefix ? (first as Lang) : DEFAULT_LOCALE);
-    for (const trip of Object.values(tripsData)) {
-      if (trip.i18n[currentLocale]?.slug === slug) {
-        const nextSlug = trip.i18n[nextLocale]?.slug;
-        if (nextSlug) {
-          return buildPath(nextLocale, `/${nextSlug}`);
-        }
-        break;
+    const match = findTripByLocaleSlug(currentLocale, tail[0]);
+    if (match) {
+      for (const locale of LOCALES) {
+        const slug = match.trip.i18n[locale]?.slug;
+        if (slug) paths[locale] = buildPath(locale, `/${slug}`);
       }
+      return paths;
     }
   }
 
+  // Остальные маршруты живут под сегментом [locale] и существуют во всех
+  // локалях, поэтому здесь достаточно сменить префикс.
   const tailPath = tail.length ? `/${tail.join("/")}` : "/";
-  return buildPath(nextLocale, tailPath);
+  for (const locale of LOCALES) {
+    paths[locale] = buildPath(locale, tailPath);
+  }
+  return paths;
+}
+
+export type LocaleAlternate = { locale: Lang; href: string };
+
+// Порядок как в прежнем переключателе языка.
+const SWITCHER_ORDER: ReadonlyArray<Lang> = ["ru", "bg", "en", "ua"];
+
+export function buildLocaleAlternates(pathname: string): LocaleAlternate[] {
+  const paths = localePathsForPath(pathname);
+  const alternates: LocaleAlternate[] = [];
+  for (const locale of SWITCHER_ORDER) {
+    const href = paths[locale];
+    if (href) alternates.push({ locale, href });
+  }
+  return alternates;
+}
+
+export function mapPathToLocale(pathname: string, nextLocale: Lang): string {
+  // Нет соответствия — уводим на главную нужной локали, а не на заведомый 404.
+  return localePathsForPath(pathname)[nextLocale] ?? buildPath(nextLocale, "/");
 }
