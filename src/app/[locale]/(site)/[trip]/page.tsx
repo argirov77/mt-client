@@ -6,10 +6,12 @@ import HeroSection from "@/components/hero/HeroSection";
 import BookingSection from "@/components/home/BookingSection";
 import Routes from "@/components/Routes";
 import Schedule from "@/components/Schedule";
+import DepartureDays from "@/components/seo/DepartureDays";
 import FullText from "@/components/seo/FullText";
 import LeadText from "@/components/seo/LeadText";
 import RelatedTrips from "@/components/seo/RelatedTrips";
 import type { Lang } from "@/lib/locale";
+import { departureDaysText } from "@/lib/departureDays";
 import { buildBusTripLD, buildHubTouristTripLD } from "@/lib/jsonld";
 import { buildTripMetadata, isLocale } from "@/lib/seo";
 import {
@@ -58,6 +60,7 @@ export default async function TripPage({
   const isHub = key === "route";
   const hubLinks = isHub ? buildHubStopLinks(lang) : undefined;
   const tripLd = isHub ? buildHubTouristTripLD(lang) : buildBusTripLD(key, lang);
+  const departureDays = departureDaysText(key, lang);
 
   const [routesData, prices] = await Promise.all([
     fetchSelectedRoute(lang),
@@ -85,6 +88,7 @@ export default async function TripPage({
       />
       <About />
       <FullText text={data.fullText} />
+      <DepartureDays text={departureDays} />
       <Routes lang={lang} hubLinks={hubLinks} initialData={routesData} />
       <Schedule lang={lang} initialPrices={prices} />
       <RelatedTrips
