@@ -8,6 +8,12 @@ import { getPublicOfferUrl } from "@/utils/publicOffer";
 import { trackContact } from "@/lib/analytics";
 
 // src/components/SiteFooter.tsx
+
+// 2005 — год запуска сайта, константа. Конечный год считается от текущей
+// даты, иначе копирайт протухает каждым январём.
+// suppressHydrationWarning: страницы статические (revalidate), поэтому в
+// новогоднюю ночь год в отданном HTML может отстать от года в браузере.
+const COPYRIGHT_YEAR = new Date().getFullYear();
 const translations = {
   ru: {
     offer: "Публичная оферта",
@@ -65,7 +71,9 @@ export default function SiteFooter() {
       <div className="container mx-auto grid gap-8 px-4 text-sm md:grid-cols-3">
         <div>
           <span className="text-lg font-bold">Максимов Турс</span>
-          <p className="mt-2 text-slate-300">© 2005-2025 ООО «Максимов Турс»</p>
+          <p className="mt-2 text-slate-300" suppressHydrationWarning>
+            © 2005–{COPYRIGHT_YEAR} ООО «Максимов Турс»
+          </p>
         </div>
 
         <div>
