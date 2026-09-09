@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -51,7 +52,13 @@ export default async function HomePage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationLd) }}
       />
-      <PurchaseReturnView />
+      {/* Оверлей возврата с оплаты читает query-параметры на клиенте
+          (useSearchParams). Suspense здесь нужен именно для CSR-bailout:
+          без него prerender падает, с ним страница остаётся статической,
+          а в SSR-разметку не попадает ничего пользовательского. */}
+      <Suspense fallback={null}>
+        <PurchaseReturnView />
+      </Suspense>
       <main className="min-h-screen">
         <HeroSection lang={lang} />
         <BookingSection lang={lang} />

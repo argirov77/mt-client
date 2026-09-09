@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 
 import PurchaseClient from "@/components/purchase/PurchaseClient";
 
+// Приватный маршрут: рендерим на каждый запрос и не отдаём в CDN-кэш.
+// Публичные страницы кэшируются (revalidate), эта ветка — нет.
+export const dynamic = "force-dynamic";
+
 interface PurchasePageProps {
   params: Promise<{
     locale: string;

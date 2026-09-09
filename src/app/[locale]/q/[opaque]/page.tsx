@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 
 import QrExchangeClient from "@/components/ticket/QrExchangeClient";
 
+// Приватный маршрут: рендерим на каждый запрос и не отдаём в CDN-кэш.
+// Публичные страницы кэшируются (revalidate), эта ветка — нет.
+export const dynamic = "force-dynamic";
+
 interface QrExchangePageProps {
   params: Promise<{
     locale: string;

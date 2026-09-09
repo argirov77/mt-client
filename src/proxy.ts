@@ -4,26 +4,23 @@ import type { NextRequest } from "next/server";
 const PREFIXED_LOCALES = ["ua", "en", "bg"] as const;
 const DEFAULT_LOCALE = "ru";
 
+// Proxy делает ровно одно: подставляет сегмент локали по умолчанию для URL без
+// префикса (/odessa-varna → /ru/odessa-varna). Заголовок x-locale больше не
+// проставляется: локаль читается из route params в layout/page, а любая
+// зависимость рендера от заголовков запроса делает маршрут динамическим и
+// снимает его с CDN-кэша.
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const firstSegment = pathname.split("/")[1] ?? "";
 
   if ((PREFIXED_LOCALES as readonly string[]).includes(firstSegment)) {
-    const requestHeaders = new Headers(request.headers);
-    requestHeaders.set("x-locale", firstSegment);
-    return NextResponse.next({
-      request: { headers: requestHeaders },
-    });
+    return NextResponse.next();
   }
 
   const rewriteUrl = request.nextUrl.clone();
   rewriteUrl.pathname =
     `/${DEFAULT_LOCALE}${pathname === "/" ? "" : pathname}` || `/${DEFAULT_LOCALE}`;
-  const requestHeaders = new Headers(request.headers);
-  requestHeaders.set("x-locale", DEFAULT_LOCALE);
-  return NextResponse.rewrite(rewriteUrl, {
-    request: { headers: requestHeaders },
-  });
+  return NextResponse.rewrite(rewriteUrl);
 }
 
 export const config = {
