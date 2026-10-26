@@ -235,22 +235,22 @@ export default function BookingPanel({
   const showAdjacent = seatCount > 1 && (autoPicked.outbound || autoPicked.return);
 
   const renderSeatOverview = () => (
-    <section className="space-y-2 rounded-2xl border border-slate-200 bg-white p-3">
-      <p className="text-xs font-bold uppercase tracking-wide text-slate-600">
+    <section className="space-y-2 rounded-2xl border border-[#e3dfd9] bg-white p-3">
+      <p className="text-xs font-bold uppercase tracking-wide text-[#5c6370]">
         {t.seatsTitle}
         {showAdjacent ? ` · ${t.seatsAdjacent}` : ""}
       </p>
       {legs.map((item) => (
         <div key={item.leg} className="flex items-center justify-between gap-3 text-sm">
-          <span className="text-slate-700">
+          <span className="text-[#173452]">
             {item.leg === "outbound" ? t.outboundShort : t.inboundShort}, {formatDayShort(item.tour.date, lang)}
           </span>
-          <b className={item.selected.length === seatCount ? "text-slate-900" : "text-amber-800"}>
+          <b className={item.selected.length === seatCount ? "text-[#173452]" : "text-amber-800"}>
             {item.loading ? t.seatsLoading : seatsText(item.selected)}
           </b>
         </div>
       ))}
-      <p className="text-xs text-slate-600">
+      <p className="text-xs text-[#5c6370]">
         {t.amenitiesLabel}: {t.amenitiesList}
       </p>
       <button
@@ -259,7 +259,7 @@ export default function BookingPanel({
           const firstIncomplete = legs.find((item) => item.selected.length < seatCount);
           openModal(firstIncomplete?.leg ?? "outbound");
         }}
-        className="flex min-h-[44px] w-full items-center justify-center rounded-xl border border-slate-300 text-sm font-semibold text-[#0a65b0] hover:bg-sky-50"
+        className="flex min-h-[44px] w-full items-center justify-center rounded-xl border border-[#e3dfd9] text-sm font-semibold text-[#c2410c] hover:bg-[#fdf0e7]"
       >
         {anySeats ? t.changeOnMap : t.chooseOnMap}
       </button>
@@ -273,7 +273,7 @@ export default function BookingPanel({
 
     return (
       <div
-        className={`fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 backdrop-blur-[2px] transition-opacity ease-in-out sm:items-center sm:px-3 sm:py-4 ${
+        className={`fixed inset-0 z-50 flex items-end justify-center bg-[#173452]/50 backdrop-blur-[2px] transition-opacity ease-in-out sm:items-center sm:px-3 sm:py-4 ${
           seatModal.isClosing ? "opacity-0" : "opacity-100"
         } ${seatModal.prefersReducedMotion ? "motion-reduce:transition-none" : ""}`}
         style={{ transitionDuration: `${seatModal.animationDuration}ms` }}
@@ -290,12 +290,12 @@ export default function BookingPanel({
           onClick={(e) => e.stopPropagation()}
         >
           <header className="flex items-center justify-between gap-3 border-b px-4 py-3">
-            <h3 className="text-lg font-bold text-slate-900">{t.seatSelectionTitle}</h3>
+            <h3 className="text-lg font-bold text-[#173452]">{t.seatSelectionTitle}</h3>
             <button
               type="button"
               aria-label={t.done}
               onClick={closeModal}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-lg font-semibold text-slate-600 hover:bg-slate-50"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-[#e3dfd9] text-lg font-semibold text-[#5c6370] hover:bg-[#f6f4f1]"
             >
               ×
             </button>
@@ -328,7 +328,7 @@ export default function BookingPanel({
                   <button
                     type="button"
                     onClick={() => (hasReturn && onOutbound ? setActiveLeg("return") : closeModal())}
-                    className="flex min-h-[44px] w-full items-center justify-center rounded-xl bg-[#0a65b0] px-4 text-sm font-bold text-white hover:bg-[#08558f]"
+                    className="flex min-h-[44px] w-full items-center justify-center rounded-xl bg-[#c2410c] px-4 text-sm font-bold text-white hover:bg-[#a8380b]"
                   >
                     {hasReturn && onOutbound ? t.nextReturnSeats : t.done}
                   </button>
@@ -344,7 +344,7 @@ export default function BookingPanel({
   return (
     <div className="space-y-4">
       {isDesktop ? (
-        <section className="rounded-2xl border border-slate-200 bg-white p-4">
+        <section className="rounded-2xl border border-[#e3dfd9] bg-white p-4">
           <SeatPicker
             t={t}
             lang={lang}
@@ -370,8 +370,8 @@ export default function BookingPanel({
         className="flex w-full flex-col gap-3"
       >
         <div>
-          <div className="text-base font-bold text-slate-900">{t.passengersTitle}</div>
-          <p className="text-sm text-slate-600">{t.passengersHint}</p>
+          <div className="text-base font-bold text-[#173452]">{t.passengersTitle}</div>
+          <p className="text-sm text-[#5c6370]">{t.passengersHint}</p>
         </div>
 
         {passengerNames.map((name, idx) => {
@@ -385,12 +385,12 @@ export default function BookingPanel({
             <div key={idx} className="space-y-1">
               <label
                 htmlFor={`passenger-name-${idx}`}
-                className="flex items-center justify-between gap-2 text-xs font-semibold text-slate-700"
+                className="flex items-center justify-between gap-2 text-xs font-semibold text-[#173452]"
               >
                 <span>
                   {t.passengerLabel(idx + 1)} · {isChild ? t.passengerKindChild : t.passengerKindAdult}
                 </span>
-                {seatsLabel ? <span className="font-normal text-slate-600">{seatsLabel}</span> : null}
+                {seatsLabel ? <span className="font-normal text-[#5c6370]">{seatsLabel}</span> : null}
               </label>
               <FormInput
                 id={`passenger-name-${idx}`}
@@ -406,7 +406,7 @@ export default function BookingPanel({
                   setPassengerNames(arr);
                 }}
                 className={`h-12 w-full rounded-xl bg-white px-3 text-base hover:bg-white focus:outline-none focus:ring-2 focus:ring-sky-200 ${
-                  highlighted ? "border-2 border-amber-500" : "border border-slate-300 focus:border-sky-500"
+                  highlighted ? "border-2 border-amber-500" : "border border-[#e3dfd9] focus:border-sky-500"
                 }`}
               />
             </div>

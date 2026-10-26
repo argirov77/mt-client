@@ -1,4 +1,4 @@
-// src/components/routes/Routes.tsx
+// src/components/Routes.tsx
 "use client";
 
 import Link from "next/link";
@@ -6,8 +6,17 @@ import React, { useEffect, useMemo, useState } from "react";
 import { API } from "@/config";
 import { useLanguage, type Lang } from "@/components/common/LanguageProvider";
 import { routesTranslations } from "@/translations/home";
-import styles from "./Routes.module.css";
-import { sectionEyebrowClass, sectionTitleClass } from "./common/designGuide";
+import {
+  accentPillClass,
+  buttonPrimaryClass,
+  buttonSecondaryClass,
+  cardTitleClass,
+  sectionDescriptionClass,
+  sectionEyebrowClass,
+  sectionInnerClass,
+  sectionPadClass,
+  sectionTitleClass,
+} from "./common/designGuide";
 import { useSectionView } from "@/utils/useSectionView";
 
 /* ===================== Types ===================== */
@@ -65,6 +74,9 @@ const reverseIfEqual = (f?: Route | null, b?: Route | null): Route | null => {
   if (!deepEqualStops(f.stops, b.stops)) return shallowClone(b);
   return { ...b, stops: [...(b.stops || [])].reverse() };
 };
+
+/** «13:40:00» → «13:40»: секунды в расписании не нужны. */
+const shortTime = (time?: string | null) => (time ? time.trim().slice(0, 5) : "");
 
 /* ===================== Component ===================== */
 
@@ -148,25 +160,28 @@ export default function Routes({ lang: langProp, hubLinks, initialData }: Routes
   const hasAny = !!forward || !!backward;
 
   return (
-    <section id="routes" ref={sectionRef} className={styles.routes}>
-      <div className={styles.routesInner}>
-        <header className={styles.routesHeader}>
-          <p className={sectionEyebrowClass}>{L.eyebrow}</p>
-          <h2 className={sectionTitleClass}>{L.title}</h2>
-        </header>
+    <section id="routes" ref={sectionRef} className={`bg-white ${sectionPadClass}`}>
+      <div className={`${sectionInnerClass} flex flex-col gap-6 lg:gap-9`}>
+        <div className="flex flex-wrap items-end justify-between gap-4 lg:gap-12">
+          <div className="flex flex-1 basis-[520px] flex-col gap-3.5">
+            <span className={sectionEyebrowClass}>{L.eyebrow}</span>
+            <h2 className={sectionTitleClass}>{L.title}</h2>
+          </div>
+          <p className={`flex-1 basis-[380px] ${sectionDescriptionClass}`}>{L.intro}</p>
+        </div>
 
         {loading && <SkeletonCards />}
 
-        {!loading && err && <p className={styles.error}>{err}</p>}
+        {!loading && err && <p className="text-[15px] text-[#c2410c]">{err}</p>}
 
-        {!loading && !err && !hasAny && <p className={styles.empty}>{L.noData}</p>}
+        {!loading && !err && !hasAny && <p className="text-[15px] text-[#5c6370]">{L.noData}</p>}
 
         {!loading && !err && hasAny && (
-          <div className={styles.routesCards}>
+          <div className="grid items-start gap-5 lg:grid-cols-2">
             {forward && (
               <RoutePanel
                 title={titleFromStops(forward)}
-                subtitle={L.forward}
+                days={L.daysForward}
                 route={forward}
                 lang={lang}
                 hubLinks={hubLinks}
@@ -175,7 +190,7 @@ export default function Routes({ lang: langProp, hubLinks, initialData }: Routes
             {backward && (
               <RoutePanel
                 title={titleFromStops(backward)}
-                subtitle={L.backward}
+                days={L.daysBackward}
                 route={backward}
                 lang={lang}
                 hubLinks={hubLinks}
@@ -183,6 +198,13 @@ export default function Routes({ lang: langProp, hubLinks, initialData }: Routes
             )}
           </div>
         )}
+
+        <div className="flex flex-wrap items-center justify-between gap-3 gap-x-6">
+          <span className="text-[15px] text-[#5c6370]">{L.timesNote}</span>
+          <Link href="#booking" className={buttonPrimaryClass}>
+            {L.cta}
+          </Link>
+        </div>
       </div>
     </section>
   );
@@ -192,15 +214,13 @@ export default function Routes({ lang: langProp, hubLinks, initialData }: Routes
 
 function SkeletonCards() {
   return (
-    <div className={styles.routesCards}>
+    <div className="grid items-start gap-5 lg:grid-cols-2">
       {[0, 1].map((i) => (
-        <div key={i} className={`${styles.routeCard} ${styles.skeletonCard}`}>
-          <div className={styles.skeletonSummary} />
-          <div className={styles.skeletonStops}>
-            {[0, 1, 2].map((j) => (
-              <div key={j} className={styles.skeletonStop} />
-            ))}
-          </div>
+        <div key={i} className="flex flex-col gap-3 rounded-3xl bg-[#f6f4f1] p-5 sm:p-6">
+          <div className="h-7 w-2/3 animate-pulse rounded-full bg-black/5" />
+          {[0, 1, 2, 3].map((j) => (
+            <div key={j} className="h-11 animate-pulse rounded-xl bg-black/5" />
+          ))}
         </div>
       ))}
     </div>
@@ -209,32 +229,23 @@ function SkeletonCards() {
 
 function RoutePanel({
   title,
-  subtitle,
+  days,
   route,
   lang = "ru",
   hubLinks,
 }: {
   title: string;
-  subtitle: string;
+  days: string;
   route: Route;
   lang?: Lang;
   hubLinks?: Record<string, string>;
 }) {
-  const L = routesTranslations[lang];
-  const count = route.stops?.length ?? 0;
-
   return (
-    <article className={styles.routeCard}>
-      <div className={styles.routeCardSummary}>
-        <div className={styles.routeCardSummaryMain}>
-          <span className={styles.routeCardBadge}>{subtitle}</span>
-          <div className={styles.routeCardText}>
-            <div className={styles.routeCardDirection}>{title}</div>
-            <div className={styles.routeCardMeta}>{L.stopsCount(count)}</div>
-          </div>
-        </div>
+    <article className="flex flex-col gap-1.5 rounded-3xl bg-[#f6f4f1] p-5 sm:p-6">
+      <div className="flex items-center justify-between gap-3 pb-2">
+        <h3 className={cardTitleClass}>{title}</h3>
+        <span className={accentPillClass}>{days}</span>
       </div>
-
       <StopsList stops={route.stops || []} lang={lang} hubLinks={hubLinks} />
     </article>
   );
@@ -253,26 +264,37 @@ function StopsList({
   const visibleByDefault = 4;
   const [expanded, setExpanded] = useState(false);
   const shouldCollapse = stops.length > visibleByDefault;
+  // В свёрнутом виде показываем концы маршрута и первые остановки после начала.
   const visibleStops = shouldCollapse && !expanded ? stops.slice(0, visibleByDefault) : stops;
+  const hiddenCount = stops.length - visibleStops.length;
 
   return (
-    <div className={styles.routeCardStopsWrap}>
-      <div className={styles.routeCardStops}>
-        {visibleStops.map((stop, i) => (
-          <StopRow
-            key={`${stop.id}-${i}`}
-            stop={stop}
-            index={i + 1}
-            isLast={i === visibleStops.length - 1}
-            lang={lang}
-            hubLinks={hubLinks}
+    <div className="flex flex-col">
+      {visibleStops.map((stop, i) => (
+        <StopRow
+          key={`${stop.id}-${i}`}
+          stop={stop}
+          isKey={i === 0 || (!shouldCollapse || expanded ? i === stops.length - 1 : false)}
+          lang={lang}
+          hubLinks={hubLinks}
+        />
+      ))}
+
+      {shouldCollapse && !expanded && hiddenCount > 0 ? (
+        <div className="relative grid min-h-[26px] grid-cols-[24px_minmax(0,1fr)] items-center gap-3.5">
+          <span
+            aria-hidden="true"
+            className="absolute bottom-0 left-[11px] top-0 w-0.5 bg-[repeating-linear-gradient(#fdba74_0_4px,transparent_4px_8px)]"
           />
-        ))}
-      </div>
+          <span />
+          <span className="py-1 text-[13.5px] text-[#5c6370]">+ {L.stopsCount(hiddenCount)}</span>
+        </div>
+      ) : null}
+
       {shouldCollapse && (
         <button
           type="button"
-          className={styles.routeStopsToggle}
+          className={`mt-3 self-start ${buttonSecondaryClass} min-h-[44px] px-[18px] text-[15px]`}
           onClick={() => setExpanded((prev) => !prev)}
           aria-expanded={expanded}
         >
@@ -285,79 +307,97 @@ function StopsList({
 
 function StopRow({
   stop,
-  index,
-  isLast,
+  isKey,
   lang = "ru",
   hubLinks,
 }: {
   stop: Stop;
-  index: number;
-  isLast: boolean;
+  isKey: boolean;
   lang?: Lang;
   hubLinks?: Record<string, string>;
 }) {
   const L = routesTranslations[lang];
-  const dotClasses = [styles.routeStopDot];
-
-  if (index === 1) {
-    dotClasses.push(styles.routeStopDotStart);
-  }
-
-  if (isLast) {
-    dotClasses.push(styles.routeStopDotEnd);
-  }
-
   const stopName = stop.name?.trim() ?? "";
   const stopHref = hubLinks?.[stopName];
+  const arrival = shortTime(stop.arrival_time);
+  const departure = shortTime(stop.departure_time);
+  const time =
+    arrival && departure
+      ? `${arrival} – ${departure}`
+      : departure
+        ? `${L.departure} ${departure}`
+        : arrival
+          ? `${L.arrival} ${arrival}`
+          : "";
 
   return (
-    <div className={styles.routeStop}>
-      <div className={styles.routeStopLine}>
-        <div className={dotClasses.join(" ")}>{index}</div>
-        {!isLast && <div className={styles.routeStopLineSeg} />}
-      </div>
-      <div className={styles.routeStopCard}>
-        <div className={styles.routeStopTop}>
-          <div>
-            <div className={styles.routeStopCity}>
-              {stopHref ? (
-                <Link href={stopHref} className="hover:underline">
-                  {stop.name}
-                </Link>
-              ) : (
-                stop.name
-              )}
-            </div>
-            {stop.description && (
-              <div className={styles.routeStopPlace}>{stop.description}</div>
+    <div
+      className={`relative grid grid-cols-[24px_minmax(0,1fr)_auto] items-center gap-3.5 ${
+        isKey ? "min-h-[46px]" : "min-h-[38px]"
+      }`}
+    >
+      <span aria-hidden="true" className="absolute bottom-0 left-[11px] top-0 w-0.5 bg-[#fdba74]" />
+      {isKey ? (
+        <span
+          aria-hidden="true"
+          className="relative h-6 w-6 rounded-full border-4 border-[#f6f4f1] bg-[#c2410c]"
+        />
+      ) : (
+        <span
+          aria-hidden="true"
+          className="relative justify-self-center h-2.5 w-2.5 rounded-full border-2 border-[#c2410c] bg-white"
+        />
+      )}
+
+      {isKey ? (
+        <span className="flex min-w-0 flex-col leading-tight">
+          <b className="text-[17px] text-[#173452]">
+            {stopHref ? (
+              <Link href={stopHref} className="hover:text-[#c2410c] hover:underline">
+                {stop.name}
+              </Link>
+            ) : (
+              stop.name
             )}
-          </div>
-          {(stop.arrival_time || stop.departure_time) && (
-            <div className={styles.routeStopTimes}>
-              {stop.arrival_time && (
-                <div>
-                  {L.arrival} <span>{stop.arrival_time}</span>
-                </div>
-              )}
-              {stop.departure_time && (
-                <div>
-                  {L.departure} <span>{stop.departure_time}</span>
-                </div>
-              )}
-            </div>
+          </b>
+          {stop.description ? (
+            <span className="text-[13.5px] text-[#5c6370]">{stop.description}</span>
+          ) : null}
+          {stop.location ? (
+            <a
+              href={stop.location}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-fit text-[13.5px] font-semibold text-[#c2410c] hover:underline"
+            >
+              {L.map}
+            </a>
+          ) : null}
+        </span>
+      ) : (
+        <span className="min-w-0 truncate text-[15px] text-[#5c6370]">
+          {stopHref ? (
+            <Link href={stopHref} className="hover:text-[#c2410c] hover:underline">
+              {stop.name}
+            </Link>
+          ) : (
+            stop.name
           )}
-        </div>
-        {stop.location && (
-          <a
-            href={stop.location}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.routeStopMap}
-          >
-            {L.map}
-          </a>
-        )}
-      </div>
+          {stop.description ? ` · ${stop.description}` : ""}
+        </span>
+      )}
+
+      {time ? (
+        <span
+          className={`whitespace-nowrap tabular-nums ${
+            isKey ? "text-[16px] font-bold text-[#173452]" : "text-[14px] text-[#5c6370]"
+          }`}
+        >
+          {time}
+        </span>
+      ) : (
+        <span />
+      )}
     </div>
   );
 }

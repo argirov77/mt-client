@@ -230,10 +230,10 @@ const StopCombobox = forwardRef<StopComboboxHandle, Props>(function StopCombobox
           ref={listRef}
           id={listboxId}
           role="listbox"
-          className="absolute left-0 right-0 z-30 mt-1 max-h-64 overflow-auto rounded-xl bg-white shadow-lg ring-1 ring-slate-200"
+          className="absolute left-0 right-0 z-30 mt-1 max-h-64 overflow-auto rounded-xl bg-white shadow-lg ring-1 ring-[#e3dfd9]"
         >
           {filtered.length === 0 ? (
-            <li className="px-4 py-2 text-sm text-slate-400">
+            <li className="px-4 py-2 text-sm text-[#8c929c]">
               {noOptionsText}
             </li>
           ) : (
@@ -249,8 +249,8 @@ const StopCombobox = forwardRef<StopComboboxHandle, Props>(function StopCombobox
                 onMouseEnter={() => setActiveIndex(idx)}
                 className={`cursor-pointer px-4 py-2 text-sm ${
                   idx === activeIndex
-                    ? 'bg-sky-50 text-sky-700'
-                    : 'text-slate-800 hover:bg-slate-50'
+                    ? 'bg-[#fdf0e7] text-[#c2410c]'
+                    : 'text-[#173452] hover:bg-[#f6f4f1]'
                 }`}
               >
                 {s.stop_name}

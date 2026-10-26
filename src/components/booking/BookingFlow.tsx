@@ -89,7 +89,7 @@ export default function BookingFlow({ forcedFromId, forcedToId, onFlowChange }: 
   return (
     <div className="w-full space-y-6">
       {!criteria && (
-        <div className="mx-auto w-full max-w-5xl rounded-none bg-transparent p-0 shadow-none ring-0 sm:rounded-3xl sm:bg-white/80 sm:p-5 sm:shadow-lg sm:ring-1 sm:ring-slate-200">
+        <div className="mx-auto w-full max-w-5xl rounded-none bg-transparent p-0 shadow-none ring-0 sm:rounded-3xl sm:bg-white/80 sm:p-5 sm:shadow-lg sm:ring-1 sm:ring-[#e3dfd9]">
           <SearchForm
             lang={lang}
             embedded
@@ -117,12 +117,12 @@ export default function BookingFlow({ forcedFromId, forcedToId, onFlowChange }: 
       {criteria && (
         <div
           ref={resultsRef}
-          className="mx-auto w-full max-w-5xl rounded-none bg-transparent p-0 shadow-none ring-0 sm:rounded-3xl sm:bg-white/90 sm:p-5 sm:shadow-lg sm:ring-1 sm:ring-slate-200"
+          className="mx-auto w-full max-w-5xl rounded-none bg-transparent p-0 shadow-none ring-0 sm:rounded-3xl sm:bg-white/90 sm:p-5 sm:shadow-lg sm:ring-1 sm:ring-[#e3dfd9]"
         >
           <div className="mb-4 flex justify-end">
             <button
               type="button"
-              className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium text-sky-700 ring-1 ring-sky-100 transition hover:bg-sky-50 hover:text-sky-900"
+              className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium text-[#c2410c] ring-1 ring-sky-100 transition hover:bg-[#fdf0e7] hover:text-sky-900"
               onClick={() => setCriteria(null)}
             >
               <ArrowLeft className="h-4 w-4" aria-hidden />

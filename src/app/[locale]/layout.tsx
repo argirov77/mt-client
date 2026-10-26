@@ -60,6 +60,16 @@ export default async function RootLayout({
   return (
     <html lang={htmlLang}>
       <head>
+        {/* Шрифты редизайна: Golos Text — текст, Unbounded — заголовки.
+            Подключены ссылкой, а не next/font: сборка на Netlify не должна
+            зависеть от доступности fonts.googleapis.com. */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        {/* eslint-disable-next-line @next/next/no-page-custom-font -- правило про pages/_document, в app-роутере ссылка в <head> корневого layout применяется ко всем страницам */}
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=Unbounded:wght@600;700&display=swap"
+        />
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
           strategy="afterInteractive"
@@ -85,7 +95,7 @@ export default async function RootLayout({
           `}
         </Script>
       </head>
-      <body className="min-h-screen antialiased bg-slate-50 text-slate-900">
+      <body className="min-h-screen bg-white text-[#173452] antialiased">
         <LanguageProvider initialLang={locale}>{children}</LanguageProvider>
       </body>
     </html>

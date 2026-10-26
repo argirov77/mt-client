@@ -45,7 +45,7 @@ export default function PurchaseReturnView() {
   const banner = PAYMENT_BANNER[activePaymentStatus] ?? null;
 
   return (
-    <div className="fixed inset-0 z-40 overflow-y-auto bg-slate-50">
+    <div className="fixed inset-0 z-40 overflow-y-auto bg-[#f6f4f1]">
       <div className="min-h-screen py-6">
         <div className="mx-auto w-full max-w-6xl space-y-4 px-4">
           {banner ? <UiAlert type={banner.type}>{banner.message}</UiAlert> : null}

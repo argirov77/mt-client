@@ -6,9 +6,9 @@ export default function LeadText({ text }: Props) {
   const trimmed = text?.trim();
   if (!trimmed) return null;
   return (
-    <section className="bg-slate-50 pb-2 pt-4">
+    <section className="bg-[#f6f4f1] pb-2 pt-4">
       <div className="mx-auto w-full max-w-3xl px-4">
-        <p className="text-base leading-relaxed text-slate-700 sm:text-lg">
+        <p className="text-base leading-relaxed text-[#173452] sm:text-lg">
           {trimmed}
         </p>
       </div>

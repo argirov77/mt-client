@@ -158,30 +158,30 @@ export default function ContactsAndPaymentStep({
     };
 
     return (
-      <div className="rounded-none border-0 bg-slate-50/70 p-3 shadow-none sm:rounded-xl sm:border sm:border-slate-200 sm:bg-white/90 sm:shadow-sm">
-        <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-600">
-          <span className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1">
+      <div className="rounded-none border-0 bg-[#f6f4f1]/70 p-3 shadow-none sm:rounded-xl sm:border sm:border-[#e3dfd9] sm:bg-white/90 sm:shadow-sm">
+        <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-[#5c6370]">
+          <span className="inline-flex items-center gap-2 rounded-full bg-[#f6f4f1] px-3 py-1">
             {directionLabel}
           </span>
-          <span className="text-slate-500">{routeLabel}</span>
+          <span className="text-[#5c6370]">{routeLabel}</span>
         </div>
 
         <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
           <div className="space-y-1">
-            <div className="text-sm font-semibold text-slate-900">
+            <div className="text-sm font-semibold text-[#173452]">
               {t.extraBaggageHeading}
             </div>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[#5c6370]">
               {isAdded ? t.removeExtraBaggage : t.baggageIncludedNote}
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-sm font-semibold text-slate-700">{getBaggagePriceLabel(direction)}</span>
-            <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-sm font-semibold text-slate-900">
+            <span className="text-sm font-semibold text-[#173452]">{getBaggagePriceLabel(direction)}</span>
+            <div className="flex items-center gap-1 rounded-full border border-[#e3dfd9] bg-[#f6f4f1] px-2 py-1 text-sm font-semibold text-[#173452]">
               <button
                 type="button"
                 onClick={handleDec}
-                className="flex h-7 w-7 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-200"
+                className="flex h-7 w-7 items-center justify-center rounded-full text-[#5c6370] transition hover:bg-[#f6f4f1]"
                 aria-label={t.removeBagAria}
               >
                 −
@@ -190,7 +190,7 @@ export default function ContactsAndPaymentStep({
               <button
                 type="button"
                 onClick={handleInc}
-                className="flex h-7 w-7 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-200"
+                className="flex h-7 w-7 items-center justify-center rounded-full text-[#5c6370] transition hover:bg-[#f6f4f1]"
                 aria-label={t.addBagAria}
               >
                 +
@@ -205,12 +205,12 @@ export default function ContactsAndPaymentStep({
   const baggageCount =
     extraBaggageOutbound.filter(Boolean).length + extraBaggageReturn.filter(Boolean).length;
 
-  const fieldLabel = "text-sm font-semibold text-slate-800";
+  const fieldLabel = "text-sm font-semibold text-[#173452]";
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2.5">
-        <span className="text-sm text-slate-700">
+      <div className="flex items-center justify-between gap-3 rounded-xl border border-[#e3dfd9] bg-white px-3 py-2.5">
+        <span className="text-sm text-[#173452]">
           {t.baggageIncludedShort}
           {baggageCount > 0 ? ` · ${t.addedExtraBaggage}: ${baggageCount}` : ""}
         </span>
@@ -218,11 +218,11 @@ export default function ContactsAndPaymentStep({
           type="button"
           onClick={() => setIsBaggageModalOpen(true)}
           aria-haspopup="dialog"
-          className="min-h-[44px] shrink-0 whitespace-nowrap rounded-lg px-2 text-sm font-bold text-[#0a65b0] hover:bg-sky-50"
+          className="min-h-[44px] shrink-0 whitespace-nowrap rounded-lg px-2 text-sm font-bold text-[#c2410c] hover:bg-[#fdf0e7]"
         >
           {t.addBaggageShort}
           {baggagePriceByDirection.outbound ? (
-            <span className="block text-[11px] font-semibold text-slate-600">{baggagePriceByDirection.outbound}</span>
+            <span className="block text-[11px] font-semibold text-[#5c6370]">{baggagePriceByDirection.outbound}</span>
           ) : null}
         </button>
       </div>
@@ -245,7 +245,7 @@ export default function ContactsAndPaymentStep({
           />
           <p
             id="contact-phone-note"
-            className={`text-xs ${phoneError ? "font-semibold text-red-700" : "text-slate-600"}`}
+            className={`text-xs ${phoneError ? "font-semibold text-red-700" : "text-[#5c6370]"}`}
           >
             {phoneError || t.phoneHint}
           </p>
@@ -266,15 +266,15 @@ export default function ContactsAndPaymentStep({
             required
             aria-invalid={Boolean(emailError) || undefined}
             aria-describedby="contact-email-note"
-            className={`h-12 w-full rounded-xl bg-white px-3 text-base text-slate-900 hover:bg-white focus:outline-none focus:ring-2 ${
+            className={`h-12 w-full rounded-xl bg-white px-3 text-base text-[#173452] hover:bg-white focus:outline-none focus:ring-2 ${
               emailError
                 ? "border-2 border-red-600 focus:ring-red-200"
-                : "border border-slate-300 focus:border-sky-500 focus:ring-sky-200"
+                : "border border-[#e3dfd9] focus:border-sky-500 focus:ring-sky-200"
             }`}
           />
           <p
             id="contact-email-note"
-            className={`text-xs ${emailError ? "font-semibold text-red-700" : "text-slate-600"}`}
+            className={`text-xs ${emailError ? "font-semibold text-red-700" : "text-[#5c6370]"}`}
           >
             {emailError || t.emailHint}
           </p>
@@ -282,18 +282,18 @@ export default function ContactsAndPaymentStep({
       </div>
 
       {totalText ? (
-        <div className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 lg:hidden">
+        <div className="rounded-xl border border-[#e3dfd9] bg-white px-3 py-2.5 lg:hidden">
           <div className="flex items-baseline justify-between">
-            <b className="text-sm text-slate-900">{t.total}</b>
-            <b className="text-base text-slate-900">{totalText}</b>
+            <b className="text-sm text-[#173452]">{t.total}</b>
+            <b className="text-base text-[#173452]">{totalText}</b>
           </div>
-          {totalNote ? <p className="text-xs text-slate-700">{totalNote}</p> : null}
+          {totalNote ? <p className="text-xs text-[#173452]">{totalNote}</p> : null}
         </div>
       ) : null}
 
       {baggageModal.shouldRender ? (
         <div
-          className={`fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-[2px] px-4 py-6 transition-opacity ease-out ${
+          className={`fixed inset-0 z-50 flex items-center justify-center bg-[#173452]/40 backdrop-blur-[2px] px-4 py-6 transition-opacity ease-out ${
             baggageModal.isClosing ? "opacity-0" : "opacity-100"
           } ${
             baggageModal.prefersReducedMotion ? "motion-reduce:transition-none" : ""
@@ -312,7 +312,7 @@ export default function ContactsAndPaymentStep({
             role="dialog"
             aria-modal="true"
             aria-label={t.extraBaggageHeading}
-            className={`relative z-10 w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-slate-200 transition-all ease-out ${
+            className={`relative z-10 w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-[#e3dfd9] transition-all ease-out ${
               baggageModal.isClosing ? "scale-95 opacity-0" : "scale-100 opacity-100"
             } ${
               baggageModal.prefersReducedMotion
@@ -322,10 +322,10 @@ export default function ContactsAndPaymentStep({
             style={{ transitionDuration: `${baggageModal.animationDuration}ms` }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
+            <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[#eeebe6] px-5 py-4">
               <div className="space-y-1">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t.extraBaggageHeading}</p>
-                <p className="text-sm text-slate-700">{t.configureBaggage}</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-[#5c6370]">{t.extraBaggageHeading}</p>
+                <p className="text-sm text-[#173452]">{t.configureBaggage}</p>
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 <span className={`${badgeTone} border border-amber-100 bg-amber-50 text-amber-800`}>
@@ -335,7 +335,7 @@ export default function ContactsAndPaymentStep({
                   type="button"
                   onClick={() => setIsBaggageModalOpen(false)}
                   aria-label={t.baggageToggleHide}
-                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-px hover:border-slate-300 hover:bg-slate-50"
+                  className="inline-flex items-center gap-2 rounded-full border border-[#e3dfd9] bg-white px-3 py-2 text-sm font-semibold text-[#173452] shadow-sm transition hover:-translate-y-px hover:border-[#e3dfd9] hover:bg-[#f6f4f1]"
                 >
                   <span aria-hidden>✕</span>
                   {t.baggageToggleHide}
@@ -350,19 +350,19 @@ export default function ContactsAndPaymentStep({
                 return (
                   <div
                     key={`baggage-${idx}`}
-                    className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 shadow-inner"
+                    className="rounded-xl border border-[#e3dfd9] bg-[#f6f4f1]/70 p-4 shadow-inner"
                   >
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-100 text-sm font-semibold text-sky-800">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#fdf0e7] text-sm font-semibold text-sky-800">
                           {idx + 1}
                         </div>
                         <div className="space-y-1">
-                          <p className="text-xs uppercase tracking-wide text-slate-500">{t.passengerLabel(idx + 1)}</p>
-                          <p className="text-base font-semibold text-slate-900">{displayName}</p>
+                          <p className="text-xs uppercase tracking-wide text-[#5c6370]">{t.passengerLabel(idx + 1)}</p>
+                          <p className="text-base font-semibold text-[#173452]">{displayName}</p>
                         </div>
                       </div>
-                      <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-500 shadow">#{idx + 1}</span>
+                      <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#5c6370] shadow">#{idx + 1}</span>
                     </div>
 
                     <div className="mt-3 grid gap-3 md:grid-cols-2">

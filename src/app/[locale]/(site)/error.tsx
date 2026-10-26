@@ -30,23 +30,23 @@ export default function SiteError({
           />
         </svg>
       </div>
-      <h1 className="text-2xl font-semibold text-slate-900">
+      <h1 className="text-2xl font-semibold text-[#173452]">
         Произошла ошибка
       </h1>
-      <p className="text-slate-600 max-w-sm">
+      <p className="text-[#5c6370] max-w-sm">
         Что-то пошло не так. Попробуйте обновить страницу.
       </p>
       <div className="flex gap-3">
         <button
           type="button"
-          className="rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white hover:bg-slate-700 transition"
+          className="rounded-full bg-[#173452] px-6 py-3 text-sm font-semibold text-white hover:bg-[#2a4a6b] transition"
           onClick={reset}
         >
           Обновить
         </button>
         <a
           href="/"
-          className="rounded-full border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+          className="rounded-full border border-[#e3dfd9] px-6 py-3 text-sm font-semibold text-[#173452] hover:bg-[#f6f4f1] transition"
         >
           На главную
         </a>

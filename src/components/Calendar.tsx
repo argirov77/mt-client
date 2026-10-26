@@ -114,11 +114,11 @@ export default function Calendar({
   return (
     <div className={`w-full max-w-[360px] rounded-2xl bg-white ${className}`}>
       <div className="flex items-center justify-between px-4 py-3">
-        <button type="button" aria-label="‹" onClick={()=>{ setMonth(m=> m===0?11:m-1); if(month===0) setYear(y=>y-1); }} className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 hover:bg-gray-100">
+        <button type="button" aria-label="‹" onClick={()=>{ setMonth(m=> m===0?11:m-1); if(month===0) setYear(y=>y-1); }} className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#e3dfd9] hover:bg-gray-100">
           <ChevronLeft className="h-5 w-5 text-gray-700"/>
         </button>
         <div className="text-sm font-semibold text-gray-800">{MONTHS[lang][month]} {year}</div>
-        <button type="button" aria-label="›" onClick={()=>{ setMonth(m=> m===11?0:m+1); if(month===11) setYear(y=>y+1); }} className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 hover:bg-gray-100">
+        <button type="button" aria-label="›" onClick={()=>{ setMonth(m=> m===11?0:m+1); if(month===11) setYear(y=>y+1); }} className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#e3dfd9] hover:bg-gray-100">
           <ChevronRight className="h-5 w-5 text-gray-700"/>
         </button>
       </div>
@@ -133,9 +133,9 @@ export default function Calendar({
           const ringToday = c.isToday && !c.selected ? " underline decoration-2 underline-offset-4" : "";
           let cls: string;
           if (c.selected) cls = "font-bold text-white shadow-md";
-          else if (c.selectable && c.isActive) cls = "border border-[#93b8e6] bg-[#e3eefb] font-bold text-slate-900 hover:bg-[#cfe1f7] cursor-pointer";
-          else if (c.selectable) cls = "bg-white text-slate-800 hover:bg-blue-50 cursor-pointer";
-          else cls = c.inMonth ? "text-slate-400 cursor-not-allowed" : "text-slate-300 cursor-not-allowed";
+          else if (c.selectable && c.isActive) cls = "border border-[#fdba74] bg-[#fdf0e7] font-bold text-[#173452] hover:bg-[#fbe2d3] cursor-pointer";
+          else if (c.selectable) cls = "bg-white text-[#173452] hover:bg-[#fdf0e7] cursor-pointer";
+          else cls = c.inMonth ? "text-[#8c929c] cursor-not-allowed" : "text-white/70 cursor-not-allowed";
           return (
             <button
               key={c.iso}
@@ -154,9 +154,9 @@ export default function Calendar({
       </div>
 
       {!allowAllFutureDates && (
-        <div className="flex gap-4 px-4 pb-3 text-xs text-slate-600">
+        <div className="flex gap-4 px-4 pb-3 text-xs text-[#5c6370]">
           <span className="inline-flex items-center gap-1.5">
-            <span aria-hidden className="inline-block h-3 w-3 rounded border border-[#93b8e6] bg-[#e3eefb]" />
+            <span aria-hidden className="inline-block h-3 w-3 rounded border border-[#fdba74] bg-[#fdf0e7]" />
             {LEGEND[lang].trip}
           </span>
           <span className="inline-flex items-center gap-1.5">

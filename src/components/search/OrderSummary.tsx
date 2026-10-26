@@ -70,18 +70,18 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
 
   const row = (label: string, value: React.ReactNode, muted = false) => (
     <div className="flex items-start justify-between gap-3 py-1.5 text-sm">
-      <span className="shrink-0 text-slate-600">{label}</span>
-      <span className={`text-right ${muted ? "text-slate-500" : "font-semibold text-slate-900"}`}>{value}</span>
+      <span className="shrink-0 text-[#5c6370]">{label}</span>
+      <span className={`text-right ${muted ? "text-[#5c6370]" : "font-semibold text-[#173452]"}`}>{value}</span>
     </div>
   );
 
   const showSeats = passengerSummaries.some((p) => p.seatOutbound || p.seatReturn);
 
   return (
-    <aside className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-      <p className="text-xs font-bold uppercase tracking-wide text-slate-600">{t.yourTrip}</p>
+    <aside className="rounded-2xl border border-[#e3dfd9] bg-white px-4 py-3 shadow-sm">
+      <p className="text-xs font-bold uppercase tracking-wide text-[#5c6370]">{t.yourTrip}</p>
 
-      <div className="mt-1 divide-y divide-slate-100">
+      <div className="mt-1 divide-y divide-[#eeebe6]">
         {row(t.outboundShort, legLine(outboundTour, fromName, toName), !outboundTour)}
         {returnRequired ? row(t.inboundShort, legLine(returnTour, toName, fromName), !returnTour) : null}
         {openReturn ? row(t.inboundShort, `${t.returnModeOpen} · ${toName} → ${fromName}`) : null}
@@ -91,9 +91,9 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
           <ul className="py-1.5 text-sm">
             {passengerSummaries.map((passenger, index) => (
               <li key={`${passenger.name}-${index}`} className="flex items-start justify-between gap-3 py-0.5">
-                <span className="min-w-0 truncate text-slate-900">{passenger.name}</span>
+                <span className="min-w-0 truncate text-[#173452]">{passenger.name}</span>
                 {showSeats ? (
-                  <span className="shrink-0 text-slate-600">
+                  <span className="shrink-0 text-[#5c6370]">
                     {[passenger.seatOutbound, passenger.seatReturn].filter(Boolean).join(" / ")}
                     {passenger.baggageOutbound || passenger.baggageReturn ? ` · +${t.ticketPassengerBaggage.toLowerCase()}` : ""}
                   </span>
@@ -108,8 +108,8 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
         {baggageLines.map((line) => row(line.label, `${line.count} (${t.extraBaggagePrice})`))}
 
         <div className="flex items-baseline justify-between gap-3 pt-2">
-          <span className="text-base font-bold text-slate-900">{t.total}</span>
-          <span className="text-lg font-bold text-slate-900">
+          <span className="text-base font-bold text-[#173452]">{t.total}</span>
+          <span className="text-lg font-bold text-[#173452]">
             {totals.overall != null ? formatPrice(totals.overall) : priceLoading ? t.loading : "—"}
           </span>
         </div>

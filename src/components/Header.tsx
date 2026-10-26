@@ -203,7 +203,7 @@ export default function Header() {
   }, [isContactOpen]);
 
   return (
-    <header className="bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 sticky top-0 z-30 border-b border-slate-200">
+    <header className="bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/75 sticky top-0 z-30 border-b border-[#e3dfd9]">
       <nav className="container mx-auto flex max-w-6xl flex-nowrap items-center gap-2 px-4 py-2 md:h-14 md:gap-3">
         {/* Лого */}
         <Link
@@ -240,7 +240,7 @@ export default function Header() {
                       setContactSource("topbar");
                       setIsContactOpen(true);
                     }}
-                    className="inline-flex h-11 w-11 items-center justify-center rounded-[14px] border border-slate-200 bg-white text-slate-700 transition hover:-translate-y-0.5 hover:shadow-lg"
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-[14px] border border-[#e3dfd9] bg-white text-[#173452] transition hover:border-[#173452]"
                     aria-label={item.label[current]}
                     title={item.label[current]}
                   >
@@ -269,8 +269,8 @@ export default function Header() {
                   href={item.href}
                   className={
                     item.isPrimary
-                      ? "flex items-center gap-2 whitespace-nowrap rounded-[14px] border border-orange-200 bg-orange-50 px-4 py-2 text-[11px] font-black uppercase tracking-wide text-orange-700 shadow-md transition hover:-translate-y-0.5 hover:shadow-lg sm:text-xs"
-                      : "flex items-center gap-2 whitespace-nowrap rounded-[14px] border border-transparent px-3 py-2 text-[11px] font-black uppercase tracking-wide text-slate-700 transition hover:-translate-y-0.5 hover:border-slate-200 hover:bg-slate-50 sm:text-xs"
+                      ? "flex items-center gap-2 whitespace-nowrap rounded-[14px] bg-[#c2410c] px-4 py-2 text-[11px] font-bold uppercase tracking-wide text-white transition hover:bg-[#a8380b] sm:text-xs"
+                      : "flex items-center gap-2 whitespace-nowrap rounded-[14px] border border-transparent px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-[#173452] transition hover:border-[#e3dfd9] hover:bg-[#f6f4f1] sm:text-xs"
                   }
                 >
                   {item.icon === "parcel" ? (
@@ -290,10 +290,10 @@ export default function Header() {
               key={office.city}
               href={`tel:${office.phones[0]}`}
               onClick={() => trackContactClick("call", office.phones[0], "topbar")}
-              className="flex flex-col leading-tight hover:text-[#0a65b0]"
+              className="flex flex-col leading-tight hover:text-[#c2410c]"
             >
-              <span className="text-[11px] font-semibold text-slate-600">{OFFICE_CITY_NAME[current][office.city]}</span>
-              <span className="text-sm font-bold text-slate-900">{formatPhone(office.phones[0])}</span>
+              <span className="text-[11px] font-semibold text-[#5c6370]">{OFFICE_CITY_NAME[current][office.city]}</span>
+              <span className="text-sm font-bold text-[#173452]">{formatPhone(office.phones[0])}</span>
             </a>
           ))}
         </div>
@@ -314,17 +314,17 @@ export default function Header() {
               ref={langSummaryRef}
               aria-label="Язык"
               title={langName[current]}
-              className="flex h-9 cursor-pointer list-none items-center gap-1 rounded-md border border-slate-300
-                         bg-white/90 px-2 text-sm text-slate-800 select-none
-                         hover:border-slate-400 focus-visible:outline-none focus-visible:ring-2
-                         focus-visible:ring-primary/30 [&::-webkit-details-marker]:hidden"
+              className="flex h-9 cursor-pointer list-none items-center gap-1 rounded-xl border border-[#e3dfd9]
+                         bg-white px-2 text-sm text-[#173452] select-none
+                         hover:border-[#173452] focus-visible:outline-none focus-visible:ring-2
+                         focus-visible:ring-[#c2410c]/30 [&::-webkit-details-marker]:hidden"
             >
               <span aria-hidden="true">{langLabel[current]}</span>
               <span className="sr-only">{langName[current]}</span>
               <svg
                 aria-hidden="true"
                 viewBox="0 0 24 24"
-                className="h-3.5 w-3.5 text-slate-500"
+                className="h-3.5 w-3.5 text-[#5c6370]"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
@@ -333,7 +333,7 @@ export default function Header() {
               </svg>
             </summary>
 
-            <ul className="absolute right-0 z-40 mt-1 min-w-[7rem] overflow-hidden rounded-md border border-slate-200 bg-white py-1 shadow-lg">
+            <ul className="absolute right-0 z-40 mt-1 min-w-[7rem] overflow-hidden rounded-xl border border-[#e3dfd9] bg-white py-1 shadow-lg">
               {localeLinks.map(({ locale, href }) => (
                 <li key={locale}>
                   <Link
@@ -344,8 +344,8 @@ export default function Header() {
                     onClick={() => setIsLangOpen(false)}
                     className={
                       locale === current
-                        ? "flex items-center gap-2 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-900"
-                        : "flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
+                        ? "flex items-center gap-2 bg-[#f6f4f1] px-3 py-2 text-sm font-bold text-[#173452]"
+                        : "flex items-center gap-2 px-3 py-2 text-sm text-[#173452] hover:bg-[#f6f4f1] focus-visible:bg-[#f6f4f1] focus-visible:outline-none"
                     }
                   >
                     <span aria-hidden="true" className="w-6 shrink-0 font-black tracking-wide">
@@ -362,25 +362,25 @@ export default function Header() {
       {/* Портал: у шапки backdrop-filter, и fixed-окно внутри неё обрезалось бы по высоте шапки */}
       {isContactOpen && typeof document !== "undefined" ? createPortal(
         <div
-          className="fixed inset-x-0 bottom-0 top-14 z-40 flex items-start justify-center overflow-y-auto bg-slate-900/50 px-4 py-8 sm:items-center"
+          className="fixed inset-x-0 bottom-0 top-14 z-40 flex items-start justify-center overflow-y-auto bg-[#173452]/50 px-4 py-8 sm:items-center"
           onClick={() => setIsContactOpen(false)}
         >
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="contact-dialog-title"
-            className="max-h-[calc(100vh-7.5rem)] w-full max-w-xl overflow-y-auto rounded-[18px] border border-slate-200 bg-white shadow-2xl"
+            className="max-h-[calc(100vh-7.5rem)] w-full max-w-xl overflow-y-auto rounded-3xl border border-[#e3dfd9] bg-white shadow-2xl"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="flex items-start justify-between gap-4 border-b border-slate-200/70 px-4 py-3">
+            <div className="flex items-start justify-between gap-4 border-b border-[#e3dfd9] px-4 py-3">
               <div>
-                <h2 id="contact-dialog-title" className="text-base font-black text-slate-900">{t.title}</h2>
-                <p className="mt-1 text-sm text-slate-600">{t.description}</p>
+                <h2 id="contact-dialog-title" className="font-display text-base font-bold text-[#173452]">{t.title}</h2>
+                <p className="mt-1 text-sm text-[#5c6370]">{t.description}</p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsContactOpen(false)}
-                className="inline-flex h-11 w-11 items-center justify-center rounded-[14px] border border-slate-200 bg-white text-slate-600 transition hover:shadow-md"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-[14px] border border-[#e3dfd9] bg-white text-[#5c6370] transition hover:border-[#173452]"
                 aria-label={t.close}
               >
                 <svg
@@ -401,18 +401,18 @@ export default function Header() {
               {OFFICES.map((office) => (
                 <section key={office.city} className="space-y-2">
                   <div>
-                    <h3 className="text-sm font-black text-slate-900">{OFFICE_CITY_NAME[current][office.city]}</h3>
-                    <p className="text-xs text-slate-600">{OFFICE_ADDRESS[current][office.city]}</p>
+                    <h3 className="font-display text-sm font-bold text-[#173452]">{OFFICE_CITY_NAME[current][office.city]}</h3>
+                    <p className="text-xs text-[#5c6370]">{OFFICE_ADDRESS[current][office.city]}</p>
                   </div>
                   {office.phones.map((phone) => (
                     <div
                       key={phone}
-                      className="flex flex-wrap items-center justify-between gap-2 rounded-[16px] border border-slate-200 bg-white px-3 py-2"
+                      className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[#e3dfd9] bg-white px-3 py-2"
                     >
                       <a
                         href={linkFor("call", phone)}
                         onClick={() => trackContactClick("call", phone)}
-                        className="text-base font-bold text-slate-900 hover:text-[#0a65b0]"
+                        className="text-base font-bold text-[#173452] hover:text-[#c2410c]"
                       >
                         {formatPhone(phone)}
                       </a>
@@ -433,7 +433,7 @@ export default function Header() {
                               onClick={() => trackContactClick(method, phone)}
                               aria-label={`${label} ${formatPhone(phone)}`}
                               title={label}
-                              className="inline-flex h-11 w-11 items-center justify-center rounded-[14px] border border-slate-200 bg-slate-50 text-slate-700 transition hover:shadow-md"
+                              className="inline-flex h-11 w-11 items-center justify-center rounded-[14px] border border-[#e3dfd9] bg-white text-[#173452] transition hover:border-[#173452]"
                             >
                               {method === "call" ? (
                                 <svg

@@ -78,8 +78,8 @@ export default function QrExchangeClient({ opaque }: QrExchangeClientProps) {
   return (
     <main className="flex min-h-screen items-center justify-center bg-gradient-to-b from-sky-100 to-sky-200 p-4">
       <div className="w-full max-w-md space-y-4 rounded-3xl bg-white/95 p-6 text-center shadow-xl">
-        <h1 className="text-xl font-semibold text-slate-800">Подключаем покупку к сессии…</h1>
-        <p className="text-sm text-slate-500">
+        <h1 className="text-xl font-semibold text-[#173452]">Подключаем покупку к сессии…</h1>
+        <p className="text-sm text-[#5c6370]">
           Сначала активируем ссылку и получаем cookie сессии, после чего откроем вашу покупку.
         </p>
 
@@ -96,7 +96,7 @@ export default function QrExchangeClient({ opaque }: QrExchangeClientProps) {
           <button
             type="button"
             onClick={() => router.replace("/")}
-            className="w-full rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 shadow hover:bg-slate-100"
+            className="w-full rounded-xl border border-[#e3dfd9] px-4 py-2 text-sm font-semibold text-[#5c6370] shadow hover:bg-[#f6f4f1]"
           >
             На главную
           </button>

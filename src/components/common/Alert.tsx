@@ -8,7 +8,7 @@ type AlertProps = PropsWithChildren<{
 
 export default function UiAlert({ type = "info", children }: AlertProps) {
   const map = {
-    info: "bg-blue-50 text-blue-700",
+    info: "bg-[#fdf0e7] text-[#c2410c]",
     success: "bg-green-50 text-green-700",
     error: "bg-red-50 text-red-700",
   } as const;

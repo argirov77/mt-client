@@ -34,16 +34,16 @@ function PopularRouteRow({ route, lang }: { route: PopularRoute; lang: Lang }) {
     <li>
       <Link
         href={route.href}
-        className="flex min-h-[56px] items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2 transition hover:border-[#93b8e6] hover:shadow-sm"
+        className="flex min-h-[56px] items-center gap-3 rounded-xl border border-[#e3dfd9] bg-white px-3 py-2 transition hover:border-[#fdba74] hover:shadow-sm"
       >
         <span className="min-w-0 flex-1">
-          <b className="block truncate text-sm text-slate-900">{route.label}</b>
-          <span className="block text-xs text-slate-600">
+          <b className="block truncate text-sm text-[#173452]">{route.label}</b>
+          <span className="block text-xs text-[#5c6370]">
             {nearest.loading ? "…" : [days, trip ? shortTime(trip.tour.departure_time) : ""].filter(Boolean).join(" · ")}
           </span>
         </span>
-        {trip ? <b className="shrink-0 text-sm text-slate-900">{formatUah(trip.tour.price)}</b> : null}
-        <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
+        {trip ? <b className="shrink-0 text-sm text-[#173452]">{formatUah(trip.tour.price)}</b> : null}
+        <ChevronRight className="h-4 w-4 shrink-0 text-[#8c929c]" aria-hidden />
       </Link>
     </li>
   );
@@ -57,7 +57,7 @@ export default function HomeFirstScreen({ lang, routes }: Props) {
   const handleFlowChange = useCallback((active: boolean) => setFlowActive(active), []);
 
   return (
-    <section id="hero" className="bg-slate-50 px-3 pb-8 pt-3 sm:px-4">
+    <section id="hero" className="bg-[#f6f4f1] px-3 pb-8 pt-3 sm:px-4">
       {/* Телефон: заголовок → форма → направления. Компьютер: слева заголовок
           и направления, справа форма на всю высоту. */}
       <div
@@ -74,7 +74,7 @@ export default function HomeFirstScreen({ lang, routes }: Props) {
             backgroundPosition: "center",
           }}
         >
-          <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#c9d6e6]">{t.homeEyebrow}</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#fdba74]">{t.homeEyebrow}</p>
           <h1 className="mt-2 text-[clamp(24px,4vw,40px)] font-black leading-[1.1] tracking-[-0.02em]">
             {t.homeTitle}
           </h1>
@@ -86,14 +86,14 @@ export default function HomeFirstScreen({ lang, routes }: Props) {
           className={`scroll-mt-20 ${flowActive ? "" : "lg:col-start-2 lg:row-span-2 lg:row-start-1"}`}
         >
           {!flowActive ? (
-            <h2 className="mb-2 px-1 text-lg font-bold text-slate-900 sm:text-xl">{t.formTitle}</h2>
+            <h2 className="mb-2 px-1 text-lg font-bold text-[#173452] sm:text-xl">{t.formTitle}</h2>
           ) : null}
           <BookingCard onFlowChange={handleFlowChange} />
         </div>
 
         {!flowActive ? (
           <div className="lg:col-start-1 lg:row-start-2">
-            <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-600">{t.popular}</p>
+            <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-[#5c6370]">{t.popular}</p>
             <ul className="space-y-2">
               {routes.map((route) => (
                 <PopularRouteRow key={route.key} route={route} lang={lang} />
@@ -101,7 +101,7 @@ export default function HomeFirstScreen({ lang, routes }: Props) {
             </ul>
             <a
               href="#parcel"
-              className="mt-2 flex min-h-[48px] items-center gap-3 rounded-xl bg-[#eef3f9] px-3 py-2 text-sm font-semibold text-[#173452] hover:bg-[#e3eefb]"
+              className="mt-2 flex min-h-[48px] items-center gap-3 rounded-xl bg-[#fdf0e7] px-3 py-2 text-sm font-semibold text-[#173452] hover:bg-[#fdf0e7]"
             >
               <span className="flex-1">{t.parcels}</span>
               <ChevronRight className="h-4 w-4 shrink-0" aria-hidden />

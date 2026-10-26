@@ -55,7 +55,7 @@ export default function StepTwo({
   step2Summary,
 }: StepTwoProps) {
   return (
-    <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+    <section className="space-y-3 rounded-2xl border border-[#e3dfd9] bg-white p-4 shadow-sm">
       {renderStepHeader(2, t.step2Title, step2Summary)}
       <div>
         {selectedOutboundTour ? (
@@ -83,7 +83,7 @@ export default function StepTwo({
             highlightNameIndex={highlightNameIndex}
           />
         ) : (
-          <p className="text-sm text-slate-600">{t.outboundShort} {t.outboundNotSelected}</p>
+          <p className="text-sm text-[#5c6370]">{t.outboundShort} {t.outboundNotSelected}</p>
         )}
       </div>
     </section>

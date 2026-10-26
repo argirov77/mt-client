@@ -28,7 +28,7 @@ const COMMON = {
 // что отдают /search/departures и /search/arrivals для выпадающих списков формы.
 // Используются для предзаполнения направления (From/To) на посадочных страницах.
 // НЕ выдуманные: значения взяты из справочника, что использует форма.
-const STOP = {
+export const STOP = {
   odessa: 4,
   bolgrad: 5,
   constanta: 7,
@@ -902,4 +902,46 @@ function cityNamesFromTrip(key: string, locale: Lang): string[] {
     },
   };
   return cities[key]?.[locale] ?? [];
+}
+
+/** Названия городов по слагу маршрута — для коротких подписей ссылок. */
+export const CITY_LABELS: Record<Lang, Record<string, string>> = {
+  ru: {
+    odessa: "Одесса",
+    varna: "Варна",
+    burgas: "Бургас",
+    "sunny-beach": "Солнечный берег",
+    constanta: "Констанца",
+  },
+  ua: {
+    odessa: "Одеса",
+    varna: "Варна",
+    burgas: "Бургас",
+    "sunny-beach": "Сонячний берег",
+    constanta: "Констанца",
+  },
+  bg: {
+    odessa: "Одеса",
+    varna: "Варна",
+    burgas: "Бургас",
+    "sunny-beach": "Слънчев бряг",
+    constanta: "Констанца",
+  },
+  en: {
+    odessa: "Odesa",
+    varna: "Varna",
+    burgas: "Burgas",
+    "sunny-beach": "Sunny Beach",
+    constanta: "Constanța",
+  },
+};
+
+/** «Одесса — Варна»: короткая подпись маршрута для подвала и перелинковки. */
+export function tripShortLabel(key: string, locale: Lang): string | null {
+  const trip = tripsData[key];
+  if (!trip) return null;
+  const from = CITY_LABELS[locale]?.[trip.fromSlug];
+  const to = CITY_LABELS[locale]?.[trip.toSlug];
+  if (!from || !to) return null;
+  return `${from} — ${to}`;
 }
