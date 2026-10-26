@@ -370,7 +370,7 @@ export default function SearchForm({
 
   const row = (
     <div className="grid gap-4">
-      <div className="relative grid gap-4 md:grid-cols-[1fr_auto_1fr] md:items-end">
+      <div className="relative grid gap-4 @xl:grid-cols-[1fr_auto_1fr] @xl:items-end">
         <div className="flex flex-col gap-2">
           <span className={labelStyles}>{t.from}</span>
           <StopCombobox
@@ -393,12 +393,12 @@ export default function SearchForm({
           />
         </div>
 
-        <div className="absolute left-1/2 top-1/2 z-10 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center md:static md:translate-x-0 md:translate-y-0 md:pb-1">
+        <div className="absolute left-1/2 top-1/2 z-10 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center @xl:static @xl:translate-x-0 @xl:translate-y-0 @xl:pb-1">
           <button
             type="button"
             title={t.swapTitle}
             onClick={handleSwap}
-            className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-sky-400 focus:outline-none md:h-12 md:w-12"
+            className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-sky-400 focus:outline-none"
           >
             <span aria-hidden className="text-lg">
               ⇄
@@ -428,7 +428,7 @@ export default function SearchForm({
         </div>
       </div>
 
-      <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-end">
+      <div className="grid w-full grid-cols-1 gap-4 @md:grid-cols-2 @4xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto] @4xl:items-end">
         <DateInput
           value={departDate}
           setValue={setDepartDate}
@@ -463,7 +463,7 @@ export default function SearchForm({
 
         <button
           type="submit"
-          className="h-14 w-full rounded-xl bg-[#0a65b0] px-8 text-base font-bold text-white shadow-lg transition hover:bg-[#08558f] hover:shadow-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0a65b0] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none sm:w-auto"
+          className="h-14 w-full rounded-xl bg-[#0a65b0] px-8 text-base font-bold text-white shadow-lg transition hover:bg-[#08558f] hover:shadow-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0a65b0] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none @4xl:w-auto"
           disabled={!fromId || !toId || !departDate}
           aria-label={t.search}
         >
@@ -474,7 +474,7 @@ export default function SearchForm({
   );
 
   const form = (
-    <form onSubmit={handleSubmit} className="w-full">
+    <form onSubmit={handleSubmit} className="@container w-full">
       {embedded ? (
         row
       ) : (

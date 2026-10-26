@@ -5,6 +5,7 @@ import { ArrowLeft, Search } from "lucide-react";
 import SearchForm from "@/components/hero/SearchForm";
 import SearchResults from "@/components/search/SearchResults";
 import { useLanguage } from "@/components/common/LanguageProvider";
+import { OPEN_TRIP_EVENT, type OpenTripDetail } from "@/utils/useNearestTrips";
 
 const backToSearchLabel = {
   ru: "Назад к поиску",
@@ -23,19 +24,49 @@ export type Criteria = {
   openReturn?: boolean;
   seatCount: number;
   discountCount: number;
+  // рейс, выбранный на первом экране («Ближайшие рейсы»)
+  preselectTourId?: number;
 };
 
 type BookingFlowProps = {
   forcedFromId?: number;
   forcedToId?: number;
+  // сообщает, показаны ли результаты поиска (а не форма)
+  onFlowChange?: (active: boolean) => void;
 };
 
-export default function BookingFlow({ forcedFromId, forcedToId }: BookingFlowProps = {}) {
+export default function BookingFlow({ forcedFromId, forcedToId, onFlowChange }: BookingFlowProps = {}) {
   const { lang } = useLanguage();
   const [criteria, setCriteria] = useState<Criteria | null>(null);
   // запоминаем последний поиск, чтобы при возврате форма не была пустой
   const [lastCriteria, setLastCriteria] = useState<Criteria | null>(null);
   const resultsRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    onFlowChange?.(Boolean(criteria));
+  }, [criteria, onFlowChange]);
+
+  // «Ближайшие рейсы» на первом экране сразу открывают шаг 1 с этим рейсом.
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const detail = (event as CustomEvent<OpenTripDetail>).detail;
+      if (!detail) return;
+      const next: Criteria = {
+        from: String(detail.from),
+        to: String(detail.to),
+        fromName: detail.fromName,
+        toName: detail.toName,
+        date: detail.date,
+        seatCount: 1,
+        discountCount: 0,
+        preselectTourId: detail.tourId,
+      };
+      setCriteria(next);
+      setLastCriteria(next);
+    };
+    window.addEventListener(OPEN_TRIP_EVENT, handler);
+    return () => window.removeEventListener(OPEN_TRIP_EVENT, handler);
+  }, []);
 
   // после нового поиска скроллим к заголовку результатов с небольшим отступом
   useEffect(() => {

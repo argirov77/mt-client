@@ -53,6 +53,7 @@ type Props = {
   openReturn?: boolean;
   seatCount: number;
   discountCount: number;
+  preselectTourId?: number;
 };
 
 type StepNavigationItem = {
@@ -110,6 +111,7 @@ export default function SearchResults({
   openReturn: openReturnInitial = false,
   seatCount,
   discountCount,
+  preselectTourId,
 }: Props) {
   const t = dict[lang ?? "ru"];
   const publicOfferUrl = getPublicOfferUrl(lang ?? "ru");
@@ -250,7 +252,10 @@ export default function SearchResults({
 
         setOutboundTours(filteredOutbound);
         setReturnTours(filteredReturn);
-        setSelectedOutboundTour(null);
+        // рейс, выбранный на первом экране страницы маршрута, — сразу выбран
+        setSelectedOutboundTour(
+          (preselectTourId && filteredOutbound.find((tour) => tour.id === preselectTourId)) || null,
+        );
         setSelectedReturnTour(null);
         setSelectedOutboundSeats([]);
         setSelectedReturnSeats([]);
@@ -281,7 +286,7 @@ export default function SearchResults({
     return () => {
       cancelled = true;
     };
-  }, [fromId, toId, date, returnDate, safeSeatCount, t]);
+  }, [fromId, toId, date, returnDate, safeSeatCount, t, preselectTourId]);
 
   const hasReturnSection = Boolean(returnDate && returnTours.length > 0);
   const getTourId = (tour: SearchTour | null) => tour?.id;

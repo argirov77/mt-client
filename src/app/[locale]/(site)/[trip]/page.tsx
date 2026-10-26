@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import About from "@/components/About";
-import HeroSection from "@/components/hero/HeroSection";
-import BookingSection from "@/components/home/BookingSection";
+import RouteFirstScreen from "@/components/hero/RouteFirstScreen";
 import Routes from "@/components/Routes";
 import Schedule from "@/components/Schedule";
 import DepartureDays from "@/components/seo/DepartureDays";
@@ -75,17 +74,14 @@ export default async function TripPage({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(tripLd) }}
         />
       )}
-      <HeroSection
+      <RouteFirstScreen
         lang={lang}
-        heroTitle={data.h1}
-        heroSubtitle={data.heroSubtitle}
+        title={data.h1}
+        subtitle={data.heroSubtitle}
+        fromId={isHub ? undefined : tripDef.fromStopId}
+        toId={isHub ? undefined : tripDef.toStopId}
       />
       <LeadText text={data.leadText} />
-      <BookingSection
-        lang={lang}
-        forcedFromId={isHub ? undefined : tripDef.fromStopId}
-        forcedToId={isHub ? undefined : tripDef.toStopId}
-      />
       <About />
       <FullText text={data.fullText} />
       <DepartureDays text={departureDays} />
