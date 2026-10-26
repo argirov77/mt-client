@@ -58,6 +58,13 @@ type ReturnPageCopy = {
 
   goHome: string;
   retryPayment: string;
+
+  orderNotFoundTitle: string;
+  officePhones: string;
+  retryPay: string;
+  whatNextTitle: string;
+  whatNextBoarding: (from: string, date: string, time: string) => string;
+  whatNextCabinet: string;
 };
 
 function slavicPlural(n: number, one: string, few: string, many: string): string {
@@ -118,11 +125,18 @@ export const returnTranslations: Record<Lang, ReturnPageCopy> = {
 
     paymentError: "Ошибка оплаты",
     failedMessage: "Платёж отклонён или отменён. Попробуйте оплатить ещё раз.",
-    orderNotFound: "Не удалось определить номер заказа.",
+    orderNotFound: "Если оплата прошла, билеты придут на email. Если письма нет — позвоните в офис.",
     httpError: (s) => `Ошибка запроса (HTTP ${s}). Попробуйте позже или обратитесь в поддержку.`,
 
     goHome: "На главную",
     retryPayment: "Вернуться к оформлению",
+
+    orderNotFoundTitle: "Не нашли заказ на этом устройстве",
+    officePhones: "Телефоны офисов",
+    retryPay: "Попробовать ещё раз",
+    whatNextTitle: "Что дальше",
+    whatNextBoarding: (from, date, time) => `Посадка: ${from} — ${date}${time ? `, ${time}` : ""}.`,
+    whatNextCabinet: "Перенести, вернуть или докупить багаж — в кабинете заказа: ссылка в письме и QR-код в билете.",
   },
 
   en: {
@@ -173,11 +187,18 @@ export const returnTranslations: Record<Lang, ReturnPageCopy> = {
 
     paymentError: "Payment error",
     failedMessage: "Payment was declined or cancelled. Please try again.",
-    orderNotFound: "Could not determine the order number.",
+    orderNotFound: "If the payment went through, the tickets will arrive by email. No email? Call the office.",
     httpError: (s) => `Request error (HTTP ${s}). Please try again later or contact support.`,
 
     goHome: "Go to home page",
     retryPayment: "Back to checkout",
+
+    orderNotFoundTitle: "We couldn't find the order on this device",
+    officePhones: "Office phones",
+    retryPay: "Try again",
+    whatNextTitle: "What's next",
+    whatNextBoarding: (from, date, time) => `Boarding: ${from} — ${date}${time ? `, ${time}` : ""}.`,
+    whatNextCabinet: "Reschedule, refund or add baggage in your order page: the link is in the email and the QR code is on the ticket.",
   },
 
   bg: {
@@ -228,11 +249,18 @@ export const returnTranslations: Record<Lang, ReturnPageCopy> = {
 
     paymentError: "Грешка при плащане",
     failedMessage: "Плащането е отхвърлено или отменено. Моля, опитайте отново.",
-    orderNotFound: "Не може да се определи номерът на поръчката.",
+    orderNotFound: "Ако плащането е минало, билетите ще дойдат на имейла. Няма писмо? Обадете се в офиса.",
     httpError: (s) => `Грешка в заявката (HTTP ${s}). Моля, опитайте по-късно или се свържете с поддръжката.`,
 
     goHome: "Към началната страница",
     retryPayment: "Обратно към плащане",
+
+    orderNotFoundTitle: "Не намерихме поръчката на това устройство",
+    officePhones: "Телефони на офисите",
+    retryPay: "Опитай отново",
+    whatNextTitle: "Какво следва",
+    whatNextBoarding: (from, date, time) => `Качване: ${from} — ${date}${time ? `, ${time}` : ""}.`,
+    whatNextCabinet: "Промяна на дата, връщане или допълнителен багаж — в страницата на поръчката: линкът е в имейла, а QR кодът — в билета.",
   },
 
   ua: {
@@ -283,10 +311,17 @@ export const returnTranslations: Record<Lang, ReturnPageCopy> = {
 
     paymentError: "Помилка оплати",
     failedMessage: "Платіж відхилено або скасовано. Спробуйте оплатити ще раз.",
-    orderNotFound: "Не вдалося визначити номер замовлення.",
+    orderNotFound: "Якщо оплата пройшла, квитки прийдуть на email. Листа немає — зателефонуйте в офіс.",
     httpError: (s) => `Помилка запиту (HTTP ${s}). Спробуйте пізніше або зверніться до підтримки.`,
 
     goHome: "На головну",
     retryPayment: "Повернутися до оформлення",
+
+    orderNotFoundTitle: "Не знайшли замовлення на цьому пристрої",
+    officePhones: "Телефони офісів",
+    retryPay: "Спробувати ще раз",
+    whatNextTitle: "Що далі",
+    whatNextBoarding: (from, date, time) => `Посадка: ${from} — ${date}${time ? `, ${time}` : ""}.`,
+    whatNextCabinet: "Перенести, повернути чи докупити багаж — у кабінеті замовлення: посилання в листі та QR-код у квитку.",
   },
 };

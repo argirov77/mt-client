@@ -1,32 +1,22 @@
-import React, { useEffect, useMemo, useState } from "react";
-import SeatClient from "../SeatClient";
-import type { Tour } from "./types";
+"use client";
+
+import React, { useEffect, useMemo, useRef, useState } from "react";
+
 import FormInput from "../common/FormInput";
+import type { SeatData } from "../BusLayout";
+import SeatPicker, { layoutForTour, type SeatLeg, type SeatLegInfo } from "./SeatPicker";
+import type { Dict, Lang, Tour } from "./types";
+import { API } from "@/config";
+import { pickAdjacentSeats } from "@/utils/seatLayout";
+import { formatDayShort } from "@/utils/tripFormat";
 import { useLockBodyScroll } from "@/utils/useLockBodyScroll";
 import { useModalVisibility } from "@/utils/useModalVisibility";
 
-type Dict = {
-  freeSeats: (n: number) => string;
-  outboundShort: string;
-  inboundShort: string;
-  next: string;
-  seatSelectionTitle: string;
-  seatSelectionSubtitle: string;
-  openSeatPicker: string;
-  changeSeatPicker: string;
-  selectedSeatsLabel: (selected: number, total: number) => string;
-  seatSummarySingle: (seat: number) => string;
-  seatSummaryMultiple: (count: number, seats: number[]) => string;
-  passengersTitle: string;
-  passengersHint: string;
-  passengerPlaceholder: string;
-  errorSelectSeat: string;
-  errorFillName: string;
-};
-
 type Props = {
   t: Dict;
+  lang: Lang;
   seatCount: number;
+  discountCount: number;
   fromId: number;
   toId: number;
   fromName: string;
@@ -50,13 +40,61 @@ type Props = {
   extraBaggageReturn: boolean[];
   setExtraBaggageReturn: React.Dispatch<React.SetStateAction<boolean[]>>;
 
-  /** вызываем при готовности перейти к контактам */
-  onReadyForContacts?: () => void;
+  /** индекс поля имени, которое подсвечиваем как незаполненное */
+  highlightNameIndex: number | null;
+};
+
+type SeatMapState = { seats: SeatData[]; loading: boolean; error?: string };
+
+// Схема мест рейса: тот же запрос /seat/, что и раньше делал SeatClient.
+function useSeatMap(tourId: number | null, departureStopId: number, arrivalStopId: number) {
+  const [state, setState] = useState<SeatMapState>({ seats: [], loading: false });
+
+  useEffect(() => {
+    if (!tourId) {
+      setState({ seats: [], loading: false });
+      return;
+    }
+    let aborted = false;
+    setState({ seats: [], loading: true });
+    (async () => {
+      try {
+        const url = `${API}/seat/?tour_id=${tourId}&departure_stop_id=${departureStopId}&arrival_stop_id=${arrivalStopId}`;
+        const res = await fetch(url, { cache: "no-store" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = (await res.json()) as { seats?: SeatData[] };
+        if (!aborted) setState({ seats: data.seats || [], loading: false });
+      } catch (e) {
+        if (!aborted) {
+          setState({ seats: [], loading: false, error: e instanceof Error ? e.message : String(e) });
+        }
+      }
+    })();
+    return () => {
+      aborted = true;
+    };
+  }, [tourId, departureStopId, arrivalStopId]);
+
+  return state;
+}
+
+const useIsDesktop = () => {
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => {
+    const query = window.matchMedia("(min-width: 1024px)");
+    const update = () => setIsDesktop(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+  return isDesktop;
 };
 
 export default function BookingPanel({
   t,
+  lang,
   seatCount,
+  discountCount,
   fromId,
   toId,
   fromName,
@@ -72,47 +110,20 @@ export default function BookingPanel({
   passengerNames,
   setPassengerNames,
 
-  extraBaggageOutbound,
   setExtraBaggageOutbound,
-  extraBaggageReturn,
   setExtraBaggageReturn,
 
-  onReadyForContacts,
+  highlightNameIndex,
 }: Props) {
   const [isSeatModalOpen, setIsSeatModalOpen] = useState(false);
-  const [modalLeg, setModalLeg] = useState<"outbound" | "return">("outbound");
-  const [modalOutboundSeats, setModalOutboundSeats] = useState<number[]>([]);
-  const [modalReturnSeats, setModalReturnSeats] = useState<number[]>([]);
-  const [modalOutboundExtra, setModalOutboundExtra] = useState(false);
-  const [modalReturnExtra, setModalReturnExtra] = useState(false);
+  const [activeLeg, setActiveLeg] = useState<SeatLeg>("outbound");
   const seatModal = useModalVisibility(isSeatModalOpen, 300);
+  const isDesktop = useIsDesktop();
 
   useLockBodyScroll(seatModal.shouldRender);
 
-  const outboundComplete = useMemo(
-    () => selectedOutboundSeats.length === seatCount,
-    [seatCount, selectedOutboundSeats.length]
-  );
-  const returnComplete = useMemo(
-    () => !selectedReturnTour || selectedReturnSeats.length === seatCount,
-    [seatCount, selectedReturnSeats.length, selectedReturnTour]
-  );
-  const namesFilled = useMemo(
-    () =>
-      passengerNames.length === seatCount &&
-      passengerNames.every((n) => n.trim().length > 0),
-    [passengerNames, seatCount]
-  );
-
-  const readyForNext = seatCount > 0 && outboundComplete && returnComplete && namesFilled;
-
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (readyForNext) {
-      setErrorMessage(null);
-    }
-  }, [readyForNext]);
+  const outboundMap = useSeatMap(selectedOutboundTour.id, fromId, toId);
+  const returnMap = useSeatMap(selectedReturnTour?.id ?? null, toId, fromId);
 
   // гарантируем, что массивы багажа не пустые
   useEffect(() => {
@@ -126,220 +137,204 @@ export default function BookingPanel({
     });
   }, [seatCount, setExtraBaggageOutbound, setExtraBaggageReturn]);
 
-  const openModal = (leg: "outbound" | "return") => {
-    setModalLeg(leg);
-    setModalOutboundSeats(selectedOutboundSeats);
-    setModalReturnSeats(selectedReturnSeats);
-    setModalOutboundExtra(extraBaggageOutbound[0] ?? false);
-    setModalReturnExtra(extraBaggageReturn[0] ?? false);
+  // Автоподбор мест рядом — один раз на рейс, пока места не выбраны.
+  // Схема остаётся, чтобы поменять.
+  const autoPickedRef = useRef<Set<string>>(new Set());
+  const [autoPicked, setAutoPicked] = useState<Record<SeatLeg, boolean>>({ outbound: false, return: false });
+
+  useEffect(() => {
+    const tryPick = (
+      leg: SeatLeg,
+      tour: Tour | null,
+      map: SeatMapState,
+      selected: number[],
+      setSelected: (v: number[]) => void,
+    ) => {
+      if (!tour || map.loading || !map.seats.length) return;
+      const key = `${leg}-${tour.id}`;
+      if (autoPickedRef.current.has(key)) return;
+      autoPickedRef.current.add(key);
+      if (selected.length) return;
+      const available = new Set(
+        map.seats.filter((seat) => seat.status === "available").map((seat) => seat.seat_num),
+      );
+      const picked = pickAdjacentSeats(layoutForTour(tour), available, seatCount);
+      if (picked.length) {
+        setSelected(picked);
+        setAutoPicked((prev) => ({ ...prev, [leg]: true }));
+      }
+    };
+    tryPick("outbound", selectedOutboundTour, outboundMap, selectedOutboundSeats, setSelectedOutboundSeats);
+    tryPick("return", selectedReturnTour, returnMap, selectedReturnSeats, setSelectedReturnSeats);
+  }, [
+    outboundMap,
+    returnMap,
+    seatCount,
+    selectedOutboundSeats,
+    selectedOutboundTour,
+    selectedReturnSeats,
+    selectedReturnTour,
+    setSelectedOutboundSeats,
+    setSelectedReturnSeats,
+  ]);
+
+  const legs = useMemo<SeatLegInfo[]>(() => {
+    const items: SeatLegInfo[] = [
+      {
+        leg: "outbound",
+        tour: selectedOutboundTour,
+        fromName,
+        toName,
+        ...outboundMap,
+        selected: selectedOutboundSeats,
+        autoPicked: autoPicked.outbound,
+      },
+    ];
+    if (selectedReturnTour) {
+      items.push({
+        leg: "return",
+        tour: selectedReturnTour,
+        fromName: toName,
+        toName: fromName,
+        ...returnMap,
+        selected: selectedReturnSeats,
+        autoPicked: autoPicked.return,
+      });
+    }
+    return items;
+  }, [
+    autoPicked,
+    fromName,
+    outboundMap,
+    returnMap,
+    selectedOutboundSeats,
+    selectedOutboundTour,
+    selectedReturnSeats,
+    selectedReturnTour,
+    toName,
+  ]);
+
+  const handleSeatsChange = (leg: SeatLeg, seats: number[]) => {
+    if (leg === "outbound") setSelectedOutboundSeats(seats);
+    else setSelectedReturnSeats(seats);
+  };
+
+  const openModal = (leg: SeatLeg = "outbound") => {
+    setActiveLeg(leg);
     setIsSeatModalOpen(true);
   };
 
-  const closeModal = () => {
-    setIsSeatModalOpen(false);
-  };
+  const closeModal = () => setIsSeatModalOpen(false);
 
-  const confirmSelection = () => {
-    const outboundValid = modalOutboundSeats.length === seatCount;
-    const returnValid = !selectedReturnTour || modalReturnSeats.length === seatCount;
+  const seatsText = (seats: number[]) =>
+    seats.length
+      ? seats.slice().sort((a, b) => a - b).join(lang === "en" ? " and " : lang === "ua" ? " і " : " и ")
+      : t.selectedSeatsLabel(0, seatCount);
 
-    if (!outboundValid || !returnValid) return;
-
-    setSelectedOutboundSeats(modalOutboundSeats);
-    const outboundBaggage = Array.from({ length: seatCount }, (_, idx) => extraBaggageOutbound[idx] ?? false);
-    outboundBaggage[0] = modalOutboundExtra;
-    setExtraBaggageOutbound(outboundBaggage);
-
-    if (selectedReturnTour) {
-      setSelectedReturnSeats(modalReturnSeats);
-      const returnBaggage = Array.from({ length: seatCount }, (_, idx) => extraBaggageReturn[idx] ?? false);
-      returnBaggage[0] = modalReturnExtra;
-      setExtraBaggageReturn(returnBaggage);
-    }
-
-    closeModal();
-  };
-
-  const renderSelectionSummary = (seats: number[]) => {
-    if (!seats.length) return t.selectedSeatsLabel(seats.length, seatCount);
-
-    const sorted = seats.slice().sort((a, b) => a - b);
-    if (seatCount === 1 || sorted.length === 1) {
-      return t.seatSummarySingle(sorted[0]);
-    }
-
-    return t.seatSummaryMultiple(sorted.length, sorted);
-  };
+  const anySeats = selectedOutboundSeats.length > 0 || selectedReturnSeats.length > 0;
+  const showAdjacent = seatCount > 1 && (autoPicked.outbound || autoPicked.return);
 
   const renderSeatOverview = () => (
-    <section className="space-y-4 rounded-none bg-transparent p-0 sm:rounded-xl sm:bg-white/70 sm:p-4 sm:shadow-sm sm:ring-1 sm:ring-slate-200">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-2">
-          <h3 className="text-lg font-semibold text-slate-900">{t.seatSelectionTitle}</h3>
-          <div className="space-y-1 text-sm text-slate-700">
-            <div className="flex items-center gap-2">
-              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-slate-700">
-                {t.outboundShort}
-              </span>
-              <span>{renderSelectionSummary(selectedOutboundSeats)}</span>
-            </div>
-
-            {selectedReturnTour && (
-              <div className="flex items-center gap-2">
-                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-slate-700">
-                  {t.inboundShort}
-                </span>
-                <span>{renderSelectionSummary(selectedReturnSeats)}</span>
-              </div>
-            )}
-          </div>
+    <section className="space-y-2 rounded-2xl border border-slate-200 bg-white p-3">
+      <p className="text-xs font-bold uppercase tracking-wide text-slate-600">
+        {t.seatsTitle}
+        {showAdjacent ? ` · ${t.seatsAdjacent}` : ""}
+      </p>
+      {legs.map((item) => (
+        <div key={item.leg} className="flex items-center justify-between gap-3 text-sm">
+          <span className="text-slate-700">
+            {item.leg === "outbound" ? t.outboundShort : t.inboundShort}, {formatDayShort(item.tour.date, lang)}
+          </span>
+          <b className={item.selected.length === seatCount ? "text-slate-900" : "text-amber-800"}>
+            {item.loading ? t.seatsLoading : seatsText(item.selected)}
+          </b>
         </div>
-
-        <button
-          type="button"
-          onClick={() => openModal("outbound")}
-          className="inline-flex items-center justify-center self-start rounded-lg border border-sky-600 bg-sky-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600"
-        >
-          {selectedOutboundSeats.length > 0 || selectedReturnSeats.length > 0
-            ? t.changeSeatPicker
-            : t.openSeatPicker}
-        </button>
-      </div>
+      ))}
+      <p className="text-xs text-slate-600">
+        {t.amenitiesLabel}: {t.amenitiesList}
+      </p>
+      <button
+        type="button"
+        onClick={() => {
+          const firstIncomplete = legs.find((item) => item.selected.length < seatCount);
+          openModal(firstIncomplete?.leg ?? "outbound");
+        }}
+        className="flex min-h-[44px] w-full items-center justify-center rounded-xl border border-slate-300 text-sm font-semibold text-[#0a65b0] hover:bg-sky-50"
+      >
+        {anySeats ? t.changeOnMap : t.chooseOnMap}
+      </button>
     </section>
   );
 
   const renderSeatModal = () => {
     if (!seatModal.shouldRender) return null;
-
-    const isOutboundModal = modalLeg === "outbound";
-    const tour = isOutboundModal ? selectedOutboundTour : selectedReturnTour;
-
-    if (!tour) return null;
-
-    const currentSeats = isOutboundModal ? modalOutboundSeats : modalReturnSeats;
-    const currentExtraBaggage = isOutboundModal ? modalOutboundExtra : modalReturnExtra;
-    const onSeatsChange = isOutboundModal ? setModalOutboundSeats : setModalReturnSeats;
-    const onBaggageChange = isOutboundModal ? setModalOutboundExtra : setModalReturnExtra;
-    const outboundValid = modalOutboundSeats.length === seatCount;
-    const returnValid = !selectedReturnTour || modalReturnSeats.length === seatCount;
+    const hasReturn = Boolean(selectedReturnTour);
+    const onOutbound = activeLeg === "outbound";
 
     return (
       <div
-        className={`fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-[2px] px-3 py-4 transition-opacity ease-in-out ${
+        className={`fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 backdrop-blur-[2px] transition-opacity ease-in-out sm:items-center sm:px-3 sm:py-4 ${
           seatModal.isClosing ? "opacity-0" : "opacity-100"
-        } ${
-          seatModal.prefersReducedMotion ? "motion-reduce:transition-none" : ""
-        }`}
+        } ${seatModal.prefersReducedMotion ? "motion-reduce:transition-none" : ""}`}
         style={{ transitionDuration: `${seatModal.animationDuration}ms` }}
         onClick={closeModal}
       >
         <div
-          className={`relative flex w-full max-w-5xl transform flex-col overflow-hidden rounded-2xl bg-white shadow-2xl transition-[opacity,transform] ease-in-out max-h-[80vh] ${
-            seatModal.isClosing ? "scale-95 opacity-0" : "scale-100 opacity-100"
-          } ${
-            seatModal.prefersReducedMotion
-              ? "motion-reduce:transform-none motion-reduce:transition-none"
-              : ""
-          }`}
+          role="dialog"
+          aria-modal="true"
+          aria-label={t.seatSelectionTitle}
+          className={`relative flex max-h-[100dvh] w-full max-w-3xl transform flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl transition-[opacity,transform] ease-in-out sm:max-h-[92vh] sm:rounded-2xl ${
+            seatModal.isClosing ? "translate-y-4 opacity-0" : "translate-y-0 opacity-100"
+          } ${seatModal.prefersReducedMotion ? "motion-reduce:transform-none motion-reduce:transition-none" : ""}`}
           style={{ transitionDuration: `${seatModal.animationDuration}ms` }}
           onClick={(e) => e.stopPropagation()}
         >
-          <header className="border-b px-5 py-3">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h3 className="text-xl font-semibold text-slate-900">{t.seatSelectionTitle}</h3>
-                <p className="text-sm text-slate-600">{t.seatSelectionSubtitle}</p>
-              </div>
-
-              <button
-                type="button"
-                aria-label="Close"
-                onClick={closeModal}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-lg font-semibold text-slate-600 shadow-sm transition hover:bg-slate-50"
-              >
-                ×
-              </button>
-            </div>
-
-            {selectedReturnTour ? (
-              <div className="mt-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Маршрут</p>
-                <div className="mt-2 grid grid-cols-2 gap-2 rounded-xl bg-slate-100 p-1 text-sm font-semibold text-slate-800">
-                  <button
-                    type="button"
-                    onClick={() => setModalLeg("outbound")}
-                    className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2 transition ${
-                      isOutboundModal
-                        ? "bg-white text-slate-900 shadow"
-                        : "text-slate-700 hover:bg-white/70"
-                    }`}
-                    aria-pressed={isOutboundModal}
-                  >
-                    <span aria-hidden>⇢</span>
-                    {t.outboundShort}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => selectedReturnTour && setModalLeg("return")}
-                    disabled={!selectedReturnTour}
-                    className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2 transition ${
-                      !isOutboundModal
-                        ? "bg-white text-slate-900 shadow"
-                        : "text-slate-700 hover:bg-white/70"
-                    } ${!selectedReturnTour ? "cursor-not-allowed opacity-60" : ""}`}
-                    aria-pressed={!isOutboundModal}
-                  >
-                    <span aria-hidden>⇠</span>
-                    {t.inboundShort}
-                  </button>
-                </div>
-              </div>
-            ) : null}
+          <header className="flex items-center justify-between gap-3 border-b px-4 py-3">
+            <h3 className="text-lg font-bold text-slate-900">{t.seatSelectionTitle}</h3>
+            <button
+              type="button"
+              aria-label={t.done}
+              onClick={closeModal}
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-lg font-semibold text-slate-600 hover:bg-slate-50"
+            >
+              ×
+            </button>
           </header>
 
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-            <div className="flex-1 overflow-auto px-5 py-3">
-              <SeatClient
-                tourId={tour.id}
-                departureStopId={isOutboundModal ? fromId : toId}
-                arrivalStopId={isOutboundModal ? toId : fromId}
-                layoutVariant={tour.layout_variant || undefined}
-                selectedSeats={currentSeats}
-                maxSeats={seatCount}
-                onChange={onSeatsChange}
-                departureText={
-                  isOutboundModal
-                    ? `${fromName} ${tour.departure_time}`
-                    : `${toName} ${tour.departure_time}`
-                }
-                arrivalText={
-                  isOutboundModal
-                    ? `${toName} ${tour.arrival_time}`
-                    : `${fromName} ${tour.arrival_time}`
-                }
-                extraBaggage={currentExtraBaggage}
-                onExtraBaggageChange={onBaggageChange}
-                showExtraBaggage={false}
-              />
-            </div>
+          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
+            <SeatPicker
+              t={t}
+              lang={lang}
+              legs={legs}
+              seatCount={seatCount}
+              activeLeg={activeLeg}
+              onActiveLegChange={setActiveLeg}
+              onChange={handleSeatsChange}
+              compact
+            />
+          </div>
 
-            <div className="flex flex-col gap-2 border-t bg-white px-5 py-3 sm:flex-row sm:justify-end">
-              <button
-                type="button"
-                onClick={closeModal}
-                className="inline-flex items-center justify-center rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
-              >
-                Отмена
-              </button>
-              <button
-                type="button"
-                disabled={!outboundValid || !returnValid}
-                onClick={confirmSelection}
-                className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
-              >
-                Подтвердить выбор
-              </button>
-            </div>
+          <div className="border-t bg-white px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+            {(() => {
+              const current = legs.find((item) => item.leg === activeLeg) ?? legs[0];
+              const missing = current.selected.length < seatCount;
+              return (
+                <>
+                  {missing ? (
+                    <p className="mb-1.5 text-center text-xs font-semibold text-amber-800">
+                      {t.missingSeats(current.leg, current.selected.length, seatCount)}
+                    </p>
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={() => (hasReturn && onOutbound ? setActiveLeg("return") : closeModal())}
+                    className="flex min-h-[44px] w-full items-center justify-center rounded-xl bg-[#0a65b0] px-4 text-sm font-bold text-white hover:bg-[#08558f]"
+                  >
+                    {hasReturn && onOutbound ? t.nextReturnSeats : t.done}
+                  </button>
+                </>
+              );
+            })()}
           </div>
         </div>
       </div>
@@ -348,74 +343,76 @@ export default function BookingPanel({
 
   return (
     <div className="space-y-4">
-      {renderSeatModal()}
-
-      {renderSeatOverview()}
+      {isDesktop ? (
+        <section className="rounded-2xl border border-slate-200 bg-white p-4">
+          <SeatPicker
+            t={t}
+            lang={lang}
+            legs={legs}
+            seatCount={seatCount}
+            activeLeg={activeLeg}
+            onActiveLegChange={setActiveLeg}
+            onChange={handleSeatsChange}
+          />
+        </section>
+      ) : (
+        <>
+          {renderSeatModal()}
+          {renderSeatOverview()}
+        </>
+      )}
 
       <form
         onSubmit={(e) => {
           // form_submit удалён как дубль search без полезной нагрузки.
           e.preventDefault();
         }}
-        className="mt-2 flex w-full max-w-[640px] flex-col gap-3 rounded-none bg-transparent p-0 shadow-none ring-0 sm:rounded-xl sm:bg-white/70 sm:p-4 sm:shadow-sm sm:ring-1 sm:ring-slate-200"
+        className="flex w-full flex-col gap-3"
       >
-        <div className="text-base font-semibold text-slate-900">{t.passengersTitle}</div>
-        <p className="text-sm text-slate-600">{t.passengersHint}</p>
+        <div>
+          <div className="text-base font-bold text-slate-900">{t.passengersTitle}</div>
+          <p className="text-sm text-slate-600">{t.passengersHint}</p>
+        </div>
 
-        {passengerNames.map((name, idx) => (
-          <label key={idx} className="space-y-1 text-sm font-medium text-slate-800">
-
-            <FormInput
-              type="text"
-              placeholder={t.passengerPlaceholder}
-              required
-              value={name}
-              onChange={(e) => {
-                const arr = [...passengerNames];
-                arr[idx] = e.target.value;
-                setPassengerNames(arr);
-              }}
-              className="w-full rounded-lg border border-slate-200 bg-white/90 px-3 py-2 text-base shadow-none focus:border-sky-500 focus:ring-2 focus:ring-sky-200 sm:shadow-sm"
-            />
-          </label>
-        ))}
+        {passengerNames.map((name, idx) => {
+          const isChild = idx >= seatCount - discountCount;
+          const highlighted = highlightNameIndex === idx && !name.trim();
+          const seatsInfo = [selectedOutboundSeats[idx], selectedReturnTour ? selectedReturnSeats[idx] : undefined]
+            .filter(Boolean)
+            .join(" / ");
+          const seatsLabel = seatsInfo ? t.seatLabel(seatsInfo) : "";
+          return (
+            <div key={idx} className="space-y-1">
+              <label
+                htmlFor={`passenger-name-${idx}`}
+                className="flex items-center justify-between gap-2 text-xs font-semibold text-slate-700"
+              >
+                <span>
+                  {t.passengerLabel(idx + 1)} · {isChild ? t.passengerKindChild : t.passengerKindAdult}
+                </span>
+                {seatsLabel ? <span className="font-normal text-slate-600">{seatsLabel}</span> : null}
+              </label>
+              <FormInput
+                id={`passenger-name-${idx}`}
+                type="text"
+                autoComplete={idx === 0 ? "name" : "off"}
+                placeholder={t.passengerPlaceholder}
+                required
+                value={name}
+                aria-invalid={highlighted || undefined}
+                onChange={(e) => {
+                  const arr = [...passengerNames];
+                  arr[idx] = e.target.value;
+                  setPassengerNames(arr);
+                }}
+                className={`h-12 w-full rounded-xl bg-white px-3 text-base hover:bg-white focus:outline-none focus:ring-2 focus:ring-sky-200 ${
+                  highlighted ? "border-2 border-amber-500" : "border border-slate-300 focus:border-sky-500"
+                }`}
+              />
+            </div>
+          );
+        })}
       </form>
-
-      <div className="flex flex-col gap-2">
-        <button
-          type="button"
-          aria-disabled={!readyForNext}
-          onClick={() => {
-            if (readyForNext) {
-              setErrorMessage(null);
-              onReadyForContacts?.();
-              return;
-            }
-
-            if (!outboundComplete || !returnComplete) {
-              setErrorMessage(t.errorSelectSeat);
-              return;
-            }
-
-            if (!namesFilled) {
-              setErrorMessage(t.errorFillName);
-            }
-          }}
-          className={`rounded-xl px-6 py-3 text-white shadow transition ${
-            readyForNext
-              ? "bg-sky-600 hover:bg-sky-700"
-              : "cursor-not-allowed bg-slate-300 text-slate-600"
-          }`}
-        >
-          {t.next}
-        </button>
-
-        {errorMessage && (
-          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
-            {errorMessage}
-          </div>
-        )}
-      </div>
     </div>
   );
 }

@@ -46,9 +46,10 @@ const extractDigits = (value: string) => value.replace(/\D/g, "");
 const formatLocalNumber = (value: string) => {
   const digits = extractDigits(value).slice(0, 10);
 
-  if (digits.length <= 3) return digits;
-  if (digits.length <= 6) return `${digits.slice(0, 3)} ${digits.slice(3)}`.trim();
-  return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`.trim();
+  // «50 123 45 67» — как номер пишут в Украине и Болгарии
+  return [digits.slice(0, 2), digits.slice(2, 5), digits.slice(5, 7), digits.slice(7)]
+    .filter(Boolean)
+    .join(" ");
 };
 
 const normalizeDialCode = (value: string) => {
@@ -57,10 +58,10 @@ const normalizeDialCode = (value: string) => {
   return digitsOnly.startsWith("+") ? digitsOnly : `+${digitsOnly.replace(/^\+/, "")}`;
 };
 
-const parsePhoneValue = (value: string) => {
+const parsePhoneValue = (value: string, defaultDialCode = "+") => {
   const trimmed = value.trim();
   if (!trimmed) {
-    return { dialCode: "+", local: "" };
+    return { dialCode: defaultDialCode, local: "" };
   }
 
   const matchingCountry = COUNTRIES.reduce<Country | null>((best, country) => {
@@ -95,6 +96,10 @@ type Props = {
   placeholder?: string;
   required?: boolean;
   className?: string;
+  // код страны, пока номер пуст (по языку сайта: RU/UA → +380, BG → +359)
+  defaultDialCode?: string;
+  invalid?: boolean;
+  describedBy?: string;
 };
 
 export default function PhoneInput({
@@ -104,8 +109,11 @@ export default function PhoneInput({
   placeholder,
   required,
   className = "",
+  defaultDialCode = "+",
+  invalid = false,
+  describedBy,
 }: Props) {
-  const parsed = useMemo(() => parsePhoneValue(value), [value]);
+  const parsed = useMemo(() => parsePhoneValue(value, defaultDialCode), [value, defaultDialCode]);
   const [dialCode, setDialCode] = useState(parsed.dialCode);
   const [localNumber, setLocalNumber] = useState(parsed.local);
   const [isOpen, setIsOpen] = useState(false);
@@ -160,7 +168,7 @@ export default function PhoneInput({
 
   return (
     <div
-      className={`flex h-12 w-full min-w-0 items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-2 shadow-inner sm:gap-2 ${className}`}
+      className={`flex h-12 w-full min-w-0 items-center gap-2 ${className}`}
     >
       <div className="relative flex items-center">
         <div className="relative">
@@ -172,7 +180,8 @@ export default function PhoneInput({
             onBlur={() => setTimeout(() => setIsOpen(false), 100)}
             maxLength={5}
             inputMode="tel"
-            className="w-24 truncate rounded-l-full rounded-r-none border-r border-slate-200 bg-slate-50/80 px-3 py-2.5 pr-8 text-base font-semibold text-slate-900 shadow-inner ring-1 ring-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-200 sm:w-24 md:w-28"
+            className="h-12 w-[6.5rem] truncate rounded-xl border border-slate-300 bg-white px-3 pr-7 text-base font-bold text-slate-900 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200"
+            aria-label="Код страны"
             aria-expanded={isOpen}
             aria-haspopup="listbox"
           />
@@ -216,7 +225,13 @@ export default function PhoneInput({
         placeholder={placeholder}
         inputMode="numeric"
         maxLength={14}
-        className="flex-1 min-w-0 rounded-l-none rounded-r-full bg-white px-4 py-2.5 text-base text-slate-900 placeholder:text-slate-400 shadow-inner ring-1 ring-transparent focus:outline-none focus:ring-2 focus:ring-emerald-200"
+        aria-invalid={invalid || undefined}
+        aria-describedby={describedBy}
+        className={`h-12 min-w-0 flex-1 rounded-xl bg-white px-3 text-base text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 ${
+          invalid
+            ? "border-2 border-red-600 focus:ring-red-200"
+            : "border border-slate-300 focus:border-sky-500 focus:ring-sky-200"
+        }`}
       />
     </div>
   );

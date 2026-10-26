@@ -1,12 +1,14 @@
 import React from "react";
 
 import BookingPanel from "../BookingPanel";
-import type { Dict, Step, Tour } from "../types";
+import type { Dict, Lang, Step, Tour } from "../types";
 
 export type StepTwoProps = {
   renderStepHeader: (stepNumber: Step, title: string, summary: string) => React.ReactNode;
   t: Dict;
+  lang: Lang;
   safeSeatCount: number;
+  safeDiscountCount: number;
   fromId: number;
   toId: number;
   fromName: string;
@@ -23,14 +25,16 @@ export type StepTwoProps = {
   setExtraBaggageOutbound: React.Dispatch<React.SetStateAction<boolean[]>>;
   extraBaggageReturn: boolean[];
   setExtraBaggageReturn: React.Dispatch<React.SetStateAction<boolean[]>>;
-  handleReadyForContacts: () => void;
+  highlightNameIndex: number | null;
   step2Summary: string;
 };
 
 export default function StepTwo({
   renderStepHeader,
   t,
+  lang,
   safeSeatCount,
+  safeDiscountCount,
   fromId,
   toId,
   fromName,
@@ -47,17 +51,19 @@ export default function StepTwo({
   setExtraBaggageOutbound,
   extraBaggageReturn,
   setExtraBaggageReturn,
-  handleReadyForContacts,
+  highlightNameIndex,
   step2Summary,
 }: StepTwoProps) {
   return (
     <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
       {renderStepHeader(2, t.step2Title, step2Summary)}
-      <div className="rounded-none border-0 bg-transparent p-0 sm:rounded-xl sm:border sm:border-slate-100 sm:bg-white sm:p-3">
+      <div>
         {selectedOutboundTour ? (
           <BookingPanel
             t={t}
+            lang={lang}
             seatCount={safeSeatCount}
+            discountCount={safeDiscountCount}
             fromId={fromId}
             toId={toId}
             fromName={fromName}
@@ -74,7 +80,7 @@ export default function StepTwo({
             setExtraBaggageOutbound={setExtraBaggageOutbound}
             extraBaggageReturn={extraBaggageReturn}
             setExtraBaggageReturn={setExtraBaggageReturn}
-            onReadyForContacts={handleReadyForContacts}
+            highlightNameIndex={highlightNameIndex}
           />
         ) : (
           <p className="text-sm text-slate-600">{t.outboundShort} {t.outboundNotSelected}</p>

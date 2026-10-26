@@ -20,13 +20,20 @@ const MONTHS: Record<Lang, string[]> = {
   ru: ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"],
   bg: ["Януари","Февруари","Март","Април","Май","Юни","Юли","Август","Септември","Октомври","Ноември","Декември"],
   en: ["January","February","March","April","May","June","July","August","September","October","November","December"],
-  ua: ["Січень","Лютий","Березень","Квітень","Травень","Червень","Липень","Серпень","Жовтень","Листопад","Грудень"],
+  ua: ["Січень","Лютий","Березень","Квітень","Травень","Червень","Липень","Серпень","Вересень","Жовтень","Листопад","Грудень"],
 };
 const WEEKDAYS: Record<Lang, string[]> = {
   ru: ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"],
   bg: ["Пн","Вт","Ср","Чт","Пт","Сб","Нд"],
   en: ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],
   ua: ["Пн","Вт","Ср","Чт","Пт","Сб","Нд"],
+};
+
+const LEGEND: Record<Lang, { trip: string; selected: string }> = {
+  ru: { trip: "есть рейс", selected: "выбрано" },
+  bg: { trip: "има курс", selected: "избрано" },
+  en: { trip: "trip available", selected: "selected" },
+  ua: { trip: "є рейс", selected: "обрано" },
 };
 
 const toISO = (y:number,m:number,d:number)=> new Date(Date.UTC(y,m,d)).toISOString().slice(0,10);
@@ -45,18 +52,22 @@ export default function Calendar({
   accentHex = "#0E63F4", // синий
   allowAllFutureDates = false,
 }: Props) {
-  const initialISO = selectedDate || activeDates[0] || todayISO();
+  // Открываем месяц выбранной даты, иначе — первого доступного дня не раньше minDate
+  // (календарь «Обратно» сразу на месяце отправления, а не на текущем).
+  const anchorISO =
+    selectedDate || activeDates.find((iso) => !minDate || iso >= minDate) || minDate;
+  const initialISO = anchorISO || todayISO();
   const init = new Date(initialISO + "T00:00:00Z");
   const [year,setYear]   = useState(init.getUTCFullYear());
   const [month,setMonth] = useState(init.getUTCMonth());
 
   useEffect(()=> {
-    const src = selectedDate || activeDates[0];
+    const src = anchorISO;
     if (!src) return;
     const d = new Date(src + "T00:00:00Z");
     setYear(d.getUTCFullYear());
     setMonth(d.getUTCMonth());
-  },[selectedDate,activeDates]);
+  },[anchorISO]);
 
   const minISO = minDate || todayISO();
   const today  = todayISO();
@@ -101,13 +112,13 @@ export default function Calendar({
   }
 
   return (
-    <div className={`w-[320px] rounded-2xl border border-gray-200 bg-white shadow-xl ${className}`}>
+    <div className={`w-full max-w-[360px] rounded-2xl bg-white ${className}`}>
       <div className="flex items-center justify-between px-4 py-3">
-        <button onClick={()=>{ setMonth(m=> m===0?11:m-1); if(month===0) setYear(y=>y-1); }} className="rounded-lg p-2 hover:bg-gray-100">
+        <button type="button" aria-label="‹" onClick={()=>{ setMonth(m=> m===0?11:m-1); if(month===0) setYear(y=>y-1); }} className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 hover:bg-gray-100">
           <ChevronLeft className="h-5 w-5 text-gray-700"/>
         </button>
         <div className="text-sm font-semibold text-gray-800">{MONTHS[lang][month]} {year}</div>
-        <button onClick={()=>{ setMonth(m=> m===11?0:m+1); if(month===11) setYear(y=>y+1); }} className="rounded-lg p-2 hover:bg-gray-100">
+        <button type="button" aria-label="›" onClick={()=>{ setMonth(m=> m===11?0:m+1); if(month===11) setYear(y=>y+1); }} className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 hover:bg-gray-100">
           <ChevronRight className="h-5 w-5 text-gray-700"/>
         </button>
       </div>
@@ -116,36 +127,44 @@ export default function Calendar({
         {WEEKDAYS[lang].map(w=> <div key={w} className="py-1">{w}</div>)}
       </div>
 
-      <div className="grid grid-cols-7 gap-1 px-3 pb-4">
+      <div className="grid grid-cols-7 gap-1 px-3 pb-3">
         {cells.map(c=>{
           const base = "relative h-10 rounded-xl flex items-center justify-center text-sm";
-          const ringToday = c.isToday ? " ring-1 ring-blue-300" : "";
-          let cls = "bg-white text-gray-800 hover:bg-blue-50 cursor-pointer";
-          if (!c.inMonth) cls = "bg-white text-gray-300";
-          if (!c.selectable) cls = c.inMonth ? "bg-gray-50 text-gray-400 cursor-not-allowed" : "bg-white text-gray-300 cursor-not-allowed";
-          if (c.selected) cls = "text-white shadow-md";
+          const ringToday = c.isToday && !c.selected ? " underline decoration-2 underline-offset-4" : "";
+          let cls: string;
+          if (c.selected) cls = "font-bold text-white shadow-md";
+          else if (c.selectable && c.isActive) cls = "border border-[#93b8e6] bg-[#e3eefb] font-bold text-slate-900 hover:bg-[#cfe1f7] cursor-pointer";
+          else if (c.selectable) cls = "bg-white text-slate-800 hover:bg-blue-50 cursor-pointer";
+          else cls = c.inMonth ? "text-slate-400 cursor-not-allowed" : "text-slate-300 cursor-not-allowed";
           return (
             <button
               key={c.iso}
               type="button"
               disabled={!c.selectable}
               onClick={()=> c.selectable && onSelect?.(c.iso)}
-              className={`${base} ${ringToday} ${cls}`}
+              className={`${base}${ringToday} ${cls}`}
               style={c.selected ? { backgroundColor: accentHex } : undefined}
               aria-label={c.iso}
               aria-pressed={c.selected}
             >
               {c.day}
-              {c.isActive && !c.selected && (
-                <span
-                  className="absolute bottom-1 h-1.5 w-1.5 rounded-full"
-                  style={{ backgroundColor: accentHex }}
-                />
-              )}
             </button>
           );
         })}
       </div>
+
+      {!allowAllFutureDates && (
+        <div className="flex gap-4 px-4 pb-3 text-xs text-slate-600">
+          <span className="inline-flex items-center gap-1.5">
+            <span aria-hidden className="inline-block h-3 w-3 rounded border border-[#93b8e6] bg-[#e3eefb]" />
+            {LEGEND[lang].trip}
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span aria-hidden className="inline-block h-3 w-3 rounded" style={{ backgroundColor: accentHex }} />
+            {LEGEND[lang].selected}
+          </span>
+        </div>
+      )}
     </div>
   );
 }

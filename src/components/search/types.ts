@@ -1,3 +1,5 @@
+import type { FlowDict } from "./flowDictionary";
+
 export type Lang = "ru" | "bg" | "en" | "ua";
 
 export type Tour = {
@@ -12,7 +14,7 @@ export type Tour = {
 
 export type Step = 1 | 2 | 3;
 
-export type Dict = {
+export type Dict = FlowDict & {
   noResults: string;
   outbound: string;
   inbound: string;

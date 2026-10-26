@@ -1,83 +1,119 @@
 import React from "react";
-import type { Lang, Tour } from "./types";
-import { formatDate } from "@/utils/date";
+import type { Dict, Lang, Tour } from "./types";
 import TripCard from "../TripCard";
+import {
+  arrivalWeekday,
+  formatDayShort,
+  formatDuration,
+  formatUah,
+  shortTime,
+  tripDuration,
+} from "@/utils/tripFormat";
 
 type TripListProps = {
   title: string;
+  heading: string; // «Туда» / «Обратно»
   tours: Tour[];
   selectedId?: number;
   onSelect: (tour: Tour) => void;
+  onChange?: () => void;
   fromName: string;
   toName: string;
   lang: Lang;
   seatCount: number;
   discountCount: number;
-  t: {
-    chosen: string;
-    adults: string;
-    discounted: string;
-  };
+  // обратный рейс при покупке туда-обратно: цена сразу со скидкой −10%
+  isReturn?: boolean;
+  t: Dict;
+};
+
+const CHILD_DISCOUNT = 0.05;
+export const RETURN_DISCOUNT = 0.1;
+
+export const freeSeatsOf = (tour: Tour) =>
+  typeof tour.seats === "number" ? tour.seats : tour.seats?.free ?? 0;
+
+/** Стоимость рейса на всех пассажиров (детский тариф — как раньше, −5%). */
+export const tourTotal = (tour: Tour, seatCount: number, discountCount: number) => {
+  const adults = Math.max(0, seatCount - discountCount);
+  return adults * tour.price + discountCount * tour.price * (1 - CHILD_DISCOUNT);
 };
 
 export default function TripList({
   title,
+  heading,
   tours,
   selectedId,
   onSelect,
+  onChange,
   fromName,
   toName,
   lang,
   seatCount,
   discountCount,
+  isReturn = false,
   t,
 }: TripListProps) {
-  const DISCOUNT = 0.05;
+  const selectedTour = tours.find((tour) => tour.id === selectedId) ?? null;
+  const visibleTours = selectedTour ? [selectedTour] : tours;
+  const otherTours = selectedTour ? tours.filter((tour) => tour.id !== selectedTour.id) : [];
+
+  const renderCard = (tour: Tour) => {
+    const duration = tripDuration(tour.departure_time, tour.arrival_time);
+    const arriveDay = duration?.dayShift
+      ? arrivalWeekday(tour.date, tour.departure_time, tour.arrival_time, lang)
+      : "";
+    const total = tourTotal(tour, seatCount, discountCount);
+    const discounted = isReturn ? total * (1 - RETURN_DISCOUNT) : total;
+    const free = freeSeatsOf(tour);
+    const breakdown =
+      !isReturn && seatCount > 1 && discountCount === 0
+        ? `${seatCount} × ${formatUah(tour.price).replace(" ₴", "")} =`
+        : undefined;
+
+    return (
+      <TripCard
+        key={tour.id}
+        heading={`${heading} · ${formatDayShort(tour.date, lang)}`}
+        fromStop={fromName}
+        toStop={toName}
+        departTime={shortTime(tour.departure_time)}
+        arriveTime={shortTime(tour.arrival_time)}
+        arriveDay={arriveDay}
+        durationText={duration ? `~${formatDuration(duration.minutes, lang)}` : undefined}
+        freeSeatsText={free > 0 ? t.freeSeats(free) : undefined}
+        priceBreakdown={breakdown}
+        priceText={formatUah(discounted)}
+        oldPriceText={isReturn ? formatUah(total).replace(" ₴", "") : undefined}
+        discountBadge={isReturn ? "−10%" : undefined}
+        onSelect={() => onSelect(tour)}
+        selected={tour.id === selectedId}
+        chosenLabel={t.chosen}
+        changeLabel={t.change}
+        onChange={onChange}
+      />
+    );
+  };
 
   return (
-    <>
-      <h3 className="mb-1 text-base font-semibold text-slate-900">{title}</h3>
-      <div className="flex flex-col gap-3">
-        {tours.map((tour) => {
-          const isChosen = selectedId === tour.id;
-
-          const dep = new Date(`${tour.date}T${tour.departure_time}`);
-          const arr = new Date(`${tour.date}T${tour.arrival_time}`);
-          if (arr.getTime() < dep.getTime()) {
-            arr.setDate(arr.getDate() + 1);
-          }
-
-          const dateStr = formatDate(dep);
-          const depTime = dep.toLocaleTimeString(lang, {
-            hour: "2-digit",
-            minute: "2-digit",
-          });
-          const arrTime = arr.toLocaleTimeString(lang, {
-            hour: "2-digit",
-            minute: "2-digit",
-          });
-
-          const adults = Math.max(0, seatCount - discountCount);
-          const adultSum = adults * tour.price;
-          const discSum = discountCount * tour.price * (1 - DISCOUNT);
-          const total = adultSum + discSum;
-
-          return (
-            <TripCard
+    <div className="space-y-2">
+      <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
+      <div className="flex flex-col gap-2">{visibleTours.map(renderCard)}</div>
+      {otherTours.length > 0 ? (
+        <div className="flex flex-wrap items-center gap-1.5 text-sm">
+          <span className="text-slate-600">{t.otherDates}:</span>
+          {otherTours.map((tour) => (
+            <button
               key={tour.id}
-              dateText={dateStr}
-              fromStop={fromName}
-              toStop={toName}
-              departTime={depTime}
-              arriveTime={arrTime}
-              total={total}
-              onSelect={() => onSelect(tour)}
-              selected={isChosen}
-              chosenLabel={t.chosen}
-            />
-          );
-        })}
-      </div>
-    </>
+              type="button"
+              onClick={() => onSelect(tour)}
+              className="min-h-[36px] rounded-lg border border-slate-200 bg-white px-2.5 text-sm font-semibold text-[#0a65b0] hover:border-[#93b8e6]"
+            >
+              {formatDayShort(tour.date, lang)} {shortTime(tour.departure_time)}
+            </button>
+          ))}
+        </div>
+      ) : null}
+    </div>
   );
 }

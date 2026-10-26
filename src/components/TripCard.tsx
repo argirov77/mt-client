@@ -1,70 +1,118 @@
-import { ChevronRight } from "lucide-react";
+import { Check } from "lucide-react";
 
 export type TripCardProps = {
-  dateText: string; // "28.08.2025"
-  fromStop: string; // "Stop1"
-  toStop: string; // "Stop3"
-  departTime: string; // "10:10"
-  arriveTime: string; // "13:10"
-  total: number; // 85.80
+  heading: string; // «Туда · ср, 28 окт»
+  fromStop: string;
+  toStop: string;
+  departTime: string; // «13:40»
+  arriveTime: string; // «05:20»
+  arriveDay?: string; // «чт», если прибытие на следующие сутки
+  durationText?: string; // «~15 ч 40 мин»
+  freeSeatsText?: string; // «Свободно мест: 13»
+  priceBreakdown?: string; // «2 × 2500 =»
+  priceText: string; // «5000 ₴»
+  oldPriceText?: string; // зачёркнутая цена без скидки
+  discountBadge?: string; // «−10%»
   onSelect?: () => void;
   selected?: boolean;
   chosenLabel?: string;
+  changeLabel?: string;
+  onChange?: () => void;
 };
 
 export default function TripCard({
-  dateText,
+  heading,
   fromStop,
   toStop,
   departTime,
   arriveTime,
-  total,
+  arriveDay,
+  durationText,
+  freeSeatsText,
+  priceBreakdown,
+  priceText,
+  oldPriceText,
+  discountBadge,
   onSelect,
   selected = false,
   chosenLabel = "Выбрано",
+  changeLabel,
+  onChange,
 }: TripCardProps) {
+  const body = (
+    <>
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs font-bold uppercase tracking-wide text-[#0a65b0]">{heading}</span>
+        {selected ? (
+          <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700">
+            <Check className="h-3.5 w-3.5" aria-hidden />
+            {chosenLabel}
+          </span>
+        ) : null}
+      </div>
+
+      <div className="mt-2 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
+        <span className="flex flex-col">
+          <b className="text-xl font-bold tabular-nums text-slate-900">{departTime}</b>
+          <span className="text-xs text-slate-600">{fromStop}</span>
+        </span>
+        <span className="flex flex-col items-center gap-0.5">
+          {durationText ? <span className="text-[11px] text-slate-600">{durationText}</span> : null}
+          <span aria-hidden className="w-full border-t-2 border-dotted border-slate-400" />
+        </span>
+        <span className="flex flex-col items-end text-right">
+          <b className="text-xl font-bold tabular-nums text-slate-900">{arriveTime}</b>
+          <span className="text-xs text-slate-600">
+            {toStop}
+            {arriveDay ? `, ${arriveDay}` : ""}
+          </span>
+        </span>
+      </div>
+
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-sm">
+        {freeSeatsText ? (
+          <span className="font-semibold text-emerald-700">{freeSeatsText}</span>
+        ) : (
+          <span />
+        )}
+        <span className="flex items-center gap-1.5 text-slate-900">
+          {priceBreakdown ? <span className="text-slate-600">{priceBreakdown}</span> : null}
+          {oldPriceText ? <s className="text-slate-500">{oldPriceText}</s> : null}
+          <b className="text-base">{priceText}</b>
+          {discountBadge ? (
+            <span className="rounded-md bg-emerald-50 px-1.5 py-0.5 text-[11px] font-bold text-emerald-700">
+              {discountBadge}
+            </span>
+          ) : null}
+        </span>
+      </div>
+    </>
+  );
+
+  if (selected) {
+    return (
+      <div className="rounded-2xl border-2 border-emerald-600 bg-white p-3 sm:p-4">
+        {body}
+        {onChange && changeLabel ? (
+          <button
+            type="button"
+            onClick={onChange}
+            className="mt-2 min-h-[44px] text-sm font-semibold text-[#0a65b0] underline-offset-2 hover:underline"
+          >
+            {changeLabel}
+          </button>
+        ) : null}
+      </div>
+    );
+  }
+
   return (
-    <div
-      className={`group flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-none transition duration-200 hover:border-orange-100 md:shadow-sm md:hover:shadow-md md:flex-row md:items-center md:justify-between md:gap-6 md:p-5 ${
-        selected ? "border-orange-200 ring-2 ring-orange-200" : ""
-      }`}
-      role="button"
+    <button
+      type="button"
       onClick={onSelect}
+      className="w-full rounded-2xl border border-slate-200 bg-white p-3 text-left transition hover:border-[#93b8e6] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 sm:p-4"
     >
-      <div className="flex flex-1 flex-col gap-3 md:gap-2">
-        <div className="flex justify-start text-sm font-semibold text-slate-900 md:text-base">
-          <span className="shrink-0 text-sm font-semibold text-slate-700 md:text-base">{dateText}</span>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div className="flex flex-col gap-0.5">
-            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">{fromStop}</span>
-            <span className="text-xl font-bold text-slate-900">{departTime}</span>
-          </div>
-
-          <div className="flex flex-col gap-0.5 items-end text-right">
-            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">{toStop}</span>
-            <span className="text-xl font-bold text-slate-900">{arriveTime}</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-1 flex w-full items-center justify-end gap-3 md:mt-0 md:ml-6 md:w-auto md:flex-col md:items-end md:justify-center">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onSelect?.();
-          }}
-          className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-md transition focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-1 ${
-            selected
-              ? "bg-emerald-600 hover:bg-emerald-700"
-              : "bg-orange-500 hover:bg-orange-600"
-          }`}
-        >
-          {selected ? chosenLabel : `${total.toFixed(2)} ₴`}
-          <ChevronRight className="h-4 w-4" />
-        </button>
-      </div>
-    </div>
+      {body}
+    </button>
   );
 }

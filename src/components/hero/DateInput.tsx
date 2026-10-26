@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { formatDate } from "@/utils/date";
+import { formatDayShort } from "@/utils/tripFormat";
 
 type Props = {
   value: string;
@@ -13,6 +13,7 @@ type Props = {
   lang?: "ru" | "bg" | "en" | "ua";
   onOpen?: () => void;            // если календарь внешне открывается
   displayText?: string;          // переопределяет показываемое значение (напр. «Открытая дата»)
+  placeholder?: string;          // текст, пока дата не выбрана (напр. «не нужно»)
 };
 
 export default function DateInput({
@@ -22,12 +23,13 @@ export default function DateInput({
   disabled,
   className = "",
   label,
-  lang = "ru", // eslint-disable-line @typescript-eslint/no-unused-vars
+  lang = "ru",
   onOpen,
   displayText,
+  placeholder = "— — —",
 }: Props) {
-  // отображаемое значение (если пусто — покажем "— — —")
-  const human = displayText ?? (value ? formatDate(value) : "— — —");
+  // дата словами: «ср, 28 окт» вместо «28/10/2026»
+  const human = displayText ?? (value ? formatDayShort(value, lang) : placeholder);
 
   return (
     <button
@@ -61,7 +63,7 @@ export default function DateInput({
         {label && (
           <span className="text-[11px] text-slate-500">{label}</span>
         )}
-        <span className="truncate text-slate-800">{human}</span>
+        <span className={`truncate font-semibold ${value || displayText ? "text-slate-900" : "text-slate-400"}`}>{human}</span>
       </span>
     </button>
   );

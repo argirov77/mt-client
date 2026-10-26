@@ -5,9 +5,12 @@ import PhoneInput from "../common/PhoneInput";
 import { useLockBodyScroll } from "@/utils/useLockBodyScroll";
 import { useModalVisibility } from "@/utils/useModalVisibility";
 
-import type { ElectronicTicketData } from "@/types/ticket";
-
 type Dict = {
+  total: string;
+  phoneHint: string;
+  emailHint: string;
+  baggageIncludedShort: string;
+  addBaggageShort: string;
   book: string;
   buy: string;
   pay: string;
@@ -61,13 +64,11 @@ type Props = {
   setExtraBaggageOutbound: Dispatch<SetStateAction<boolean[]>>;
   extraBaggageReturn: boolean[];
   setExtraBaggageReturn: Dispatch<SetStateAction<boolean[]>>;
-  purchaseId: number | null;
-  ticket: ElectronicTicketData | null;
-  publicOfferUrl: string;
-  handleAction: (action: "book" | "purchase") => void;
-  handlePay: () => void;
-  canPay: boolean;
-  onDownloadTicket?: (ticketNumber: string) => void;
+  defaultDialCode: string;
+  phoneError?: string | null;
+  emailError?: string | null;
+  totalText?: string;
+  totalNote?: string;
 };
 
 export default function ContactsAndPaymentStep({
@@ -85,13 +86,11 @@ export default function ContactsAndPaymentStep({
   setExtraBaggageOutbound,
   extraBaggageReturn,
   setExtraBaggageReturn,
-  purchaseId,
-  ticket,
-  publicOfferUrl,
-  handleAction,
-  handlePay,
-  canPay,
-  onDownloadTicket,
+  defaultDialCode,
+  phoneError,
+  emailError,
+  totalText,
+  totalNote,
 }: Props) {
   // purchase_click удалён (дубль begin_checkout без полезной нагрузки).
   // begin_checkout шлётся один раз при попадании на этот экран из SearchResults.
@@ -203,169 +202,94 @@ export default function ContactsAndPaymentStep({
     );
   };
 
+  const baggageCount =
+    extraBaggageOutbound.filter(Boolean).length + extraBaggageReturn.filter(Boolean).length;
+
+  const fieldLabel = "text-sm font-semibold text-slate-800";
+
   return (
-    <div className="space-y-5">
-      <div className="rounded-none border-0 bg-slate-50/70 p-3 shadow-none sm:rounded-2xl sm:border sm:border-slate-200 sm:bg-gradient-to-br sm:from-sky-50 sm:via-white sm:to-blue-50 sm:p-4 sm:shadow-sm">
-        <div className="flex items-start justify-between gap-3">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <div className={`${badgeTone} bg-sky-100 text-sky-800`}>{t.baggageIncludedTitle}</div>
-            </div>
-            <ul className="space-y-1 text-sm text-slate-700">
-              <li className="flex items-center gap-2">
-                <span className="text-emerald-600">●</span>
-                <span>{t.baggageIncludedCabin}</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="text-emerald-600">●</span>
-                <span>{t.baggageIncludedChecked}</span>
-              </li>
-            </ul>
-            <p className="text-xs text-slate-500">{t.baggageIncludedNote}</p>
-            <button
-              type="button"
-              onClick={() => setIsBaggageModalOpen(true)}
-              aria-haspopup="dialog"
-              className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-white px-3 py-1 text-xs font-semibold text-sky-700 shadow-sm transition hover:border-sky-300 hover:bg-sky-50"
-            >
-              {t.addExtraBaggage}
-            </button>
-          </div>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2.5">
+        <span className="text-sm text-slate-700">
+          {t.baggageIncludedShort}
+          {baggageCount > 0 ? ` · ${t.addedExtraBaggage}: ${baggageCount}` : ""}
+        </span>
+        <button
+          type="button"
+          onClick={() => setIsBaggageModalOpen(true)}
+          aria-haspopup="dialog"
+          className="min-h-[44px] shrink-0 whitespace-nowrap rounded-lg px-2 text-sm font-bold text-[#0a65b0] hover:bg-sky-50"
+        >
+          {t.addBaggageShort}
+          {baggagePriceByDirection.outbound ? (
+            <span className="block text-[11px] font-semibold text-slate-600">{baggagePriceByDirection.outbound}</span>
+          ) : null}
+        </button>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="min-w-0 space-y-1.5">
+          <label className={fieldLabel} htmlFor="contact-phone">
+            {t.contactsPhone}
+          </label>
+          <PhoneInput
+            id="contact-phone"
+            placeholder="50 123 4567"
+            value={phone}
+            onChange={setPhone}
+            required
+            defaultDialCode={defaultDialCode}
+            invalid={Boolean(phoneError)}
+            describedBy="contact-phone-note"
+            className="w-full"
+          />
+          <p
+            id="contact-phone-note"
+            className={`text-xs ${phoneError ? "font-semibold text-red-700" : "text-slate-600"}`}
+          >
+            {phoneError || t.phoneHint}
+          </p>
+        </div>
+
+        <div className="min-w-0 space-y-1.5">
+          <label className={fieldLabel} htmlFor="contact-email">
+            {t.contactsEmail}
+          </label>
+          <FormInput
+            id="contact-email"
+            type="email"
+            autoComplete="email"
+            inputMode="email"
+            placeholder="name@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            aria-invalid={Boolean(emailError) || undefined}
+            aria-describedby="contact-email-note"
+            className={`h-12 w-full rounded-xl bg-white px-3 text-base text-slate-900 hover:bg-white focus:outline-none focus:ring-2 ${
+              emailError
+                ? "border-2 border-red-600 focus:ring-red-200"
+                : "border border-slate-300 focus:border-sky-500 focus:ring-sky-200"
+            }`}
+          />
+          <p
+            id="contact-email-note"
+            className={`text-xs ${emailError ? "font-semibold text-red-700" : "text-slate-600"}`}
+          >
+            {emailError || t.emailHint}
+          </p>
         </div>
       </div>
 
-      <div className="rounded-none border-0 bg-transparent p-0 shadow-none sm:rounded-2xl sm:border sm:border-slate-200 sm:bg-white sm:p-4 sm:shadow-sm">
-        <h3 className="text-base font-semibold text-slate-900">{t.contactsAndPayment}</h3>
-        <p className="text-sm text-slate-600">{t.contactsDescription}</p>
-
-        <div className="mt-4 grid gap-4 md:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
-          <div className="w-full min-w-0 space-y-3 rounded-xl border border-slate-200 bg-white/80 p-3 shadow-none sm:rounded-2xl sm:border sm:border-slate-100 sm:bg-gradient-to-br sm:from-white sm:via-sky-50 sm:to-blue-50/60 sm:p-4 sm:shadow-inner">
-            <label
-              className="flex items-center gap-2 text-sm font-semibold text-slate-800"
-              htmlFor="contact-phone"
-            >
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-sky-700 shadow-sm ring-1 ring-slate-100">
-                <svg
-                  aria-hidden
-                  viewBox="0 0 24 24"
-                  className="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M6.5 3.75h1.25c.35 0 .64.26.7.6l.6 3.52a.7.7 0 01-.41.75l-1.1.48c.86 2.22 2.57 3.94 4.79 4.79l.48-1.1a.7.7 0 01.75-.41l3.52.6c.34.06.6.35.6.7V18c0 .69-.56 1.25-1.25 1.25H17A12.25 12.25 0 014.75 7V4.99c0-.68.56-1.24 1.25-1.24z"
-                  />
-                </svg>
-              </span>
-              <span>{t.contactsPhone}</span>
-            </label>
-            <div className="rounded-xl border border-slate-200 bg-white p-2 shadow-none sm:rounded-2xl sm:border-slate-100 sm:bg-white/80 sm:shadow-sm">
-              <PhoneInput
-                id="contact-phone"
-                placeholder={t.contactsPhone}
-                value={phone}
-                onChange={setPhone}
-                required
-                className="w-full"
-              />
-            </div>
+      {totalText ? (
+        <div className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 lg:hidden">
+          <div className="flex items-baseline justify-between">
+            <b className="text-sm text-slate-900">{t.total}</b>
+            <b className="text-base text-slate-900">{totalText}</b>
           </div>
-
-          <div className="w-full min-w-0 space-y-3 rounded-xl border border-slate-200 bg-white/80 p-3 shadow-none sm:rounded-2xl sm:border sm:border-slate-100 sm:bg-gradient-to-br sm:from-white sm:via-slate-50 sm:to-sky-50/70 sm:p-4 sm:shadow-inner">
-            <label
-              className="flex items-center gap-2 text-sm font-semibold text-slate-800"
-              htmlFor="contact-email"
-            >
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-emerald-700 shadow-sm ring-1 ring-slate-100">
-                <svg
-                  aria-hidden
-                  viewBox="0 0 24 24"
-                  className="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M4.75 6.5h14.5a.75.75 0 01.75.75v9.5a.75.75 0 01-.75.75H4.75A.75.75 0 014 16.75v-9.5a.75.75 0 01.75-.75z"
-                  />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 7l7 5 7-5" />
-                </svg>
-              </span>
-              <span>{t.contactsEmail}</span>
-            </label>
-            <div className="rounded-xl border border-slate-200 bg-white p-2 shadow-none sm:rounded-2xl sm:border-slate-100 sm:bg-white/80 sm:shadow-sm">
-              <FormInput
-                id="contact-email"
-                type="email"
-                placeholder="name@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-base text-slate-900 shadow-none focus:border-emerald-200 focus:bg-white sm:rounded-full sm:bg-gradient-to-r sm:from-white sm:to-slate-50/80 sm:shadow-inner"
-              />
-            </div>
-          </div>
+          {totalNote ? <p className="text-xs text-slate-700">{totalNote}</p> : null}
         </div>
-      </div>
-
-      <div className="flex flex-wrap gap-3">
-        <button
-          type="button"
-          onClick={() => {
-            handleAction("book");
-          }}
-          className="rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-800 shadow-sm transition hover:-translate-y-px hover:border-slate-300 hover:shadow"
-        >
-          {t.book}
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            handleAction("purchase");
-          }}
-          className="rounded-full bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow hover:bg-emerald-700"
-        >
-          {t.buy}
-        </button>
-        {purchaseId && canPay && (
-          <button
-            type="button"
-            onClick={handlePay}
-            className="rounded-full border border-emerald-200 bg-emerald-50 px-6 py-3 text-sm font-semibold text-emerald-700 shadow-sm transition hover:-translate-y-px hover:border-emerald-300 hover:bg-emerald-100"
-          >
-            {t.pay}
-          </button>
-        )}
-        {ticket?.ticketNumber && onDownloadTicket && (
-          <button
-            type="button"
-            onClick={() => onDownloadTicket(ticket.ticketNumber)}
-            className="rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-800 shadow-sm transition hover:-translate-y-px hover:border-slate-300 hover:shadow"
-          >
-            {t.ticketDownload}
-          </button>
-        )}
-      </div>
-
-      {purchaseId && (
-        <p className="text-xs text-slate-500">
-          {t.publicOfferConsent}{" "}
-          <a
-            href={publicOfferUrl}
-            className="font-semibold text-slate-700 underline decoration-dotted underline-offset-2 hover:text-slate-900"
-            target="_blank"
-            rel="noreferrer"
-          >
-            {t.publicOfferLink}
-          </a>
-          .
-        </p>
-      )}
+      ) : null}
 
       {baggageModal.shouldRender ? (
         <div

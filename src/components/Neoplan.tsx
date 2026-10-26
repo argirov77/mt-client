@@ -8,6 +8,8 @@ type Props = {
   selectedSeats?: number[];
   toggleSeat?: (seatNum: number) => void;
   interactive?: boolean;
+  seatLabels?: Record<number, number>;
+  compact?: boolean;
 };
 
 /**
@@ -25,7 +27,7 @@ type Props = {
  *  - "w"    -> стена / перегородка между рядами
  *  - "-"    -> пустая ячейка
  */
-const NEOPLAN_LAYOUT: CellCode[] = [
+export const NEOPLAN_LAYOUT: CellCode[] = [
   //   0    1    2    3    4
   "d", "0", "0", "0", "e", // водитель + вход
   "w", "w", "-", "w", "w", // перегородка
@@ -53,6 +55,8 @@ export default function Neoplan({
   selectedSeats = [],
   toggleSeat,
   interactive = false,
+  seatLabels,
+  compact,
 }: Props) {
   return (
     <BusLayout
@@ -61,6 +65,8 @@ export default function Neoplan({
       selectedSeats={selectedSeats}
       toggleSeat={toggleSeat}
       interactive={interactive}
+      seatLabels={seatLabels}
+      compact={compact}
     />
   );
 }

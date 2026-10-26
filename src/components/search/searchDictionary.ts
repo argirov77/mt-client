@@ -1,6 +1,7 @@
 import type { Dict, Lang } from "./types";
+import { flowDict, type FlowDict } from "./flowDictionary";
 
-const dict: Record<Lang, Dict> = {
+const baseDict: Record<Lang, Omit<Dict, keyof FlowDict>> = {
   // ... оставил без изменений, как у тебя ...
   ru: {
     noResults: "Рейсы не найдены",
@@ -84,7 +85,7 @@ const dict: Record<Lang, Dict> = {
     next: "Далее",
     subtotal: "Промежуточно",
     stepLabel: (step) => `Шаг ${step}`,
-    stepCounter: (current, total) => `Шаг ${current} / ${total}`,
+    stepCounter: (current, total) => `Шаг ${current} из ${total}`,
     changeOutbound: "Изменить рейсы",
     changeReturn: "Изменить обратно",
     outboundNotSelected: "не выбран",
@@ -104,7 +105,7 @@ const dict: Record<Lang, Dict> = {
     passengersTitle: "Пассажиры",
     passengersHint: "Укажите имя и фамилию как в документе.",
     passengerPlaceholder: "Имя Фамилия",
-    errorSelectSeat: "Выберите место для ОТ - ДО (туда или обратно)",
+    errorSelectSeat: "Выберите места для всех пассажиров",
     errorFillName: "Заполните Имя и фамилию пассажира",
     passengerLabel: (index) => `Пассажир ${index}`,
     extraBaggageHeading: "Дополнительный багаж",
@@ -206,7 +207,7 @@ const dict: Record<Lang, Dict> = {
     next: "Next",
     subtotal: "Subtotal",
     stepLabel: (step) => `Step ${step}`,
-    stepCounter: (current, total) => `Step ${current} / ${total}`,
+    stepCounter: (current, total) => `Step ${current} of ${total}`,
     changeOutbound: "Change outbound",
     changeReturn: "Change return",
     outboundNotSelected: "not selected",
@@ -329,7 +330,7 @@ const dict: Record<Lang, Dict> = {
     next: "Напред",
     subtotal: "Междинно",
     stepLabel: (step) => `Стъпка ${step}`,
-    stepCounter: (current, total) => `Стъпка ${current} / ${total}`,
+    stepCounter: (current, total) => `Стъпка ${current} от ${total}`,
     changeOutbound: "Промени курса натам",
     changeReturn: "Промени обратно",
     outboundNotSelected: "не е избран",
@@ -452,7 +453,7 @@ const dict: Record<Lang, Dict> = {
     next: "Далі",
     subtotal: "Проміжно",
     stepLabel: (step) => `Крок ${step}`,
-    stepCounter: (current, total) => `Крок ${current} / ${total}`,
+    stepCounter: (current, total) => `Крок ${current} з ${total}`,
     changeOutbound: "Змінити рейси",
     changeReturn: "Змінити назад",
     outboundNotSelected: "не обрано",
@@ -493,6 +494,13 @@ const dict: Record<Lang, Dict> = {
     openReturnSummaryLabel: "Назад (відкрита дата)",
     returnDiscountNote: "−10% на зворотний квиток при купівлі туди й назад",
   },
+};
+
+const dict: Record<Lang, Dict> = {
+  ru: { ...baseDict.ru, ...flowDict.ru },
+  en: { ...baseDict.en, ...flowDict.en },
+  bg: { ...baseDict.bg, ...flowDict.bg },
+  ua: { ...baseDict.ua, ...flowDict.ua },
 };
 
 export { dict };

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { User, Plus, Minus, HelpCircle } from "lucide-react";
+import { User, Plus, Minus } from "lucide-react";
 
 type PassengerValue = {
   adults: number;
@@ -25,6 +25,8 @@ const L = {
     discount: "Детский",
     tip: "Дети до 13.99",
     done: "Готово",
+    summary: (a: number, d: number) =>
+      [a ? `${a} ${plural(a, "взрослый", "взрослых", "взрослых")}` : "", d ? `${d} ${plural(d, "детский", "детских", "детских")}` : ""].filter(Boolean).join(", ") || "0",
   },
   en: {
     passengers: "Passengers",
@@ -32,6 +34,8 @@ const L = {
     discount: "Children",
     tip: "Children up to 13.99",
     done: "Done",
+    summary: (a: number, d: number) =>
+      [a ? `${a} ${a === 1 ? "adult" : "adults"}` : "", d ? `${d} ${d === 1 ? "child" : "children"}` : ""].filter(Boolean).join(", ") || "0",
   },
   bg: {
     passengers: "Пътници",
@@ -39,6 +43,8 @@ const L = {
     discount: "Детски",
     tip: "Деца до 13.99",
     done: "Готово",
+    summary: (a: number, d: number) =>
+      [a ? `${a} ${a === 1 ? "възрастен" : "възрастни"}` : "", d ? `${d} ${d === 1 ? "детски" : "детски"}` : ""].filter(Boolean).join(", ") || "0",
   },
   ua: {
     passengers: "Пасажири",
@@ -46,8 +52,18 @@ const L = {
     discount: "Дитячий",
     tip: "Діти до 13.99",
     done: "Готово",
+    summary: (a: number, d: number) =>
+      [a ? `${a} ${plural(a, "дорослий", "дорослих", "дорослих")}` : "", d ? `${d} ${plural(d, "дитячий", "дитячих", "дитячих")}` : ""].filter(Boolean).join(", ") || "0",
   },
 };
+
+function plural(n: number, one: string, few: string, many: string) {
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return one;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few;
+  return many;
+}
 
 export default function PassengersInput({
   value,
@@ -60,7 +76,6 @@ export default function PassengersInput({
 }: Props) {
   const t = L[lang];
   const [open, setOpen] = useState(false);
-  const [showDiscountTip, setShowDiscountTip] = useState(false);
   const [local, setLocal] = useState<PassengerValue>(value);
 
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -83,14 +98,12 @@ export default function PassengersInput({
         !btnRef.current.contains(e.target as Node)
       ) {
         setOpen(false);
-        setShowDiscountTip(false);
         onChange(local);
       }
     };
     const onEsc = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setOpen(false);
-        setShowDiscountTip(false);
         onChange(local);
       }
     };
@@ -125,7 +138,8 @@ export default function PassengersInput({
       const clampedLeft = Math.min(Math.max(centeredLeft, minLeft), maxLeft);
 
       setPopoverLeft(clampedLeft);
-      setPopoverTop(buttonRect.height + 8);
+      // открываем вверх: снизу кнопка «Поиск», её поповер закрывать не должен
+      setPopoverTop(-popRect.height - 8);
     };
 
     updatePosition();
@@ -171,8 +185,13 @@ export default function PassengersInput({
         aria-expanded={open}
         title={t.passengers}
       >
-        <User className="h-5 w-5 opacity-80" />
-        <span className="tabular-nums">{value.adults + value.discount}</span>
+        <User className="h-5 w-5 shrink-0 text-slate-500" aria-hidden />
+        <span className="flex min-w-0 flex-col leading-tight">
+          <span className="text-[11px] text-slate-500">{t.passengers}</span>
+          <span className="truncate font-semibold text-slate-900">
+            {t.summary(value.adults, value.discount)}
+          </span>
+        </span>
       </button>
 
       {/* Поповер */}
@@ -197,23 +216,10 @@ export default function PassengersInput({
             {/* Льготный + подсказка */}
             <Row
               label={
-                <div className="relative inline-flex items-center gap-1">
+                <span className="flex flex-col leading-tight">
                   {t.discount}
-                  <button
-                    type="button"
-                    className="inline-flex items-center"
-                    aria-label={t.tip}
-                    title={t.tip}
-                    onClick={() => setShowDiscountTip((prev) => !prev)}
-                  >
-                    <HelpCircle className="h-4 w-4 text-slate-400 hover:text-slate-600" />
-                  </button>
-                  {showDiscountTip && (
-                    <span className="absolute left-0 top-6 z-10 w-56 rounded-lg bg-slate-900 px-2 py-1 text-xs font-normal text-white shadow-lg">
-                      {t.tip}
-                    </span>
-                  )}
-                </div>
+                  <span className="text-xs text-slate-500">{t.tip}</span>
+                </span>
               }
               value={local.discount}
               onMinus={() => change(0, -1)}
