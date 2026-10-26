@@ -10,6 +10,7 @@ import apiClient from '@/lib/apiClient';
 import { useLockBodyScroll } from '@/utils/useLockBodyScroll';
 import { useModalVisibility } from '@/utils/useModalVisibility';
 import { trackSearch, trackSearchIntent, buildRouteCategory } from '@/lib/analytics';
+import { weekdaysOfDates } from '@/utils/tripFormat';
 
 type Stop = { id: number; stop_name: string };
 
@@ -52,6 +53,13 @@ const L = {
     noMatches: 'Ничего не найдено',
     openDate: 'Открытая дата',
     openDateBtn: 'Билет с открытой датой',
+    openDateHint: 'Дату и место выберете позже в кабинете заказа по QR-коду',
+    noReturn: 'не нужно',
+    outboundTitle: 'Туда',
+    returnTitle: 'Обратно',
+    tripsOn: (days: string) => `Рейсы по ${days}`,
+    returnDiscount: 'обратный билет −10%',
+    close: 'Закрыть',
   },
   en: {
     from: 'From',
@@ -63,6 +71,13 @@ const L = {
     noMatches: 'No matches',
     openDate: 'Open date',
     openDateBtn: 'Open-date ticket',
+    openDateHint: 'Choose the date and seat later in your order page via the QR code',
+    noReturn: 'not needed',
+    outboundTitle: 'Outbound',
+    returnTitle: 'Return',
+    tripsOn: (days: string) => `Trips on ${days}`,
+    returnDiscount: 'return ticket −10%',
+    close: 'Close',
   },
   bg: {
     from: 'Откъде',
@@ -74,6 +89,13 @@ const L = {
     noMatches: 'Няма съвпадения',
     openDate: 'Отворена дата',
     openDateBtn: 'Билет с отворена дата',
+    openDateHint: 'Датата и мястото избирате по-късно в страницата на поръчката чрез QR кода',
+    noReturn: 'не е нужно',
+    outboundTitle: 'Натам',
+    returnTitle: 'Обратно',
+    tripsOn: (days: string) => `Курсове в ${days}`,
+    returnDiscount: 'обратен билет −10%',
+    close: 'Затвори',
   },
   ua: {
     from: 'Звідки',
@@ -85,6 +107,13 @@ const L = {
     noMatches: 'Нічого не знайдено',
     openDate: 'Відкрита дата',
     openDateBtn: 'Квиток з відкритою датою',
+    openDateHint: 'Дату й місце оберете пізніше в кабінеті замовлення за QR-кодом',
+    noReturn: 'не потрібно',
+    outboundTitle: 'Туди',
+    returnTitle: 'Назад',
+    tripsOn: (days: string) => `Рейси по ${days}`,
+    returnDiscount: 'зворотний квиток −10%',
+    close: 'Закрити',
   },
 };
 
@@ -257,6 +286,18 @@ export default function SearchForm({
     return () => window.clearTimeout(timer);
   }, [fromId, toId, departDate, lang, prefilled]);
 
+  const fromStopName =
+    departureStops.find((stop) => stop.id === fromId)?.stop_name || '';
+  const toStopName =
+    arrivalStops.find((stop) => stop.id === toId)?.stop_name || '';
+
+  // Обратная дата не может быть раньше отправления.
+  useEffect(() => {
+    if (departDate && returnDate && returnDate < departDate) {
+      setReturnDate('');
+    }
+  }, [departDate, returnDate]);
+
   const handleSwap = () => {
     markInteracted();
     setFrom(to);
@@ -329,7 +370,7 @@ export default function SearchForm({
 
   const row = (
     <div className="grid gap-4">
-      <div className="relative grid gap-4 md:grid-cols-[1fr_auto_1fr] md:items-end">
+      <div className="relative grid gap-4 @xl:grid-cols-[1fr_auto_1fr] @xl:items-end">
         <div className="flex flex-col gap-2">
           <span className={labelStyles}>{t.from}</span>
           <StopCombobox
@@ -352,12 +393,12 @@ export default function SearchForm({
           />
         </div>
 
-        <div className="absolute left-1/2 top-1/2 z-10 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center md:static md:translate-x-0 md:translate-y-0 md:pb-1">
+        <div className="absolute left-1/2 top-1/2 z-10 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center @xl:static @xl:translate-x-0 @xl:translate-y-0 @xl:pb-1">
           <button
             type="button"
             title={t.swapTitle}
             onClick={handleSwap}
-            className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-sky-400 focus:outline-none md:h-12 md:w-12"
+            className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-sky-400 focus:outline-none"
           >
             <span aria-hidden className="text-lg">
               ⇄
@@ -387,7 +428,7 @@ export default function SearchForm({
         </div>
       </div>
 
-      <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-end">
+      <div className="grid w-full grid-cols-1 gap-4 @md:grid-cols-2 @4xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto] @4xl:items-end">
         <DateInput
           value={departDate}
           setValue={setDepartDate}
@@ -407,20 +448,22 @@ export default function SearchForm({
           disabled={!fromId || !toId}
           onOpen={handleReturnOpen}
           displayText={openReturn ? t.openDate : undefined}
+          placeholder={t.noReturn}
         />
 
         <PassengersInput
+          lang={lang}
           value={passengers}
           onChange={(val) => {
             markInteracted();
             setPassengers(val);
           }}
-          pillClass="h-14 w-full rounded-xl bg-slate-50 px-3 text-slate-800 ring-1 ring-slate-200 inline-flex items-center gap-2 transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+          pillClass="h-14 w-full rounded-xl bg-slate-50 px-4 text-left text-slate-800 ring-1 ring-slate-200 inline-flex items-center gap-2 transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
         />
 
         <button
           type="submit"
-          className="h-14 w-full rounded-xl bg-gradient-to-r from-[#ff6a00] to-[#ff8c1a] px-8 text-base font-semibold text-white shadow-lg transition hover:shadow-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#ff6a00] sm:w-auto"
+          className="h-14 w-full rounded-xl bg-[#0a65b0] px-8 text-base font-bold text-white shadow-lg transition hover:bg-[#08558f] hover:shadow-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0a65b0] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none @4xl:w-auto"
           disabled={!fromId || !toId || !departDate}
           aria-label={t.search}
         >
@@ -431,7 +474,7 @@ export default function SearchForm({
   );
 
   const form = (
-    <form onSubmit={handleSubmit} className="w-full">
+    <form onSubmit={handleSubmit} className="@container w-full">
       {embedded ? (
         row
       ) : (
@@ -446,86 +489,123 @@ export default function SearchForm({
     <>
       {form}
       {departModal.shouldRender && (
-        <div
-          className={`fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-[2px] transition-opacity ease-out ${
-            departModal.isClosing ? 'opacity-0' : 'opacity-100'
-          } ${
-            departModal.prefersReducedMotion
-              ? 'motion-reduce:transition-none'
-              : ''
-          }`}
-          style={{ transitionDuration: `${departModal.animationDuration}ms` }}
-          onClick={() => setShowDepart(false)}
+        <CalendarSheet
+          visibility={departModal}
+          onClose={() => setShowDepart(false)}
+          closeLabel={t.close}
+          title={`${t.outboundTitle}${fromStopName && toStopName ? ` · ${fromStopName} → ${toStopName}` : ''}`}
+          subtitle={departActive.length ? t.tripsOn(weekdaysOfDates(departActive, lang)) : undefined}
         >
-          <div
-            className={`origin-center transform rounded-2xl bg-white shadow-2xl transition-all ease-out ${
-              departModal.isClosing ? 'scale-95 opacity-0' : 'scale-100 opacity-100'
-            } ${
-              departModal.prefersReducedMotion
-                ? 'motion-reduce:transform-none motion-reduce:transition-none'
-                : ''
-            }`}
-            style={{ transitionDuration: `${departModal.animationDuration}ms` }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Calendar
-              activeDates={departActive}
-              selectedDate={departDate}
-              onSelect={(iso) => {
-                setDepartDate(iso);
-                setShowDepart(false);
-                // после выбора даты НИЧЕГО автоматически не открываем
-              }}
-              lang={lang}
-            />
-          </div>
-        </div>
+          <Calendar
+            activeDates={departActive}
+            selectedDate={departDate}
+            onSelect={(iso) => {
+              setDepartDate(iso);
+              setShowDepart(false);
+              // после выбора даты НИЧЕГО автоматически не открываем
+            }}
+            lang={lang}
+          />
+        </CalendarSheet>
       )}
       {returnModal.shouldRender && (
-        <div
-          className={`fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-[2px] transition-opacity ease-out ${
-            returnModal.isClosing ? 'opacity-0' : 'opacity-100'
-          } ${
-            returnModal.prefersReducedMotion
-              ? 'motion-reduce:transition-none'
-              : ''
-          }`}
-          style={{ transitionDuration: `${returnModal.animationDuration}ms` }}
-          onClick={() => setShowReturn(false)}
+        <CalendarSheet
+          visibility={returnModal}
+          onClose={() => setShowReturn(false)}
+          closeLabel={t.close}
+          title={`${t.returnTitle}${fromStopName && toStopName ? ` · ${toStopName} → ${fromStopName}` : ''}`}
+          subtitle={[
+            returnActive.length ? t.tripsOn(weekdaysOfDates(returnActive, lang)) : '',
+            t.returnDiscount,
+          ]
+            .filter(Boolean)
+            .join(' · ')}
         >
-          <div
-            className={`origin-center transform rounded-2xl bg-white shadow-2xl transition-all ease-out ${
-              returnModal.isClosing ? 'scale-95 opacity-0' : 'scale-100 opacity-100'
-            } ${
-              returnModal.prefersReducedMotion
-                ? 'motion-reduce:transform-none motion-reduce:transition-none'
-                : ''
-            }`}
-            style={{ transitionDuration: `${returnModal.animationDuration}ms` }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Calendar
-              activeDates={returnActive}
-              selectedDate={returnDate}
-              onSelect={(iso) => {
-                setReturnDate(iso);
-                setOpenReturn(false);
-                setShowReturn(false);
-              }}
-              lang={lang}
-            />
-            <div className="border-t border-gray-100 px-3 py-3">
-              <button
-                type="button"
-                onClick={handleSelectOpenReturn}
-                className="w-full rounded-xl border border-[#0E63F4]/30 bg-[#0E63F4]/5 px-4 py-2.5 text-sm font-semibold text-[#0E63F4] transition hover:bg-[#0E63F4]/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
-              >
-                {t.openDateBtn}
-              </button>
-            </div>
+          <Calendar
+            activeDates={returnActive}
+            selectedDate={returnDate}
+            minDate={departDate || undefined}
+            onSelect={(iso) => {
+              setReturnDate(iso);
+              setOpenReturn(false);
+              setShowReturn(false);
+            }}
+            lang={lang}
+          />
+          <div className="w-full max-w-[360px] px-3 pb-3">
+            <button
+              type="button"
+              onClick={handleSelectOpenReturn}
+              className={`flex w-full flex-col items-center gap-0.5 rounded-xl border-[1.5px] px-4 py-2.5 text-center transition focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
+                openReturn
+                  ? 'border-[#0E63F4] bg-[#0E63F4]/10'
+                  : 'border-[#93b8e6] bg-[#f3f8fe] hover:bg-[#e3eefb]'
+              }`}
+            >
+              <span className="text-sm font-bold text-[#0E63F4]">{t.openDateBtn}</span>
+              <span className="text-xs text-slate-600">{t.openDateHint}</span>
+            </button>
           </div>
-        </div>
+        </CalendarSheet>
       )}
     </>
+  );
+}
+
+// Окно календаря: снизу листом на телефоне, по центру на компьютере.
+function CalendarSheet({
+  visibility,
+  onClose,
+  closeLabel,
+  title,
+  subtitle,
+  children,
+}: {
+  visibility: ReturnType<typeof useModalVisibility>;
+  onClose: () => void;
+  closeLabel: string;
+  title: string;
+  subtitle?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      className={`fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 backdrop-blur-[2px] transition-opacity ease-out sm:items-center ${
+        visibility.isClosing ? 'opacity-0' : 'opacity-100'
+      } ${visibility.prefersReducedMotion ? 'motion-reduce:transition-none' : ''}`}
+      style={{ transitionDuration: `${visibility.animationDuration}ms` }}
+      onClick={onClose}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        className={`w-full max-w-[400px] transform rounded-t-3xl bg-white pb-[env(safe-area-inset-bottom)] shadow-2xl transition-all ease-out sm:rounded-2xl ${
+          visibility.isClosing ? 'translate-y-4 opacity-0 sm:scale-95' : 'translate-y-0 opacity-100'
+        } ${
+          visibility.prefersReducedMotion
+            ? 'motion-reduce:transform-none motion-reduce:transition-none'
+            : ''
+        }`}
+        style={{ transitionDuration: `${visibility.animationDuration}ms` }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-3 px-4 pt-4">
+          <div className="min-w-0">
+            <p className="text-base font-bold text-slate-900">{title}</p>
+            {subtitle ? <p className="text-xs text-slate-600">{subtitle}</p> : null}
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={closeLabel}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 text-lg text-slate-600 hover:bg-slate-50"
+          >
+            ×
+          </button>
+        </div>
+        <div className="flex flex-col items-center">{children}</div>
+      </div>
+    </div>
   );
 }

@@ -3,18 +3,40 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import About from "@/components/About";
-import HeroSection from "@/components/hero/HeroSection";
-import BookingSection from "@/components/home/BookingSection";
+import HomeFirstScreen, { type PopularRoute } from "@/components/hero/HomeFirstScreen";
 import PurchaseReturnView from "@/components/home/PurchaseReturnView";
 import ParcelSection from "@/components/ParcelSection";
 import Routes from "@/components/Routes";
 import Schedule from "@/components/Schedule";
-import { buildHomeMetadata, isLocale } from "@/lib/seo";
+import { buildHomeMetadata, buildPath, isLocale } from "@/lib/seo";
+import { tripsData } from "@/lib/tripsData";
+import { firstScreenTranslations } from "@/translations/firstScreen";
 import { buildOrganizationLD } from "@/lib/jsonld";
 import type { Lang } from "@/lib/locale";
 import { fetchSelectedPricelist, fetchSelectedRoute } from "@/lib/serverData";
 
 type Params = { locale: string };
+
+// Популярные направления на первом экране главной.
+const POPULAR_ROUTE_KEYS = ["odessa-varna", "odessa-sunny-beach", "odessa-burgas", "varna-odessa"];
+
+function buildPopularRoutes(lang: Lang): PopularRoute[] {
+  const labels = firstScreenTranslations[lang].popularLabels;
+  return POPULAR_ROUTE_KEYS.flatMap((key) => {
+    const trip = tripsData[key];
+    const data = trip?.i18n[lang];
+    if (!trip || !data || !trip.fromStopId || !trip.toStopId) return [];
+    return [
+      {
+        key,
+        href: buildPath(lang, `/${data.slug}`),
+        label: labels[key] ?? data.h1,
+        fromId: trip.fromStopId,
+        toId: trip.toStopId,
+      },
+    ];
+  });
+}
 
 // Ревалидация задана на уровне страницы, а не на fetch: /selected_route и
 // /selected_pricelist — POST-запросы, а Data Cache в Next кэширует только GET,
@@ -60,8 +82,7 @@ export default async function HomePage({
         <PurchaseReturnView />
       </Suspense>
       <main className="min-h-screen">
-        <HeroSection lang={lang} />
-        <BookingSection lang={lang} />
+        <HomeFirstScreen lang={lang} routes={buildPopularRoutes(lang)} />
         <About />
         <ParcelSection />
         <Routes lang={lang} initialData={routesData} />

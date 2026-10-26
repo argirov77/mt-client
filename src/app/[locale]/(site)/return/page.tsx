@@ -18,6 +18,7 @@ import {
   BOOKING_CURRENCY,
 } from "@/lib/analytics";
 import { returnTranslations, dateLocaleMap } from "@/translations/return";
+import OfficePhones from "@/components/common/OfficePhones";
 import type { Lang } from "@/components/common/LanguageProvider";
 
 // ========== Types ==========
@@ -612,6 +613,7 @@ function PaidView({
 
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <h2 className="text-base font-semibold text-slate-900">{t.fiscalTitle}</h2>
+
         {(fiscalState.status === "idle" || fiscalState.status === "pending" || fiscalState.status === "processing") && (
           <p className="mt-2 text-sm text-slate-600">{t.fiscalProcessing}</p>
         )}
@@ -634,6 +636,23 @@ function PaidView({
             </button>
           </div>
         )}
+      </div>
+
+      {/* Что дальше: где и когда посадка, где кабинет заказа */}
+      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h2 className="text-base font-semibold text-slate-900">{t.whatNextTitle}</h2>
+        <ul className="mt-2 space-y-1.5 text-sm text-slate-700">
+          {ticketGroups[0] ? (
+            <li>
+              {t.whatNextBoarding(
+                ticketGroups[0].from,
+                ticketGroups[0].date,
+                ticketGroups[0].departureTime ? ticketGroups[0].departureTime.slice(0, 5) : "",
+              )}
+            </li>
+          ) : null}
+          <li>{t.whatNextCabinet}</li>
+        </ul>
       </div>
     </main>
   );
@@ -1113,17 +1132,43 @@ function ReturnPageContent() {
 
   // ── Failed ──────────────────────────────────────────────────────────────
   if (pageState.kind === "failed") {
+    // Заказ не найден на устройстве — это не «ошибка оплаты»: человек мог
+    // уже заплатить. Говорим, что билеты придут на email, и даём телефоны.
+    if (pageState.reason === "no_order") {
+      return (
+        <main className="mx-auto flex min-h-[70vh] w-full max-w-xl flex-col items-center justify-center gap-5 p-6 text-center">
+          <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+            <svg aria-hidden viewBox="0 0 24 24" className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-semibold text-slate-900">{t.orderNotFoundTitle}</h1>
+          <p className="max-w-sm text-slate-600">{t.orderNotFound}</p>
+          <div className="w-full">
+            <p className="mb-2 text-sm font-semibold text-slate-700">{t.officePhones}</p>
+            <OfficePhones lang={lang} source="return_page" />
+          </div>
+          <button
+            type="button"
+            className="rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-700"
+            onClick={() => router.push("/")}
+          >
+            {t.goHome}
+          </button>
+        </main>
+      );
+    }
+
     const failedMessage =
-      pageState.reason === "no_order"
-        ? t.orderNotFound
-        : pageState.reason === "http_error"
-          ? t.httpError(pageState.httpStatus ?? 0)
-          : t.failedMessage;
+      pageState.reason === "http_error"
+        ? t.httpError(pageState.httpStatus ?? 0)
+        : t.failedMessage;
 
     return (
       <main className="mx-auto flex min-h-[70vh] w-full max-w-xl flex-col items-center justify-center gap-5 p-6 text-center">
         <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-red-100 text-red-600">
           <svg
+            aria-hidden
             viewBox="0 0 24 24"
             className="h-8 w-8"
             fill="none"
@@ -1143,10 +1188,10 @@ function ReturnPageContent() {
         <p className="text-slate-600">{failedMessage}</p>
         <button
           type="button"
-          className="rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white hover:bg-slate-700 transition"
+          className="min-h-[44px] rounded-full bg-emerald-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-emerald-800"
           onClick={handleRetryPayment}
         >
-          {t.retryPayment}
+          {queryPurchaseId ? t.retryPay : t.retryPayment}
         </button>
       </main>
     );

@@ -59,3 +59,39 @@ export const isValidPassengerEmail = (value: string): boolean => {
   return true;
 };
 
+
+// Сколько цифр ждём после кода страны. Для остальных кодов — от 6 до 12.
+// Болгарские стационарные номера — 8 цифр, мобильные — 9.
+const NATIONAL_DIGITS: Record<string, { min: number; max: number }> = {
+  "+380": { min: 9, max: 9 },
+  "+359": { min: 8, max: 9 },
+};
+
+export type PhoneCheck =
+  | { ok: true }
+  | { ok: false; reason: "empty" | "no_code" | "length"; dialCode: string; expectedDigits: number | null };
+
+/**
+ * Проверка телефона в формате PhoneInput: «+380 50 123 4567».
+ * Номер без кода страны или с неполным номером на сервер не уходит.
+ */
+export const checkPassengerPhone = (value: string): PhoneCheck => {
+  const trimmed = value.trim();
+  const match = /^(\+\d{1,4})\s*(.*)$/.exec(trimmed);
+  if (!trimmed || trimmed === "+") {
+    return { ok: false, reason: "empty", dialCode: "", expectedDigits: null };
+  }
+  if (!match) {
+    return { ok: false, reason: "no_code", dialCode: "", expectedDigits: null };
+  }
+  const dialCode = match[1];
+  const digits = match[2].replace(/\D/g, "");
+  if (!digits) {
+    return { ok: false, reason: "empty", dialCode, expectedDigits: NATIONAL_DIGITS[dialCode]?.max ?? null };
+  }
+  const range = NATIONAL_DIGITS[dialCode] ?? { min: 6, max: 12 };
+  if (digits.length < range.min || digits.length > range.max) {
+    return { ok: false, reason: "length", dialCode, expectedDigits: NATIONAL_DIGITS[dialCode]?.max ?? null };
+  }
+  return { ok: true };
+};

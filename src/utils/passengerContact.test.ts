@@ -2,6 +2,7 @@ import { test } from "node:test";
 import * as assert from "node:assert/strict";
 
 import {
+  checkPassengerPhone,
   isValidPassengerEmail,
   normalizePassengerContact,
 } from "./passengerContact";
@@ -59,4 +60,24 @@ test("isValidPassengerEmail enforces local and total length limits", () => {
 
   assert.equal(isValidPassengerEmail(localPartOverLimit), false);
   assert.equal(isValidPassengerEmail(totalOverLimit), false);
+});
+
+test("checkPassengerPhone accepts full numbers with a country code", () => {
+  assert.deepEqual(checkPassengerPhone("+380 50 123 4567"), { ok: true });
+  assert.deepEqual(checkPassengerPhone("+359 89 429 0356"), { ok: true });
+  assert.deepEqual(checkPassengerPhone("+40 721 234 567"), { ok: true });
+});
+
+test("checkPassengerPhone rejects empty, codeless and short numbers", () => {
+  assert.equal(checkPassengerPhone("").ok, false);
+  assert.equal(checkPassengerPhone("+380").ok, false);
+  const short = checkPassengerPhone("+380 50 123 45");
+  assert.equal(short.ok, false);
+  if (!short.ok) {
+    assert.equal(short.reason, "length");
+    assert.equal(short.expectedDigits, 9);
+  }
+  const noCode = checkPassengerPhone("050 123 4567");
+  assert.equal(noCode.ok, false);
+  if (!noCode.ok) assert.equal(noCode.reason, "no_code");
 });

@@ -46,6 +46,9 @@ type AboutCopy = {
   title: string;
   subtitle: string;
   closeLabel: string;
+  facts: { value: string; label: string }[];
+  amenities: string;
+  call: string;
 };
 
 type ParcelCopy = {
@@ -59,6 +62,9 @@ type ParcelCopy = {
   }[];
   cta: string;
   note: string;
+  fromUa: string;
+  fromBg: string;
+  call: string;
 };
 
 export const heroTranslations: Record<Lang, HeroCopy> = {
@@ -246,6 +252,9 @@ export const parcelTranslations: Record<Lang, ParcelCopy> = {
       { title: "Стоимость", value: "от 15 €", hint: "зависит от веса и габаритов" },
     ],
     cta: "Связаться и получить расчёт",
+    fromUa: "Из Украины — офис в Одессе",
+    fromBg: "Из Болгарии — офис в Варне",
+    call: "Звонок",
     note: "Свяжитесь с нами, укажите направление, города, вес и размеры — мы вернёмся с точной ценой и сроками.",
   },
   bg: {
@@ -258,6 +267,9 @@ export const parcelTranslations: Record<Lang, ParcelCopy> = {
       { title: "Цена", value: "от 15 €", hint: "според тегло и размери" },
     ],
     cta: "Свържи се и получи оферта",
+    fromUa: "От Украйна — офис в Одеса",
+    fromBg: "От България — офис във Варна",
+    call: "Обаждане",
     note: "Свържи се с нас и посочи посока, градове, тегло и размери — ще върнем точна цена и срок.",
   },
   en: {
@@ -270,6 +282,9 @@ export const parcelTranslations: Record<Lang, ParcelCopy> = {
       { title: "Price", value: "from €15", hint: "based on weight and dimensions" },
     ],
     cta: "Contact us for a quote",
+    fromUa: "From Ukraine — Odesa office",
+    fromBg: "From Bulgaria — Varna office",
+    call: "Call",
     note: "Contact us and share the route, cities, weight, and dimensions — we’ll reply with an exact quote and timing.",
   },
   ua: {
@@ -282,6 +297,9 @@ export const parcelTranslations: Record<Lang, ParcelCopy> = {
       { title: "Вартість", value: "від 15 €", hint: "залежить від ваги та габаритів" },
     ],
     cta: "Звʼязатися для розрахунку",
+    fromUa: "З України — офіс в Одесі",
+    fromBg: "З Болгарії — офіс у Варні",
+    call: "Дзвінок",
     note: "Звʼяжіться з нами, вкажіть напрямок, міста, вагу та розміри — відповімо з точною ціною і строками.",
   },
 };
@@ -327,6 +345,14 @@ export const aboutTranslations: Record<Lang, AboutCopy> = {
     subtitle:
       "Максимов Турс занимается пассажирскими перевозками с 1992 года! Доверие, ответственность, безопасность — наши главные принципы!",
     closeLabel: "Закрыть",
+    facts: [
+      { value: "с 1992", label: "года на линии" },
+      { value: "круглый год", label: "регулярные рейсы" },
+      { value: "от 10 лет", label: "стаж водителей" },
+      { value: "2 офиса", label: "в Одессе и Варне" },
+    ],
+    amenities: "Климат-контроль, Wi-Fi, USB-розетки, туалет, откидные сиденья",
+    call: "Позвонить",
   },
   en: {
     kicker: "About company",
@@ -334,6 +360,14 @@ export const aboutTranslations: Record<Lang, AboutCopy> = {
     subtitle:
       "Maksimov Tours has provided passenger transport since 1992. Trust, responsibility, and safety are our core principles.",
     closeLabel: "Close",
+    facts: [
+      { value: "since 1992", label: "on the route" },
+      { value: "all year", label: "regular trips" },
+      { value: "10+ years", label: "driver experience" },
+      { value: "2 offices", label: "in Odesa and Varna" },
+    ],
+    amenities: "Air conditioning, Wi-Fi, USB sockets, toilet, reclining seats",
+    call: "Call",
   },
   bg: {
     kicker: "За компанията",
@@ -341,6 +375,14 @@ export const aboutTranslations: Record<Lang, AboutCopy> = {
     subtitle:
       "„Максимов Турс“ извършва пътнически превози от 1992 г. Доверие, отговорност и безопасност са нашите основни принципи.",
     closeLabel: "Затвори",
+    facts: [
+      { value: "от 1992", label: "година на линията" },
+      { value: "целогодишно", label: "редовни курсове" },
+      { value: "над 10 г.", label: "стаж на шофьорите" },
+      { value: "2 офиса", label: "в Одеса и Варна" },
+    ],
+    amenities: "Климатик, Wi-Fi, USB контакти, тоалетна, накланящи се седалки",
+    call: "Обади се",
   },
   ua: {
     kicker: "Про компанію",
@@ -348,5 +390,13 @@ export const aboutTranslations: Record<Lang, AboutCopy> = {
     subtitle:
       "«Максимов Турс» займається пасажирськими перевезеннями з 1992 року. Довіра, відповідальність і безпека — наші головні принципи.",
     closeLabel: "Закрити",
+    facts: [
+      { value: "з 1992", label: "року на лінії" },
+      { value: "цілий рік", label: "регулярні рейси" },
+      { value: "від 10 років", label: "стаж водіїв" },
+      { value: "2 офіси", label: "в Одесі та Варні" },
+    ],
+    amenities: "Клімат-контроль, Wi-Fi, USB-розетки, туалет, відкидні сидіння",
+    call: "Зателефонувати",
   },
 };

@@ -22,75 +22,63 @@ const StepProgress: React.FC<StepProgressProps> = ({
   onNavigate,
   stepCounterLabel,
 }) => {
-  const progressPercent = ((activeStep - 1) / Math.max(steps.length - 1, 1)) * 100;
-  const activeIndex = Math.max(0, steps.findIndex((step) => step.state === "active"));
-  const underlineWidth = `${100 / Math.max(steps.length, 1)}%`;
+  const activeLabel = steps.find((step) => step.id === activeStep)?.label ?? "";
+  const progressPercent = (activeStep / Math.max(steps.length, 1)) * 100;
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 pb-3 shadow-sm">
-      <div className="flex items-center gap-3">
-        <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
+    <nav aria-label={stepCounterLabel} className="rounded-2xl border border-slate-200 bg-white px-3 py-2.5 sm:px-4">
+      {/* Телефон: название шага, «Шаг 1 из 3» и тонкая полоса */}
+      <div className="sm:hidden">
+        <div className="flex justify-between text-xs font-bold text-slate-600">
+          <span>{activeLabel}</span>
+          <span>{stepCounterLabel}</span>
+        </div>
+        <div className="mt-1.5 h-1 rounded-full bg-slate-200">
           <div
-            className="absolute left-0 top-0 h-full bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 transition-all duration-400 ease-in-out"
-            style={{ width: `${Math.max(0, Math.min(100, progressPercent))}%` }}
+            className="h-1 rounded-full bg-[#0a65b0] transition-all duration-300"
+            style={{ width: `${progressPercent}%` }}
           />
         </div>
-        <span className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-          {stepCounterLabel}
-        </span>
       </div>
-      <div className="relative mt-3">
-        <div className="hidden pb-3 sm:grid sm:grid-cols-3 sm:gap-3">
-          {steps.map((step) => {
-            const isActive = step.state === "active";
-            const isDone = step.state === "done";
-            const isFuture = step.state === "future";
 
-            return (
+      {/* Компьютер: три пронумерованных шага */}
+      <ol className="hidden items-center gap-2 sm:flex">
+        {steps.map((step, index) => {
+          const isActive = step.state === "active";
+          const isDone = step.state === "done";
+          return (
+            <li key={step.id} className="flex min-w-0 flex-1 items-center gap-2">
               <button
-                key={step.id}
                 type="button"
                 onClick={() => onNavigate(step.id)}
-                className={`group flex min-w-0 flex-col items-start gap-2 rounded-xl border p-3 text-left shadow-sm transition hover:border-sky-200 hover:shadow-md duration-400 ease-in-out ${
-                  isActive
-                    ? "scale-[1.04] border-sky-400 bg-sky-50"
-                    : isDone
-                      ? "hover:scale-[1.01] border-emerald-100 bg-emerald-50"
-                      : "hover:scale-[1.01] border-slate-200 bg-white"
-                } ${isFuture ? "opacity-75" : ""}`}
+                aria-current={isActive ? "step" : undefined}
+                className="flex min-h-[44px] min-w-0 items-center gap-2 rounded-xl px-1 text-left"
               >
-                <div className="flex w-full items-center gap-2">
-                  <span
-                    className={`grid h-8 w-8 place-items-center rounded-full text-xs font-semibold ${
-                      isActive
-                        ? "bg-sky-600 text-white"
-                        : isDone
-                          ? "bg-emerald-100 text-emerald-700"
-                          : "bg-slate-100 text-slate-600"
-                    }`}
-                  >
-                    {isDone && !isActive ? "✓" : step.id}
-                  </span>
-                  <div className="min-w-0">
-                    <div className="truncate text-sm font-semibold text-slate-900">{step.label}</div>
-                    <div className="truncate text-xs text-slate-500">{step.summary}</div>
-                  </div>
-                </div>
+                <span
+                  className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-sm font-bold ${
+                    isActive
+                      ? "bg-[#0a65b0] text-white"
+                      : isDone
+                        ? "bg-emerald-100 text-emerald-800"
+                        : "bg-slate-100 text-slate-600"
+                  }`}
+                >
+                  {isDone && !isActive ? "✓" : step.id}
+                </span>
+                <span
+                  className={`truncate text-sm ${isActive ? "font-bold text-slate-900" : "font-semibold text-slate-600"}`}
+                >
+                  {step.label}
+                </span>
               </button>
-            );
-          })}
-        </div>
-        <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-[3px] overflow-hidden rounded-full bg-slate-100">
-          <div
-            className="absolute bottom-0 left-0 h-[3px] rounded-full bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 transition-transform duration-400 ease-in-out"
-            style={{
-              width: underlineWidth,
-              transform: `translateX(${activeIndex * 100}%)`,
-            }}
-          />
-        </div>
-      </div>
-    </div>
+              {index < steps.length - 1 ? (
+                <span aria-hidden className="h-px flex-1 bg-slate-200" />
+              ) : null}
+            </li>
+          );
+        })}
+      </ol>
+    </nav>
   );
 };
 

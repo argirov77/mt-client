@@ -21,6 +21,10 @@ type Props = {
   selectedSeats?: number[];
   toggleSeat?: (seatNum: number) => void;
   interactive?: boolean;
+  // номер пассажира на выбранном месте: { 15: 1, 16: 2 }
+  seatLabels?: Record<number, number>;
+  // уменьшенная схема, чтобы весь автобус помещался на экран телефона
+  compact?: boolean;
 };
 
 type ParsedLayout = {
@@ -69,7 +73,11 @@ export default function BusLayout({
   selectedSeats = [],
   toggleSeat,
   interactive = false,
+  seatLabels,
+  compact = false,
 }: Props) {
+  const cellSize = compact ? 34 : 45;
+  const aisleSize = compact ? 22 : 35;
   const { seatRows, wallRows } = useMemo(() => parseLayout(layout), [layout]);
   const statusMap = useMemo(() => buildStatusMap(seats), [seats]);
 
@@ -209,7 +217,7 @@ export default function BusLayout({
     recalc();
     window.addEventListener("resize", recalc);
     return () => window.removeEventListener("resize", recalc);
-  }, [computeCellRects, seatRows, wallRows]);
+  }, [computeCellRects, seatRows, wallRows, compact]);
 
   /* === СИДЕНЬЕ: 3 состояния (available / selected / taken) === */
 
@@ -259,13 +267,36 @@ export default function BusLayout({
         className={seatClass}
         onClick={() => clickable && toggleSeat?.(seatNum)}
         aria-pressed={isSelected}
-        aria-label={`Место ${seatNum}`}
+        aria-label={`Место ${seatNum}${seatLabels?.[seatNum] ? `, пассажир ${seatLabels[seatNum]}` : ""}`}
         disabled={!clickable}
       >
+        {isSelected && seatLabels?.[seatNum] ? (
+          <span
+            aria-hidden
+            style={{
+              position: "absolute",
+              top: -3,
+              right: -3,
+              zIndex: 2,
+              minWidth: 16,
+              height: 16,
+              padding: "0 3px",
+              borderRadius: 999,
+              background: "#0f172a",
+              color: "#fff",
+              fontSize: 10,
+              fontWeight: 700,
+              lineHeight: "16px",
+              textAlign: "center",
+            }}
+          >
+            {seatLabels[seatNum]}
+          </span>
+        ) : null}
         <svg
           className="bus-seat-svg"
-          width="45"
-          height="45"
+          width={cellSize}
+          height={cellSize}
           viewBox="0 0 32 32"
           xmlns="http://www.w3.org/2000/svg"
         >
@@ -428,7 +459,11 @@ export default function BusLayout({
   };
 
   return (
-    <div className="bus-container" ref={containerRef}>
+    <div
+      className="bus-container"
+      ref={containerRef}
+      style={{ ["--seat" as string]: `${cellSize}px`, ["--aisle" as string]: `${aisleSize}px` }}
+    >
       <div className="bus-corridors-layer">
         {corridorBlocks.map((b, idx) => (
           <div
@@ -520,8 +555,8 @@ export default function BusLayout({
           position: relative;
           z-index: 1;
           display: grid;
-          grid-template-columns: 45px 45px 35px 45px 45px;
-          grid-auto-rows: 45px;
+          grid-template-columns: var(--seat) var(--seat) var(--aisle) var(--seat) var(--seat);
+          grid-auto-rows: var(--seat);
           column-gap: 2px;
           row-gap: 1px;
         }
@@ -534,8 +569,8 @@ export default function BusLayout({
         }
 
         .bus-cell {
-          width: 45px;
-          height: 45px;
+          width: var(--seat);
+          height: var(--seat);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -544,8 +579,8 @@ export default function BusLayout({
 
         .bus-seat-wrapper {
           position: relative;
-          width: 45px;
-          height: 45px;
+          width: var(--seat);
+          height: var(--seat);
           cursor: pointer;
           padding: 0;
           border: none;
@@ -557,8 +592,8 @@ export default function BusLayout({
         }
 
         .bus-seat-svg {
-          width: 45px;
-          height: 45px;
+          width: var(--seat);
+          height: var(--seat);
         }
 
         .bus-seat-wrapper:hover {
@@ -577,12 +612,12 @@ export default function BusLayout({
 
         .bus-seat-disabled {
           cursor: not-allowed;
-          opacity: 0.85;
+          opacity: 0.45;
         }
 
         .bus-icon-cell {
-          width: 45px;
-          height: 45px;
+          width: var(--seat);
+          height: var(--seat);
           border-radius: 10px;
           border: none;
           background: #e5e7eb;
@@ -594,8 +629,8 @@ export default function BusLayout({
         }
 
         .bus-icon-svg {
-          width: 28px;
-          height: 28px;
+          width: 60%;
+          height: 60%;
           display: block;
           object-fit: contain;
         }
