@@ -282,7 +282,7 @@ export default function BusLayout({
               height: 16,
               padding: "0 3px",
               borderRadius: 999,
-              background: "#0f172a",
+              background: "#173452",
               color: "#fff",
               fontSize: 10,
               fontWeight: 700,
@@ -537,10 +537,10 @@ export default function BusLayout({
       <style jsx>{`
         .bus-container {
           position: relative;
-          background: #f7f8fd;
+          background: #faf9f7;
           border-radius: 14px;
           padding: 4px;
-          border: 1px solid #dde3f3;
+          border: 1px solid #e3dfd9;
           box-shadow: 0 2px 6px rgba(15, 35, 75, 0.08);
         }
 
@@ -606,7 +606,7 @@ export default function BusLayout({
           position: absolute;
           inset: 4px;
           border-radius: 10px;
-          box-shadow: 0 0 0 2px #2563eb,
+          box-shadow: 0 0 0 2px #c2410c,
             0 0 8px rgba(37, 99, 235, 0.7);
         }
 
@@ -646,7 +646,7 @@ export default function BusLayout({
         .bus-wall-horizontal {
           position: absolute;
           border-radius: 999px;
-          background: linear-gradient(90deg, #cbd5f5, #93c5fd);
+          background: linear-gradient(90deg, #e3dfd9, #fdba74);
           box-shadow: 0 1px 2px rgba(148, 163, 184, 0.7);
         }
 

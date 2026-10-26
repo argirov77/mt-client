@@ -42,7 +42,7 @@ export default function TripCard({
   const body = (
     <>
       <div className="flex items-center justify-between gap-2">
-        <span className="text-xs font-bold uppercase tracking-wide text-[#0a65b0]">{heading}</span>
+        <span className="text-xs font-bold uppercase tracking-wide text-[#c2410c]">{heading}</span>
         {selected ? (
           <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700">
             <Check className="h-3.5 w-3.5" aria-hidden />
@@ -53,16 +53,16 @@ export default function TripCard({
 
       <div className="mt-2 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
         <span className="flex flex-col">
-          <b className="text-xl font-bold tabular-nums text-slate-900">{departTime}</b>
-          <span className="text-xs text-slate-600">{fromStop}</span>
+          <b className="text-xl font-bold tabular-nums text-[#173452]">{departTime}</b>
+          <span className="text-xs text-[#5c6370]">{fromStop}</span>
         </span>
         <span className="flex flex-col items-center gap-0.5">
-          {durationText ? <span className="text-[11px] text-slate-600">{durationText}</span> : null}
-          <span aria-hidden className="w-full border-t-2 border-dotted border-slate-400" />
+          {durationText ? <span className="text-[11px] text-[#5c6370]">{durationText}</span> : null}
+          <span aria-hidden className="w-full border-t-2 border-dotted border-[#a3a7ad]" />
         </span>
         <span className="flex flex-col items-end text-right">
-          <b className="text-xl font-bold tabular-nums text-slate-900">{arriveTime}</b>
-          <span className="text-xs text-slate-600">
+          <b className="text-xl font-bold tabular-nums text-[#173452]">{arriveTime}</b>
+          <span className="text-xs text-[#5c6370]">
             {toStop}
             {arriveDay ? `, ${arriveDay}` : ""}
           </span>
@@ -75,9 +75,9 @@ export default function TripCard({
         ) : (
           <span />
         )}
-        <span className="flex items-center gap-1.5 text-slate-900">
-          {priceBreakdown ? <span className="text-slate-600">{priceBreakdown}</span> : null}
-          {oldPriceText ? <s className="text-slate-500">{oldPriceText}</s> : null}
+        <span className="flex items-center gap-1.5 text-[#173452]">
+          {priceBreakdown ? <span className="text-[#5c6370]">{priceBreakdown}</span> : null}
+          {oldPriceText ? <s className="text-[#5c6370]">{oldPriceText}</s> : null}
           <b className="text-base">{priceText}</b>
           {discountBadge ? (
             <span className="rounded-md bg-emerald-50 px-1.5 py-0.5 text-[11px] font-bold text-emerald-700">
@@ -97,7 +97,7 @@ export default function TripCard({
           <button
             type="button"
             onClick={onChange}
-            className="mt-2 min-h-[44px] text-sm font-semibold text-[#0a65b0] underline-offset-2 hover:underline"
+            className="mt-2 min-h-[44px] text-sm font-semibold text-[#c2410c] underline-offset-2 hover:underline"
           >
             {changeLabel}
           </button>
@@ -110,7 +110,7 @@ export default function TripCard({
     <button
       type="button"
       onClick={onSelect}
-      className="w-full rounded-2xl border border-slate-200 bg-white p-3 text-left transition hover:border-[#93b8e6] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 sm:p-4"
+      className="w-full rounded-2xl border border-[#e3dfd9] bg-white p-3 text-left transition hover:border-[#fdba74] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 sm:p-4"
     >
       {body}
     </button>

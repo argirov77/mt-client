@@ -38,7 +38,7 @@ type Props = {
 };
 
 const tiny = {
-  legend: "flex items-center gap-4 text-sm text-slate-600 flex-wrap",
+  legend: "flex items-center gap-4 text-sm text-[#5c6370] flex-wrap",
   badge: "inline-flex items-center gap-1 px-2 py-0.5 rounded-md border",
 };
 
@@ -166,9 +166,9 @@ export default function SeatClient({
       {err && <div className="mt-2 rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-rose-900">{err}</div>}
 
       <div className="mt-3 flex flex-col gap-4 md:flex-row">
-        <div className="flex-1 overflow-x-auto rounded-xl border bg-slate-50 p-3">
+        <div className="flex-1 overflow-x-auto rounded-xl border bg-[#f6f4f1] p-3">
           {loading ? (
-            <div className="text-sm text-slate-500">Загрузка схемы…</div>
+            <div className="text-sm text-[#5c6370]">Загрузка схемы…</div>
           ) : (layoutVariant || "").toString().toLowerCase() === "travego" ? (
             <Travego
               seats={seats}
@@ -206,7 +206,7 @@ export default function SeatClient({
             </span>
           </div>
           {showExtraBaggage && (
-            <div className="space-y-2 rounded-lg border border-slate-200 bg-white/70 p-3">
+            <div className="space-y-2 rounded-lg border border-[#e3dfd9] bg-white/70 p-3">
               <div>
                 В стоимость включены 1 чемодан и 1 ручная кладь.
                 {extraBaggage && " Добавлен дополнительный чемодан."}
@@ -225,7 +225,7 @@ export default function SeatClient({
       </div>
 
       {!!selectedSeats.length && (
-        <div className="mt-2 text-sm text-slate-600">
+        <div className="mt-2 text-sm text-[#5c6370]">
           Вы выбрали: {selectedSeats.slice().sort((a, b) => a - b).join(", ")}
         </div>
       )}

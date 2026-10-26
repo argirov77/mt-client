@@ -171,11 +171,11 @@ function TicketGroupCard({ group, lang }: { group: TicketGroup; lang: Lang }) {
   const t = returnTranslations[lang];
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+    <div className="rounded-2xl border border-[#e3dfd9] bg-white p-5 shadow-sm space-y-4">
       <div className="flex items-center gap-2 mb-1">
         <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
           group.direction === "outbound"
-            ? "bg-sky-50 text-sky-700 border border-sky-100"
+            ? "bg-[#fdf0e7] text-[#c2410c] border border-sky-100"
             : "bg-violet-50 text-violet-700 border border-violet-100"
         }`}>
           {group.direction === "outbound" ? (
@@ -193,59 +193,59 @@ function TicketGroupCard({ group, lang }: { group: TicketGroup; lang: Lang }) {
 
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="space-y-1 min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+          <p className="text-xs font-semibold uppercase tracking-wide text-[#8c929c]">
             {t.route}
           </p>
-          <p className="text-base font-semibold text-slate-900 truncate">
+          <p className="text-base font-semibold text-[#173452] truncate">
             {group.routeName}
           </p>
         </div>
         <div className="text-right shrink-0 space-y-1">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+          <p className="text-xs font-semibold uppercase tracking-wide text-[#8c929c]">
             {t.date}
           </p>
-          <p className="text-sm font-medium text-slate-700">{group.date}</p>
+          <p className="text-sm font-medium text-[#173452]">{group.date}</p>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-xl bg-slate-50 p-3 space-y-1">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+        <div className="rounded-xl bg-[#f6f4f1] p-3 space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-[#8c929c]">
             {t.from}
           </p>
-          <p className="text-sm font-semibold text-slate-900">{group.from}</p>
+          <p className="text-sm font-semibold text-[#173452]">{group.from}</p>
           {group.departureTime && (
-            <p className="text-xs text-slate-500">{group.departureTime}</p>
+            <p className="text-xs text-[#5c6370]">{group.departureTime}</p>
           )}
         </div>
-        <div className="rounded-xl bg-slate-50 p-3 space-y-1">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+        <div className="rounded-xl bg-[#f6f4f1] p-3 space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-[#8c929c]">
             {t.to}
           </p>
-          <p className="text-sm font-semibold text-slate-900">{group.to}</p>
+          <p className="text-sm font-semibold text-[#173452]">{group.to}</p>
           {group.arrivalTime && (
-            <p className="text-xs text-slate-500">{group.arrivalTime}</p>
+            <p className="text-xs text-[#5c6370]">{group.arrivalTime}</p>
           )}
         </div>
       </div>
 
       <div className="space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+        <p className="text-xs font-semibold uppercase tracking-wide text-[#8c929c]">
           {t.passengers}
         </p>
         <div className="flex flex-wrap gap-2">
           {group.items.map(({ ticket, passengerName }) => (
             <div
               key={String(ticket.id)}
-              className="inline-flex items-center gap-2 rounded-lg bg-slate-50 border border-slate-100 px-3 py-1.5"
+              className="inline-flex items-center gap-2 rounded-lg bg-[#f6f4f1] border border-[#eeebe6] px-3 py-1.5"
             >
-              <svg aria-hidden viewBox="0 0 16 16" className="h-3.5 w-3.5 text-slate-400" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <svg aria-hidden viewBox="0 0 16 16" className="h-3.5 w-3.5 text-[#8c929c]" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <circle cx="8" cy="5" r="3" />
                 <path strokeLinecap="round" d="M2 14c0-2.5 2.7-4.5 6-4.5s6 2 6 4.5" />
               </svg>
-              <span className="text-sm text-slate-700">{passengerName}</span>
+              <span className="text-sm text-[#173452]">{passengerName}</span>
               {ticket.seat_num !== null && ticket.seat_num !== undefined && (
-                <span className="text-xs font-semibold text-sky-600 bg-sky-50 rounded-full px-1.5 py-0.5">
+                <span className="text-xs font-semibold text-[#c2410c] bg-[#fdf0e7] rounded-full px-1.5 py-0.5">
                   {t.seat} {ticket.seat_num}
                 </span>
               )}
@@ -522,29 +522,29 @@ function PaidView({
             />
           </svg>
         </div>
-        <h1 className="text-2xl font-semibold text-slate-900">
+        <h1 className="text-2xl font-semibold text-[#173452]">
           {t.paymentSuccess}
         </h1>
         {customerName && (
-          <p className="text-lg text-slate-700">
+          <p className="text-lg text-[#173452]">
             {customerName}
           </p>
         )}
-        <p className="text-slate-600">
+        <p className="text-[#5c6370]">
           {t.ticketsReady}
         </p>
       </div>
 
       {/* Summary badges */}
       <div className="flex flex-wrap items-center justify-center gap-3">
-        <div className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-600">
+        <div className="inline-flex items-center gap-1.5 rounded-full bg-[#f6f4f1] px-3 py-1 text-sm text-[#5c6370]">
           <svg aria-hidden viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.5">
             <circle cx="8" cy="5" r="3" />
             <path strokeLinecap="round" d="M2 14c0-2.5 2.7-4.5 6-4.5s6 2 6 4.5" />
           </svg>
           {t.passengerCount(paxCount)}
         </div>
-        <div className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-600">
+        <div className="inline-flex items-center gap-1.5 rounded-full bg-[#f6f4f1] px-3 py-1 text-sm text-[#5c6370]">
           <svg aria-hidden viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.5">
             <rect x="2" y="3" width="12" height="10" rx="1.5" />
             <path d="M2 7h12" />
@@ -602,7 +602,7 @@ function PaidView({
           )}
         </button>
         {!hasEmail && (
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-[#8c929c]">
             {t.noEmailWarning}
           </p>
         )}
@@ -611,11 +611,11 @@ function PaidView({
         )}
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="text-base font-semibold text-slate-900">{t.fiscalTitle}</h2>
+      <div className="rounded-2xl border border-[#e3dfd9] bg-white p-5 shadow-sm">
+        <h2 className="text-base font-semibold text-[#173452]">{t.fiscalTitle}</h2>
 
         {(fiscalState.status === "idle" || fiscalState.status === "pending" || fiscalState.status === "processing") && (
-          <p className="mt-2 text-sm text-slate-600">{t.fiscalProcessing}</p>
+          <p className="mt-2 text-sm text-[#5c6370]">{t.fiscalProcessing}</p>
         )}
         {fiscalState.status === "timeout" && (
           <p className="mt-2 text-sm text-amber-700">{t.fiscalTimeout}</p>
@@ -625,13 +625,13 @@ function PaidView({
             <button type="button" onClick={handleReceiptClick} className="rounded-full bg-sky-600 px-5 py-2 text-sm font-semibold text-white hover:bg-sky-700 transition">
               {t.downloadFiscalReceipt}
             </button>
-            {fiscalState.fiscalCode && <p className="text-xs text-slate-500">{t.fiscalCodeLabel}: {fiscalState.fiscalCode}</p>}
+            {fiscalState.fiscalCode && <p className="text-xs text-[#5c6370]">{t.fiscalCodeLabel}: {fiscalState.fiscalCode}</p>}
           </div>
         )}
         {(fiscalState.status === "failed" || fiscalState.status === "error") && (
           <div className="mt-3 space-y-2">
             <p className="text-sm text-red-600">{fiscalState.message ?? t.fiscalUnavailable}</p>
-            <button type="button" onClick={() => void resolveFiscal({ manual: true })} className="rounded-full border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition disabled:opacity-60" disabled={isFiscalRefreshing}>
+            <button type="button" onClick={() => void resolveFiscal({ manual: true })} className="rounded-full border border-[#e3dfd9] px-4 py-2 text-sm font-semibold text-[#173452] hover:bg-[#f6f4f1] transition disabled:opacity-60" disabled={isFiscalRefreshing}>
               {isFiscalRefreshing ? t.refreshing : t.refreshStatus}
             </button>
           </div>
@@ -639,9 +639,9 @@ function PaidView({
       </div>
 
       {/* Что дальше: где и когда посадка, где кабинет заказа */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="text-base font-semibold text-slate-900">{t.whatNextTitle}</h2>
-        <ul className="mt-2 space-y-1.5 text-sm text-slate-700">
+      <div className="rounded-2xl border border-[#e3dfd9] bg-white p-5 shadow-sm">
+        <h2 className="text-base font-semibold text-[#173452]">{t.whatNextTitle}</h2>
+        <ul className="mt-2 space-y-1.5 text-sm text-[#173452]">
           {ticketGroups[0] ? (
             <li>
               {t.whatNextBoarding(
@@ -1077,15 +1077,15 @@ function ReturnPageContent() {
             />
           </svg>
         </div>
-        <h1 className="text-2xl font-semibold text-slate-900">
+        <h1 className="text-2xl font-semibold text-[#173452]">
           {t.paymentSuccess}
         </h1>
-        <p className="text-slate-600 max-w-sm">
+        <p className="text-[#5c6370] max-w-sm">
           {t.paidNoDetailsMessage}
         </p>
         <button
           type="button"
-          className="rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white hover:bg-slate-700 transition"
+          className="rounded-full bg-[#173452] px-6 py-3 text-sm font-semibold text-white hover:bg-[#2a4a6b] transition"
           onClick={() => router.push("/")}
         >
           {t.goHome}
@@ -1113,15 +1113,15 @@ function ReturnPageContent() {
             />
           </svg>
         </div>
-        <h1 className="text-2xl font-semibold text-slate-900">
+        <h1 className="text-2xl font-semibold text-[#173452]">
           {t.paymentProcessing}
         </h1>
-        <p className="text-slate-600 max-w-sm">
+        <p className="text-[#5c6370] max-w-sm">
           {t.pendingTimeoutMessage}
         </p>
         <button
           type="button"
-          className="rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white hover:bg-slate-700 transition"
+          className="rounded-full bg-[#173452] px-6 py-3 text-sm font-semibold text-white hover:bg-[#2a4a6b] transition"
           onClick={() => router.push("/")}
         >
           {t.goHome}
@@ -1142,15 +1142,15 @@ function ReturnPageContent() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
           </div>
-          <h1 className="text-2xl font-semibold text-slate-900">{t.orderNotFoundTitle}</h1>
-          <p className="max-w-sm text-slate-600">{t.orderNotFound}</p>
+          <h1 className="text-2xl font-semibold text-[#173452]">{t.orderNotFoundTitle}</h1>
+          <p className="max-w-sm text-[#5c6370]">{t.orderNotFound}</p>
           <div className="w-full">
-            <p className="mb-2 text-sm font-semibold text-slate-700">{t.officePhones}</p>
+            <p className="mb-2 text-sm font-semibold text-[#173452]">{t.officePhones}</p>
             <OfficePhones lang={lang} source="return_page" />
           </div>
           <button
             type="button"
-            className="rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-700"
+            className="rounded-full bg-[#173452] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#2a4a6b]"
             onClick={() => router.push("/")}
           >
             {t.goHome}
@@ -1182,10 +1182,10 @@ function ReturnPageContent() {
             />
           </svg>
         </div>
-        <h1 className="text-2xl font-semibold text-slate-900">
+        <h1 className="text-2xl font-semibold text-[#173452]">
           {t.paymentError}
         </h1>
-        <p className="text-slate-600">{failedMessage}</p>
+        <p className="text-[#5c6370]">{failedMessage}</p>
         <button
           type="button"
           className="min-h-[44px] rounded-full bg-emerald-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-emerald-800"
@@ -1201,14 +1201,14 @@ function ReturnPageContent() {
   return (
     <main className="mx-auto flex min-h-[70vh] w-full max-w-xl flex-col items-center justify-center gap-5 p-6 text-center">
       <div className="h-12 w-12 animate-spin rounded-full border-[3px] border-sky-200 border-t-sky-600" />
-      <h1 className="text-2xl font-semibold text-slate-900">
+      <h1 className="text-2xl font-semibold text-[#173452]">
         {t.checkingTitle}
       </h1>
-      <p className="text-slate-600">
+      <p className="text-[#5c6370]">
         {pageState.attempt <= 1 ? t.checkingPayment : t.awaitingConfirmation}
       </p>
       {pageState.attempt > 3 && (
-        <p className="text-xs text-slate-400">
+        <p className="text-xs text-[#8c929c]">
           {t.attemptCounter(pageState.attempt, MAX_ATTEMPTS)}
         </p>
       )}

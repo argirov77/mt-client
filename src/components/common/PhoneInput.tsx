@@ -180,22 +180,22 @@ export default function PhoneInput({
             onBlur={() => setTimeout(() => setIsOpen(false), 100)}
             maxLength={5}
             inputMode="tel"
-            className="h-12 w-[6.5rem] truncate rounded-xl border border-slate-300 bg-white px-3 pr-7 text-base font-bold text-slate-900 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200"
+            className="h-12 w-[6.5rem] truncate rounded-xl border border-[#e3dfd9] bg-white px-3 pr-7 text-base font-bold text-[#173452] focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200"
             aria-label="Код страны"
             aria-expanded={isOpen}
             aria-haspopup="listbox"
           />
-          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500" aria-hidden>
+          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#5c6370]" aria-hidden>
             ▾
           </span>
           {isOpen && (
-            <div className="absolute z-10 mt-1 w-full min-w-[10rem] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
+            <div className="absolute z-10 mt-1 w-full min-w-[10rem] overflow-hidden rounded-xl border border-[#e3dfd9] bg-white shadow-xl">
               <div className="max-h-52 overflow-y-auto">
                 {filteredCountries.map((country) => (
                   <button
                     type="button"
                     key={country.code}
-                    className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-base text-slate-900 hover:bg-emerald-50"
+                    className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-base text-[#173452] hover:bg-emerald-50"
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => handleCountryChange(country.code)}
                   >
@@ -203,11 +203,11 @@ export default function PhoneInput({
                       {country.flag}
                     </span>
                     <span className="font-semibold">{country.code}</span>
-                    <span className="text-slate-600">{country.dialCode}</span>
+                    <span className="text-[#5c6370]">{country.dialCode}</span>
                   </button>
                 ))}
                 {filteredCountries.length === 0 && (
-                  <div className="px-3 py-3 text-sm text-slate-500">
+                  <div className="px-3 py-3 text-sm text-[#5c6370]">
                     Ничего не найдено, используется введённый код
                   </div>
                 )}
@@ -227,10 +227,10 @@ export default function PhoneInput({
         maxLength={14}
         aria-invalid={invalid || undefined}
         aria-describedby={describedBy}
-        className={`h-12 min-w-0 flex-1 rounded-xl bg-white px-3 text-base text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 ${
+        className={`h-12 min-w-0 flex-1 rounded-xl bg-white px-3 text-base text-[#173452] placeholder:text-[#8c929c] focus:outline-none focus:ring-2 ${
           invalid
             ? "border-2 border-red-600 focus:ring-red-200"
-            : "border border-slate-300 focus:border-sky-500 focus:ring-sky-200"
+            : "border border-[#e3dfd9] focus:border-sky-500 focus:ring-sky-200"
         }`}
       />
     </div>

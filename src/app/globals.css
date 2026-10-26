@@ -1,8 +1,22 @@
 @import "tailwindcss";
 
+/*
+ * Единый язык редизайна: тёмно-синий из логотипа — текст, тёмные блоки и
+ * подвал; оранжевый — кнопки и акценты; тёплый светлый — фон секций.
+ * Серый остаётся только для второстепенных подписей.
+ */
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #173452;
+
+  --navy: #173452;
+  --navy-soft: #2a4a6b;
+  --orange: #c2410c;
+  --orange-soft: #fdf0e7;
+  --sand: #fdba74;
+  --surface: #f6f4f1;
+  --line: #e3dfd9;
+  --muted: #5c6370;
 }
 
 html {
@@ -12,16 +26,29 @@ html {
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-navy: var(--navy);
+  --color-navy-soft: var(--navy-soft);
+  --color-brand: var(--orange);
+  --color-brand-soft: var(--orange-soft);
+  --color-sand: var(--sand);
+  --color-surface: var(--surface);
+  --color-line: var(--line);
+  --color-muted: var(--muted);
+  --font-sans: "Golos Text", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  --font-display: "Unbounded", "Golos Text", system-ui, sans-serif;
 }
 
 body {
   background: var(--background);
-  color: #111827;
-  font-family: Inter, "Roboto", "Helvetica Neue", Arial, sans-serif;
+  color: var(--navy);
+  font-family: "Golos Text", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
   font-size: 16px;
   line-height: 1.6;
+}
+
+/* Заголовки секций и крупные цифры — вторым шрифтом, как в макетах. */
+.font-display {
+  font-family: "Unbounded", "Golos Text", system-ui, sans-serif;
 }
 
 @keyframes fadeStepIn {

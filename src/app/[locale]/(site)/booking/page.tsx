@@ -16,9 +16,9 @@ export const metadata: Metadata = {
 
 export default function BookingPage() {
   return (
-    <main className="min-h-screen bg-slate-50 p-4 pb-14">
+    <main className="min-h-screen bg-[#f6f4f1] p-4 pb-14">
       <section className="mx-auto mt-6 max-w-6xl">
-        <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">Бронирование билетов</h1>
+        <h1 className="text-2xl font-bold text-[#173452] sm:text-3xl">Бронирование билетов</h1>
       </section>
       <section className="mt-6">
         <BookingCard />

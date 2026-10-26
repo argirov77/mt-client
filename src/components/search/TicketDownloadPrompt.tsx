@@ -46,7 +46,7 @@ export default function TicketDownloadPrompt({
             type="button"
             onClick={onClose}
             aria-label={t.ticketDownloadDismiss}
-            className="rounded-full border border-transparent p-1 text-slate-500 transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-700"
+            className="rounded-full border border-transparent p-1 text-[#5c6370] transition hover:border-[#e3dfd9] hover:bg-[#f6f4f1] hover:text-[#173452]"
           >
             ×
           </button>
@@ -62,7 +62,7 @@ export default function TicketDownloadPrompt({
           <button
             type="button"
             onClick={onClose}
-            className="text-sm font-medium text-slate-500 transition hover:text-slate-700"
+            className="text-sm font-medium text-[#5c6370] transition hover:text-[#173452]"
           >
             {t.ticketDownloadDismiss}
           </button>

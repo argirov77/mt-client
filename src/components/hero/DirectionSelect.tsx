@@ -197,7 +197,7 @@ export default function DirectionSelect({
         className={`shrink-0 w-10 h-10 rounded-xl border transition flex items-center justify-center
           ${
             canSwap
-              ? 'bg-white text-blue-600 hover:border-blue-300'
+              ? 'bg-white text-[#c2410c] hover:border-blue-300'
               : 'bg-white/60 text-gray-400 cursor-not-allowed'
           }`}
       >

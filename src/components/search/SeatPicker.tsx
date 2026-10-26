@@ -111,7 +111,7 @@ export default function SeatPicker({
   return (
     <div className="space-y-3">
       {legs.length > 1 ? (
-        <div role="tablist" className="grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1">
+        <div role="tablist" className="grid grid-cols-2 gap-1 rounded-xl bg-[#f6f4f1] p-1">
           {legs.map((item) => {
             const isActive = item.leg === current.leg;
             const complete = item.selected.length === seatCount;
@@ -123,7 +123,7 @@ export default function SeatPicker({
                 aria-selected={isActive}
                 onClick={() => onActiveLegChange(item.leg)}
                 className={`flex min-h-[44px] flex-col items-center justify-center rounded-lg px-2 py-1 text-center text-xs transition ${
-                  isActive ? "bg-white text-slate-900 shadow" : "text-slate-700 hover:bg-white/70"
+                  isActive ? "bg-white text-[#173452] shadow" : "text-[#173452] hover:bg-white/70"
                 }`}
               >
                 <span className="font-bold">
@@ -143,7 +143,7 @@ export default function SeatPicker({
         </div>
       ) : null}
 
-      <p className="text-xs text-slate-700">
+      <p className="text-xs text-[#173452]">
         <b>
           {current.fromName} {shortTime(current.tour.departure_time)} → {current.toName}{" "}
           {shortTime(current.tour.arrival_time)}
@@ -153,9 +153,9 @@ export default function SeatPicker({
       </p>
 
       <div className={`flex flex-col gap-3 ${compact ? "" : "sm:flex-row sm:items-start"}`}>
-        <div className="flex justify-center overflow-x-auto rounded-xl bg-slate-50 p-2">
+        <div className="flex justify-center overflow-x-auto rounded-xl bg-[#f6f4f1] p-2">
           {current.loading ? (
-            <div className="px-6 py-10 text-sm text-slate-600">{t.seatsLoading}</div>
+            <div className="px-6 py-10 text-sm text-[#5c6370]">{t.seatsLoading}</div>
           ) : current.error ? (
             <div className="rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-900">
               {current.error}
@@ -187,21 +187,21 @@ export default function SeatPicker({
           ) : null}
 
           <div>
-            <p className="text-xs font-bold uppercase tracking-wide text-slate-600">{t.yourSeats}</p>
+            <p className="text-xs font-bold uppercase tracking-wide text-[#5c6370]">{t.yourSeats}</p>
             <ul className="mt-1 space-y-1">
               {Array.from({ length: seatCount }, (_, index) => {
                 const seat = current.selected[index];
                 return (
                   <li key={index} className="flex items-center gap-2">
-                    <span className="grid h-5 min-w-5 place-items-center rounded-full bg-slate-900 px-1 text-[10px] font-bold text-white">
+                    <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#173452] px-1 text-[10px] font-bold text-white">
                       {index + 1}
                     </span>
                     {seat ? (
-                      <span className="text-slate-900">
+                      <span className="text-[#173452]">
                         <b>{seat}</b> · {sides.get(seat) === "window" ? t.seatWindow : t.seatAisle}
                       </span>
                     ) : (
-                      <span className="text-slate-500">{t.seatNotChosen}</span>
+                      <span className="text-[#5c6370]">{t.seatNotChosen}</span>
                     )}
                   </li>
                 );
@@ -209,7 +209,7 @@ export default function SeatPicker({
             </ul>
           </div>
 
-          <div className="flex flex-wrap gap-3 text-xs text-slate-700">
+          <div className="flex flex-wrap gap-3 text-xs text-[#173452]">
             <span className="inline-flex items-center gap-1.5">
               <span aria-hidden className="h-3 w-3 rounded bg-[#7AC700]" />
               {t.legendFree}
@@ -224,8 +224,8 @@ export default function SeatPicker({
             </span>
           </div>
 
-          <p className="text-xs text-slate-600">
-            <b className="text-slate-800">{t.amenitiesLabel}:</b> {t.amenitiesList}
+          <p className="text-xs text-[#5c6370]">
+            <b className="text-[#173452]">{t.amenitiesLabel}:</b> {t.amenitiesList}
           </p>
         </div>
       </div>

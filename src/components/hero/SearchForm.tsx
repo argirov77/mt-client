@@ -363,10 +363,10 @@ export default function SearchForm({
 
   // ВНУТРЕННЕЕ СОДЕРЖИМОЕ ФОРМЫ
   const baseFieldStyles =
-    "h-14 w-full rounded-xl bg-slate-50 px-4 text-slate-900 ring-1 ring-slate-200 transition hover:bg-white focus-visible:ring-2 focus-visible:ring-sky-400 focus:outline-none";
+    "h-14 w-full rounded-xl bg-[#f6f4f1] px-4 text-[#173452] ring-1 ring-[#e3dfd9] transition hover:bg-white focus-visible:ring-2 focus-visible:ring-sky-400 focus:outline-none";
 
   const labelStyles =
-    "text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500";
+    "text-[11px] font-semibold uppercase tracking-[0.14em] text-[#5c6370]";
 
   const row = (
     <div className="grid gap-4">
@@ -398,7 +398,7 @@ export default function SearchForm({
             type="button"
             title={t.swapTitle}
             onClick={handleSwap}
-            className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-sky-400 focus:outline-none"
+            className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-[#e3dfd9] bg-white text-[#5c6370] shadow-sm transition hover:bg-[#f6f4f1] focus-visible:ring-2 focus-visible:ring-sky-400 focus:outline-none"
           >
             <span aria-hidden className="text-lg">
               ⇄
@@ -422,7 +422,7 @@ export default function SearchForm({
             disabled={!fromId}
             placeholder={t.to}
             ariaLabel={t.to}
-            inputClassName={`${baseFieldStyles} pr-4 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400`}
+            inputClassName={`${baseFieldStyles} pr-4 disabled:cursor-not-allowed disabled:bg-[#f6f4f1] disabled:text-[#8c929c]`}
             noOptionsText={t.noMatches}
           />
         </div>
@@ -458,12 +458,12 @@ export default function SearchForm({
             markInteracted();
             setPassengers(val);
           }}
-          pillClass="h-14 w-full rounded-xl bg-slate-50 px-4 text-left text-slate-800 ring-1 ring-slate-200 inline-flex items-center gap-2 transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+          pillClass="h-14 w-full rounded-xl bg-[#f6f4f1] px-4 text-left text-[#173452] ring-1 ring-[#e3dfd9] inline-flex items-center gap-2 transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
         />
 
         <button
           type="submit"
-          className="h-14 w-full rounded-xl bg-[#0a65b0] px-8 text-base font-bold text-white shadow-lg transition hover:bg-[#08558f] hover:shadow-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0a65b0] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none @4xl:w-auto"
+          className="h-14 w-full rounded-xl bg-[#c2410c] px-8 text-base font-bold text-white shadow-lg transition hover:bg-[#a8380b] hover:shadow-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#c2410c] disabled:cursor-not-allowed disabled:bg-[#d7d2cb] disabled:shadow-none @4xl:w-auto"
           disabled={!fromId || !toId || !departDate}
           aria-label={t.search}
         >
@@ -539,11 +539,11 @@ export default function SearchForm({
               className={`flex w-full flex-col items-center gap-0.5 rounded-xl border-[1.5px] px-4 py-2.5 text-center transition focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
                 openReturn
                   ? 'border-[#0E63F4] bg-[#0E63F4]/10'
-                  : 'border-[#93b8e6] bg-[#f3f8fe] hover:bg-[#e3eefb]'
+                  : 'border-[#fdba74] bg-[#faf7f3] hover:bg-[#fdf0e7]'
               }`}
             >
               <span className="text-sm font-bold text-[#0E63F4]">{t.openDateBtn}</span>
-              <span className="text-xs text-slate-600">{t.openDateHint}</span>
+              <span className="text-xs text-[#5c6370]">{t.openDateHint}</span>
             </button>
           </div>
         </CalendarSheet>
@@ -570,7 +570,7 @@ function CalendarSheet({
 }) {
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 backdrop-blur-[2px] transition-opacity ease-out sm:items-center ${
+      className={`fixed inset-0 z-50 flex items-end justify-center bg-[#173452]/40 backdrop-blur-[2px] transition-opacity ease-out sm:items-center ${
         visibility.isClosing ? 'opacity-0' : 'opacity-100'
       } ${visibility.prefersReducedMotion ? 'motion-reduce:transition-none' : ''}`}
       style={{ transitionDuration: `${visibility.animationDuration}ms` }}
@@ -592,14 +592,14 @@ function CalendarSheet({
       >
         <div className="flex items-start justify-between gap-3 px-4 pt-4">
           <div className="min-w-0">
-            <p className="text-base font-bold text-slate-900">{title}</p>
-            {subtitle ? <p className="text-xs text-slate-600">{subtitle}</p> : null}
+            <p className="text-base font-bold text-[#173452]">{title}</p>
+            {subtitle ? <p className="text-xs text-[#5c6370]">{subtitle}</p> : null}
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label={closeLabel}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 text-lg text-slate-600 hover:bg-slate-50"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#e3dfd9] text-lg text-[#5c6370] hover:bg-[#f6f4f1]"
           >
             ×
           </button>

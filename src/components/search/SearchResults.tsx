@@ -1322,11 +1322,11 @@ export default function SearchResults({
         notes={
           <>
             <span className="block">{t.bookingNote}</span>
-            <span className="block text-slate-500">
+            <span className="block text-[#5c6370]">
               {t.publicOfferConsent}{" "}
               <a
                 href={publicOfferUrl}
-                className="font-semibold text-slate-700 underline decoration-dotted underline-offset-2 hover:text-slate-900"
+                className="font-semibold text-[#173452] underline decoration-dotted underline-offset-2 hover:text-[#173452]"
                 target="_blank"
                 rel="noreferrer"
               >
@@ -1345,9 +1345,9 @@ export default function SearchResults({
     return (
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-lg font-bold text-slate-900">{title}</h2>
+          <h2 className="text-lg font-bold text-[#173452]">{title}</h2>
           {showInlineSummary ? (
-            <p className="text-sm text-slate-600">{summary}</p>
+            <p className="text-sm text-[#5c6370]">{summary}</p>
           ) : null}
         </div>
       </div>
@@ -1360,7 +1360,7 @@ export default function SearchResults({
       const returnDirectionTitle = `${toName} → ${fromName}`;
 
       return (
-        <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
+        <section className="space-y-4 rounded-2xl border border-[#e3dfd9] bg-white p-3 shadow-sm sm:p-4">
           {renderStepHeader(1, t.step1Title, step1Summary)}
 
           {outboundTours.length > 0 && (
@@ -1382,7 +1382,7 @@ export default function SearchResults({
 
           {(returnDate || openReturn) && outboundTours.length > 0 && (
             <div className="space-y-1.5">
-              <p className="text-xs font-bold uppercase tracking-wide text-slate-600">
+              <p className="text-xs font-bold uppercase tracking-wide text-[#5c6370]">
                 {t.returnModeTitle}
               </p>
               {returnDate && (
@@ -1398,7 +1398,7 @@ export default function SearchResults({
                         className={`min-h-[44px] rounded-xl px-3 text-sm font-semibold transition ${
                           active
                             ? "border-2 border-emerald-600 bg-emerald-50 text-emerald-900"
-                            : "border border-slate-300 bg-white text-slate-800 hover:bg-slate-50"
+                            : "border border-[#e3dfd9] bg-white text-[#173452] hover:bg-[#f6f4f1]"
                         }`}
                       >
                         {isOpen ? t.returnModeOpen : t.returnModeFixed}
@@ -1408,7 +1408,7 @@ export default function SearchResults({
                 </div>
               )}
               {openReturn && (
-                <p className="rounded-xl bg-[#f3f8fe] px-3 py-2 text-xs text-slate-700">
+                <p className="rounded-xl bg-[#faf7f3] px-3 py-2 text-xs text-[#173452]">
                   {t.openReturnHint} · {t.returnDiscountShort}
                 </p>
               )}
@@ -1434,7 +1434,7 @@ export default function SearchResults({
           )}
 
           {!loading && !outboundTours.length && !returnTours.length && (
-            <p className="text-sm text-slate-600">{t.noResults}</p>
+            <p className="text-sm text-[#5c6370]">{t.noResults}</p>
           )}
         </section>
       );

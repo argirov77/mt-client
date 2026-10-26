@@ -62,18 +62,18 @@ function CabinetNoLink() {
   return (
     <>
       <Header />
-      <main className="min-h-[70vh] bg-slate-50 px-4 py-10">
-        <div className="mx-auto max-w-xl space-y-5 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
-          <h1 className="text-2xl font-bold text-slate-900">{t.title}</h1>
-          <p className="text-slate-700">{t.text}</p>
+      <main className="min-h-[70vh] bg-[#f6f4f1] px-4 py-10">
+        <div className="mx-auto max-w-xl space-y-5 rounded-2xl border border-[#e3dfd9] bg-white p-5 sm:p-6">
+          <h1 className="text-2xl font-bold text-[#173452]">{t.title}</h1>
+          <p className="text-[#173452]">{t.text}</p>
           <div className="space-y-2">
-            <p className="font-semibold text-slate-900">{t.noEmail}</p>
-            <p className="text-sm text-slate-700">{t.spam}</p>
+            <p className="font-semibold text-[#173452]">{t.noEmail}</p>
+            <p className="text-sm text-[#173452]">{t.spam}</p>
             <OfficePhones lang={lang} source="cabinet" />
           </div>
           <Link
             href={buildPath(lang, "/")}
-            className="inline-flex min-h-[44px] items-center rounded-xl border border-slate-300 px-4 text-sm font-semibold text-slate-800 hover:bg-slate-50"
+            className="inline-flex min-h-[44px] items-center rounded-xl border border-[#e3dfd9] px-4 text-sm font-semibold text-[#173452] hover:bg-[#f6f4f1]"
           >
             {t.home}
           </Link>

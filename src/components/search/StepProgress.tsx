@@ -26,16 +26,16 @@ const StepProgress: React.FC<StepProgressProps> = ({
   const progressPercent = (activeStep / Math.max(steps.length, 1)) * 100;
 
   return (
-    <nav aria-label={stepCounterLabel} className="rounded-2xl border border-slate-200 bg-white px-3 py-2.5 sm:px-4">
+    <nav aria-label={stepCounterLabel} className="rounded-2xl border border-[#e3dfd9] bg-white px-3 py-2.5 sm:px-4">
       {/* Телефон: название шага, «Шаг 1 из 3» и тонкая полоса */}
       <div className="sm:hidden">
-        <div className="flex justify-between text-xs font-bold text-slate-600">
+        <div className="flex justify-between text-xs font-bold text-[#5c6370]">
           <span>{activeLabel}</span>
           <span>{stepCounterLabel}</span>
         </div>
-        <div className="mt-1.5 h-1 rounded-full bg-slate-200">
+        <div className="mt-1.5 h-1 rounded-full bg-[#e3dfd9]">
           <div
-            className="h-1 rounded-full bg-[#0a65b0] transition-all duration-300"
+            className="h-1 rounded-full bg-[#c2410c] transition-all duration-300"
             style={{ width: `${progressPercent}%` }}
           />
         </div>
@@ -57,22 +57,22 @@ const StepProgress: React.FC<StepProgressProps> = ({
                 <span
                   className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-sm font-bold ${
                     isActive
-                      ? "bg-[#0a65b0] text-white"
+                      ? "bg-[#c2410c] text-white"
                       : isDone
                         ? "bg-emerald-100 text-emerald-800"
-                        : "bg-slate-100 text-slate-600"
+                        : "bg-[#f6f4f1] text-[#5c6370]"
                   }`}
                 >
                   {isDone && !isActive ? "✓" : step.id}
                 </span>
                 <span
-                  className={`truncate text-sm ${isActive ? "font-bold text-slate-900" : "font-semibold text-slate-600"}`}
+                  className={`truncate text-sm ${isActive ? "font-bold text-[#173452]" : "font-semibold text-[#5c6370]"}`}
                 >
                   {step.label}
                 </span>
               </button>
               {index < steps.length - 1 ? (
-                <span aria-hidden className="h-px flex-1 bg-slate-200" />
+                <span aria-hidden className="h-px flex-1 bg-[#e3dfd9]" />
               ) : null}
             </li>
           );

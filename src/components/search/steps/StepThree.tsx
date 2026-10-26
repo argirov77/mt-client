@@ -36,7 +36,7 @@ export default function StepThree({
   ...rest
 }: StepThreeProps) {
   return (
-    <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+    <section className="space-y-3 rounded-2xl border border-[#e3dfd9] bg-white p-4 shadow-sm">
       {renderStepHeader(3, t.contactsAndPayment, step3Summary)}
       <ContactsAndPaymentStep t={t} hasReturnSection={returnRequired} {...rest} />
     </section>

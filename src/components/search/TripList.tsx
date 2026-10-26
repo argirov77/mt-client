@@ -97,17 +97,17 @@ export default function TripList({
 
   return (
     <div className="space-y-2">
-      <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
+      <h3 className="text-sm font-semibold text-[#173452]">{title}</h3>
       <div className="flex flex-col gap-2">{visibleTours.map(renderCard)}</div>
       {otherTours.length > 0 ? (
         <div className="flex flex-wrap items-center gap-1.5 text-sm">
-          <span className="text-slate-600">{t.otherDates}:</span>
+          <span className="text-[#5c6370]">{t.otherDates}:</span>
           {otherTours.map((tour) => (
             <button
               key={tour.id}
               type="button"
               onClick={() => onSelect(tour)}
-              className="min-h-[36px] rounded-lg border border-slate-200 bg-white px-2.5 text-sm font-semibold text-[#0a65b0] hover:border-[#93b8e6]"
+              className="min-h-[36px] rounded-lg border border-[#e3dfd9] bg-white px-2.5 text-sm font-semibold text-[#c2410c] hover:border-[#fdba74]"
             >
               {formatDayShort(tour.date, lang)} {shortTime(tour.departure_time)}
             </button>

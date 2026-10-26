@@ -1,13 +1,13 @@
 .page {
-  --purchase-bg: #f6f8fb;
+  --purchase-bg: #f6f4f1;
   --purchase-surface: #ffffff;
-  --purchase-text: #0b1b2b;
-  --purchase-muted: #6b7c93;
-  --purchase-line: #e5eaf1;
+  --purchase-text: #173452;
+  --purchase-muted: #5c6370;
+  --purchase-line: #e3dfd9;
   --purchase-shadow: 0 8px 22px rgba(11, 74, 134, 0.06);
-  --purchase-primary: #0b4a86;
-  --purchase-primary-hover: #073763;
-  --purchase-accent: #ff9800;
+  --purchase-primary: #173452;
+  --purchase-primary-hover: #2a4a6b;
+  --purchase-accent: #c2410c;
   --purchase-danger: #c62828;
   --purchase-radius-lg: 16px;
   --purchase-radius-md: 12px;
@@ -67,8 +67,8 @@
   font-weight: 800;
   font-size: 12px;
   color: var(--purchase-primary);
-  background: #eaf2ff;
-  border: 1px solid #d7e6fb;
+  background: #fdf0e7;
+  border: 1px solid #f3d7c6;
 }
 
 .bulkBar {
@@ -108,15 +108,15 @@
   gap: 8px;
   padding: 6px 10px;
   border-radius: 999px;
-  border: 1px solid #d7e6fb;
-  background: #eef4ff;
-  color: #2d4e70;
+  border: 1px solid #f3d7c6;
+  background: #f6f4f1;
+  color: #173452;
   font-weight: 700;
   text-decoration: none;
 }
 
 .contactPill:hover {
-  background: #e6efff;
+  background: #eeebe6;
 }
 
 .contactPlaceholder {
@@ -138,8 +138,8 @@
   margin-top: 4px;
   padding: 6px 10px;
   border-radius: 999px;
-  background: #fbfcff;
-  border: 1px solid #e6ecf4;
+  background: #faf9f7;
+  border: 1px solid #e3dfd9;
   font-weight: 700;
   color: var(--purchase-primary);
 }
@@ -161,7 +161,7 @@
   gap: 12px;
   padding: 16px 18px 14px;
   border-bottom: 1px solid var(--purchase-line);
-  background: #f8fbff;
+  background: #f6f4f1;
 }
 
 .scrollCardTitle {
@@ -184,7 +184,7 @@
   overflow: auto;
   overscroll-behavior: contain;
   padding: 18px;
-  background: #fbfcff;
+  background: #faf9f7;
 }
 
 .scrollAreaScrolled {
@@ -210,7 +210,7 @@
   border-radius: 999px;
   border: 1px solid var(--purchase-line);
   background: #fff;
-  color: #385c83;
+  color: #173452;
   font-weight: 800;
   font-size: 13px;
   box-shadow: 0 3px 10px rgba(7, 55, 99, 0.12);
@@ -239,7 +239,7 @@
   padding: 12px 16px;
   border: 1px solid var(--purchase-line);
   border-radius: var(--purchase-radius-md);
-  background: #f8fbff;
+  background: #f6f4f1;
 }
 
 .bulkBarDock {
@@ -322,7 +322,7 @@
   margin-top: 6px;
   font-size: 14px;
   font-weight: 700;
-  color: #2d4e70;
+  color: #173452;
 }
 
 .menu {
@@ -360,8 +360,8 @@
 }
 
 .btnGhost {
-  background: #f7f9fe;
-  color: #3a5a7a;
+  background: #f6f4f1;
+  color: #5c6370;
 }
 
 .btnDanger {
@@ -395,14 +395,14 @@
 }
 
 .btnOutline {
-  background: #f7f9fe;
-  border-color: #cbd7eb;
+  background: #f6f4f1;
+  border-color: #e3dfd9;
   color: var(--purchase-primary);
 }
 
 .btnPrimary {
-  background: #12375c;
-  border-color: #12375c;
+  background: #173452;
+  border-color: #173452;
   color: #fff;
 }
 
@@ -415,28 +415,28 @@
 }
 
 .btnPill {
-  background: #eef4ff;
-  border-color: #d7e6fb;
+  background: #f6f4f1;
+  border-color: #f3d7c6;
   color: var(--purchase-primary);
 }
 
 .btnPill:hover {
-  background: #e1ecff;
+  background: #eeebe6;
 }
 
 .btnPillMuted {
-  background: #fbfcff;
-  border-color: #e6ecf4;
-  color: #5f7ba0;
+  background: #faf9f7;
+  border-color: #e3dfd9;
+  color: #5c6370;
 }
 
 .btnOutline:hover {
-  background: #eef4ff;
+  background: #f6f4f1;
 }
 
 .btnPrimary:hover {
-  background: #0b4a86;
-  border-color: #0b4a86;
+  background: #173452;
+  border-color: #173452;
 }
 
 .menuList {
@@ -466,7 +466,7 @@
 }
 
 .menuList button:hover {
-  background: #f7f9fe;
+  background: #f6f4f1;
 }
 
 .menuDanger {
@@ -486,22 +486,22 @@
   padding: 8px 12px;
   border-radius: 999px;
   border: 1px solid var(--purchase-line);
-  background: #f7f9fe;
-  color: #3b5e85;
+  background: #f6f4f1;
+  color: #173452;
   font-weight: 700;
   font-size: 13px;
 }
 
 .chipDate {
-  background: #eaf2ff;
-  border-color: #d7e6fb;
+  background: #fdf0e7;
+  border-color: #f3d7c6;
   color: var(--purchase-primary);
 }
 
 .chipSeat {
-  background: #fbfcff;
-  border-color: #edf2f8;
-  color: #5f7ba0;
+  background: #faf9f7;
+  border-color: #f6f4f1;
+  color: #5c6370;
   font-weight: 600;
 }
 
@@ -521,18 +521,18 @@
   padding: 6px 10px;
   border-radius: 12px;
   border: 1px solid var(--purchase-line);
-  background: #f7f9fe;
+  background: #f6f4f1;
 }
 
 .baggageStepper button {
   width: 28px;
   height: 28px;
   border-radius: 8px;
-  border: 1px solid #ccd6e2;
+  border: 1px solid #e3dfd9;
   background: #fff;
   font-size: 16px;
   font-weight: 700;
-  color: #3a5878;
+  color: #173452;
   cursor: pointer;
 }
 
@@ -591,7 +591,7 @@
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  color: #3a5878;
+  color: #173452;
 }
 
 .linkButton {
@@ -624,8 +624,8 @@
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   padding: 16px;
   border-radius: 14px;
-  background: #f8faff;
-  border: 1px solid #e3e9f4;
+  background: #faf9f7;
+  border: 1px solid #e3dfd9;
 }
 
 .panelLabel {
@@ -644,10 +644,10 @@
 }
 
 .panelPassengers {
-  border: 1px solid #e3e9f4;
+  border: 1px solid #e3dfd9;
   border-radius: 14px;
   padding: 16px;
-  background: #fbfcff;
+  background: #faf9f7;
 }
 
 .passengerList {
@@ -657,7 +657,7 @@
   display: grid;
   gap: 6px;
   font-size: 14px;
-  color: #445b76;
+  color: #5c6370;
 }
 
 .panelSection {
@@ -687,14 +687,14 @@
   gap: 12px;
   padding: 14px 16px;
   border-radius: 14px;
-  border: 1px solid #dde5f0;
-  background: #f7f9fe;
+  border: 1px solid #e3dfd9;
+  background: #f6f4f1;
   cursor: pointer;
 }
 
 .tourOptionActive {
-  border-color: #91b7ff;
-  background: #e8f0ff;
+  border-color: #fdba74;
+  background: #fdf0e7;
 }
 
 .tourOption input {
@@ -706,7 +706,7 @@
   margin: 0;
   font-size: 16px;
   font-weight: 700;
-  color: #12375c;
+  color: #173452;
 }
 
 .panelButtons {
@@ -766,9 +766,9 @@
   align-items: center;
   justify-content: space-between;
   padding: 14px 16px;
-  border: 1px solid #e3e9f4;
+  border: 1px solid #e3dfd9;
   border-radius: 14px;
-  background: #fbfcff;
+  background: #faf9f7;
 }
 
 .baggageInfo {
@@ -810,7 +810,7 @@
   margin: 8px 0 0;
   padding-left: 16px;
   font-size: 13px;
-  color: #445b76;
+  color: #5c6370;
 }
 
 .modal {
@@ -864,7 +864,7 @@
 }
 
 .modalClose:hover {
-  background: #f6f8fb;
+  background: #f6f4f1;
 }
 
 .modalBody {

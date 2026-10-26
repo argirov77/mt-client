@@ -44,19 +44,19 @@ export default function RelatedTrips({
   if (!reverse && !hub && related.length === 0) return null;
 
   return (
-    <section className="bg-slate-50 py-12">
+    <section className="bg-[#f6f4f1] py-12">
       <div className="mx-auto w-full max-w-5xl px-4">
-        <h2 className="mb-6 text-2xl font-semibold text-slate-900">{t.blockTitle}</h2>
+        <h2 className="mb-6 text-2xl font-semibold text-[#173452]">{t.blockTitle}</h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {reverse ? (
             <Link
               href={reverse.href}
-              className="group flex flex-col gap-1 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+              className="group flex flex-col gap-1 rounded-2xl border border-[#e3dfd9] bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
             >
-              <span className="text-xs font-semibold uppercase tracking-[0.14em] text-sky-600">
+              <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#c2410c]">
                 {t.reverseLabel}
               </span>
-              <span className="text-base font-semibold text-slate-900 group-hover:text-sky-700">
+              <span className="text-base font-semibold text-[#173452] group-hover:text-[#c2410c]">
                 {reverse.label}
               </span>
             </Link>
@@ -64,12 +64,12 @@ export default function RelatedTrips({
           {hub ? (
             <Link
               href={hub.href}
-              className="group flex flex-col gap-1 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+              className="group flex flex-col gap-1 rounded-2xl border border-[#e3dfd9] bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
             >
-              <span className="text-xs font-semibold uppercase tracking-[0.14em] text-orange-600">
+              <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#c2410c]">
                 {t.hubLabel}
               </span>
-              <span className="text-base font-semibold text-slate-900 group-hover:text-orange-700">
+              <span className="text-base font-semibold text-[#173452] group-hover:text-[#c2410c]">
                 {hub.label}
               </span>
             </Link>
@@ -78,12 +78,12 @@ export default function RelatedTrips({
             <Link
               key={link.href}
               href={link.href}
-              className="group flex flex-col gap-1 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+              className="group flex flex-col gap-1 rounded-2xl border border-[#e3dfd9] bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
             >
-              <span className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+              <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8c929c]">
                 {t.relatedLabel}
               </span>
-              <span className="text-base font-semibold text-slate-900 group-hover:text-sky-700">
+              <span className="text-base font-semibold text-[#173452] group-hover:text-[#c2410c]">
                 {link.label}
               </span>
             </Link>

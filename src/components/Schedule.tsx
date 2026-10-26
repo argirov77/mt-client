@@ -1,13 +1,23 @@
 'use client';
 
 import Link from 'next/link';
+import { ChevronRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import apiClient from '@/lib/apiClient';
-import { findTripKeyForStopPair, tripsData } from '@/lib/tripsData';
+import { STOP, findTripKeyForStopPair, tripsData } from '@/lib/tripsData';
 import { buildPath } from '@/lib/seo';
-import { scheduleTranslations } from '@/translations/home';
+import { routesTranslations, scheduleTranslations } from '@/translations/home';
 import {
+  accentPillClass,
+  buttonPrimaryClass,
+  cardTitleClass,
+  notePillClass,
   sectionBgMuted,
+  sectionEyebrowClass,
+  sectionEyebrowOnDarkClass,
+  sectionInnerClass,
+  sectionPadClass,
+  sectionTitleClass,
 } from './common/designGuide';
 import type { Lang } from './common/LanguageProvider';
 import { useSectionView } from '@/utils/useSectionView';
@@ -20,7 +30,6 @@ type PriceItem = {
   price: number;
 };
 
-
 function formatPrice(n: number, curr: string) {
   return `${Number(n).toFixed(0)} ${curr}`;
 }
@@ -31,8 +40,10 @@ type PriceListProps = {
   initialPrices?: PriceItem[] | null;
 };
 
+/** Цены из продажи, сгруппированные как в макете: из Одессы, в Одессу, между городами. */
 export default function PriceListCompact({ lang = 'ru', initialPrices }: PriceListProps) {
   const t = scheduleTranslations[lang];
+  const routesCopy = routesTranslations[lang];
   const hasInitial = Array.isArray(initialPrices) && initialPrices.length > 0;
   const [list, setList] = useState<PriceItem[]>(hasInitial ? initialPrices : []);
   const [loading, setLoading] = useState(!hasInitial);
@@ -76,74 +87,112 @@ export default function PriceListCompact({ lang = 'ru', initialPrices }: PriceLi
     };
   }, [lang, dataLang]);
 
+  // Группы — по id остановки Одессы, а не по названию: названия переведены.
+  const groups = [
+    {
+      key: 'from',
+      title: t.groupFrom,
+      days: routesCopy.daysForward,
+      items: list.filter((item) => item.departure_stop_id === STOP.odessa),
+    },
+    {
+      key: 'to',
+      title: t.groupTo,
+      days: routesCopy.daysBackward,
+      items: list.filter((item) => item.arrival_stop_id === STOP.odessa),
+    },
+    {
+      key: 'between',
+      title: t.groupBetween,
+      days: '',
+      items: list.filter(
+        (item) => item.departure_stop_id !== STOP.odessa && item.arrival_stop_id !== STOP.odessa,
+      ),
+    },
+  ].filter((group) => group.items.length > 0);
+
   return (
-    <section id="prices" ref={sectionRef} className={`${sectionBgMuted} py-16`}>
-      <div className="mx-auto w-full max-w-6xl px-4">
-        <div className="mb-10 text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-            {t.eyebrow}
-          </p>
-          <h2 className="mt-3 text-3xl font-semibold text-slate-900 sm:text-4xl">
-            {t.title}
-          </h2>
-          <p className="mt-3 text-base text-slate-500">{t.description}</p>
-          <div className="mt-5 flex flex-wrap justify-center gap-2">
+    <section id="prices" ref={sectionRef} className={`${sectionBgMuted} ${sectionPadClass}`}>
+      <div className={`${sectionInnerClass} flex flex-col gap-7 lg:gap-10`}>
+        <div className="flex flex-wrap items-end justify-between gap-5 lg:gap-12">
+          <div className="flex flex-1 basis-[520px] flex-col gap-4">
+            <span className={sectionEyebrowClass}>{t.eyebrow}</span>
+            <h2 className={sectionTitleClass}>{t.title}</h2>
+          </div>
+          <div className="flex flex-1 basis-[380px] flex-wrap gap-2">
             {t.meta.map((item) => (
-              <span
-                key={item}
-                className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600"
-              >
+              <span key={item} className={notePillClass}>
                 {item}
               </span>
             ))}
           </div>
         </div>
 
-        {loading && (
-          <p className="text-center text-slate-500">{t.loading}</p>
-        )}
-        {!loading && err && (
-          <p className="text-center text-red-500">{t.error}</p>
-        )}
+        {loading && <p className="text-[15px] text-[#5c6370]">{t.loading}</p>}
+        {!loading && err && <p className="text-[15px] text-[#c2410c]">{t.error}</p>}
         {!loading && !err && list.length === 0 && (
-          <p className="text-center text-slate-500">{t.noData}</p>
+          <p className="text-[15px] text-[#5c6370]">{t.noData}</p>
         )}
 
-        {!loading && !err && list.length > 0 && (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {list.map((r, i) => {
-              const tripKey = findTripKeyForStopPair(r.departure_stop_id, r.arrival_stop_id);
-              const slug = tripKey ? tripsData[tripKey]?.i18n[lang]?.slug : null;
-              const href = slug ? buildPath(lang, `/${slug}`) : null;
-              const cardClass =
-                "flex items-center justify-between gap-4 rounded-2xl border border-slate-200/60 bg-white px-5 py-4 shadow-[0_12px_30px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(15,23,42,0.1)]";
-              const inner = (
-                <>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 text-base font-semibold text-slate-900">
-                      <span className="truncate">{r.departure_name.trim()}</span>
-                      <span className="text-slate-400">→</span>
-                      <span className="truncate">{r.arrival_name.trim()}</span>
+        {!loading && !err && groups.length > 0 && (
+          <div className="grid items-start gap-5 md:grid-cols-2 lg:grid-cols-3">
+            {groups.map((group) => (
+              <div key={group.key} className="flex flex-col rounded-3xl bg-white p-5 sm:p-6">
+                <div className="flex items-baseline justify-between gap-3 pb-2.5">
+                  <h3 className={`${cardTitleClass} text-[19px]`}>{group.title}</h3>
+                  {group.days ? <span className={accentPillClass}>{group.days}</span> : null}
+                </div>
+
+                {group.items.map((item, index) => {
+                  const tripKey = findTripKeyForStopPair(item.departure_stop_id, item.arrival_stop_id);
+                  const slug = tripKey ? tripsData[tripKey]?.i18n[lang]?.slug : null;
+                  const href = slug ? buildPath(lang, `/${slug}`) : null;
+                  const label =
+                    group.key === 'from'
+                      ? item.arrival_name.trim()
+                      : group.key === 'to'
+                        ? item.departure_name.trim()
+                        : `${item.departure_name.trim()} → ${item.arrival_name.trim()}`;
+                  const price = (
+                    <span className="font-display whitespace-nowrap text-[17px] font-bold text-[#173452]">
+                      {formatPrice(item.price, t.currency)}
+                    </span>
+                  );
+                  const key = `${item.departure_stop_id}-${item.arrival_stop_id}-${index}`;
+                  const rowClass =
+                    'grid min-h-[52px] grid-cols-[minmax(0,1fr)_auto_20px] items-center gap-3 border-t border-[#eeebe6] first:border-t-0';
+
+                  return href ? (
+                    <Link key={key} href={href} className={`${rowClass} group`}>
+                      <span className="truncate text-[16px] font-semibold text-[#173452] group-hover:text-[#c2410c]">
+                        {label}
+                      </span>
+                      {price}
+                      <ChevronRight className="h-[18px] w-[18px] text-[#a3a7ad]" aria-hidden />
+                    </Link>
+                  ) : (
+                    <div key={key} className={rowClass}>
+                      <span className="truncate text-[16px] font-semibold text-[#173452]">{label}</span>
+                      {price}
+                      <span />
                     </div>
-                  </div>
-                  <span className="shrink-0 rounded-full bg-orange-100 px-3 py-1 text-sm font-semibold text-orange-700">
-                    {formatPrice(r.price, t.currency)}
-                  </span>
-                </>
-              );
-              const key = `${r.departure_stop_id}-${r.arrival_stop_id}-${i}`;
-              return href ? (
-                <Link key={key} href={href} className={cardClass}>
-                  {inner}
-                </Link>
-              ) : (
-                <article key={key} className={cardClass}>
-                  {inner}
-                </article>
-              );
-            })}
+                  );
+                })}
+              </div>
+            ))}
           </div>
         )}
+
+        <div className="flex flex-wrap items-center gap-4 gap-x-8 rounded-3xl bg-[#173452] p-5 text-white sm:p-7">
+          <div className="flex flex-1 basis-[300px] flex-col gap-1.5">
+            <span className={sectionEyebrowOnDarkClass}>{t.returnKicker}</span>
+            <span className="font-display text-[20px] font-bold sm:text-[26px]">{t.returnTitle}</span>
+          </div>
+          <p className="flex-[2] basis-[380px] text-base text-white/85">{t.returnNote}</p>
+          <Link href="#booking" className={buttonPrimaryClass}>
+            {t.cta}
+          </Link>
+        </div>
       </div>
     </section>
   );

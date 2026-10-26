@@ -69,7 +69,7 @@ export default function PassengersInput({
   value,
   onChange,
   className = "",
-  pillClass = "h-12 px-3 rounded-2xl bg-white/90 hover:bg-white text-slate-800 shadow ring-1 ring-black/5",
+  pillClass = "h-12 px-3 rounded-2xl bg-white/90 hover:bg-white text-[#173452] shadow ring-1 ring-black/5",
   minAdults = 0,
   maxTotal = 9,
   lang = "ru",
@@ -185,10 +185,10 @@ export default function PassengersInput({
         aria-expanded={open}
         title={t.passengers}
       >
-        <User className="h-5 w-5 shrink-0 text-slate-500" aria-hidden />
+        <User className="h-5 w-5 shrink-0 text-[#5c6370]" aria-hidden />
         <span className="flex min-w-0 flex-col leading-tight">
-          <span className="text-[11px] text-slate-500">{t.passengers}</span>
-          <span className="truncate font-semibold text-slate-900">
+          <span className="text-[11px] text-[#5c6370]">{t.passengers}</span>
+          <span className="truncate font-semibold text-[#173452]">
             {t.summary(value.adults, value.discount)}
           </span>
         </span>
@@ -218,7 +218,7 @@ export default function PassengersInput({
               label={
                 <span className="flex flex-col leading-tight">
                   {t.discount}
-                  <span className="text-xs text-slate-500">{t.tip}</span>
+                  <span className="text-xs text-[#5c6370]">{t.tip}</span>
                 </span>
               }
               value={local.discount}
@@ -231,9 +231,9 @@ export default function PassengersInput({
 
           {/* Итого + Готово */}
           <div className="mt-3 flex items-center justify-between">
-            <span className="text-sm text-slate-500">
+            <span className="text-sm text-[#5c6370]">
               {t.passengers}:{" "}
-              <b className="text-slate-900 tabular-nums">{total}</b>
+              <b className="text-[#173452] tabular-nums">{total}</b>
             </span>
             <button
               type="button"
@@ -270,7 +270,7 @@ function Row({
 }) {
   return (
     <div className="flex items-center justify-between gap-2">
-      <span className="text-sm text-slate-700">{label}</span>
+      <span className="text-sm text-[#173452]">{label}</span>
       <div className="flex items-center gap-2">
         <IconButton
           ariaLabel="minus"
@@ -280,7 +280,7 @@ function Row({
           <Minus className="h-4 w-4" />
         </IconButton>
 
-        <span className="w-7 text-center tabular-nums text-slate-900">
+        <span className="w-7 text-center tabular-nums text-[#173452]">
           {value}
         </span>
 
@@ -317,8 +317,8 @@ function IconButton({
       className={`h-8 w-8 grid place-items-center rounded-full border transition
         ${
           disabled
-            ? "border-slate-200 text-slate-300 cursor-not-allowed"
-            : "border-slate-300 text-slate-700 hover:bg-slate-50 active:scale-95"
+            ? "border-[#e3dfd9] text-white/70 cursor-not-allowed"
+            : "border-[#e3dfd9] text-[#173452] hover:bg-[#f6f4f1] active:scale-95"
         }`}
     >
       {children}

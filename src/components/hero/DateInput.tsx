@@ -38,7 +38,7 @@ export default function DateInput({
       onClick={onOpen}
       className={[
         // единая «пилюля»: одинаковая высота/радиус/тени
-        "h-14 w-full rounded-xl bg-slate-50 hover:bg-white ring-1 ring-slate-200",
+        "h-14 w-full rounded-xl bg-[#f6f4f1] hover:bg-white ring-1 ring-[#e3dfd9]",
         "px-4 text-left",
         "flex items-center",
         "transition focus-visible:ring-2 focus-visible:ring-sky-400 focus:outline-none",
@@ -49,7 +49,7 @@ export default function DateInput({
       {/* левая иконка календаря */}
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        className="mr-3 h-5 w-5 text-slate-500 shrink-0"
+        className="mr-3 h-5 w-5 text-[#5c6370] shrink-0"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
@@ -61,9 +61,9 @@ export default function DateInput({
       {/* текстовая часть: маленький лейбл + крупное значение в одну колонку */}
       <span className="flex min-w-0 flex-col leading-tight">
         {label && (
-          <span className="text-[11px] text-slate-500">{label}</span>
+          <span className="text-[11px] text-[#5c6370]">{label}</span>
         )}
-        <span className={`truncate font-semibold ${value || displayText ? "text-slate-900" : "text-slate-400"}`}>{human}</span>
+        <span className={`truncate font-semibold ${value || displayText ? "text-[#173452]" : "text-[#8c929c]"}`}>{human}</span>
       </span>
     </button>
   );

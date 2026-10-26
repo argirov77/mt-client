@@ -19,11 +19,11 @@ type Props = {
 };
 
 const toneClass = (action: Action) => {
-  if (action.muted) return "bg-slate-300 text-slate-700 hover:bg-slate-300";
+  if (action.muted) return "bg-[#d7d2cb] text-[#173452] hover:bg-[#d7d2cb]";
   if (action.tone === "pay") return "bg-emerald-700 text-white hover:bg-emerald-800";
   if (action.tone === "secondary")
-    return "border-[1.5px] border-slate-300 bg-white text-slate-900 hover:border-slate-400";
-  return "bg-[#0a65b0] text-white hover:bg-[#08558f]";
+    return "border-[1.5px] border-[#e3dfd9] bg-white text-[#173452] hover:border-[#173452]";
+  return "bg-[#c2410c] text-white hover:bg-[#a8380b]";
 };
 
 /**
@@ -46,7 +46,7 @@ export default function FlowActionBar({ hint, totalLabel, totalText, primary, se
   );
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white px-3 pb-[calc(0.6rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-6px_14px_rgba(15,23,42,0.07)] lg:static lg:z-auto lg:rounded-2xl lg:border lg:px-4 lg:pb-4 lg:pt-3 lg:shadow-sm">
+    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[#e3dfd9] bg-white px-3 pb-[calc(0.6rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-6px_14px_rgba(15,23,42,0.07)] lg:static lg:z-auto lg:rounded-2xl lg:border lg:px-4 lg:pb-4 lg:pt-3 lg:shadow-sm">
       <div className="mx-auto flex max-w-5xl flex-col gap-1.5">
         {hint ? (
           <p role="status" className="text-center text-xs font-semibold text-amber-800 lg:text-left">
@@ -63,14 +63,14 @@ export default function FlowActionBar({ hint, totalLabel, totalText, primary, se
             {totalText ? (
               // на компьютере итог уже стоит в «Вашей поездке» над кнопкой
               <span className="flex flex-col leading-tight lg:hidden">
-                <span className="text-[11px] text-slate-600">{totalLabel}</span>
-                <b className="text-base text-slate-900">{totalText}</b>
+                <span className="text-[11px] text-[#5c6370]">{totalLabel}</span>
+                <b className="text-base text-[#173452]">{totalText}</b>
               </span>
             ) : null}
             {primary ? renderButton(primary, "flex-1") : null}
           </div>
         )}
-        {notes ? <div className="text-center text-[11px] text-slate-600 lg:text-left">{notes}</div> : null}
+        {notes ? <div className="text-center text-[11px] text-[#5c6370] lg:text-left">{notes}</div> : null}
       </div>
     </div>
   );

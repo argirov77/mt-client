@@ -110,7 +110,7 @@ export default function RouteFirstScreen({ lang, title, subtitle, fromId, toId }
   const chip = "rounded-full bg-white/15 px-2.5 py-1 text-xs sm:text-sm";
 
   return (
-    <section id="hero" className="bg-slate-50 px-3 pb-8 pt-3 sm:px-4">
+    <section id="hero" className="bg-[#f6f4f1] px-3 pb-8 pt-3 sm:px-4">
       <div
         className={`mx-auto grid w-full max-w-6xl items-start gap-4 lg:gap-6 ${
           flowActive ? "" : "lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]"
@@ -126,7 +126,7 @@ export default function RouteFirstScreen({ lang, title, subtitle, fromId, toId }
               backgroundPosition: "center",
             }}
           >
-            <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#c9d6e6]">{t.directSince}</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#fdba74]">{t.directSince}</p>
             <h1 className="mt-2 text-[clamp(24px,4vw,40px)] font-black leading-[1.1] tracking-[-0.02em]">{title}</h1>
             {subtitle && !isRoute ? <p className="mt-2 text-sm text-white/85">{subtitle}</p> : null}
             {isRoute ? (
@@ -156,20 +156,20 @@ export default function RouteFirstScreen({ lang, title, subtitle, fromId, toId }
 
           {isRoute && (outbound.loading || outbound.trips.length > 0) ? (
             <div>
-              <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-600">{t.nearestTrips}</p>
+              <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-[#5c6370]">{t.nearestTrips}</p>
               <div className="grid grid-cols-3 gap-2">
                 {outbound.loading
                   ? [0, 1, 2].map((key) => (
-                      <span key={key} className="h-[58px] animate-pulse rounded-xl bg-slate-200/70" aria-hidden />
+                      <span key={key} className="h-[58px] animate-pulse rounded-xl bg-[#e3dfd9]/70" aria-hidden />
                     ))
                   : outbound.trips.map((trip, index) => (
                       <button
                         key={trip.date}
                         type="button"
                         onClick={() => openTrip(index)}
-                        className="flex min-h-[58px] flex-col items-center justify-center rounded-xl border border-slate-300 bg-white px-1 py-2 transition hover:border-[#93b8e6] hover:shadow-sm"
+                        className="flex min-h-[58px] flex-col items-center justify-center rounded-xl border border-[#e3dfd9] bg-white px-1 py-2 transition hover:border-[#fdba74] hover:shadow-sm"
                       >
-                        <b className="text-sm text-slate-900">{formatDayShort(trip.date, lang)}</b>
+                        <b className="text-sm text-[#173452]">{formatDayShort(trip.date, lang)}</b>
                         <span className="text-xs font-semibold text-emerald-700">{t.seatsFree(trip.freeSeats)}</span>
                       </button>
                     ))}
@@ -178,14 +178,14 @@ export default function RouteFirstScreen({ lang, title, subtitle, fromId, toId }
           ) : null}
 
           {isRoute ? (
-            <p className="rounded-xl bg-[#eef3f9] px-3 py-2 text-sm text-[#173452]">
+            <p className="rounded-xl bg-[#fdf0e7] px-3 py-2 text-sm text-[#173452]">
               {returnDays && names.from && names.to
                 ? t.returnDiscount(`${names.to} → ${names.from}`, returnDays)
                 : t.returnDiscountShort}
             </p>
           ) : null}
 
-          <ul className="space-y-1 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700">
+          <ul className="space-y-1 rounded-xl border border-[#e3dfd9] bg-white px-3 py-2.5 text-sm text-[#173452]">
             {[t.baggageIncluded, t.freeBooking].map((item) => (
               <li key={item} className="flex items-start gap-2">
                 <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" aria-hidden />
@@ -197,7 +197,7 @@ export default function RouteFirstScreen({ lang, title, subtitle, fromId, toId }
 
         <div id="booking" ref={bookingRef} className="scroll-mt-20">
           {!flowActive ? (
-            <h2 className="mb-2 px-1 text-lg font-bold text-slate-900 sm:text-xl">{t.formTitle}</h2>
+            <h2 className="mb-2 px-1 text-lg font-bold text-[#173452] sm:text-xl">{t.formTitle}</h2>
           ) : null}
           <BookingCard forcedFromId={fromId} forcedToId={toId} onFlowChange={handleFlowChange} />
         </div>
@@ -205,17 +205,17 @@ export default function RouteFirstScreen({ lang, title, subtitle, fromId, toId }
 
       {/* Телефон: кнопка «Выбрать рейс» закреплена внизу, пока форма не на экране */}
       {!flowActive && !bookingVisible ? (
-        <div className="fixed inset-x-0 bottom-0 z-40 flex items-center gap-3 border-t border-slate-200 bg-white px-3 pb-[calc(0.6rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-6px_14px_rgba(15,23,42,0.07)] lg:hidden">
+        <div className="fixed inset-x-0 bottom-0 z-40 flex items-center gap-3 border-t border-[#e3dfd9] bg-white px-3 pb-[calc(0.6rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-6px_14px_rgba(15,23,42,0.07)] lg:hidden">
           {first ? (
             <span className="flex flex-col leading-tight">
-              <span className="text-[11px] text-slate-600">{formatDayShort(first.date, lang)}</span>
-              <b className="text-base text-slate-900">{formatUah(first.tour.price)}</b>
+              <span className="text-[11px] text-[#5c6370]">{formatDayShort(first.date, lang)}</span>
+              <b className="text-base text-[#173452]">{formatUah(first.tour.price)}</b>
             </span>
           ) : null}
           <button
             type="button"
             onClick={() => openTrip(0)}
-            className="flex min-h-[44px] flex-1 items-center justify-center rounded-xl bg-[#0a65b0] px-4 text-sm font-bold text-white hover:bg-[#08558f]"
+            className="flex min-h-[44px] flex-1 items-center justify-center rounded-xl bg-[#c2410c] px-4 text-sm font-bold text-white hover:bg-[#a8380b]"
           >
             {t.chooseTrip}
           </button>

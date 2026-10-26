@@ -16,7 +16,7 @@ export default function FullText({ text }: Props) {
         {paragraphs.map((paragraph, index) => (
           <p
             key={index}
-            className="text-base leading-relaxed text-slate-700"
+            className="text-base leading-relaxed text-[#173452]"
           >
             {paragraph}
           </p>

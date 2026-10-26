@@ -12,7 +12,7 @@ export default function DepartureDays({ text }: Props) {
   return (
     <section className="bg-white pt-4">
       <div className="mx-auto w-full max-w-3xl px-4">
-        <p className="text-base leading-relaxed text-slate-700">{trimmed}</p>
+        <p className="text-base leading-relaxed text-[#173452]">{trimmed}</p>
       </div>
     </section>
   );
