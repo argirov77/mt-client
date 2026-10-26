@@ -5,8 +5,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useLanguage, type Lang } from "@/components/common/LanguageProvider";
 import { trackContact } from "@/lib/analytics";
+import { OFFICES, OFFICE_ADDRESS, OFFICE_CITY_NAME, formatPhone } from "@/lib/offices";
 import { buildLocaleAlternates, toHreflang, toHtmlLang } from "@/lib/seo";
 
 type MenuLabel = Record<Lang, string>;
@@ -45,8 +47,6 @@ const menu: MenuItem[] = [
   },
 ];
 
-type ContactCity = "varna" | "odessa";
-
 type ContactTranslations = Record<
   Lang,
   {
@@ -64,7 +64,7 @@ type ContactTranslations = Record<
 const contactTranslations: ContactTranslations = {
   ru: {
     title: "Контакты",
-    description: "Выберите способ связи, затем выберите номер.",
+    description: "Позвонить или написать — одним нажатием",
     varna: "Варна",
     odessa: "Одесса",
     call: "Звонок",
@@ -74,7 +74,7 @@ const contactTranslations: ContactTranslations = {
   },
   bg: {
     title: "Контакти",
-    description: "Изберете начин за връзка, след това изберете номер.",
+    description: "Обадете се или пишете с едно натискане",
     varna: "Варна",
     odessa: "Одеса",
     call: "Обаждане",
@@ -84,7 +84,7 @@ const contactTranslations: ContactTranslations = {
   },
   en: {
     title: "Contacts",
-    description: "Choose a contact method, then pick a number.",
+    description: "Call or message in one tap",
     varna: "Varna",
     odessa: "Odesa",
     call: "Call",
@@ -94,7 +94,7 @@ const contactTranslations: ContactTranslations = {
   },
   ua: {
     title: "Контакти",
-    description: "Оберіть спосіб звʼязку, потім номер.",
+    description: "Зателефонувати чи написати — одним натисканням",
     varna: "Варна",
     odessa: "Одеса",
     call: "Дзвінок",
@@ -103,13 +103,6 @@ const contactTranslations: ContactTranslations = {
     hint: "Оберіть спосіб звʼязку, потім номер (місто підписане).",
   },
 };
-
-const contacts: { city: ContactCity; phone: string }[] = [
-  { city: "varna", phone: "+359894290356" },
-  { city: "varna", phone: "+359879554559" },
-  { city: "odessa", phone: "+380930004636" },
-  { city: "odessa", phone: "+380674232247" },
-];
 
 const normalizePhoneDigits = (phone: string) => phone.replace(/[^\d]/g, "");
 
@@ -135,7 +128,6 @@ export default function Header() {
   const [isLangOpen, setIsLangOpen] = useState(false);
   const langRef = useRef<HTMLDetailsElement>(null);
   const langSummaryRef = useRef<HTMLElement>(null);
-  const [method, setMethod] = useState<"telegram" | "viber" | "whatsapp" | "call">("telegram");
   // Один и тот же модал контактов открывается из топбара и из секции «Посылка»
   // (событие open-contact-modal). source определяем по точке открытия.
   const [contactSource, setContactSource] = useState<"topbar" | "parcel_section">("topbar");
@@ -180,14 +172,9 @@ export default function Header() {
     return () => window.removeEventListener("open-contact-modal", handler);
   }, []);
 
-  const actionLabel = {
-    telegram: "Telegram",
-    viber: "Viber",
-    whatsapp: "WhatsApp",
-    call: t.call,
-  } as const;
+  type ContactMethodKey = "call" | "viber" | "telegram" | "whatsapp";
 
-  const linkFor = (phone: string) => {
+  const linkFor = (method: ContactMethodKey, phone: string) => {
     const digits = normalizePhoneDigits(phone);
 
     if (method === "call") return `tel:${phone}`;
@@ -197,13 +184,23 @@ export default function Header() {
     return `tg://resolve?phone=${digits}`;
   };
 
-  const trackContactClick = (phone: string) => {
+  const trackContactClick = (method: ContactMethodKey, phone: string, source = contactSource) => {
     trackContact({
       method: method === "call" ? "phone" : method,
-      source: contactSource,
+      source,
       label: method === "call" ? phone : method,
     });
   };
+
+  // Закрытие окна контактов по Escape
+  useEffect(() => {
+    if (!isContactOpen) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsContactOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [isContactOpen]);
 
   return (
     <header className="bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 sticky top-0 z-30 border-b border-slate-200">
@@ -286,11 +283,26 @@ export default function Header() {
           })}
         </ul>
 
+        {/* Компьютер: телефоны офисов видны сразу */}
+        <div className="ml-auto hidden items-center gap-4 lg:flex">
+          {OFFICES.map((office) => (
+            <a
+              key={office.city}
+              href={`tel:${office.phones[0]}`}
+              onClick={() => trackContactClick("call", office.phones[0], "topbar")}
+              className="flex flex-col leading-tight hover:text-[#0a65b0]"
+            >
+              <span className="text-[11px] font-semibold text-slate-600">{OFFICE_CITY_NAME[current][office.city]}</span>
+              <span className="text-sm font-bold text-slate-900">{formatPhone(office.phones[0])}</span>
+            </a>
+          ))}
+        </div>
+
         {/* Переключатель языка: выпадающий список из настоящих ссылок */}
         <div
           role="group"
           aria-label="Выбор языка"
-          className="order-3 ml-auto inline-flex items-center md:order-none md:ml-4"
+          className="order-3 ml-auto inline-flex items-center md:order-none md:ml-4 lg:ml-2"
         >
           <details
             ref={langRef}
@@ -347,22 +359,28 @@ export default function Header() {
           </details>
         </div>
       </nav>
-      {isContactOpen ? (
+      {/* Портал: у шапки backdrop-filter, и fixed-окно внутри неё обрезалось бы по высоте шапки */}
+      {isContactOpen && typeof document !== "undefined" ? createPortal(
         <div
-          className="fixed inset-x-0 top-14 z-40 flex items-start justify-center overflow-y-auto bg-slate-900/50 px-4 py-8 sm:items-center"
-          role="dialog"
-          aria-modal="true"
+          className="fixed inset-x-0 bottom-0 top-14 z-40 flex items-start justify-center overflow-y-auto bg-slate-900/50 px-4 py-8 sm:items-center"
+          onClick={() => setIsContactOpen(false)}
         >
-          <div className="max-h-[calc(100vh-7.5rem)] w-full max-w-xl overflow-y-auto rounded-[18px] border border-slate-200 bg-white shadow-2xl">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="contact-dialog-title"
+            className="max-h-[calc(100vh-7.5rem)] w-full max-w-xl overflow-y-auto rounded-[18px] border border-slate-200 bg-white shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
             <div className="flex items-start justify-between gap-4 border-b border-slate-200/70 px-4 py-3">
               <div>
-                <h2 className="text-base font-black text-slate-900">{t.title}</h2>
-                <p className="mt-1 text-sm text-slate-500">{t.description}</p>
+                <h2 id="contact-dialog-title" className="text-base font-black text-slate-900">{t.title}</h2>
+                <p className="mt-1 text-sm text-slate-600">{t.description}</p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsContactOpen(false)}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-[14px] border border-slate-200 bg-white text-slate-600 transition hover:-translate-y-0.5 hover:shadow-md"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-[14px] border border-slate-200 bg-white text-slate-600 transition hover:shadow-md"
                 aria-label={t.close}
               >
                 <svg
@@ -378,111 +396,75 @@ export default function Header() {
               </button>
             </div>
 
-            <div className="grid gap-3 p-4">
-              <div className="flex flex-wrap gap-2" role="group" aria-label={t.message}>
-                {(
-                  [
-                    { key: "telegram", label: "Telegram" },
-                    { key: "viber", label: "Viber" },
-                    { key: "whatsapp", label: "WhatsApp" },
-                    { key: "call", label: t.call },
-                  ] as const
-                ).map((item) => (
-                  <button
-                    key={item.key}
-                    type="button"
-                    onClick={() => setMethod(item.key)}
-                    aria-pressed={method === item.key}
-                    aria-label={item.label}
-                    title={item.label}
-                    className={
-                      method === item.key
-                        ? "flex h-11 w-11 items-center justify-center rounded-[16px] border border-orange-200 bg-orange-50 text-orange-700 shadow-md transition hover:-translate-y-0.5"
-                        : "flex h-11 w-11 items-center justify-center rounded-[16px] border border-slate-200 bg-white text-slate-700 transition hover:-translate-y-0.5 hover:shadow-md"
-                    }
-                  >
-                    {item.key === "telegram" ? (
-                      <img src="/icons/telegram.png" alt="Telegram" width={18} height={18} />
-                    ) : null}
-                    {item.key === "viber" ? (
-                      <img src="/icons/viber.png" alt="Viber" width={18} height={18} />
-                    ) : null}
-                    {item.key === "whatsapp" ? (
-                      <img src="/icons/whatsapp.png" alt="WhatsApp" width={18} height={18} />
-                    ) : null}
-                    {item.key === "call" ? (
-                      <svg
-                        aria-hidden="true"
-                        viewBox="0 0 24 24"
-                        className="h-4 w-4"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.8"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M22 16.9v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.18 2 2 0 0 1 4.06 2h3a2 2 0 0 1 2 1.72c.12.86.32 1.7.57 2.5a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.58-1.09a2 2 0 0 1 2.11-.45c.8.25 1.64.45 2.5.57A2 2 0 0 1 22 16.9z"
-                        />
-                      </svg>
-                    ) : null}
-                  </button>
-                ))}
-              </div>
-
-              <div className="grid gap-2">
-                {contacts.map((entry) => (
-                  <div
-                    key={`${entry.city}-${entry.phone}`}
-                    className="flex items-center justify-between gap-3 rounded-[16px] border border-slate-200 bg-white px-3 py-2"
-                  >
-                    <div className="min-w-0">
-                      <p className="text-xs font-black uppercase tracking-wide text-slate-700">
-                        {t[entry.city as keyof typeof t]}
-                      </p>
-                      <p className="text-xs text-slate-500">{entry.phone}</p>
-                    </div>
-                    <a
-                      href={linkFor(entry.phone)}
-                      onClick={() => trackContactClick(entry.phone)}
-                      aria-label={`${actionLabel[method]} ${entry.phone}`}
-                      title={actionLabel[method]}
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-[14px] border border-slate-200 bg-slate-50 text-slate-700 transition hover:-translate-y-0.5 hover:shadow-md"
-                    >
-                      {method === "telegram" ? (
-                        <img src="/icons/telegram.png" alt="Telegram" width={18} height={18} />
-                      ) : null}
-                      {method === "viber" ? (
-                        <img src="/icons/viber.png" alt="Viber" width={18} height={18} />
-                      ) : null}
-                      {method === "whatsapp" ? (
-                        <img src="/icons/whatsapp.png" alt="WhatsApp" width={18} height={18} />
-                      ) : null}
-                      {method === "call" ? (
-                        <svg
-                          aria-hidden="true"
-                          viewBox="0 0 24 24"
-                          className="h-4 w-4"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.8"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M22 16.9v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.18 2 2 0 0 1 4.06 2h3a2 2 0 0 1 2 1.72c.12.86.32 1.7.57 2.5a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.58-1.09a2 2 0 0 1 2.11-.45c.8.25 1.64.45 2.5.57A2 2 0 0 1 22 16.9z"
-                          />
-                        </svg>
-                      ) : null}
-                    </a>
+            {/* Один шаг: у каждого номера сразу звонок и мессенджеры */}
+            <div className="grid gap-4 p-4">
+              {OFFICES.map((office) => (
+                <section key={office.city} className="space-y-2">
+                  <div>
+                    <h3 className="text-sm font-black text-slate-900">{OFFICE_CITY_NAME[current][office.city]}</h3>
+                    <p className="text-xs text-slate-600">{OFFICE_ADDRESS[current][office.city]}</p>
                   </div>
-                ))}
-              </div>
-
-              <p className="text-xs text-slate-500">{t.hint}</p>
+                  {office.phones.map((phone) => (
+                    <div
+                      key={phone}
+                      className="flex flex-wrap items-center justify-between gap-2 rounded-[16px] border border-slate-200 bg-white px-3 py-2"
+                    >
+                      <a
+                        href={linkFor("call", phone)}
+                        onClick={() => trackContactClick("call", phone)}
+                        className="text-base font-bold text-slate-900 hover:text-[#0a65b0]"
+                      >
+                        {formatPhone(phone)}
+                      </a>
+                      <div className="flex gap-1.5">
+                        {(["call", "viber", "telegram", "whatsapp"] as const).map((method) => {
+                          const label =
+                            method === "call"
+                              ? t.call
+                              : method === "viber"
+                                ? "Viber"
+                                : method === "telegram"
+                                  ? "Telegram"
+                                  : "WhatsApp";
+                          return (
+                            <a
+                              key={method}
+                              href={linkFor(method, phone)}
+                              onClick={() => trackContactClick(method, phone)}
+                              aria-label={`${label} ${formatPhone(phone)}`}
+                              title={label}
+                              className="inline-flex h-11 w-11 items-center justify-center rounded-[14px] border border-slate-200 bg-slate-50 text-slate-700 transition hover:shadow-md"
+                            >
+                              {method === "call" ? (
+                                <svg
+                                  aria-hidden="true"
+                                  viewBox="0 0 24 24"
+                                  className="h-4 w-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="1.8"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M22 16.9v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.18 2 2 0 0 1 4.06 2h3a2 2 0 0 1 2 1.72c.12.86.32 1.7.57 2.5a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.58-1.09a2 2 0 0 1 2.11-.45c.8.25 1.64.45 2.5.57A2 2 0 0 1 22 16.9z"
+                                  />
+                                </svg>
+                              ) : (
+                                <img src={`/icons/${method}.png`} alt="" width={18} height={18} />
+                              )}
+                            </a>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </section>
+              ))}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       ) : null}
     </header>
   );

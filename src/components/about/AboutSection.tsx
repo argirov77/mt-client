@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import {
   bodyTextClass,
@@ -10,6 +10,7 @@ import {
 import { aboutContent, type Lang } from "./content";
 import { aboutTranslations } from "@/translations/home";
 import { trackContact } from "@/lib/analytics";
+import { formatPhone } from "@/lib/offices";
 
 type Props = {
   lang?: Lang;
@@ -17,30 +18,31 @@ type Props = {
   className?: string;
 };
 
+type MediaItem = { src: string; alt: string; caption?: string };
+
+/**
+ * «О компании» без вкладок: факты, автобусы и офисы подряд, коротко.
+ * Тексты, фото, номера и мессенджеры — те же, что были во вкладках.
+ */
 export default function AboutSection({
   lang = "ru",
   id = "about",
   className = "",
 }: Props) {
   const blocks = aboutContent[lang] ?? aboutContent.ru;
-  const { kicker, title, subtitle, closeLabel } = aboutTranslations[lang] ?? aboutTranslations.ru;
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [activeMediaIndex, setActiveMediaIndex] = useState(0);
-  const [modalItem, setModalItem] = useState<null | {
-    src: string;
-    alt: string;
-    caption?: string;
-  }>(null);
+  const copy = aboutTranslations[lang] ?? aboutTranslations.ru;
+  const [modalItem, setModalItem] = useState<MediaItem | null>(null);
 
-  const activeBlock = blocks[activeIndex] ?? blocks[0];
-  const media = activeBlock?.media ?? [];
-  const heroMedia = media[activeMediaIndex] ?? media[0];
+  const aboutBlock = blocks.find((block) => !block.media && !block.offices) ?? blocks[0];
+  const fleetBlock = blocks.find((block) => block.media?.length);
+  const officesBlock = blocks.find((block) => block.offices?.length);
 
   const formatPhoneDigits = (phone: string) => phone.replace(/\D/g, "");
-  const buildWhatsAppLink = (phone: string) => `https://wa.me/${formatPhoneDigits(phone)}`;
-  const buildViberLink = (phone: string) =>
-    `viber://chat?number=%2B${formatPhoneDigits(phone)}`;
-  const buildTelegramLink = (phone: string) => `https://t.me/+${formatPhoneDigits(phone)}`;
+  const messengers = (phone: string) => [
+    { key: "viber" as const, label: "Viber", href: `viber://chat?number=%2B${formatPhoneDigits(phone)}` },
+    { key: "telegram" as const, label: "Telegram", href: `https://t.me/+${formatPhoneDigits(phone)}` },
+    { key: "whatsapp" as const, label: "WhatsApp", href: `https://wa.me/${formatPhoneDigits(phone)}` },
+  ];
   const trackPhoneClick = (phone: string) => {
     trackContact({ method: "phone", source: "about_section", label: phone });
   };
@@ -48,308 +50,121 @@ export default function AboutSection({
     trackContact({ method: messenger, source: "about_section", label: messenger });
   };
 
-  useEffect(() => {
-    setActiveMediaIndex(0);
-  }, [activeIndex]);
-
-  const bulletItems = useMemo(() => activeBlock?.bullets ?? [], [activeBlock]);
-
   return (
     <section id={id} className={`${sectionBgMuted} py-16 ${className}`}>
-      <div className="mx-auto w-full max-w-6xl px-4">
+      <div className="mx-auto w-full max-w-6xl space-y-10 px-4">
         <div className="text-center">
-          <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-            {kicker}
-          </div>
-          <h2 className={`${sectionTitleClass} mt-2`}>
-            {title}
-          </h2>
-          <p className="mx-auto mt-3 max-w-3xl text-sm text-slate-600 md:text-base">
-            {subtitle}
-          </p>
+          <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">{copy.kicker}</div>
+          <h2 className={`${sectionTitleClass} mt-2`}>{copy.title}</h2>
+          <p className="mx-auto mt-3 max-w-3xl text-sm text-slate-600 md:text-base">{copy.subtitle}</p>
         </div>
 
-        <section className="mt-8 overflow-hidden rounded-3xl border border-slate-200/70 bg-white/80 shadow-[0_16px_40px_rgba(15,23,42,0.08)]">
-          <div className="border-b border-slate-200/70 bg-gradient-to-b from-white/95 to-white/80 px-4 py-3">
-            <div
-              className="flex flex-nowrap gap-2 overflow-auto md:flex-wrap"
-              role="tablist"
-              aria-label="Разделы"
-            >
-              {blocks.map((block, idx) => (
-                <button
-                  key={`${block.title}-${idx}`}
-                  type="button"
-                  role="tab"
-                  className={`rounded-full border px-4 py-2 text-xs font-black uppercase tracking-wide transition ${
-                    idx === activeIndex
-                      ? "border-orange-200/80 bg-orange-100/70 text-orange-700 shadow-[0_12px_24px_rgba(251,146,60,0.18)]"
-                      : "border-slate-200/70 bg-white text-slate-600 hover:-translate-y-0.5 hover:shadow-md"
-                  }`}
-                  aria-selected={idx === activeIndex}
-                  onClick={() => setActiveIndex(idx)}
+        {/* О компании: факты вместо общих слов */}
+        <div className="space-y-4">
+          <ul className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            {copy.facts.map((fact) => (
+              <li key={fact.label} className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                <b className="block text-lg text-slate-900 md:text-xl">{fact.value}</b>
+                <span className="text-sm text-slate-600">{fact.label}</span>
+              </li>
+            ))}
+          </ul>
+          {aboutBlock ? (
+            <div className="space-y-2">
+              {aboutBlock.text.map((paragraph, index) => (
+                <p key={`${paragraph}-${index}`} className={`${bodyTextClass} text-slate-700`}>
+                  {paragraph}
+                </p>
+              ))}
+            </div>
+          ) : null}
+        </div>
+
+        {/* Автобусы: фото с подписями */}
+        {fleetBlock ? (
+          <div className="space-y-3">
+            <h3 className="text-xl font-extrabold tracking-tight text-slate-900">{fleetBlock.title}</h3>
+            <ul className="grid grid-cols-3 gap-2 sm:gap-3">
+              {(fleetBlock.media ?? []).map((item) => (
+                <li key={item.src}>
+                  <button
+                    type="button"
+                    className="w-full overflow-hidden rounded-2xl border border-slate-200 bg-white text-left transition hover:shadow-md"
+                    onClick={() => setModalItem(item)}
+                  >
+                    <span className="block aspect-[4/3] bg-slate-100">
+                      <Image
+                        src={item.src}
+                        alt={item.alt}
+                        width={480}
+                        height={360}
+                        className="h-full w-full object-cover"
+                      />
+                    </span>
+                    <span className="block px-2 py-1.5 text-xs font-bold text-slate-800 sm:text-sm">
+                      {item.caption ?? item.alt}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <p className="text-sm text-slate-700">{copy.amenities}</p>
+          </div>
+        ) : null}
+
+        {/* Офисы: фото, адрес, телефон и мессенджеры одной строкой */}
+        {officesBlock?.offices ? (
+          <div className="space-y-3">
+            <h3 className="text-xl font-extrabold tracking-tight text-slate-900">{officesBlock.title}</h3>
+            <div className="grid gap-4 md:grid-cols-2">
+              {officesBlock.offices.map((office) => (
+                <div
+                  key={office.city}
+                  className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white sm:flex-row"
                 >
-                  {block.title}
-                </button>
+                  <div className="relative aspect-[16/9] sm:aspect-auto sm:w-40 sm:shrink-0">
+                    <Image src={office.image.src} alt={office.image.alt} fill className="object-cover" />
+                  </div>
+                  <div className="flex flex-1 flex-col gap-2 p-4">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <b className="text-base text-slate-900">{office.city}</b>
+                      <span className="text-sm text-slate-600">· {office.tag}</span>
+                    </div>
+                    <p className="text-sm text-slate-700">{office.address}</p>
+                    {office.phones.map((phone) => (
+                      <div key={phone} className="flex flex-wrap items-center gap-2">
+                        <a
+                          href={`tel:${phone}`}
+                          onClick={() => trackPhoneClick(phone)}
+                          aria-label={`${copy.call} ${formatPhone(phone)}`}
+                          className="min-h-[44px] content-center text-base font-bold text-slate-900 hover:text-[#0a65b0]"
+                        >
+                          {formatPhone(phone)}
+                        </a>
+                        <span className="ml-auto flex gap-1.5">
+                          {messengers(phone).map((messenger) => (
+                            <a
+                              key={messenger.key}
+                              href={messenger.href}
+                              onClick={() => trackMessengerClick(messenger.key)}
+                              target="_blank"
+                              rel="noreferrer"
+                              aria-label={`${messenger.label} ${formatPhone(phone)}`}
+                              title={messenger.label}
+                              className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 transition hover:border-slate-400"
+                            >
+                              <Image src={`/icons/${messenger.key}.png`} alt="" width={18} height={18} />
+                            </a>
+                          ))}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
           </div>
-
-          {activeBlock?.offices ? (
-            <div className="px-5 py-6">
-              <h3 className="text-xl font-extrabold tracking-tight text-slate-900">
-                {activeBlock?.title}
-              </h3>
-              <div className="mt-3 space-y-3">
-                {activeBlock?.text.map((paragraph, index) => (
-                  <p key={`${paragraph}-${index}`} className={`${bodyTextClass} text-slate-600`}>
-                    {paragraph}
-                  </p>
-                ))}
-              </div>
-
-              <ul className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-3">
-                {bulletItems.map((item, index) => (
-                  <li
-                    key={`${item}-${index}`}
-                    className="flex min-w-0 gap-3 rounded-2xl border border-slate-200/70 bg-slate-50/60 p-3"
-                  >
-                    <span className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-lg border border-blue-200 bg-blue-50 text-blue-600">
-                      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M20 6L9 17l-5-5" />
-                      </svg>
-                    </span>
-                    <span className="min-w-0 flex-1 break-words text-sm text-slate-700">{item}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <div className="mt-6 grid gap-6 lg:grid-cols-2">
-                {activeBlock.offices.map((office, index) => (
-                  <div
-                    key={`${office.city}-${index}`}
-                    className="flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-[0_12px_30px_rgba(15,23,42,0.08)]"
-                  >
-                    <div className="relative aspect-[16/9] bg-gradient-to-br from-slate-50 to-orange-50">
-                      <Image
-                        src={office.image.src}
-                        alt={office.image.alt}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                    <div className="flex flex-1 flex-col gap-3 p-4">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="text-base font-extrabold text-slate-900">{office.city}</div>
-                        <span className="rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-bold text-orange-700">
-                          {office.tag}
-                        </span>
-                      </div>
-                      <div className="text-sm text-slate-600">{office.address}</div>
-                      {office.image.caption ? (
-                        <div className="text-xs font-semibold text-slate-500">
-                          {office.image.caption}
-                        </div>
-                      ) : null}
-                      <div className="mt-2 space-y-2">
-                        {office.phones.map((phone) => (
-                          <div
-                            key={phone}
-                            className="rounded-2xl border border-slate-200/70 bg-slate-50/70 px-3 py-3"
-                          >
-                            <div className="flex flex-wrap items-center justify-between gap-2">
-                              <a
-                                href={`tel:${phone}`}
-                                onClick={() => trackPhoneClick(phone)}
-                                className="text-sm font-semibold text-slate-800 hover:text-orange-600"
-                              >
-                                {phone}
-                              </a>
-                              <a
-                                href={`tel:${phone}`}
-                                onClick={() => trackPhoneClick(phone)}
-                                className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-bold uppercase tracking-wide text-slate-700"
-                              >
-                                Позвонить
-                              </a>
-                            </div>
-                            <div className="mt-2 flex flex-wrap items-center gap-2">
-                              <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                                Мессенджеры
-                              </span>
-                              <div className="flex items-center gap-2">
-                                <a
-                                  href={buildViberLink(phone)}
-                                  onClick={() => trackMessengerClick("viber")}
-                                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-purple-200 bg-white text-purple-700 transition hover:border-purple-400"
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  aria-label={`Viber ${phone}`}
-                                  title="Viber"
-                                >
-                                  <Image
-                                    src="/icons/viber.png"
-                                    alt="Viber"
-                                    width={18}
-                                    height={18}
-                                  />
-                                </a>
-                                <a
-                                  href={buildWhatsAppLink(phone)}
-                                  onClick={() => trackMessengerClick("whatsapp")}
-                                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-emerald-200 bg-white text-emerald-700 transition hover:border-emerald-400"
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  aria-label={`WhatsApp ${phone}`}
-                                  title="WhatsApp"
-                                >
-                                  <Image
-                                    src="/icons/whatsapp.png"
-                                    alt="WhatsApp"
-                                    width={18}
-                                    height={18}
-                                  />
-                                </a>
-                                <a
-                                  href={buildTelegramLink(phone)}
-                                  onClick={() => trackMessengerClick("telegram")}
-                                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-sky-200 bg-white text-sky-700 transition hover:border-sky-400"
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  aria-label={`Telegram ${phone}`}
-                                  title="Telegram"
-                                >
-                                  <Image
-                                    src="/icons/telegram.png"
-                                    alt="Telegram"
-                                    width={18}
-                                    height={18}
-                                  />
-                                </a>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="grid gap-0 lg:grid-cols-[1.05fr_0.95fr]">
-              <div className="border-b border-slate-200/70 px-5 py-6 lg:border-b-0 lg:border-r">
-                <h3 className="text-xl font-extrabold tracking-tight text-slate-900">
-                  {activeBlock?.title}
-                </h3>
-                <div className="mt-3 space-y-3">
-                  {activeBlock?.text.map((paragraph, index) => (
-                    <p key={`${paragraph}-${index}`} className={`${bodyTextClass} text-slate-600`}>
-                      {paragraph}
-                    </p>
-                  ))}
-                </div>
-
-                <ul className="mt-5 grid grid-cols-1 gap-3">
-                  {bulletItems.map((item, index) => (
-                    <li
-                      key={`${item}-${index}`}
-                      className="flex min-w-0 gap-3 rounded-2xl border border-slate-200/70 bg-slate-50/60 p-3"
-                    >
-                      <span className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-lg border border-blue-200 bg-blue-50 text-blue-600">
-                        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M20 6L9 17l-5-5" />
-                        </svg>
-                      </span>
-                      <span className="min-w-0 flex-1 break-words text-sm text-slate-700">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="px-5 py-6">
-                {media.length > 0 ? (
-                  <>
-                    <div className="hidden gap-3 sm:grid sm:grid-cols-2">
-                      {media.map((item, index) => (
-                        <button
-                          key={`${item.src}-${index}`}
-                          type="button"
-                          className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg"
-                          onClick={() => setModalItem(item)}
-                        >
-                          <div className="aspect-[16/10] bg-gradient-to-br from-slate-50 to-orange-50">
-                            <Image
-                              src={item.src}
-                              alt={item.alt}
-                              width={640}
-                              height={420}
-                              className="h-full w-full object-cover"
-                            />
-                          </div>
-                          <div className="flex items-center justify-between gap-2 px-3 py-2 text-xs font-bold text-slate-700">
-                            <span>{item.caption ?? ""}</span>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-
-                    <div className="block sm:hidden">
-                      <button
-                        type="button"
-                        className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white text-left shadow-md"
-                        onClick={() => heroMedia && setModalItem(heroMedia)}
-                      >
-                        <div className="aspect-[16/10] bg-gradient-to-br from-slate-50 to-orange-50">
-                          {heroMedia ? (
-                            <Image
-                              src={heroMedia.src}
-                              alt={heroMedia.alt}
-                              width={640}
-                              height={420}
-                              className="h-full w-full object-cover"
-                            />
-                          ) : null}
-                        </div>
-                        <div className="flex items-center justify-between gap-2 border-t border-slate-200/70 px-3 py-2 text-xs font-bold text-slate-700">
-                          <span>{heroMedia?.caption ?? ""}</span>
-                        </div>
-                      </button>
-
-                      <div className="mt-3 flex gap-3 overflow-auto pb-2">
-                        {media.map((item, index) => (
-                          <button
-                            key={`${item.src}-${index}`}
-                            type="button"
-                            className={`flex w-28 flex-shrink-0 flex-col overflow-hidden rounded-2xl border text-left shadow-sm ${
-                              index === activeMediaIndex
-                                ? "border-orange-200 bg-orange-50/60"
-                                : "border-slate-200/70 bg-white"
-                            }`}
-                            onClick={() => setActiveMediaIndex(index)}
-                          >
-                            <div className="aspect-[16/10] bg-gradient-to-br from-slate-50 to-orange-50">
-                              <Image
-                                src={item.src}
-                                alt={item.alt}
-                                width={240}
-                                height={160}
-                                className="h-full w-full object-cover"
-                              />
-                            </div>
-                            <div className="px-2 py-2 text-[11px] font-bold text-slate-700">
-                              {item.caption ?? ""}
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                ) : null}
-              </div>
-            </div>
-          )}
-        </section>
+        ) : null}
       </div>
 
       {modalItem ? (
@@ -358,6 +173,9 @@ export default function AboutSection({
           onClick={() => setModalItem(null)}
         >
           <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={modalItem.caption ?? modalItem.alt}
             className="w-full max-w-4xl overflow-hidden rounded-3xl border border-white/10 bg-slate-950"
             onClick={(event) => event.stopPropagation()}
           >
@@ -372,10 +190,10 @@ export default function AboutSection({
               <span>{modalItem.caption ?? modalItem.alt}</span>
               <button
                 type="button"
-                className="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold text-white"
+                className="min-h-[44px] rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold text-white"
                 onClick={() => setModalItem(null)}
               >
-                {closeLabel}
+                {copy.closeLabel}
               </button>
             </div>
           </div>

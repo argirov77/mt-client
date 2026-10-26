@@ -10,14 +10,27 @@ import {
   sectionTitleClass,
 } from "@/components/common/designGuide";
 import { useSectionView } from "@/utils/useSectionView";
+import { trackContact } from "@/lib/analytics";
+import { OFFICES, type OfficeCity } from "@/lib/offices";
 
 export default function ParcelSection() {
   const { lang } = useLanguage();
   const t = parcelTranslations[lang];
   const sectionRef = useSectionView<HTMLElement>("parcel");
 
-  const handleClick = () => {
-    window.dispatchEvent(new Event("open-contact-modal"));
+  // Прямые кнопки вместо общего окна: из Украины пишут в Одессу, из Болгарии — в Варну.
+  const directions: { city: OfficeCity; label: string }[] = [
+    { city: "odessa", label: t.fromUa },
+    { city: "varna", label: t.fromBg },
+  ];
+
+  const linksFor = (phone: string) => {
+    const digits = phone.replace(/\D/g, "");
+    return [
+      { method: "viber" as const, label: "Viber", href: `viber://chat?number=${encodeURIComponent(phone)}` },
+      { method: "telegram" as const, label: "Telegram", href: `tg://resolve?phone=${digits}` },
+      { method: "phone" as const, label: t.call, href: `tel:${phone}` },
+    ];
   };
 
   return (
@@ -83,15 +96,34 @@ export default function ParcelSection() {
           </div>
         </div>
 
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
-          <button
-            type="button"
-            onClick={handleClick}
-            className="inline-flex items-center justify-center rounded-full border border-orange-200 bg-orange-50 px-5 py-3 text-xs font-bold uppercase tracking-wide text-orange-700 shadow-[0_12px_24px_rgba(251,146,60,0.18)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_30px_rgba(251,146,60,0.2)]"
-          >
-            {t.cta}
-          </button>
-          <p className={`max-w-xl text-sm text-slate-600 sm:text-base`}>{t.note}</p>
+        <p className="mt-6 text-sm text-slate-700 sm:text-base">{t.note}</p>
+        <div className="mt-3 grid gap-3 md:grid-cols-2">
+          {directions.map(({ city, label }) => {
+            const phone = OFFICES.find((office) => office.city === city)?.phones[0] ?? "";
+            return (
+              <div key={city} className="rounded-2xl border border-slate-200 bg-white p-4">
+                <p className="text-sm font-bold text-slate-900">{label}</p>
+                <div className="mt-2 grid grid-cols-3 gap-2">
+                  {linksFor(phone).map((link) => (
+                    <a
+                      key={link.method}
+                      href={link.href}
+                      onClick={() =>
+                        trackContact({
+                          method: link.method,
+                          source: "parcel_section",
+                          label: link.method === "phone" ? phone : link.method,
+                        })
+                      }
+                      className="flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-2 text-sm font-semibold text-slate-800 transition hover:border-slate-300 hover:bg-white"
+                    >
+                      {link.label}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>
