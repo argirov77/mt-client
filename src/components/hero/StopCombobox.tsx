@@ -25,6 +25,8 @@ type Props = {
   ariaLabel?: string;
   inputClassName?: string;
   noOptionsText?: string;
+  /** id остановок, которые без поиска стоят вверху списка, в этом порядке */
+  pinnedIds?: readonly number[];
 };
 
 function levenshtein(a: string, b: string): number {
@@ -86,6 +88,7 @@ const StopCombobox = forwardRef<StopComboboxHandle, Props>(function StopCombobox
     ariaLabel,
     inputClassName = '',
     noOptionsText = 'Нет совпадений',
+    pinnedIds,
   },
   ref,
 ) {
@@ -118,6 +121,20 @@ const StopCombobox = forwardRef<StopComboboxHandle, Props>(function StopCombobox
     [stops],
   );
 
+  // Без поиска: закреплённые города сверху, остальные — по алфавиту.
+  const pinnedStops = useMemo(
+    () =>
+      (pinnedIds ?? []).flatMap((id) => stops.filter((s) => s.id === id)),
+    [pinnedIds, stops],
+  );
+  const defaultStops = useMemo(
+    () => [
+      ...pinnedStops,
+      ...sortedStops.filter((s) => !pinnedStops.includes(s)),
+    ],
+    [pinnedStops, sortedStops],
+  );
+
   // Keep input in sync with selected value when not actively typing.
   useEffect(() => {
     if (!typing) setQuery(selectedName);
@@ -125,7 +142,7 @@ const StopCombobox = forwardRef<StopComboboxHandle, Props>(function StopCombobox
 
   const filtered = useMemo(() => {
     const q = query.trim();
-    if (!q || (!typing && q === selectedName)) return sortedStops;
+    if (!q || (!typing && q === selectedName)) return defaultStops;
     const threshold = Math.max(2, Math.ceil(q.length / 2));
     return sortedStops
       .map((s) => ({ stop: s, score: scoreStop(s.stop_name, q) }))
@@ -138,7 +155,9 @@ const StopCombobox = forwardRef<StopComboboxHandle, Props>(function StopCombobox
           }),
       )
       .map((x) => x.stop);
-  }, [query, sortedStops, selectedName, typing]);
+  }, [query, sortedStops, defaultStops, selectedName, typing]);
+
+  const showsPinned = filtered === defaultStops && pinnedStops.length > 0;
 
   useEffect(() => {
     setActiveIndex(0);
@@ -251,6 +270,10 @@ const StopCombobox = forwardRef<StopComboboxHandle, Props>(function StopCombobox
                   idx === activeIndex
                     ? 'bg-[#fdf0e7] text-[#c2410c]'
                     : 'text-[#173452] hover:bg-[#f6f4f1]'
+                } ${
+                  showsPinned && idx === pinnedStops.length
+                    ? 'border-t border-[#e3dfd9]'
+                    : ''
                 }`}
               >
                 {s.stop_name}

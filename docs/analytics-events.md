@@ -51,7 +51,7 @@
 | --- | --- | --- | --- |
 | 1 | `search` | `trackSearch` | `SearchForm.handleSubmit` (валидная форма) |
 | 2 | `view_item_list` | `trackViewItemList` | `SearchResults` — useEffect после загрузки туров, один раз на запрос |
-| 3 | `select_item` | `trackSelectItem` | клик по рейсу (`onSelectOutbound` / `onSelectReturn`) |
+| 3 | `select_item` | `trackSelectItem` | клик по рейсу (`onSelectOutbound` / `onSelectReturn`) или автовыбор единственного рейса в направлении (после `view_item_list`) |
 | 4 | `add_to_cart` | `trackAddToCart` | все места выбраны (`seatsDone`), один раз на выбор рейса |
 | 5 | `begin_checkout` | `trackBeginCheckout` | попадание на экран `ContactsAndPaymentStep` (`activeStep===3 && step2Complete`), **один раз, до развилки** |
 | 6 | `add_payment_info` | `trackAddPaymentInfo` | `handleAction("purchase")` и `handlePay` перед редиректом на LiqPay |
@@ -202,6 +202,8 @@ Next.js-навигацию, при которой query-параметр тер�
 3. На странице результатов после загрузки списка → `view_item_list`
    (`items[]` рейсов, `item_count`).
 4. Кликнуть рейс → `select_item` (`items[0]` с price, `value`, `currency`).
+   Если рейс на дату один, он выбирается сам и `select_item` уходит сразу
+   после `view_item_list`.
 5. Выбрать места на всех пассажиров → `add_to_cart` (`items` с `quantity`,
    `value`, `seats_outbound`).
 6. Заполнить контакты, попасть на экран оформления → `begin_checkout` **один раз**

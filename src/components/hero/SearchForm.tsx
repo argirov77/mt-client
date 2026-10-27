@@ -11,8 +11,12 @@ import { useLockBodyScroll } from '@/utils/useLockBodyScroll';
 import { useModalVisibility } from '@/utils/useModalVisibility';
 import { trackSearch, trackSearchIntent, buildRouteCategory } from '@/lib/analytics';
 import { weekdaysOfDates } from '@/utils/tripFormat';
+import { STOP } from '@/lib/tripsData';
 
 type Stop = { id: number; stop_name: string };
+
+// Главные города — вверху списков «Откуда» и «Куда», остальные по алфавиту.
+const PINNED_STOP_IDS = [STOP.odessa, STOP.varna, STOP.sunnyBeach, STOP.bolgrad];
 
 type Lang = 'ru' | 'bg' | 'en' | 'ua';
 type Props = {
@@ -390,6 +394,7 @@ export default function SearchForm({
             ariaLabel={t.from}
             inputClassName={`${baseFieldStyles} pr-4`}
             noOptionsText={t.noMatches}
+            pinnedIds={PINNED_STOP_IDS}
           />
         </div>
 
@@ -424,6 +429,7 @@ export default function SearchForm({
             ariaLabel={t.to}
             inputClassName={`${baseFieldStyles} pr-4 disabled:cursor-not-allowed disabled:bg-[#f6f4f1] disabled:text-[#8c929c]`}
             noOptionsText={t.noMatches}
+            pinnedIds={PINNED_STOP_IDS}
           />
         </div>
       </div>

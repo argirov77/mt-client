@@ -22,38 +22,38 @@ const L = {
   ru: {
     passengers: "Пассажиры",
     adults: "Взрослый",
-    discount: "Детский",
-    tip: "Дети до 13.99",
+    discount: "Льготный",
+    tip: "Дети до 17.99, пенсионеры, студенты до 25.99",
     done: "Готово",
     summary: (a: number, d: number) =>
-      [a ? `${a} ${plural(a, "взрослый", "взрослых", "взрослых")}` : "", d ? `${d} ${plural(d, "детский", "детских", "детских")}` : ""].filter(Boolean).join(", ") || "0",
+      [a ? `${a} ${plural(a, "взрослый", "взрослых", "взрослых")}` : "", d ? `${d} ${plural(d, "льготный", "льготных", "льготных")}` : ""].filter(Boolean).join(", ") || "0",
   },
   en: {
     passengers: "Passengers",
     adults: "Adult",
-    discount: "Children",
-    tip: "Children up to 13.99",
+    discount: "Discounted",
+    tip: "Children up to 17.99, seniors, students up to 25.99",
     done: "Done",
     summary: (a: number, d: number) =>
-      [a ? `${a} ${a === 1 ? "adult" : "adults"}` : "", d ? `${d} ${d === 1 ? "child" : "children"}` : ""].filter(Boolean).join(", ") || "0",
+      [a ? `${a} ${a === 1 ? "adult" : "adults"}` : "", d ? `${d} discounted` : ""].filter(Boolean).join(", ") || "0",
   },
   bg: {
     passengers: "Пътници",
     adults: "Възрастен",
-    discount: "Детски",
-    tip: "Деца до 13.99",
+    discount: "С намаление",
+    tip: "Деца до 17.99, пенсионери, студенти до 25.99",
     done: "Готово",
     summary: (a: number, d: number) =>
-      [a ? `${a} ${a === 1 ? "възрастен" : "възрастни"}` : "", d ? `${d} ${d === 1 ? "детски" : "детски"}` : ""].filter(Boolean).join(", ") || "0",
+      [a ? `${a} ${a === 1 ? "възрастен" : "възрастни"}` : "", d ? `${d} с намаление` : ""].filter(Boolean).join(", ") || "0",
   },
   ua: {
     passengers: "Пасажири",
     adults: "Дорослий",
-    discount: "Дитячий",
-    tip: "Діти до 13.99",
+    discount: "Пільговий",
+    tip: "Діти до 17.99, пенсіонери, студенти до 25.99",
     done: "Готово",
     summary: (a: number, d: number) =>
-      [a ? `${a} ${plural(a, "дорослий", "дорослих", "дорослих")}` : "", d ? `${d} ${plural(d, "дитячий", "дитячих", "дитячих")}` : ""].filter(Boolean).join(", ") || "0",
+      [a ? `${a} ${plural(a, "дорослий", "дорослих", "дорослих")}` : "", d ? `${d} ${plural(d, "пільговий", "пільгових", "пільгових")}` : ""].filter(Boolean).join(", ") || "0",
   },
 };
 

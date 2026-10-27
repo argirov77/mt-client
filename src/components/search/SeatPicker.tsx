@@ -27,7 +27,6 @@ export type SeatLegInfo = {
   loading: boolean;
   error?: string;
   selected: number[];
-  autoPicked: boolean;
 };
 
 type Props = {
@@ -102,9 +101,7 @@ export default function SeatPicker({
       ? t.seatsFull(seatCount)
       : firstMissing
         ? t.seatPickFor(firstMissing)
-        : current.autoPicked
-          ? t.seatsAutoPicked
-          : null;
+        : null;
 
   const BusComponent = layout === TRAVEGO_LAYOUT ? Travego : Neoplan;
 
@@ -174,14 +171,7 @@ export default function SeatPicker({
 
         <div className="min-w-0 flex-1 space-y-3 text-sm">
           {hint ? (
-            <p
-              role="status"
-              className={`rounded-lg px-3 py-2 text-xs font-semibold ${
-                fullHintLeg === current.leg || firstMissing
-                  ? "bg-amber-50 text-amber-900"
-                  : "bg-emerald-50 text-emerald-900"
-              }`}
-            >
+            <p role="status" className="rounded-lg bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900">
               {hint}
             </p>
           ) : null}

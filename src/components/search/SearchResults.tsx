@@ -147,6 +147,8 @@ export default function SearchResults({
     null
   );
   const [selectedReturnTour, setSelectedReturnTour] = useState<SearchTour | null>(null);
+  // Рейсы, выбранные автоматически (единственные в направлении), — для select_item.
+  const autoSelectedRef = useRef<{ outbound: SearchTour | null; return: SearchTour | null } | null>(null);
 
   // Обратный билет с открытой датой (сценарий C): обратный рейс не выбирается,
   // бэкенд выпускает предоплаченный открытый обратный билет.
@@ -252,13 +254,18 @@ export default function SearchResults({
 
         setOutboundTours(filteredOutbound);
         setReturnTours(filteredReturn);
-        // рейс, выбранный на первом экране страницы маршрута, — сразу выбран
-        setSelectedOutboundTour(
-          (preselectTourId && filteredOutbound.find((tour) => tour.id === preselectTourId)) || null,
-        );
-        setSelectedReturnTour(null);
+        // Рейс, выбранный на первом экране страницы маршрута, — сразу выбран.
+        // Если рейс в направлении один, выбирать нечего — выбираем его сами.
+        const singleOutbound = filteredOutbound.length === 1 ? filteredOutbound[0] : null;
+        const singleReturn = filteredReturn.length === 1 ? filteredReturn[0] : null;
+        const outboundPick =
+          (preselectTourId && filteredOutbound.find((tour) => tour.id === preselectTourId)) ||
+          singleOutbound;
+        setSelectedOutboundTour(outboundPick);
+        setSelectedReturnTour(singleReturn);
         setSelectedOutboundSeats([]);
         setSelectedReturnSeats([]);
+        autoSelectedRef.current = { outbound: singleOutbound, return: singleReturn };
 
         const bothEmpty =
           !(filteredOutbound && filteredOutbound.length) &&
@@ -271,7 +278,10 @@ export default function SearchResults({
           setMsg("");
         }
 
-        setActiveStep(1);
+        // Всё выбрано без пассажира — шаг «Выбор рейса» пропускаем, сразу
+        // места и пассажиры. Вернуться к нему можно через прогресс.
+        const returnPending = filteredReturn.length > 0 && !singleReturn;
+        setActiveStep(outboundPick && !returnPending ? 2 : 1);
       } catch {
         if (!cancelled) {
           setMsg(t.errSearch);
@@ -291,29 +301,38 @@ export default function SearchResults({
   const hasReturnSection = Boolean(returnDate && returnTours.length > 0);
   const getTourId = (tour: SearchTour | null) => tour?.id;
 
+  // select_item: выбор рейса пассажиром или автоматически, когда рейс один.
+  const trackTourSelect = useCallback(
+    (tour: SearchTour, leg: "outbound" | "return") => {
+      const [departure, arrival] = leg === "outbound" ? [fromName, toName] : [toName, fromName];
+      trackSelectItem({
+        locale: lang,
+        listName: `search_results_${leg}`,
+        items: [
+          {
+            item_id: String(tour.id),
+            item_name: `${departure} → ${arrival}`,
+            item_category: leg === "return" || returnDate ? "roundtrip" : "oneway",
+            item_category2: buildRouteCategory(
+              { id: fromId, name: fromName },
+              { id: toId, name: toName },
+            ),
+            price: tour.price,
+            item_variant: tour.date,
+            departure,
+            arrival,
+            travel_date: tour.date,
+          },
+        ],
+        value: tour.price,
+      });
+    },
+    [fromId, fromName, lang, returnDate, toId, toName],
+  );
+
   // Выбор рейсов
   const onSelectOutbound = (tour: SearchTour) => {
-    trackSelectItem({
-      locale: lang,
-      listName: "search_results_outbound",
-      items: [
-        {
-          item_id: String(tour.id),
-          item_name: `${fromName} → ${toName}`,
-          item_category: returnDate ? "roundtrip" : "oneway",
-          item_category2: buildRouteCategory(
-            { id: fromId, name: fromName },
-            { id: toId, name: toName },
-          ),
-          price: tour.price,
-          item_variant: tour.date,
-          departure: fromName,
-          arrival: toName,
-          travel_date: tour.date,
-        },
-      ],
-      value: tour.price,
-    });
+    trackTourSelect(tour, "outbound");
     setSelectedOutboundTour(tour);
     setSelectedOutboundSeats([]);
     setSelectedReturnSeats([]);
@@ -321,27 +340,7 @@ export default function SearchResults({
   };
 
   const onSelectReturn = (tour: SearchTour) => {
-    trackSelectItem({
-      locale: lang,
-      listName: "search_results_return",
-      items: [
-        {
-          item_id: String(tour.id),
-          item_name: `${toName} → ${fromName}`,
-          item_category: "roundtrip",
-          item_category2: buildRouteCategory(
-            { id: fromId, name: fromName },
-            { id: toId, name: toName },
-          ),
-          price: tour.price,
-          item_variant: tour.date,
-          departure: toName,
-          arrival: fromName,
-          travel_date: tour.date,
-        },
-      ],
-      value: tour.price,
-    });
+    trackTourSelect(tour, "return");
     setSelectedReturnTour(tour);
     setSelectedOutboundSeats([]);
     setSelectedReturnSeats([]);
@@ -1041,6 +1040,17 @@ export default function SearchResults({
       extra: { item_count: outboundTours.length, route },
     });
   }, [loading, outboundTours, fromName, toName, returnDate, fromId, toId, lang]);
+
+  // select_item для рейсов, выбранных автоматически, — после view_item_list,
+  // чтобы воронка не рвалась из-за пропущенного шага «Выбор рейса».
+  useEffect(() => {
+    if (loading) return;
+    const picked = autoSelectedRef.current;
+    if (!picked) return;
+    autoSelectedRef.current = null;
+    if (picked.outbound) trackTourSelect(picked.outbound, "outbound");
+    if (picked.return) trackTourSelect(picked.return, "return");
+  }, [loading, trackTourSelect]);
 
   // add_to_cart: рейс + место зафиксированы (бывший view_item). Один раз на
   // текущий выбор рейсов; сбрасывается при смене рейса.

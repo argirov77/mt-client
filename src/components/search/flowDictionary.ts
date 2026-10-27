@@ -19,18 +19,16 @@ export type FlowDict = {
   returnDiscountShort: string;
 
   seatsTitle: string;
-  seatsAdjacent: string;
   amenitiesLabel: string;
   amenitiesList: string;
   changeOnMap: string;
-  chooseOnMap: string;
+  chooseSeats: (count: number) => string;
   passengerKindAdult: string;
   passengerKindChild: string;
   missingSeats: (leg: Leg, selected: number, total: number) => string;
   missingName: (index: number) => string;
   seatWindow: string;
   seatAisle: string;
-  seatsAutoPicked: string;
   seatPickFor: (index: number) => string;
   seatsFull: (count: number) => string;
   yourSeats: string;
@@ -94,7 +92,7 @@ export const flowDict: Record<Lang, FlowDict> = {
     passengersSummary: (a, d) =>
       [
         a ? `${a} ${ruPlural(a, "взрослый", "взрослых", "взрослых")}` : "",
-        d ? `${d} ${ruPlural(d, "детский", "детских", "детских")}` : "",
+        d ? `${d} ${ruPlural(d, "льготный", "льготных", "льготных")}` : "",
       ]
         .filter(Boolean)
         .join(", "),
@@ -107,18 +105,16 @@ export const flowDict: Record<Lang, FlowDict> = {
     returnDiscountShort: "−10% на обратный билет",
 
     seatsTitle: "Места",
-    seatsAdjacent: "рядом",
     amenitiesLabel: "В автобусе",
     amenitiesList: "Wi-Fi, туалет, климат-контроль, розетки, откидные сиденья",
     changeOnMap: "Изменить на схеме",
-    chooseOnMap: "Выбрать на схеме",
+    chooseSeats: (n) => (n > 1 ? "Выбрать места" : "Выбрать место"),
     passengerKindAdult: "взрослый",
-    passengerKindChild: "детский",
+    passengerKindChild: "льготный",
     missingSeats: (leg, s, t) => `Выберите места ${leg === "return" ? "обратно" : "туда"}: ${s} из ${t}`,
     missingName: (i) => `Заполните имя пассажира ${i}`,
     seatWindow: "у окна",
     seatAisle: "у прохода",
-    seatsAutoPicked: "Подобрали места рядом. Чтобы поменять — нажмите на своё синее место, потом на зелёное.",
     seatPickFor: (i) => `Нажмите на зелёное место для пассажира ${i}. Синее — чтобы освободить.`,
     seatsFull: (n) => `Уже выбрано ${n} из ${n} — нажмите на синее, чтобы освободить`,
     yourSeats: "Ваши места",
@@ -168,7 +164,7 @@ export const flowDict: Record<Lang, FlowDict> = {
     passengersSummary: (a, d) =>
       [
         a ? `${a} ${ruPlural(a, "дорослий", "дорослих", "дорослих")}` : "",
-        d ? `${d} ${ruPlural(d, "дитячий", "дитячих", "дитячих")}` : "",
+        d ? `${d} ${ruPlural(d, "пільговий", "пільгових", "пільгових")}` : "",
       ]
         .filter(Boolean)
         .join(", "),
@@ -181,18 +177,16 @@ export const flowDict: Record<Lang, FlowDict> = {
     returnDiscountShort: "−10% на зворотний квиток",
 
     seatsTitle: "Місця",
-    seatsAdjacent: "поруч",
     amenitiesLabel: "В автобусі",
     amenitiesList: "Wi-Fi, туалет, клімат-контроль, розетки, відкидні сидіння",
     changeOnMap: "Змінити на схемі",
-    chooseOnMap: "Обрати на схемі",
+    chooseSeats: (n) => (n > 1 ? "Обрати місця" : "Обрати місце"),
     passengerKindAdult: "дорослий",
-    passengerKindChild: "дитячий",
+    passengerKindChild: "пільговий",
     missingSeats: (leg, s, t) => `Оберіть місця ${leg === "return" ? "назад" : "туди"}: ${s} з ${t}`,
     missingName: (i) => `Заповніть ім'я пасажира ${i}`,
     seatWindow: "біля вікна",
     seatAisle: "біля проходу",
-    seatsAutoPicked: "Підібрали місця поруч. Щоб змінити — натисніть на своє синє місце, потім на зелене.",
     seatPickFor: (i) => `Натисніть на зелене місце для пасажира ${i}. Синє — щоб звільнити.`,
     seatsFull: (n) => `Уже обрано ${n} з ${n} — натисніть на синє, щоб звільнити`,
     yourSeats: "Ваші місця",
@@ -242,7 +236,7 @@ export const flowDict: Record<Lang, FlowDict> = {
     passengersSummary: (a, d) =>
       [
         a ? `${a} ${a === 1 ? "възрастен" : "възрастни"}` : "",
-        d ? `${d} детски` : "",
+        d ? `${d} с намаление` : "",
       ]
         .filter(Boolean)
         .join(", "),
@@ -255,18 +249,16 @@ export const flowDict: Record<Lang, FlowDict> = {
     returnDiscountShort: "−10% за обратния билет",
 
     seatsTitle: "Места",
-    seatsAdjacent: "едно до друго",
     amenitiesLabel: "В автобуса",
     amenitiesList: "Wi-Fi, тоалетна, климатик, контакти, накланящи се седалки",
     changeOnMap: "Промени на схемата",
-    chooseOnMap: "Избери на схемата",
+    chooseSeats: (n) => (n > 1 ? "Избери места" : "Избери място"),
     passengerKindAdult: "възрастен",
-    passengerKindChild: "детски",
+    passengerKindChild: "с намаление",
     missingSeats: (leg, s, t) => `Изберете места ${leg === "return" ? "обратно" : "натам"}: ${s} от ${t}`,
     missingName: (i) => `Попълнете името на пътник ${i}`,
     seatWindow: "до прозореца",
     seatAisle: "до пътеката",
-    seatsAutoPicked: "Избрахме места едно до друго. За промяна натиснете своето синьо място, после зелено.",
     seatPickFor: (i) => `Натиснете зелено място за пътник ${i}. Синьо — за освобождаване.`,
     seatsFull: (n) => `Вече са избрани ${n} от ${n} — натиснете синьо място, за да го освободите`,
     yourSeats: "Вашите места",
@@ -316,7 +308,7 @@ export const flowDict: Record<Lang, FlowDict> = {
     passengersSummary: (a, d) =>
       [
         a ? `${a} ${a === 1 ? "adult" : "adults"}` : "",
-        d ? `${d} ${d === 1 ? "child" : "children"}` : "",
+        d ? `${d} discounted` : "",
       ]
         .filter(Boolean)
         .join(", "),
@@ -329,18 +321,16 @@ export const flowDict: Record<Lang, FlowDict> = {
     returnDiscountShort: "−10% on the return ticket",
 
     seatsTitle: "Seats",
-    seatsAdjacent: "together",
     amenitiesLabel: "On board",
     amenitiesList: "Wi-Fi, toilet, air conditioning, sockets, reclining seats",
     changeOnMap: "Change on the seat map",
-    chooseOnMap: "Choose on the seat map",
+    chooseSeats: (n) => (n > 1 ? "Choose seats" : "Choose a seat"),
     passengerKindAdult: "adult",
-    passengerKindChild: "child",
+    passengerKindChild: "discounted",
     missingSeats: (leg, s, t) => `Choose ${leg === "return" ? "return" : "outbound"} seats: ${s} of ${t}`,
     missingName: (i) => `Enter the name of passenger ${i}`,
     seatWindow: "window",
     seatAisle: "aisle",
-    seatsAutoPicked: "We picked seats together. To change, tap your blue seat, then a green one.",
     seatPickFor: (i) => `Tap a green seat for passenger ${i}. Tap a blue one to release it.`,
     seatsFull: (n) => `${n} of ${n} already chosen — tap a blue seat to release it`,
     yourSeats: "Your seats",

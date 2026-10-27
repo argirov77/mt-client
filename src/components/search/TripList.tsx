@@ -33,7 +33,7 @@ export const RETURN_DISCOUNT = 0.1;
 export const freeSeatsOf = (tour: Tour) =>
   typeof tour.seats === "number" ? tour.seats : tour.seats?.free ?? 0;
 
-/** Стоимость рейса на всех пассажиров (детский тариф — как раньше, −5%). */
+/** Стоимость рейса на всех пассажиров (льготный тариф — как раньше, −5%). */
 export const tourTotal = (tour: Tour, seatCount: number, discountCount: number) => {
   const adults = Math.max(0, seatCount - discountCount);
   return adults * tour.price + discountCount * tour.price * (1 - CHILD_DISCOUNT);

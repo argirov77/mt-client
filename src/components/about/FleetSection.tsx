@@ -5,7 +5,6 @@ import { useState } from "react";
 import { Armchair, Bath, Snowflake, Usb, Wifi } from "lucide-react";
 
 import {
-  sectionBgMuted,
   sectionDescriptionClass,
   sectionEyebrowClass,
   sectionInnerClass,
@@ -27,7 +26,7 @@ export default function FleetSection({ lang = "ru", id = "fleet" }: { lang?: Lan
   const [modalItem, setModalItem] = useState<MediaItem | null>(null);
 
   return (
-    <section id={id} className={`${sectionBgMuted} ${sectionPadClass}`}>
+    <section id={id} className={`bg-white ${sectionPadClass}`}>
       <div className={`${sectionInnerClass} flex flex-col gap-8 lg:gap-11`}>
         <div className="flex flex-wrap items-end justify-between gap-5 lg:gap-12">
           <div className="flex flex-1 basis-[520px] flex-col gap-4">
@@ -60,7 +59,7 @@ export default function FleetSection({ lang = "ru", id = "fleet" }: { lang?: Lan
           ))}
         </ul>
 
-        <ul className="grid gap-4 rounded-3xl bg-white p-5 sm:grid-cols-2 sm:p-7 lg:grid-cols-5">
+        <ul className="grid gap-4 rounded-3xl bg-[#f6f4f1] p-5 sm:grid-cols-2 sm:p-7 lg:grid-cols-5">
           {copy.amenityList.map((amenity, index) => {
             const Icon = AMENITY_ICONS[index] ?? Snowflake;
             return (

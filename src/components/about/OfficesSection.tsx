@@ -6,6 +6,7 @@ import { MapPin, Phone } from "lucide-react";
 import {
   accentPillClass,
   cardTitleClass,
+  sectionBgMuted,
   sectionDescriptionClass,
   sectionEyebrowClass,
   sectionInnerClass,
@@ -43,7 +44,7 @@ export default function OfficesSection({
   );
 
   return (
-    <section id={id} className={`bg-white ${sectionPadClass}`}>
+    <section id={id} className={`${sectionBgMuted} ${sectionPadClass}`}>
       <div className={`${sectionInnerClass} flex flex-col gap-8 lg:gap-11`}>
         <div className="flex flex-wrap items-end justify-between gap-5 lg:gap-12">
           <div className="flex flex-1 basis-[520px] flex-col gap-4">
@@ -55,7 +56,7 @@ export default function OfficesSection({
 
         <div className="grid gap-5 lg:grid-cols-2">
           {ordered.map((office) => (
-            <article key={office.city} className="flex flex-col overflow-hidden rounded-3xl bg-[#f6f4f1]">
+            <article key={office.city} className="flex flex-col overflow-hidden rounded-3xl bg-white">
               <Image
                 src={office.image.src}
                 alt={office.image.alt}
@@ -77,7 +78,7 @@ export default function OfficesSection({
                   {office.phones.map((phone) => (
                     <div
                       key={phone}
-                      className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl bg-white py-2.5 pl-4 pr-2.5"
+                      className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl bg-[#f6f4f1] py-2.5 pl-4 pr-2.5"
                     >
                       <a
                         href={`tel:${phone}`}
