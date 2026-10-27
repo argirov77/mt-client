@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 import FormInput from "../common/FormInput";
 import type { SeatData } from "../BusLayout";
-import SeatPicker, { layoutForTour, type SeatLeg, type SeatLegInfo } from "./SeatPicker";
+import SeatPicker, { type SeatLeg, type SeatLegInfo } from "./SeatPicker";
 import type { Dict, Lang, Tour } from "./types";
 import { API } from "@/config";
-import { pickAdjacentSeats } from "@/utils/seatLayout";
 import { formatDayShort } from "@/utils/tripFormat";
 import { useLockBodyScroll } from "@/utils/useLockBodyScroll";
 import { useModalVisibility } from "@/utils/useModalVisibility";
@@ -137,47 +136,7 @@ export default function BookingPanel({
     });
   }, [seatCount, setExtraBaggageOutbound, setExtraBaggageReturn]);
 
-  // Автоподбор мест рядом — один раз на рейс, пока места не выбраны.
-  // Схема остаётся, чтобы поменять.
-  const autoPickedRef = useRef<Set<string>>(new Set());
-  const [autoPicked, setAutoPicked] = useState<Record<SeatLeg, boolean>>({ outbound: false, return: false });
-
-  useEffect(() => {
-    const tryPick = (
-      leg: SeatLeg,
-      tour: Tour | null,
-      map: SeatMapState,
-      selected: number[],
-      setSelected: (v: number[]) => void,
-    ) => {
-      if (!tour || map.loading || !map.seats.length) return;
-      const key = `${leg}-${tour.id}`;
-      if (autoPickedRef.current.has(key)) return;
-      autoPickedRef.current.add(key);
-      if (selected.length) return;
-      const available = new Set(
-        map.seats.filter((seat) => seat.status === "available").map((seat) => seat.seat_num),
-      );
-      const picked = pickAdjacentSeats(layoutForTour(tour), available, seatCount);
-      if (picked.length) {
-        setSelected(picked);
-        setAutoPicked((prev) => ({ ...prev, [leg]: true }));
-      }
-    };
-    tryPick("outbound", selectedOutboundTour, outboundMap, selectedOutboundSeats, setSelectedOutboundSeats);
-    tryPick("return", selectedReturnTour, returnMap, selectedReturnSeats, setSelectedReturnSeats);
-  }, [
-    outboundMap,
-    returnMap,
-    seatCount,
-    selectedOutboundSeats,
-    selectedOutboundTour,
-    selectedReturnSeats,
-    selectedReturnTour,
-    setSelectedOutboundSeats,
-    setSelectedReturnSeats,
-  ]);
-
+  // Места не подбираем сами: пассажир выбирает их на схеме.
   const legs = useMemo<SeatLegInfo[]>(() => {
     const items: SeatLegInfo[] = [
       {
@@ -187,7 +146,6 @@ export default function BookingPanel({
         toName,
         ...outboundMap,
         selected: selectedOutboundSeats,
-        autoPicked: autoPicked.outbound,
       },
     ];
     if (selectedReturnTour) {
@@ -198,12 +156,10 @@ export default function BookingPanel({
         toName: fromName,
         ...returnMap,
         selected: selectedReturnSeats,
-        autoPicked: autoPicked.return,
       });
     }
     return items;
   }, [
-    autoPicked,
     fromName,
     outboundMap,
     returnMap,
@@ -229,17 +185,13 @@ export default function BookingPanel({
   const seatsText = (seats: number[]) =>
     seats.length
       ? seats.slice().sort((a, b) => a - b).join(lang === "en" ? " and " : lang === "ua" ? " і " : " и ")
-      : t.selectedSeatsLabel(0, seatCount);
+      : t.seatNotChosen;
 
   const anySeats = selectedOutboundSeats.length > 0 || selectedReturnSeats.length > 0;
-  const showAdjacent = seatCount > 1 && (autoPicked.outbound || autoPicked.return);
 
   const renderSeatOverview = () => (
     <section className="space-y-2 rounded-2xl border border-[#e3dfd9] bg-white p-3">
-      <p className="text-xs font-bold uppercase tracking-wide text-[#5c6370]">
-        {t.seatsTitle}
-        {showAdjacent ? ` · ${t.seatsAdjacent}` : ""}
-      </p>
+      <p className="text-xs font-bold uppercase tracking-wide text-[#5c6370]">{t.seatsTitle}</p>
       {legs.map((item) => (
         <div key={item.leg} className="flex items-center justify-between gap-3 text-sm">
           <span className="text-[#173452]">
@@ -259,9 +211,13 @@ export default function BookingPanel({
           const firstIncomplete = legs.find((item) => item.selected.length < seatCount);
           openModal(firstIncomplete?.leg ?? "outbound");
         }}
-        className="flex min-h-[44px] w-full items-center justify-center rounded-xl border border-[#e3dfd9] text-sm font-semibold text-[#c2410c] hover:bg-[#fdf0e7]"
+        className={`flex min-h-[44px] w-full items-center justify-center rounded-xl text-sm ${
+          anySeats
+            ? "border border-[#e3dfd9] font-semibold text-[#c2410c] hover:bg-[#fdf0e7]"
+            : "bg-[#c2410c] font-bold text-white hover:bg-[#a8380b]"
+        }`}
       >
-        {anySeats ? t.changeOnMap : t.chooseOnMap}
+        {anySeats ? t.changeOnMap : t.chooseSeats(seatCount)}
       </button>
     </section>
   );

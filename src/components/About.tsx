@@ -7,7 +7,7 @@ import OfficesSection from "@/components/about/OfficesSection";
 import { useLanguage } from "@/components/common/LanguageProvider";
 import { useSectionView } from "@/utils/useSectionView";
 
-/** Три раздела подряд, как в макетах: о компании, автопарк, офисы и контакты. */
+/** Три раздела подряд: о компании, офисы и контакты, автопарк. */
 export default function About() {
   const { lang } = useLanguage();
   const sectionRef = useSectionView<HTMLDivElement>("about");
@@ -15,8 +15,8 @@ export default function About() {
   return (
     <div ref={sectionRef}>
       <AboutSection lang={lang} />
-      <FleetSection lang={lang} />
       <OfficesSection lang={lang} />
+      <FleetSection lang={lang} />
     </div>
   );
 }
